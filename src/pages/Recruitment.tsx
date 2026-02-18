@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
+import CTASection from "@/components/CTASection";
 
 interface Opening {
   id: string;
@@ -59,6 +60,7 @@ const Recruitment = () => {
           ))}
         </div>
       </Section>
+      <CTASection />
     </div>
   );
 };

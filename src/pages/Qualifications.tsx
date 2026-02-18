@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
 import QualificationCard from "@/components/QualificationCard";
+import CTASection from "@/components/CTASection";
 
 interface Qualification {
   id: string;
@@ -68,6 +69,7 @@ const Qualifications = () => {
           ))}
         </div>
       </Section>
+      <CTASection />
     </div>
   );
 };

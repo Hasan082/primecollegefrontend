@@ -1,14 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { fetchContent } from "@/lib/api";
 import HeroSlider from "@/components/HeroSlider";
 import Section from "@/components/Section";
-
-interface StatItem {
-  title: string;
-  value: string;
-  description: string;
-}
+import CTASection from "@/components/CTASection";
 
 interface HomeData {
   hero: Array<{
@@ -60,7 +54,7 @@ const Index = () => {
           )}
 
           {section.type === "text" && (
-            <Section title={section.title} className="">
+            <Section title={section.title}>
               <p className="text-center text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                 {section.content}
               </p>
@@ -80,20 +74,7 @@ const Index = () => {
             </Section>
           )}
 
-          {section.type === "cta" && (
-            <section className="bg-secondary py-16 px-4">
-              <div className="container mx-auto text-center">
-                <h2 className="text-3xl font-bold text-secondary-foreground mb-4">{section.title}</h2>
-                <p className="text-secondary-foreground/80 max-w-2xl mx-auto mb-8">{section.content}</p>
-                <Link
-                  to="/contact"
-                  className="inline-block bg-primary text-primary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
-                >
-                  Contact Us
-                </Link>
-              </div>
-            </section>
-          )}
+          {section.type === "cta" && <CTASection />}
         </div>
       ))}
     </div>

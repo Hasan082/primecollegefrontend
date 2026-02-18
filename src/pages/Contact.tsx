@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
+import CTASection from "@/components/CTASection";
 
 interface ContactData {
   title: string;
@@ -99,6 +100,7 @@ const Contact = () => {
           </div>
         </div>
       </Section>
+      <CTASection />
     </div>
   );
 };

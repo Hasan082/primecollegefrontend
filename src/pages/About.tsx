@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
+import CTASection from "@/components/CTASection";
 
 interface AboutData {
   title: string;
@@ -48,6 +49,7 @@ const About = () => {
           </p>
         </Section>
       ))}
+      <CTASection />
     </div>
   );
 };
