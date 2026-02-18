@@ -59,20 +59,16 @@ const LogoCarousel = () => {
         className="overflow-hidden whitespace-nowrap"
         style={{ scrollBehavior: "auto" }}
       >
-        <div className="inline-flex gap-10 px-4 items-center">
+        <div className="inline-flex gap-16 px-8 items-center">
           {allLogos.map((logo, i) => (
             <div
               key={`${logo.title}-${i}`}
-              className={`inline-flex items-center justify-center flex-shrink-0 px-6 h-[100px] ${
-                logo.hasBackground ? "bg-card rounded-lg shadow-sm p-4" : ""
-              }`}
+              className="inline-flex items-center justify-center flex-shrink-0 h-[120px] min-w-[160px]"
             >
               <img
                 src={logo.src}
                 alt={logo.title}
-                className={`max-h-[80px] w-auto object-contain ${
-                  logo.hasBackground ? "" : "brightness-0 opacity-60"
-                }`}
+                className="max-h-[100px] max-w-[180px] w-auto object-contain"
               />
             </div>
           ))}
