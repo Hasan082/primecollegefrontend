@@ -77,7 +77,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${imageMap[slide.image] || heroClassroom})` }}
       />
-      <div className="absolute inset-0 bg-foreground/60" />
+      <div className="absolute inset-0 bg-foreground/70" />
       <div className="relative z-10 flex items-center justify-center h-full">
         <div className="text-center max-w-3xl px-6">
           <span className="inline-block bg-secondary text-secondary-foreground text-xs font-bold px-4 py-1 rounded mb-4 uppercase tracking-wider">
@@ -140,8 +140,8 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
           <button
             key={i}
             onClick={() => goTo(i, i > current ? "right" : "left")}
-            className={`w-3 h-3 rounded-full transition-colors ${
-              i === current ? "bg-secondary" : "bg-background/50"
+            className={`h-3 rounded-full transition-all duration-300 ${
+              i === current ? "w-8 bg-secondary" : "w-3 bg-background/50"
             }`}
           />
         ))}

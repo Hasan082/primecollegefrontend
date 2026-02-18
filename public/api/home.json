@@ -34,6 +34,13 @@
       "price": "£950",
       "cta": "Enroll Now",
       "image": "care"
+    },
+    {
+      "category": "Care",
+      "title": "OTHM Level 7 Diploma in Healthcare Management",
+      "price": "£1,500",
+      "cta": "Enroll Now",
+      "image": "care"
     }
   ],
   "sections": [
@@ -42,6 +49,29 @@
       "title": "Welcome to Prime College",
       "content": "Prime College is a leading provider of professional qualifications in the UK. We offer a wide range of nationally and internationally recognised qualifications in Business, Management, and Health & Social Care. Our courses are designed to help you advance your career and achieve your professional goals.",
       "type": "text"
+    },
+    {
+      "id": "stats",
+      "title": "Prime College's Delivery Standard",
+      "content": "Through ISO9001 and Investors In People, our teaching model means we deliver qualifications that ensure we maintain a high standard of employer and learner satisfaction.",
+      "type": "stats",
+      "items": [
+        {
+          "title": "Training Courses",
+          "value": "27",
+          "description": "From Level 1 up to Level 7, for learners that are starting their career or want to progress further into a leadership masters degree level."
+        },
+        {
+          "title": "Different Countries",
+          "value": "5",
+          "description": "Courses are delivered internationally, and also recognised internationally with accredited certification."
+        },
+        {
+          "title": "Completion Rate",
+          "value": "100%",
+          "description": "To commit to every learner achieving their qualification."
+        }
+      ]
     },
     {
       "id": "why-us",
@@ -65,6 +95,41 @@
           "description": "Get personalised career guidance and support throughout your learning journey."
         }
       ]
+    },
+    {
+      "id": "qualifications-overview",
+      "title": "Our Qualifications",
+      "content": "We offer qualifications across three key areas: Business, Management, and Health & Social Care. Each programme is designed to equip you with practical skills and knowledge that employers value.",
+      "type": "text"
+    },
+    {
+      "id": "accreditation",
+      "title": "Accreditation & Recognition",
+      "type": "features",
+      "items": [
+        {
+          "title": "OTHM Qualifications",
+          "description": "Ofqual-regulated qualifications recognised by employers and universities across the UK and internationally."
+        },
+        {
+          "title": "QUALIFI Qualifications",
+          "description": "Nationally recognised awards, certificates, and diplomas for professional development."
+        },
+        {
+          "title": "University Progression",
+          "description": "Our Level 7 diplomas can lead to MBA top-up programmes at UK universities."
+        },
+        {
+          "title": "International Recognition",
+          "description": "Qualifications recognised by employers and institutions across the globe."
+        }
+      ]
+    },
+    {
+      "id": "cta",
+      "title": "Start Your Journey Today",
+      "content": "Whether you are looking to start a new career, advance in your current role, or gain specialist knowledge, Prime College has a qualification for you. Contact us today to discuss your options.",
+      "type": "cta"
     }
   ],
   "meta": {

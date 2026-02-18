@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { fetchContent } from "@/lib/api";
 import HeroSlider from "@/components/HeroSlider";
 import Section from "@/components/Section";
+
+interface StatItem {
+  title: string;
+  value: string;
+  description: string;
+}
 
 interface HomeData {
   hero: Array<{
@@ -16,7 +23,7 @@ interface HomeData {
     title: string;
     content?: string;
     type: string;
-    items?: Array<{ title: string; description: string }>;
+    items?: Array<{ title: string; description: string; value?: string }>;
   }>;
 }
 
@@ -33,27 +40,61 @@ const Index = () => {
     <div>
       <HeroSlider slides={data.hero} />
       {data.sections.map((section) => (
-        <Section
-          key={section.id}
-          title={section.title}
-          className={section.id === "why-us" ? "bg-muted" : ""}
-        >
-          {section.type === "text" && (
-            <p className="text-center text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {section.content}
-            </p>
-          )}
-          {section.type === "features" && section.items && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {section.items.map((item) => (
-                <div key={item.title} className="bg-card p-6 rounded border border-border">
-                  <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
+        <div key={section.id}>
+          {section.type === "stats" && (
+            <section className="bg-primary py-16 px-4">
+              <div className="container mx-auto text-center">
+                <h2 className="text-3xl font-bold text-primary-foreground mb-4">{section.title}</h2>
+                <p className="text-primary-foreground/80 max-w-3xl mx-auto mb-12">{section.content}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                  {section.items?.map((item) => (
+                    <div key={item.title} className="text-center">
+                      <div className="text-5xl md:text-6xl font-bold text-primary-foreground mb-3">{item.value}</div>
+                      <div className="text-lg font-semibold text-secondary mb-2">{item.title}</div>
+                      <p className="text-primary-foreground/70 text-sm max-w-xs mx-auto">{item.description}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            </section>
           )}
-        </Section>
+
+          {section.type === "text" && (
+            <Section title={section.title} className="">
+              <p className="text-center text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                {section.content}
+              </p>
+            </Section>
+          )}
+
+          {section.type === "features" && (
+            <Section title={section.title} className={section.id === "why-us" ? "bg-muted" : ""}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {section.items?.map((item) => (
+                  <div key={item.title} className="bg-card p-6 rounded border border-border">
+                    <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {section.type === "cta" && (
+            <section className="bg-secondary py-16 px-4">
+              <div className="container mx-auto text-center">
+                <h2 className="text-3xl font-bold text-secondary-foreground mb-4">{section.title}</h2>
+                <p className="text-secondary-foreground/80 max-w-2xl mx-auto mb-8">{section.content}</p>
+                <Link
+                  to="/contact"
+                  className="inline-block bg-primary text-primary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </section>
+          )}
+        </div>
       ))}
     </div>
   );

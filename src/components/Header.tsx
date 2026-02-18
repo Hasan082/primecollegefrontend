@@ -92,21 +92,23 @@ const Header = () => {
               </button>
 
               {openMega === cat.label && (
-                <div className="absolute top-full left-0 bg-popover border border-border shadow-lg rounded z-50 min-w-[420px] p-5">
-                  <h4 className="text-xs font-bold uppercase text-muted-foreground mb-3 tracking-wider">
-                    {cat.label} Qualifications
-                  </h4>
-                  <div className="flex flex-col gap-1">
-                    {cat.qualifications.map((q) => (
-                      <Link
-                        key={q.label}
-                        to={q.href}
-                        className="text-sm text-foreground hover:text-primary py-1.5 px-2 rounded hover:bg-muted block"
-                        onClick={() => setOpenMega(null)}
-                      >
-                        {q.label}
-                      </Link>
-                    ))}
+                <div className="fixed left-0 right-0 top-[72px] bg-popover border-t border-border shadow-lg z-50">
+                  <div className="container mx-auto p-6">
+                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-wider">
+                      {cat.label} Qualifications
+                    </h4>
+                    <div className="grid grid-cols-4 gap-4">
+                      {cat.qualifications.map((q) => (
+                        <Link
+                          key={q.label}
+                          to={q.href}
+                          className="text-sm text-foreground hover:text-primary py-2 px-3 rounded hover:bg-muted block"
+                          onClick={() => setOpenMega(null)}
+                        >
+                          {q.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
