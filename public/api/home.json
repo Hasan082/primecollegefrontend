@@ -51,6 +51,47 @@
       "type": "text"
     },
     {
+      "id": "about",
+      "title": "",
+      "type": "about-split",
+      "headline": "We help individuals succeed in their careers by developing knowledge, skills and professional behaviours.",
+      "paragraphs": [
+        "The Prime College (TPC) offers comprehensive training programs tailored to various industries. We achieve this by partnering with industry experts and employers to develop a curriculum that aligns with the latest industry standards and practices.",
+        "TPC regularly reviews and updates its curriculum to reflect industry advancements, assessment of trainers' qualifications and teaching methods, and monitoring learners' progress and feedback. We also maintain close relationships with awarding bodies to ensure that our programs remain relevant and responsive to the evolving needs of the job market. Our organisation stands out in the market due to our commitment to innovation, flexibility, and inclusivity."
+      ],
+      "ctaLabel": "Read More →",
+      "ctaHref": "/about"
+    },
+    {
+      "id": "why-us",
+      "title": "Why Choose Us",
+      "type": "why-us",
+      "content": "We are committed to upholding the highest standards of quality, professionalism, and employee wellbeing through rigorous quality assurance processes and a dedicated mental health first-aider.\n\nWe provide live teaching sessions and follow up meetings with your dedicated tutor who will support you throughout your course. Anytime you need to reach out to your tutor for more information or guidance, this can be done through any communication method available such as: email, phone calls or Teams.",
+      "items": [
+        {
+          "title": "What we do",
+          "icon": "Users",
+          "description": "We specialise in one-on-one or group sessions."
+        },
+        {
+          "title": "How we do it",
+          "icon": "Award",
+          "description": "We provide teaching experts to develop programs that align with the industry standards."
+        },
+        {
+          "title": "Who is it for",
+          "icon": "CheckCircle",
+          "description": "Any person that is 18 and over and wishes to improve their CPD and employment prospects."
+        }
+      ]
+    },
+    {
+      "id": "qualifications-overview",
+      "title": "Our Qualifications",
+      "content": "We offer qualifications across three key areas: Business, Management, and Health & Social Care. Each programme is designed to equip you with practical skills and knowledge that employers value.",
+      "type": "text"
+    },
+    {
       "id": "stats",
       "title": "Prime College's Delivery Standard",
       "content": "Through ISO9001 and Investors In People, our teaching model means we deliver qualifications that ensure we maintain a high standard of employer and learner satisfaction.",
@@ -74,55 +115,19 @@
       ]
     },
     {
-      "id": "why-us",
-      "title": "Why Choose Prime College?",
-      "type": "features",
-      "items": [
-        {
-          "title": "Recognised Qualifications",
-          "description": "All our qualifications are awarded by Ofqual-regulated awarding bodies including OTHM and QUALIFI."
-        },
-        {
-          "title": "Flexible Learning",
-          "description": "Study at your own pace with our flexible online and blended learning options."
-        },
-        {
-          "title": "Expert Tutors",
-          "description": "Learn from industry professionals with years of practical and academic experience."
-        },
-        {
-          "title": "Career Support",
-          "description": "Get personalised career guidance and support throughout your learning journey."
-        }
-      ]
-    },
-    {
-      "id": "qualifications-overview",
-      "title": "Our Qualifications",
-      "content": "We offer qualifications across three key areas: Business, Management, and Health & Social Care. Each programme is designed to equip you with practical skills and knowledge that employers value.",
-      "type": "text"
-    },
-    {
       "id": "accreditation",
-      "title": "Accreditation & Recognition",
-      "type": "features",
+      "title": "Awarding Bodies, Awards and Accreditations",
+      "type": "accreditation-logos",
       "items": [
-        {
-          "title": "OTHM Qualifications",
-          "description": "Ofqual-regulated qualifications recognised by employers and universities across the UK and internationally."
-        },
-        {
-          "title": "QUALIFI Qualifications",
-          "description": "Nationally recognised awards, certificates, and diplomas for professional development."
-        },
-        {
-          "title": "University Progression",
-          "description": "Our Level 7 diplomas can lead to MBA top-up programmes at UK universities."
-        },
-        {
-          "title": "International Recognition",
-          "description": "Qualifications recognised by employers and institutions across the globe."
-        }
+        { "title": "VTCT Approved" },
+        { "title": "Investors In People" },
+        { "title": "ISO 9001 Quality Management" },
+        { "title": "CMI Centre" },
+        { "title": "OTHM Qualifications" },
+        { "title": "QUALIFI" },
+        { "title": "REC Corporate Member" },
+        { "title": "Cyber Essentials Certified" },
+        { "title": "CPD Member" }
       ]
     },
     {
