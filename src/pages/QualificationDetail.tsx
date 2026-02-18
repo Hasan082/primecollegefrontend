@@ -6,6 +6,8 @@ import heroClassroom from "@/assets/hero-classroom.jpg";
 import heroBusiness from "@/assets/hero-business.jpg";
 import heroCare from "@/assets/hero-care.jpg";
 import CTASection from "@/components/CTASection";
+import UpsellModal from "@/components/UpsellModal";
+import { useCart } from "@/contexts/CartContext";
 
 // Dummy data for all qualifications - keyed by slug
 const qualificationsData: Record<string, {
@@ -215,7 +217,8 @@ const imageMap: Record<string, string> = {
 const QualificationDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-
+  const [showUpsell, setShowUpsell] = useState(false);
+  const { addItem } = useCart();
   const qual = slug ? qualificationsData[slug] : null;
 
   if (!qual) {
@@ -274,12 +277,22 @@ const QualificationDetail = () => {
                   {qual.price}
                 </span>
               </div>
-              <Link
-                to={`/checkout/${slug}`}
+              <button
+                onClick={() => {
+                  addItem({
+                    slug: slug!,
+                    title: qual.title,
+                    level: qual.level,
+                    duration: qual.duration,
+                    price: qual.price,
+                    category: qual.category,
+                  });
+                  setShowUpsell(true);
+                }}
                 className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
               >
                 Enroll Now
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -387,6 +400,11 @@ const QualificationDetail = () => {
 
       {/* CTA */}
       <CTASection />
+
+      {/* Upsell Modal */}
+      {showUpsell && slug && (
+        <UpsellModal currentSlug={slug} onClose={() => setShowUpsell(false)} />
+      )}
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, ShoppingCart } from "lucide-react";
 import logo from "@/assets/prime-logo-white-notext.png";
+import { useCart } from "@/contexts/CartContext";
 
 interface Qualification {
   label: string;
@@ -57,6 +58,7 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const { itemCount } = useCart();
 
   return (
     <div className="sticky top-0 z-50" onMouseLeave={() => setOpenMega(null)}>
@@ -101,9 +103,19 @@ const Header = () => {
               </Link>
             ))}
 
+            {/* Cart */}
+            <Link to="/checkout" className="relative text-primary-foreground hover:opacity-80 ml-2">
+              <ShoppingCart className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-secondary text-secondary-foreground text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+
             <Link
               to="/login"
-              className="ml-4 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
+              className="ml-2 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
             >
               Login
             </Link>

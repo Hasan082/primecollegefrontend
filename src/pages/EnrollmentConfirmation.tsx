@@ -1,27 +1,32 @@
-import { useParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { CheckCircle, Download, Mail, Calendar, ArrowRight } from "lucide-react";
-
-const courseData: Record<string, { title: string; level: string; duration: string; price: string }> = {
-  "othm-level-4-diploma-in-business-management": { title: "OTHM Level 4 Diploma in Business Management", level: "Level 4", duration: "9 months", price: "£1,000" },
-  "othm-level-5-extended-diploma-in-business-management": { title: "OTHM Level 5 Extended Diploma in Business Management", level: "Level 5", duration: "12 months", price: "£1,200" },
-  "othm-level-6-diploma-in-business-management": { title: "OTHM Level 6 Diploma in Business Management", level: "Level 6", duration: "9 months", price: "£1,350" },
-  "othm-level-7-diploma-in-strategic-management-and-leadership": { title: "OTHM Level 7 Diploma in Strategic Management and Leadership", level: "Level 7", duration: "12 months", price: "£1,500" },
-  "qualifi-level-7-diploma-in-strategic-management-and-leadership": { title: "QUALIFI Level 7 Diploma in Strategic Management and Leadership", level: "Level 7", duration: "12 months", price: "£1,600" },
-  "qualifi-level-3-diploma-in-health-and-social-care": { title: "QUALIFI Level 3 Diploma in Health and Social Care", level: "Level 3", duration: "6 months", price: "£950" },
-  "othm-level-5-diploma-in-health-and-social-care-management": { title: "OTHM Level 5 Diploma in Health and Social Care Management", level: "Level 5", duration: "9 months", price: "£1,100" },
-  "othm-level-7-diploma-in-healthcare-management": { title: "OTHM Level 7 Diploma in Healthcare Management", level: "Level 7", duration: "12 months", price: "£1,500" },
-};
+import { useCart } from "@/contexts/CartContext";
 
 const EnrollmentConfirmation = () => {
-  const { slug } = useParams<{ slug: string }>();
-  const course = slug ? courseData[slug] : null;
+  const { items, totalPrice, clearCart } = useCart();
   const orderId = `PC-${Date.now().toString(36).toUpperCase()}`;
 
-  if (!course) {
+  const bundleDiscount = items.length >= 2 ? 0.1 : 0;
+  const registrationFee = 50;
+  const discountAmount = totalPrice * bundleDiscount;
+  const finalTotal = totalPrice - discountAmount + registrationFee;
+
+  // If cart is empty (e.g. direct navigation), show fallback
+  if (items.length === 0) {
     return (
-      <div className="py-20 text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-4">Page Not Found</h1>
-        <Link to="/" className="bg-primary text-primary-foreground px-6 py-3 rounded font-semibold">Go Home</Link>
+      <div className="bg-muted min-h-screen py-16 px-4">
+        <div className="container mx-auto max-w-2xl text-center">
+          <div className="bg-card border border-border rounded p-8 mb-8">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Enrollment Complete</h1>
+            <p className="text-muted-foreground text-sm">Your enrollment has been confirmed. Check your email for details.</p>
+          </div>
+          <Link to="/" className="bg-primary text-primary-foreground px-6 py-3 rounded font-semibold text-sm hover:opacity-90">
+            Back to Home
+          </Link>
+        </div>
       </div>
     );
   }
@@ -48,23 +53,43 @@ const EnrollmentConfirmation = () => {
               <span className="text-muted-foreground">Order ID</span>
               <span className="font-mono font-semibold text-foreground">{orderId}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Course</span>
-              <span className="text-foreground font-medium text-right max-w-[60%]">{course.title}</span>
+
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-bold uppercase text-muted-foreground mb-2 tracking-wider">Enrolled Courses</p>
+              {items.map((item) => (
+                <div key={item.slug} className="flex justify-between py-2">
+                  <div>
+                    <span className="text-foreground font-medium">{item.title}</span>
+                    <div className="flex gap-2 mt-0.5">
+                      <span className="text-xs text-muted-foreground">{item.level}</span>
+                      <span className="text-xs text-muted-foreground">•</span>
+                      <span className="text-xs text-muted-foreground">{item.duration}</span>
+                    </div>
+                  </div>
+                  <span className="text-foreground shrink-0 ml-4">{item.price}</span>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Level</span>
-              <span className="text-foreground">{course.level}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Duration</span>
-              <span className="text-foreground">{course.duration}</span>
-            </div>
-            <div className="flex justify-between border-t border-border pt-3">
-              <span className="font-bold text-foreground">Total Paid</span>
-              <span className="font-bold text-primary">
-                £{(parseFloat(course.price.replace(/[^0-9.]/g, "")) + 50).toLocaleString()}
-              </span>
+
+            <div className="border-t border-border pt-3 space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-foreground">£{totalPrice.toLocaleString()}</span>
+              </div>
+              {bundleDiscount > 0 && (
+                <div className="flex justify-between text-secondary-foreground">
+                  <span>Bundle Discount (10%)</span>
+                  <span>-£{discountAmount.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Registration Fee</span>
+                <span className="text-foreground">£{registrationFee}</span>
+              </div>
+              <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
+                <span className="text-foreground">Total Paid</span>
+                <span className="text-primary">£{finalTotal.toLocaleString()}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -107,6 +132,7 @@ const EnrollmentConfirmation = () => {
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
             to="/"
+            onClick={() => clearCart()}
             className="flex-1 bg-primary text-primary-foreground py-3 rounded font-semibold text-sm text-center hover:opacity-90 flex items-center justify-center gap-2"
           >
             Back to Home
@@ -114,6 +140,7 @@ const EnrollmentConfirmation = () => {
           </Link>
           <Link
             to="/qualifications"
+            onClick={() => clearCart()}
             className="flex-1 bg-card border border-border text-foreground py-3 rounded font-semibold text-sm text-center hover:bg-muted"
           >
             Browse More Courses
