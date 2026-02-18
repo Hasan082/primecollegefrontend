@@ -121,13 +121,23 @@ const Header = () => {
             </Link>
           </nav>
 
-          {/* Mobile Toggle */}
-          <button
-            className="lg:hidden text-primary-foreground"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Mobile Cart + Toggle */}
+          <div className="lg:hidden flex items-center gap-3">
+            <Link to="/checkout" className="relative text-primary-foreground hover:opacity-80">
+              <ShoppingCart className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-secondary text-secondary-foreground text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+            <button
+              className="text-primary-foreground"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </header>
 
