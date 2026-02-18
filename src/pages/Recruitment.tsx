@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
 import CTASection from "@/components/CTASection";
+import recruitmentBanner from "@/assets/recruitment-banner.jpg";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,10 +79,14 @@ const Recruitment = () => {
 
   return (
     <div>
-      <div className="bg-primary py-16 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="text-4xl font-bold text-primary-foreground mb-4">{data.title}</h1>
-          <p className="text-primary-foreground/80 max-w-2xl mx-auto">{data.intro}</p>
+      <div className="relative h-[400px] overflow-hidden">
+        <img src={recruitmentBanner} alt="Recruitment at Prime College" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-primary/75" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">{data.title}</h1>
+            <p className="text-primary-foreground/90 max-w-2xl mx-auto text-lg">{data.intro}</p>
+          </div>
         </div>
       </div>
 
@@ -114,11 +119,14 @@ const Recruitment = () => {
 
       {/* Job Application Dialog */}
       <Dialog open={!!selectedJob} onOpenChange={(open) => { if (!open) setSelectedJob(null); }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {selectedJob && (
             <>
               <DialogHeader>
                 <DialogTitle className="text-xl">{selectedJob.title}</DialogTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Review the full job details below. Scroll down to complete and submit your application.
+                </p>
               </DialogHeader>
 
               {/* Job Meta */}
