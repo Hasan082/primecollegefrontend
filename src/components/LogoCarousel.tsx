@@ -1,20 +1,25 @@
 import { useEffect, useRef } from "react";
 
+import vtctLogo from "@/assets/logos/vtct.png";
+import iipLogo from "@/assets/logos/iip.png";
+import iso9001Logo from "@/assets/logos/iso9001.png";
+import cmiLogo from "@/assets/logos/cmi.png";
+import cyberEssentialsLogo from "@/assets/logos/cyber-essentials.png";
+import cpdLogo from "@/assets/logos/cpd.png";
+
 interface LogoItem {
   title: string;
-  abbreviation: string;
+  src: string;
+  hasBackground?: boolean;
 }
 
 const logos: LogoItem[] = [
-  { title: "VTCT Approved", abbreviation: "VTCT" },
-  { title: "Investors In People", abbreviation: "IIP" },
-  { title: "ISO 9001 Quality Management", abbreviation: "ISO 9001" },
-  { title: "CMI Centre", abbreviation: "CMI" },
-  { title: "OTHM Qualifications", abbreviation: "OTHM" },
-  { title: "QUALIFI", abbreviation: "QUALIFI" },
-  { title: "REC Corporate Member", abbreviation: "REC" },
-  { title: "Cyber Essentials Certified", abbreviation: "CE" },
-  { title: "CPD Member", abbreviation: "CPD" },
+  { title: "VTCT Approved", src: vtctLogo },
+  { title: "Investors In People", src: iipLogo },
+  { title: "ISO 9001 Quality Management", src: iso9001Logo },
+  { title: "CMI Centre", src: cmiLogo },
+  { title: "Cyber Essentials Certified", src: cyberEssentialsLogo, hasBackground: true },
+  { title: "CPD Member", src: cpdLogo, hasBackground: true },
 ];
 
 const LogoCarousel = () => {
@@ -54,18 +59,21 @@ const LogoCarousel = () => {
         className="overflow-hidden whitespace-nowrap"
         style={{ scrollBehavior: "auto" }}
       >
-        <div className="inline-flex gap-8 px-4">
+        <div className="inline-flex gap-10 px-4 items-center">
           {allLogos.map((logo, i) => (
             <div
-              key={`${logo.abbreviation}-${i}`}
-              className="inline-flex flex-col items-center justify-center bg-card border border-border rounded-lg min-w-[180px] h-[120px] px-6 flex-shrink-0 shadow-sm"
+              key={`${logo.title}-${i}`}
+              className={`inline-flex items-center justify-center flex-shrink-0 px-6 h-[100px] ${
+                logo.hasBackground ? "bg-card rounded-lg shadow-sm p-4" : ""
+              }`}
             >
-              <span className="text-2xl font-bold text-primary mb-1">
-                {logo.abbreviation}
-              </span>
-              <span className="text-xs text-muted-foreground text-center whitespace-normal max-w-[150px]">
-                {logo.title}
-              </span>
+              <img
+                src={logo.src}
+                alt={logo.title}
+                className={`max-h-[80px] w-auto object-contain ${
+                  logo.hasBackground ? "" : "brightness-0 opacity-60"
+                }`}
+              />
             </div>
           ))}
         </div>
