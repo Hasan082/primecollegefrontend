@@ -249,12 +249,6 @@ const Checkout = () => {
                 </div>
               )}
 
-              <div className="mt-4 bg-muted rounded p-3">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  <strong className="text-foreground">Payment Plan Available</strong><br />
-                  Pay in 3 interest-free instalments. Contact us after enrollment for details.
-                </p>
-              </div>
             </div>
           </div>
         </div>
