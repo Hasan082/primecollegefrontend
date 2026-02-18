@@ -43,9 +43,9 @@ const LogoCarousel = () => {
   const allLogos = [...logos, ...logos];
 
   return (
-    <section className="bg-primary py-16 px-4">
+    <section className="bg-muted py-16 px-4">
       <div className="container mx-auto text-center mb-12">
-        <h2 className="text-3xl font-bold text-primary-foreground italic">
+        <h2 className="text-3xl font-bold text-foreground italic">
           Awarding Bodies, Awards and Accreditations
         </h2>
       </div>
@@ -58,12 +58,12 @@ const LogoCarousel = () => {
           {allLogos.map((logo, i) => (
             <div
               key={`${logo.abbreviation}-${i}`}
-              className="inline-flex flex-col items-center justify-center bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg min-w-[180px] h-[120px] px-6 flex-shrink-0"
+              className="inline-flex flex-col items-center justify-center bg-card border border-border rounded-lg min-w-[180px] h-[120px] px-6 flex-shrink-0 shadow-sm"
             >
-              <span className="text-2xl font-bold text-primary-foreground/90 mb-1">
+              <span className="text-2xl font-bold text-primary mb-1">
                 {logo.abbreviation}
               </span>
-              <span className="text-xs text-primary-foreground/60 text-center whitespace-normal max-w-[150px]">
+              <span className="text-xs text-muted-foreground text-center whitespace-normal max-w-[150px]">
                 {logo.title}
               </span>
             </div>
