@@ -1,107 +1,110 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, ChevronDown } from "lucide-react";
+import logo from "@/assets/prime-logo-white-notext.png";
 
-interface MegaMenuItem {
+interface Qualification {
   label: string;
   href: string;
 }
 
-interface NavItem {
+interface CategoryNav {
   label: string;
-  href?: string;
-  megaMenu?: MegaMenuItem[];
+  qualifications: Qualification[];
 }
 
-const navItems: NavItem[] = [
+const categoryNavItems: CategoryNav[] = [
+  {
+    label: "Business",
+    qualifications: [
+      { label: "OTHM Level 4 Diploma in Business Management", href: "/qualifications" },
+      { label: "OTHM Level 5 Extended Diploma in Business Management", href: "/qualifications" },
+      { label: "OTHM Level 6 Diploma in Business Management", href: "/qualifications" },
+    ],
+  },
+  {
+    label: "Management",
+    qualifications: [
+      { label: "OTHM Level 7 Diploma in Strategic Management and Leadership", href: "/qualifications" },
+      { label: "QUALIFI Level 7 Diploma in Strategic Management and Leadership", href: "/qualifications" },
+    ],
+  },
+  {
+    label: "Care",
+    qualifications: [
+      { label: "QUALIFI Level 3 Diploma in Health and Social Care", href: "/qualifications" },
+      { label: "OTHM Level 5 Diploma in Health and Social Care Management", href: "/qualifications" },
+      { label: "OTHM Level 7 Diploma in Healthcare Management", href: "/qualifications" },
+    ],
+  },
+];
+
+interface SimpleNavItem {
+  label: string;
+  href: string;
+}
+
+const simpleNavItems: SimpleNavItem[] = [
   { label: "Home", href: "/" },
-  {
-    label: "About",
-    megaMenu: [
-      { label: "Our Mission", href: "/about" },
-      { label: "Our Vision", href: "/about" },
-      { label: "Our Values", href: "/about" },
-      { label: "Our Team", href: "/about" },
-      { label: "Accreditations", href: "/about" },
-    ],
-  },
-  {
-    label: "Qualifications",
-    megaMenu: [
-      { label: "Business Level 4", href: "/qualifications" },
-      { label: "Business Level 5", href: "/qualifications" },
-      { label: "Business Level 6", href: "/qualifications" },
-      { label: "Management Level 7", href: "/qualifications" },
-      { label: "Strategic Leadership", href: "/qualifications" },
-      { label: "Health & Social Care L3", href: "/qualifications" },
-      { label: "Health & Social Care L5", href: "/qualifications" },
-      { label: "Healthcare Management L7", href: "/qualifications" },
-      { label: "All Qualifications", href: "/qualifications" },
-      { label: "Entry Requirements", href: "/qualifications" },
-    ],
-  },
-  {
-    label: "Recruitment",
-    megaMenu: [
-      { label: "Current Openings", href: "/recruitment" },
-      { label: "Academic Roles", href: "/recruitment" },
-      { label: "Admin Roles", href: "/recruitment" },
-      { label: "How to Apply", href: "/recruitment" },
-      { label: "Benefits", href: "/recruitment" },
-    ],
-  },
+  { label: "About", href: "/about" },
+  { label: "Recruitment", href: "/recruitment" },
   { label: "Contact", href: "/contact" },
 ];
+
+const HEADER_HEIGHT = 72;
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
   return (
-    <header className="bg-primary sticky top-0 z-50">
-      <div className="container mx-auto flex items-center justify-between py-3 px-4">
+    <header className="bg-primary sticky top-0 z-50" style={{ height: HEADER_HEIGHT }}>
+      <div className="container mx-auto flex items-center justify-between h-full px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <span className="text-primary-foreground text-2xl font-bold tracking-wide">
-            PRIME COLLEGE
-          </span>
+          <img src={logo} alt="Prime College" className="h-12 w-auto" />
         </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-1">
-          {navItems.map((item) => (
-            <div
+          {simpleNavItems.slice(0, 2).map((item) => (
+            <Link
               key={item.label}
+              to={item.href}
+              className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded"
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          {/* Category Nav Items with Mega Menus */}
+          {categoryNavItems.map((cat) => (
+            <div
+              key={cat.label}
               className="relative"
-              onMouseEnter={() => item.megaMenu && setOpenMega(item.label)}
+              onMouseEnter={() => setOpenMega(cat.label)}
               onMouseLeave={() => setOpenMega(null)}
             >
-              {item.href && !item.megaMenu ? (
-                <Link
-                  to={item.href}
-                  className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded"
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <button className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded flex items-center gap-1">
-                  {item.label}
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-              )}
+              <button className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded flex items-center gap-1">
+                {cat.label}
+                <ChevronDown className="w-3 h-3" />
+              </button>
 
-              {/* Mega Menu */}
-              {item.megaMenu && openMega === item.label && (
-                <div className="absolute top-full left-0 bg-popover border border-border shadow-lg rounded z-50 min-w-[600px] p-6">
-                  <div className="grid grid-cols-3 gap-x-8 gap-y-2">
-                    {item.megaMenu.map((sub) => (
+              {openMega === cat.label && (
+                <div className="absolute top-full left-0 bg-popover border border-border shadow-lg rounded z-50 min-w-[420px] p-5">
+                  <h4 className="text-xs font-bold uppercase text-muted-foreground mb-3 tracking-wider">
+                    {cat.label} Qualifications
+                  </h4>
+                  <div className="flex flex-col gap-1">
+                    {cat.qualifications.map((q) => (
                       <Link
-                        key={sub.label}
-                        to={sub.href}
-                        className="text-sm text-foreground hover:text-primary py-1 block"
+                        key={q.label}
+                        to={q.href}
+                        className="text-sm text-foreground hover:text-primary py-1.5 px-2 rounded hover:bg-muted block"
                         onClick={() => setOpenMega(null)}
                       >
-                        {sub.label}
+                        {q.label}
                       </Link>
                     ))}
                   </div>
@@ -109,6 +112,17 @@ const Header = () => {
               )}
             </div>
           ))}
+
+          {simpleNavItems.slice(2).map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded"
+            >
+              {item.label}
+            </Link>
+          ))}
+
           <Link
             to="/login"
             className="ml-4 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
@@ -128,50 +142,61 @@ const Header = () => {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="lg:hidden bg-primary border-t border-primary/80 px-4 pb-4">
-          {navItems.map((item) => (
-            <div key={item.label}>
-              {item.href && !item.megaMenu ? (
-                <Link
-                  to={item.href}
-                  className="block text-primary-foreground py-2 text-sm font-medium"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <>
-                  <button
-                    className="flex items-center justify-between w-full text-primary-foreground py-2 text-sm font-medium"
-                    onClick={() =>
-                      setOpenMega(openMega === item.label ? null : item.label)
-                    }
-                  >
-                    {item.label}
-                    <ChevronDown
-                      className={`w-3 h-3 transition-transform ${
-                        openMega === item.label ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                  {openMega === item.label && item.megaMenu && (
-                    <div className="pl-4 pb-2">
-                      {item.megaMenu.map((sub) => (
-                        <Link
-                          key={sub.label}
-                          to={sub.href}
-                          className="block text-primary-foreground/80 py-1 text-sm"
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {sub.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </>
+        <div className="lg:hidden bg-primary border-t border-primary-foreground/20 px-4 pb-4">
+          {simpleNavItems.slice(0, 2).map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              className="block text-primary-foreground py-2 text-sm font-medium"
+              onClick={() => setMobileOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          {categoryNavItems.map((cat) => (
+            <div key={cat.label}>
+              <button
+                className="flex items-center justify-between w-full text-primary-foreground py-2 text-sm font-medium"
+                onClick={() =>
+                  setMobileExpanded(mobileExpanded === cat.label ? null : cat.label)
+                }
+              >
+                {cat.label}
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform ${
+                    mobileExpanded === cat.label ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {mobileExpanded === cat.label && (
+                <div className="pl-4 pb-2">
+                  {cat.qualifications.map((q) => (
+                    <Link
+                      key={q.label}
+                      to={q.href}
+                      className="block text-primary-foreground/80 py-1 text-sm"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {q.label}
+                    </Link>
+                  ))}
+                </div>
               )}
             </div>
           ))}
+
+          {simpleNavItems.slice(2).map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              className="block text-primary-foreground py-2 text-sm font-medium"
+              onClick={() => setMobileOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
+
           <Link
             to="/login"
             className="block mt-2 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded text-center"
@@ -185,4 +210,5 @@ const Header = () => {
   );
 };
 
+export { HEADER_HEIGHT };
 export default Header;
