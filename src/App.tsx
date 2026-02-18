@@ -12,6 +12,8 @@ import QualificationDetail from "./pages/QualificationDetail";
 import Recruitment from "./pages/Recruitment";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import Checkout from "./pages/Checkout";
+import EnrollmentConfirmation from "./pages/EnrollmentConfirmation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/checkout/:slug" element={<Checkout />} />
+          <Route path="/enrollment-confirmation/:slug" element={<EnrollmentConfirmation />} />
           <Route path="*" element={
             <>
               <Header />
