@@ -5,6 +5,7 @@ import { fetchContent } from "@/lib/api";
 import HeroSlider from "@/components/HeroSlider";
 import Section from "@/components/Section";
 import CTASection from "@/components/CTASection";
+import LogoCarousel from "@/components/LogoCarousel";
 
 const iconMap: Record<string, React.ElementType> = {
   Users,
@@ -47,7 +48,16 @@ const Index = () => {
       <HeroSlider slides={data.hero} />
       {data.sections.map((section) => (
         <div key={section.id}>
-          {/* About split section */}
+          {/* Welcome / text on white bg */}
+          {section.type === "text" && (
+            <Section title={section.title}>
+              <p className="text-center text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                {section.content}
+              </p>
+            </Section>
+          )}
+
+          {/* About split - dark bg */}
           {section.type === "about-split" && (
             <section className="bg-primary py-20 px-4">
               <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -71,16 +81,16 @@ const Index = () => {
             </section>
           )}
 
-          {/* Why Choose Us - dark section with icons */}
+          {/* Why Choose Us - light muted bg */}
           {section.type === "why-us" && (
-            <section className="bg-primary py-16 px-4">
+            <section className="bg-muted py-16 px-4">
               <div className="container mx-auto text-center">
-                <h2 className="text-3xl font-bold text-primary-foreground mb-2">{section.title}</h2>
+                <h2 className="text-3xl font-bold text-foreground mb-2">{section.title}</h2>
                 <div className="w-12 h-1 bg-secondary mx-auto mb-8" />
                 {section.content && (
                   <div className="max-w-3xl mx-auto mb-12">
                     {section.content.split("\n\n").map((p, i) => (
-                      <p key={i} className="text-primary-foreground/80 leading-relaxed mb-4">{p}</p>
+                      <p key={i} className="text-muted-foreground leading-relaxed mb-4">{p}</p>
                     ))}
                   </div>
                 )}
@@ -90,10 +100,12 @@ const Index = () => {
                     return (
                       <div key={item.title} className="text-center">
                         <div className="flex justify-center mb-4">
-                          <Icon className="w-16 h-16 text-primary-foreground/60" strokeWidth={1} />
+                          <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
+                            <Icon className="w-10 h-10 text-primary-foreground" strokeWidth={1.5} />
+                          </div>
                         </div>
-                        <h3 className="text-xl font-bold text-primary-foreground mb-3">{item.title}</h3>
-                        <p className="text-primary-foreground/70 text-sm max-w-xs mx-auto">{item.description}</p>
+                        <h3 className="text-xl font-bold text-foreground mb-3">{item.title}</h3>
+                        <p className="text-muted-foreground text-sm max-w-xs mx-auto">{item.description}</p>
                       </div>
                     );
                   })}
@@ -102,7 +114,9 @@ const Index = () => {
             </section>
           )}
 
-          {/* Stats / Counter */}
+          {/* Qualifications overview - white bg (text type handles it) */}
+
+          {/* Stats / Counter - dark bg */}
           {section.type === "stats" && (
             <section className="bg-primary py-16 px-4">
               <div className="container mx-auto text-center">
@@ -121,37 +135,12 @@ const Index = () => {
             </section>
           )}
 
-          {/* Accreditation logos */}
-          {section.type === "accreditation-logos" && (
-            <section className="bg-primary py-16 px-4">
-              <div className="container mx-auto text-center">
-                <h2 className="text-3xl font-bold text-primary-foreground italic mb-12">{section.title}</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-                  {section.items?.map((item) => (
-                    <div
-                      key={item.title}
-                      className="bg-primary-foreground/10 border border-primary-foreground/20 rounded p-6 flex items-center justify-center min-h-[100px]"
-                    >
-                      <span className="text-primary-foreground/80 text-sm font-semibold text-center">{item.title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Plain text */}
-          {section.type === "text" && (
-            <Section title={section.title}>
-              <p className="text-center text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                {section.content}
-              </p>
-            </Section>
-          )}
+          {/* Accreditation logo carousel - lighter dark bg */}
+          {section.type === "accreditation-logos" && <LogoCarousel />}
 
           {/* Features grid */}
           {section.type === "features" && (
-            <Section title={section.title} className={section.id === "why-us" ? "bg-muted" : ""}>
+            <Section title={section.title} className="bg-muted">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {section.items?.map((item) => (
                   <div key={item.title} className="bg-card p-6 rounded border border-border">
