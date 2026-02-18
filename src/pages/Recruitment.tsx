@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Briefcase, Clock, Upload, X } from "lucide-react";
+import { MapPin, Briefcase, Clock, Upload, X, PoundSterling, CalendarDays, CheckCircle2 } from "lucide-react";
 
 interface Opening {
   id: string;
@@ -15,7 +15,12 @@ interface Opening {
   department: string;
   type: string;
   location: string;
+  salary: string;
+  closing_date: string;
   description: string;
+  responsibilities: string[];
+  requirements: string[];
+  benefits: string[];
 }
 
 interface RecruitmentData {
@@ -61,7 +66,6 @@ const Recruitment = () => {
       return;
     }
     setSubmitting(true);
-    // Simulate submission
     setTimeout(() => {
       setSubmitting(false);
       setSelectedJob(null);
@@ -94,7 +98,7 @@ const Recruitment = () => {
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-3">
                 <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" />{job.department}</span>
                 <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{job.location}</span>
-                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{job.type}</span>
+                <span className="flex items-center gap-1"><PoundSterling className="w-3.5 h-3.5" />{job.salary}</span>
               </div>
               <p className="text-sm text-muted-foreground">{job.description}</p>
               <button
@@ -117,20 +121,62 @@ const Recruitment = () => {
                 <DialogTitle className="text-xl">{selectedJob.title}</DialogTitle>
               </DialogHeader>
 
-              {/* Job Details */}
-              <div className="bg-muted rounded-lg p-4 mb-4">
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-3">
-                  <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 text-primary" />{selectedJob.department}</span>
-                  <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" />{selectedJob.location}</span>
-                  <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" />{selectedJob.type}</span>
+              {/* Job Meta */}
+              <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground border-b border-border pb-4">
+                <span className="flex items-center gap-1.5"><Briefcase className="w-4 h-4 text-primary" />{selectedJob.department}</span>
+                <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" />{selectedJob.location}</span>
+                <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" />{selectedJob.type}</span>
+                <span className="flex items-center gap-1.5"><PoundSterling className="w-4 h-4 text-primary" />{selectedJob.salary}</span>
+                <span className="flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-primary" />Closing: {selectedJob.closing_date}</span>
+              </div>
+
+              {/* Job Description */}
+              <div className="space-y-5 py-2">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Job Description</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{selectedJob.description}</p>
                 </div>
-                <h4 className="font-semibold text-foreground text-sm mb-1">Job Description</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{selectedJob.description}</p>
+
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Key Responsibilities</h4>
+                  <ul className="space-y-1.5">
+                    {selectedJob.responsibilities.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-secondary mt-0.5 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Requirements</h4>
+                  <ul className="space-y-1.5">
+                    {selectedJob.requirements.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What We Offer</h4>
+                  <ul className="space-y-1.5">
+                    {selectedJob.benefits.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-secondary mt-0.5 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
               {/* Application Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <h4 className="font-semibold text-foreground">Apply for this position</h4>
+              <form onSubmit={handleSubmit} className="space-y-4 border-t border-border pt-4">
+                <h4 className="font-semibold text-foreground text-lg">Apply for this position</h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">

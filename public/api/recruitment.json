@@ -8,7 +8,32 @@
       "department": "Academic",
       "type": "Full-time",
       "location": "London",
-      "description": "We are seeking an experienced Business Management tutor to deliver engaging and high-quality teaching across Level 4-7 qualifications."
+      "salary": "£30,000 – £38,000 per annum",
+      "closing_date": "28 February 2026",
+      "description": "We are seeking an experienced Business Management tutor to deliver engaging and high-quality teaching across Level 4-7 qualifications.",
+      "responsibilities": [
+        "Plan and deliver lessons across Business Management programmes (Level 4–7)",
+        "Assess and mark learner assignments, providing constructive feedback",
+        "Develop and update teaching materials and schemes of work",
+        "Support learners through one-to-one tutorials and academic guidance",
+        "Participate in internal and external quality assurance processes",
+        "Maintain accurate records of learner attendance, progress, and achievement"
+      ],
+      "requirements": [
+        "A degree in Business Management or a related discipline",
+        "A recognised teaching qualification (e.g. PGCE, DTLLS, or equivalent)",
+        "Minimum 2 years' experience teaching in further/higher education",
+        "Strong knowledge of OTHM and/or QUALIFI qualification frameworks",
+        "Excellent communication and interpersonal skills",
+        "Ability to motivate and inspire adult learners"
+      ],
+      "benefits": [
+        "Competitive salary with annual review",
+        "Generous annual leave entitlement",
+        "Continuous professional development opportunities",
+        "Supportive and collaborative working environment",
+        "Central London location with excellent transport links"
+      ]
     },
     {
       "id": "2",
@@ -16,7 +41,32 @@
       "department": "Academic",
       "type": "Part-time",
       "location": "London",
-      "description": "Join our Health & Social Care department to assess and support learners through their qualifications."
+      "salary": "£22,000 – £26,000 pro rata",
+      "closing_date": "15 March 2026",
+      "description": "Join our Health & Social Care department to assess and support learners through their qualifications.",
+      "responsibilities": [
+        "Conduct assessments of learner portfolios against qualification standards",
+        "Provide detailed written and verbal feedback to learners",
+        "Plan and carry out workplace observations where required",
+        "Maintain assessment records and ensure timely submission of results",
+        "Liaise with internal quality assurers to uphold standards",
+        "Attend standardisation meetings and team briefings"
+      ],
+      "requirements": [
+        "A relevant qualification in Health & Social Care (Level 5 or above)",
+        "Assessor qualification (e.g. CAVA, A1/D32/D33, or equivalent)",
+        "Proven experience in assessing vocational qualifications",
+        "Strong organisational and time-management skills",
+        "Current knowledge of sector practices and regulations",
+        "DBS clearance (Enhanced)"
+      ],
+      "benefits": [
+        "Flexible working hours to suit your schedule",
+        "Access to CPD training and workshops",
+        "Supportive management and mentoring",
+        "Opportunities for career progression",
+        "Employee wellbeing initiatives"
+      ]
     },
     {
       "id": "3",
@@ -24,7 +74,32 @@
       "department": "Administration",
       "type": "Full-time",
       "location": "London",
-      "description": "Manage student enquiries, applications, and enrolment processes to ensure a smooth admissions journey."
+      "salary": "£24,000 – £28,000 per annum",
+      "closing_date": "10 March 2026",
+      "description": "Manage student enquiries, applications, and enrolment processes to ensure a smooth admissions journey.",
+      "responsibilities": [
+        "Handle incoming enquiries via phone, email, and in person",
+        "Guide prospective students through the application and enrolment process",
+        "Verify and process student documentation and eligibility checks",
+        "Maintain the student records database with accurate and up-to-date information",
+        "Coordinate with academic departments on course availability and intake dates",
+        "Prepare admissions reports for management review"
+      ],
+      "requirements": [
+        "Previous experience in an admissions or student services role",
+        "Strong IT skills including MS Office and CRM/database systems",
+        "Excellent customer service and communication skills",
+        "High attention to detail and accuracy",
+        "Ability to work under pressure during peak enrolment periods",
+        "A Level or equivalent qualification (degree desirable)"
+      ],
+      "benefits": [
+        "Competitive salary with annual review",
+        "Monday to Friday working pattern",
+        "20+ days annual leave plus bank holidays",
+        "Career development and training support",
+        "Friendly and inclusive workplace culture"
+      ]
     }
   ],
   "meta": {
