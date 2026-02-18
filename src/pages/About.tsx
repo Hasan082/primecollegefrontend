@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { GraduationCap, Clock, TrendingUp, Heart, RefreshCw, Users, Target, BarChart3, Shield, Lightbulb } from "lucide-react";
 import { fetchContent } from "@/lib/api";
 import CTASection from "@/components/CTASection";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import aboutHero from "@/assets/about-hero.jpg";
 import aboutMission from "@/assets/about-mission.jpg";
 
@@ -47,7 +48,7 @@ const About = () => {
     fetchContent<AboutData>("about").then(setData);
   }, []);
 
-  if (!data) return <div className="flex items-center justify-center h-96 text-muted-foreground">Loading...</div>;
+  if (!data) return <LoadingSpinner />;
 
   return (
     <div>

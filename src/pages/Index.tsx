@@ -6,6 +6,7 @@ import HeroSlider from "@/components/HeroSlider";
 import Section from "@/components/Section";
 import CTASection from "@/components/CTASection";
 import LogoCarousel from "@/components/LogoCarousel";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 import heroClassroom from "@/assets/hero-classroom.jpg";
 import heroBusiness from "@/assets/hero-business.jpg";
@@ -65,7 +66,7 @@ const Index = () => {
     fetchContent<HomeData>("home").then(setData);
   }, []);
 
-  if (!data) return <div className="flex items-center justify-center h-screen text-muted-foreground">Loading...</div>;
+  if (!data) return <LoadingSpinner />;
 
   return (
     <div>

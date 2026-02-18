@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
 import CTASection from "@/components/CTASection";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import recruitmentBanner from "@/assets/recruitment-banner.jpg";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -75,7 +76,7 @@ const Recruitment = () => {
     }, 1500);
   };
 
-  if (!data) return <div className="flex items-center justify-center h-96 text-muted-foreground">Loading...</div>;
+  if (!data) return <LoadingSpinner />;
 
   return (
     <div>

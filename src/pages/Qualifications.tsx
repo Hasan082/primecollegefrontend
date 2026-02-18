@@ -3,6 +3,7 @@ import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
 import QualificationCard from "@/components/QualificationCard";
 import CTASection from "@/components/CTASection";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Qualification {
   id: string;
@@ -29,7 +30,7 @@ const Qualifications = () => {
     fetchContent<QualData>("qualifications").then(setData);
   }, []);
 
-  if (!data) return <div className="flex items-center justify-center h-96 text-muted-foreground">Loading...</div>;
+  if (!data) return <LoadingSpinner />;
 
   const filtered =
     activeCategory === "All"
