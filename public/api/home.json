@@ -1,0 +1,74 @@
+{
+  "hero": [
+    {
+      "category": "Business",
+      "title": "OTHM Level 7 Diploma in Strategic Management and Leadership",
+      "price": "£1,500",
+      "cta": "Enroll Now",
+      "image": "classroom"
+    },
+    {
+      "category": "Management",
+      "title": "OTHM Level 5 Extended Diploma in Business Management",
+      "price": "£1,200",
+      "cta": "Enroll Now",
+      "image": "business"
+    },
+    {
+      "category": "Care",
+      "title": "OTHM Level 5 Diploma in Health and Social Care Management",
+      "price": "£1,100",
+      "cta": "Enroll Now",
+      "image": "leadership"
+    },
+    {
+      "category": "Business",
+      "title": "OTHM Level 6 Diploma in Business Management",
+      "price": "£1,350",
+      "cta": "Enroll Now",
+      "image": "executive"
+    },
+    {
+      "category": "Care",
+      "title": "QUALIFI Level 3 Diploma in Health and Social Care",
+      "price": "£950",
+      "cta": "Enroll Now",
+      "image": "care"
+    }
+  ],
+  "sections": [
+    {
+      "id": "welcome",
+      "title": "Welcome to Prime College",
+      "content": "Prime College is a leading provider of professional qualifications in the UK. We offer a wide range of nationally and internationally recognised qualifications in Business, Management, and Health & Social Care. Our courses are designed to help you advance your career and achieve your professional goals.",
+      "type": "text"
+    },
+    {
+      "id": "why-us",
+      "title": "Why Choose Prime College?",
+      "type": "features",
+      "items": [
+        {
+          "title": "Recognised Qualifications",
+          "description": "All our qualifications are awarded by Ofqual-regulated awarding bodies including OTHM and QUALIFI."
+        },
+        {
+          "title": "Flexible Learning",
+          "description": "Study at your own pace with our flexible online and blended learning options."
+        },
+        {
+          "title": "Expert Tutors",
+          "description": "Learn from industry professionals with years of practical and academic experience."
+        },
+        {
+          "title": "Career Support",
+          "description": "Get personalised career guidance and support throughout your learning journey."
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "title": "Prime College – Professional Qualifications UK",
+    "description": "Leading provider of professional qualifications in Business, Management, and Health & Social Care in the UK."
+  }
+}

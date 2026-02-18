@@ -1,0 +1,34 @@
+{
+  "title": "Recruitment",
+  "intro": "Join our team of dedicated professionals. Prime College is always looking for talented individuals to help us deliver exceptional education.",
+  "openings": [
+    {
+      "id": "1",
+      "title": "Business Management Tutor",
+      "department": "Academic",
+      "type": "Full-time",
+      "location": "London",
+      "description": "We are seeking an experienced Business Management tutor to deliver engaging and high-quality teaching across Level 4-7 qualifications."
+    },
+    {
+      "id": "2",
+      "title": "Health & Social Care Assessor",
+      "department": "Academic",
+      "type": "Part-time",
+      "location": "London",
+      "description": "Join our Health & Social Care department to assess and support learners through their qualifications."
+    },
+    {
+      "id": "3",
+      "title": "Student Admissions Officer",
+      "department": "Administration",
+      "type": "Full-time",
+      "location": "London",
+      "description": "Manage student enquiries, applications, and enrolment processes to ensure a smooth admissions journey."
+    }
+  ],
+  "meta": {
+    "title": "Recruitment – Prime College",
+    "description": "Explore career opportunities at Prime College. Join our team of education professionals."
+  }
+}
