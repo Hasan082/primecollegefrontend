@@ -1,0 +1,21 @@
+{
+  "title": "Contact Us",
+  "intro": "Get in touch with Prime College. We'd love to hear from you.",
+  "details": {
+    "address": "Prime College, London, United Kingdom",
+    "email": "info@primecollege.org.uk",
+    "phone": "+44 (0) 20 1234 5678",
+    "hours": "Monday – Friday: 9:00 AM – 5:00 PM"
+  },
+  "formFields": [
+    { "name": "name", "label": "Full Name", "type": "text", "required": true },
+    { "name": "email", "label": "Email Address", "type": "email", "required": true },
+    { "name": "phone", "label": "Phone Number", "type": "tel", "required": false },
+    { "name": "subject", "label": "Subject", "type": "text", "required": true },
+    { "name": "message", "label": "Message", "type": "textarea", "required": true }
+  ],
+  "meta": {
+    "title": "Contact Us – Prime College",
+    "description": "Contact Prime College for enquiries about our professional qualifications and courses."
+  }
+}

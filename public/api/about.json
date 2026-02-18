@@ -1,0 +1,28 @@
+{
+  "title": "About Prime College",
+  "intro": "Prime College is a UK-based educational institution dedicated to delivering high-quality professional qualifications. We are committed to providing accessible, flexible, and industry-relevant education to learners from all backgrounds.",
+  "sections": [
+    {
+      "title": "Our Mission",
+      "content": "To empower learners with the knowledge, skills, and qualifications needed to excel in their chosen careers. We aim to bridge the gap between education and employment by offering practical, career-focused programmes."
+    },
+    {
+      "title": "Our Vision",
+      "content": "To become a leading centre of excellence for professional education in the UK, recognised for our commitment to quality, innovation, and student success."
+    },
+    {
+      "title": "Our Values",
+      "content": "Excellence in education, integrity in all our dealings, inclusivity and diversity, continuous improvement, and student-centred approach."
+    }
+  ],
+  "stats": [
+    { "label": "Students Enrolled", "value": "2,000+" },
+    { "label": "Qualifications Offered", "value": "50+" },
+    { "label": "Years of Experience", "value": "10+" },
+    { "label": "Partner Organisations", "value": "30+" }
+  ],
+  "meta": {
+    "title": "About Us – Prime College",
+    "description": "Learn about Prime College's mission, vision, and commitment to professional education in the UK."
+  }
+}
