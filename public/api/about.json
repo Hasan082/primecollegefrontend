@@ -1,20 +1,50 @@
 {
-  "title": "About Prime College",
-  "intro": "Prime College is a UK-based educational institution dedicated to delivering high-quality professional qualifications. We are committed to providing accessible, flexible, and industry-relevant education to learners from all backgrounds.",
-  "sections": [
-    {
-      "title": "Our Mission",
-      "content": "To empower learners with the knowledge, skills, and qualifications needed to excel in their chosen careers. We aim to bridge the gap between education and employment by offering practical, career-focused programmes."
-    },
-    {
-      "title": "Our Vision",
-      "content": "To become a leading centre of excellence for professional education in the UK, recognised for our commitment to quality, innovation, and student success."
-    },
-    {
-      "title": "Our Values",
-      "content": "Excellence in education, integrity in all our dealings, inclusivity and diversity, continuous improvement, and student-centred approach."
-    }
-  ],
+  "title": "About Us",
+  "intro": "Prime College is a UK-based educational institution dedicated to delivering high-quality professional qualifications.",
+  "about": {
+    "label": "ABOUT US",
+    "headline": "We aid employers in cultivating prosperous, productive, efficient, and resilient businesses.",
+    "paragraphs": [
+      "The Prime College (TPC) is an innovative training provider with a philosophy of nurturing industry leaders, organisational builds, and valued professional qualifications. TPC prides itself on delivering a range of qualifications, from Level 3 to Level 7, across the fields of Business, Care, Management, and Leadership.",
+      "Whether it's in the learning, training or teaching arena, Prime College's mission is to empower professional development in Business Management, and Health & Social Care."
+    ]
+  },
+  "vision": {
+    "title": "Our Vision",
+    "items": [
+      { "label": "Support", "content": "To support learners through a personalised learning experience, a skill for life, developing a clear route to a rewarding career path." },
+      { "label": "Inspire", "content": "To inspire our students to embrace learning and discover interests that impact the quality, wellbeing, and welfare of their employers." },
+      { "label": "Energy", "content": "To develop and recognise positive energy, warmth of character, boldness, and desire in people who thrive." },
+      { "label": "Encourage", "content": "To encourage learners to achieve the best possible grades, subsequently securing employment." }
+    ]
+  },
+  "mission": {
+    "title": "Our Mission",
+    "content": "To enable learners to upgrade their competencies in leadership, to focus on critical thinking and decisive action, to understand the social, economic, and emotional factors of managing a business in a highly competitive and uncertain world."
+  },
+  "approach": {
+    "title": "Our Smart Approach",
+    "intro": "We assist individuals in achieving success in their careers by improving their knowledge, skills and inspiring confidence and motivation.",
+    "items": [
+      { "title": "Expertise", "description": "Complete and comprehensive academic teaching methods that suit all learning abilities.", "icon": "GraduationCap" },
+      { "title": "Flexibility", "description": "Tailored to suit flexible study sessions for adults working within demanding careers.", "icon": "Clock" },
+      { "title": "High-performing", "description": "We help others develop a strong performing team to ensure outstanding leadership qualities.", "icon": "TrendingUp" },
+      { "title": "Supportive", "description": "Our mentors are right there. Our coaching and mentoring services are designed to help you reach your goals.", "icon": "Heart" },
+      { "title": "Continuous Improvement", "description": "Prime College staff are always on hand to advise, guide and improve the student's experience.", "icon": "RefreshCw" },
+      { "title": "Our Team", "description": "Every member of our team is dedicated to the task of enriching the lives of learners.", "icon": "Users" }
+    ]
+  },
+  "values": {
+    "title": "Our Values",
+    "intro": "The Prime College values are essential elements in enhancing excellence in a high-performance culture to encourage employees to meet expectations in the following areas:",
+    "items": [
+      { "title": "Ambition First", "description": "Our ambitions are focused on quality training providing our learners with core knowledge and skills to develop confidence, motivation and values.", "icon": "Target" },
+      { "title": "Results-First", "description": "All learners are well supported throughout their learning experience. Our mission is to create consistent learning outcomes for achieving set targets.", "icon": "BarChart" },
+      { "title": "Integrity First", "description": "We adhere to our core values. Our policies and all aspects of business activities are honest, fair and ethical about transparency, accountability and trust.", "icon": "Shield" },
+      { "title": "Resourcefully First", "description": "We keep abreast of training methods, techniques for building adaptability, and ways to develop leadership potential to the very highest levels.", "icon": "Lightbulb" }
+    ],
+    "footer": "At the core of our approach, we believe that an open, honest, free-thinking work culture where everyone is valued equitably. Problem-solving is something we take on through quality learning and development to empower people to aim for and achieve continuous improvement."
+  },
   "stats": [
     { "label": "Students Enrolled", "value": "2,000+" },
     { "label": "Qualifications Offered", "value": "50+" },
