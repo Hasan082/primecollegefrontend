@@ -54,7 +54,7 @@ const About = () => {
       {/* Hero Banner with Image */}
       <div className="relative h-[400px] overflow-hidden">
         <img src={aboutHero} alt="About Prime College" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-foreground/50" />
+        <div className="absolute inset-0 bg-foreground/70" />
         <div className="absolute inset-0 flex items-center justify-center">
           <h1 className="text-4xl md:text-5xl font-bold text-background">{data.title}</h1>
         </div>
@@ -99,7 +99,7 @@ const About = () => {
       <section className="relative">
         <div className="h-[300px] overflow-hidden">
           <img src={aboutMission} alt="Our Mission" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-foreground/40" />
+          <div className="absolute inset-0 bg-foreground/65" />
         </div>
         <div className="container mx-auto px-4">
           <div className="bg-card border border-border rounded-xl p-8 max-w-xl mx-auto -mt-16 relative z-10 text-center shadow-lg">
@@ -147,11 +147,11 @@ const About = () => {
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold text-foreground mb-4">{data.values.title}</h2>
           <p className="text-muted-foreground max-w-3xl mx-auto mb-12">{data.values.intro}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-10">
             {data.values.items.map((item) => {
               const Icon = iconMap[item.icon] || Target;
               return (
-                <div key={item.title} className="text-center">
+                <div key={item.title} className="bg-card border border-border rounded-xl p-6 text-center shadow-sm">
                   <div className="flex justify-center mb-4">
                     <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
                       <Icon className="w-8 h-8 text-primary-foreground" strokeWidth={1.5} />
