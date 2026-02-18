@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Qualifications from "./pages/Qualifications";
+import QualificationDetail from "./pages/QualificationDetail";
 import Recruitment from "./pages/Recruitment";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
@@ -31,6 +32,7 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/qualifications" element={<Qualifications />} />
+                  <Route path="/qualifications/:slug" element={<QualificationDetail />} />
                   <Route path="/recruitment" element={<Recruitment />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="*" element={<NotFound />} />

@@ -17,24 +17,24 @@ const categoryNavItems: CategoryNav[] = [
   {
     label: "Business",
     qualifications: [
-      { label: "OTHM Level 4 Diploma in Business Management", href: "/qualifications" },
-      { label: "OTHM Level 5 Extended Diploma in Business Management", href: "/qualifications" },
-      { label: "OTHM Level 6 Diploma in Business Management", href: "/qualifications" },
+      { label: "OTHM Level 4 Diploma in Business Management", href: "/qualifications/othm-level-4-diploma-in-business-management" },
+      { label: "OTHM Level 5 Extended Diploma in Business Management", href: "/qualifications/othm-level-5-extended-diploma-in-business-management" },
+      { label: "OTHM Level 6 Diploma in Business Management", href: "/qualifications/othm-level-6-diploma-in-business-management" },
     ],
   },
   {
     label: "Management",
     qualifications: [
-      { label: "OTHM Level 7 Diploma in Strategic Management and Leadership", href: "/qualifications" },
-      { label: "QUALIFI Level 7 Diploma in Strategic Management and Leadership", href: "/qualifications" },
+      { label: "OTHM Level 7 Diploma in Strategic Management and Leadership", href: "/qualifications/othm-level-7-diploma-in-strategic-management-and-leadership" },
+      { label: "QUALIFI Level 7 Diploma in Strategic Management and Leadership", href: "/qualifications/qualifi-level-7-diploma-in-strategic-management-and-leadership" },
     ],
   },
   {
     label: "Care",
     qualifications: [
-      { label: "QUALIFI Level 3 Diploma in Health and Social Care", href: "/qualifications" },
-      { label: "OTHM Level 5 Diploma in Health and Social Care Management", href: "/qualifications" },
-      { label: "OTHM Level 7 Diploma in Healthcare Management", href: "/qualifications" },
+      { label: "QUALIFI Level 3 Diploma in Health and Social Care", href: "/qualifications/qualifi-level-3-diploma-in-health-and-social-care" },
+      { label: "OTHM Level 5 Diploma in Health and Social Care Management", href: "/qualifications/othm-level-5-diploma-in-health-and-social-care-management" },
+      { label: "OTHM Level 7 Diploma in Healthcare Management", href: "/qualifications/othm-level-7-diploma-in-healthcare-management" },
     ],
   },
 ];
