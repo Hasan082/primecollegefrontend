@@ -86,10 +86,39 @@
       ]
     },
     {
-      "id": "qualifications-overview",
-      "title": "Our Qualifications",
-      "content": "We offer qualifications across three key areas: Business, Management, and Health & Social Care. Each programme is designed to equip you with practical skills and knowledge that employers value.",
-      "type": "text"
+      "id": "popular-qualifications",
+      "title": "Popular Qualifications",
+      "type": "popular-qualifications",
+      "items": [
+        {
+          "title": "OTHM Level 7 Diploma in Strategic Management and Leadership",
+          "category": "Management",
+          "level": "Level 7",
+          "price": "£1,500",
+          "image": "classroom"
+        },
+        {
+          "title": "OTHM Level 6 Diploma in Business Management",
+          "category": "Business",
+          "level": "Level 6",
+          "price": "£1,350",
+          "image": "executive"
+        },
+        {
+          "title": "OTHM Level 5 Diploma in Health and Social Care Management",
+          "category": "Care",
+          "level": "Level 5",
+          "price": "£1,100",
+          "image": "care"
+        },
+        {
+          "title": "QUALIFI Level 7 Diploma in Strategic Management and Leadership",
+          "category": "Management",
+          "level": "Level 7",
+          "price": "£1,600",
+          "image": "leadership"
+        }
+      ]
     },
     {
       "id": "stats",

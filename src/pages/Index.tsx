@@ -7,6 +7,20 @@ import Section from "@/components/Section";
 import CTASection from "@/components/CTASection";
 import LogoCarousel from "@/components/LogoCarousel";
 
+import heroClassroom from "@/assets/hero-classroom.jpg";
+import heroBusiness from "@/assets/hero-business.jpg";
+import heroLeadership from "@/assets/hero-leadership.jpg";
+import heroExecutive from "@/assets/hero-executive.jpg";
+import heroCare from "@/assets/hero-care.jpg";
+
+const heroImageMap: Record<string, string> = {
+  classroom: heroClassroom,
+  business: heroBusiness,
+  leadership: heroLeadership,
+  executive: heroExecutive,
+  care: heroCare,
+};
+
 const iconMap: Record<string, React.ElementType> = {
   Users,
   Award,
@@ -30,7 +44,16 @@ interface HomeData {
     paragraphs?: string[];
     ctaLabel?: string;
     ctaHref?: string;
-    items?: Array<{ title: string; description?: string; value?: string; icon?: string }>;
+    items?: Array<{
+      title: string;
+      description?: string;
+      value?: string;
+      icon?: string;
+      category?: string;
+      level?: string;
+      price?: string;
+      image?: string;
+    }>;
   }>;
 }
 
@@ -114,7 +137,48 @@ const Index = () => {
             </section>
           )}
 
-          {/* Qualifications overview - white bg (text type handles it) */}
+          {/* Popular Qualifications - cards with rounded images */}
+          {section.type === "popular-qualifications" && (
+            <Section title={section.title}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {section.items?.map((item) => (
+                  <Link
+                    key={item.title}
+                    to="/qualifications"
+                    className="bg-card border border-border rounded-xl overflow-hidden group"
+                  >
+                    <div className="aspect-[4/3] overflow-hidden rounded-xl m-3">
+                      <img
+                        src={heroImageMap[item.image || "classroom"] || heroClassroom}
+                        alt={item.title}
+                        className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="px-4 pb-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
+                          {item.category}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{item.level}</span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground leading-snug mb-3">
+                        {item.title}
+                      </h3>
+                      <div className="text-lg font-bold text-primary">{item.price}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <div className="text-center mt-8">
+                <Link
+                  to="/qualifications"
+                  className="inline-block bg-primary text-primary-foreground px-8 py-3 font-semibold rounded text-sm hover:opacity-90"
+                >
+                  View All Qualifications
+                </Link>
+              </div>
+            </Section>
+          )}
 
           {/* Stats / Counter - dark bg */}
           {section.type === "stats" && (
@@ -135,7 +199,7 @@ const Index = () => {
             </section>
           )}
 
-          {/* Accreditation logo carousel - lighter dark bg */}
+          {/* Accreditation logo carousel */}
           {section.type === "accreditation-logos" && <LogoCarousel />}
 
           {/* Features grid */}
