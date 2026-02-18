@@ -275,10 +275,10 @@ const QualificationDetail = () => {
                 </span>
               </div>
               <Link
-                to="/contact"
+                to={`/checkout/${slug}`}
                 className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
               >
-                Enquire
+                Enroll Now
               </Link>
             </div>
           </div>
