@@ -53,6 +53,7 @@ interface HomeData {
       level?: string;
       price?: string;
       image?: string;
+      date?: string;
     }>;
   }>;
 }
@@ -217,6 +218,40 @@ const Index = () => {
           )}
 
           {section.type === "cta" && <CTASection />}
+
+          {/* Blog / News cards */}
+          {section.type === "blog" && (
+            <Section title={section.title}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {section.items?.map((item) => (
+                  <div key={item.title} className="bg-card border border-border rounded-xl overflow-hidden group">
+                    <div className="aspect-[16/9] overflow-hidden">
+                      <img
+                        src={heroImageMap[item.image || "classroom"] || heroClassroom}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
+                          {item.category}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{item.date}</span>
+                      </div>
+                      <h3 className="text-base font-semibold text-foreground leading-snug mb-2">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                        {item.description}
+                      </p>
+                      <span className="text-sm font-semibold text-primary">Read More →</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
         </div>
       ))}
     </div>

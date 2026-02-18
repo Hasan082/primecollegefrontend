@@ -164,6 +164,34 @@
       "title": "Start Your Journey Today",
       "content": "Whether you are looking to start a new career, advance in your current role, or gain specialist knowledge, Prime College has a qualification for you. Contact us today to discuss your options.",
       "type": "cta"
+    },
+    {
+      "id": "blog",
+      "title": "Latest News & Blog",
+      "type": "blog",
+      "items": [
+        {
+          "title": "How to Choose the Right Qualification for Your Career",
+          "description": "Navigating the world of professional qualifications can be overwhelming. Here's our guide to finding the perfect course that aligns with your career aspirations and professional goals.",
+          "date": "12 Feb 2026",
+          "category": "Career Advice",
+          "image": "business"
+        },
+        {
+          "title": "The Importance of Accredited Qualifications in the UK Job Market",
+          "description": "Employers increasingly value Ofqual-regulated qualifications. Learn why accredited diplomas from OTHM and QUALIFI can give you a competitive edge in today's market.",
+          "date": "5 Feb 2026",
+          "category": "Industry Insights",
+          "image": "executive"
+        },
+        {
+          "title": "Prime College Achieves 100% Learner Completion Rate",
+          "description": "We're proud to announce that Prime College has maintained a 100% completion rate across all programmes, reflecting our commitment to learner success and support.",
+          "date": "28 Jan 2026",
+          "category": "College News",
+          "image": "classroom"
+        }
+      ]
     }
   ],
   "meta": {
