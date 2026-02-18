@@ -59,88 +59,94 @@ const Header = () => {
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
   return (
-    <header className="bg-primary sticky top-0 z-50" style={{ height: HEADER_HEIGHT }}>
-      <div className="container mx-auto flex items-center justify-between h-full px-4">
-        {/* Logo */}
-        <Link to="/" className="flex items-center">
-          <img src={logo} alt="Prime College" className="h-12 w-auto" />
-        </Link>
+    <div className="sticky top-0 z-50" onMouseLeave={() => setOpenMega(null)}>
+      <header className="bg-primary" style={{ height: HEADER_HEIGHT }}>
+        <div className="container mx-auto flex items-center justify-between h-full px-4">
+          {/* Logo */}
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="Prime College" className="h-12 w-auto" />
+          </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1">
-          {simpleNavItems.slice(0, 2).map((item) => (
-            <Link
-              key={item.label}
-              to={item.href}
-              className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {simpleNavItems.slice(0, 2).map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded"
+              >
+                {item.label}
+              </Link>
+            ))}
 
-          {/* Category Nav Items with Mega Menus */}
-          {categoryNavItems.map((cat) => (
-            <div
-              key={cat.label}
-              className="relative"
-              onMouseEnter={() => setOpenMega(cat.label)}
-              onMouseLeave={() => setOpenMega(null)}
-            >
-              <button className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded flex items-center gap-1">
+            {/* Category Nav Items */}
+            {categoryNavItems.map((cat) => (
+              <button
+                key={cat.label}
+                className={`text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded flex items-center gap-1 ${openMega === cat.label ? "bg-primary/80" : ""}`}
+                onMouseEnter={() => setOpenMega(cat.label)}
+              >
                 {cat.label}
                 <ChevronDown className="w-3 h-3" />
               </button>
+            ))}
 
-              {openMega === cat.label && (
-                <div className="fixed left-0 right-0 top-[72px] bg-popover border-t border-border shadow-lg z-50">
-                  <div className="container mx-auto p-6">
-                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-wider">
-                      {cat.label} Qualifications
-                    </h4>
-                    <div className="grid grid-cols-4 gap-4">
-                      {cat.qualifications.map((q) => (
-                        <Link
-                          key={q.label}
-                          to={q.href}
-                          className="text-sm text-foreground hover:text-primary py-2 px-3 rounded hover:bg-muted block"
-                          onClick={() => setOpenMega(null)}
-                        >
-                          {q.label}
-                        </Link>
-                      ))}
-                    </div>
+            {simpleNavItems.slice(2).map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded"
+              >
+                {item.label}
+              </Link>
+            ))}
+
+            <Link
+              to="/login"
+              className="ml-4 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
+            >
+              Login
+            </Link>
+          </nav>
+
+          {/* Mobile Toggle */}
+          <button
+            className="lg:hidden text-primary-foreground"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+      </header>
+
+      {/* Mega Menu Panel - rendered outside header but inside hover wrapper */}
+      {openMega && (
+        <div className="hidden lg:block bg-popover border-t border-border shadow-lg">
+          <div className="container mx-auto p-6">
+            {categoryNavItems
+              .filter((cat) => cat.label === openMega)
+              .map((cat) => (
+                <div key={cat.label}>
+                  <h4 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-wider">
+                    {cat.label} Qualifications
+                  </h4>
+                  <div className="grid grid-cols-4 gap-4">
+                    {cat.qualifications.map((q) => (
+                      <Link
+                        key={q.label}
+                        to={q.href}
+                        className="text-sm text-foreground hover:text-primary py-2 px-3 rounded hover:bg-muted block"
+                        onClick={() => setOpenMega(null)}
+                      >
+                        {q.label}
+                      </Link>
+                    ))}
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
-
-          {simpleNavItems.slice(2).map((item) => (
-            <Link
-              key={item.label}
-              to={item.href}
-              className="text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded"
-            >
-              {item.label}
-            </Link>
-          ))}
-
-          <Link
-            to="/login"
-            className="ml-4 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
-          >
-            Login
-          </Link>
-        </nav>
-
-        {/* Mobile Toggle */}
-        <button
-          className="lg:hidden text-primary-foreground"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Mobile Menu */}
       {mobileOpen && (
@@ -208,7 +214,7 @@ const Header = () => {
           </Link>
         </div>
       )}
-    </header>
+    </div>
   );
 };
 
