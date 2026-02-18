@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { HEADER_HEIGHT } from "./Header";
 import heroClassroom from "@/assets/hero-classroom.jpg";
 import heroBusiness from "@/assets/hero-business.jpg";
 import heroLeadership from "@/assets/hero-leadership.jpg";
@@ -28,14 +29,34 @@ interface HeroSliderProps {
 
 const HeroSlider = ({ slides }: HeroSliderProps) => {
   const [current, setCurrent] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [direction, setDirection] = useState<"left" | "right">("right");
+  const [isAnimating, setIsAnimating] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const goTo = useCallback(
+    (index: number, dir: "left" | "right") => {
+      if (isAnimating || index === current) return;
+      setDirection(dir);
+      setPrevIndex(current);
+      setCurrent(index);
+      setIsAnimating(true);
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setPrevIndex(null);
+        setIsAnimating(false);
+      }, 600);
+    },
+    [current, isAnimating]
+  );
 
   const next = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % slides.length);
-  }, [slides.length]);
+    goTo((current + 1) % slides.length, "right");
+  }, [current, slides.length, goTo]);
 
   const prev = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-  }, [slides.length]);
+    goTo((current - 1 + slides.length) % slides.length, "left");
+  }, [current, slides.length, goTo]);
 
   useEffect(() => {
     const timer = setInterval(next, 5000);
@@ -44,19 +65,19 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
 
   if (!slides.length) return null;
 
-  const slide = slides[current];
+  const slideHeight = `calc(100vh - ${HEADER_HEIGHT}px)`;
 
-  return (
-    <section className="relative h-screen w-full overflow-hidden">
-      {/* Background Image */}
+  const renderSlide = (slide: Slide, key: string, animClass: string) => (
+    <div
+      key={key}
+      className={`absolute inset-0 ${animClass}`}
+      style={{ height: slideHeight }}
+    >
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${imageMap[slide.image] || heroClassroom})` }}
       />
-      {/* Dark Overlay */}
       <div className="absolute inset-0 bg-foreground/60" />
-
-      {/* Content */}
       <div className="relative z-10 flex items-center justify-center h-full">
         <div className="text-center max-w-3xl px-6">
           <span className="inline-block bg-secondary text-secondary-foreground text-xs font-bold px-4 py-1 rounded mb-4 uppercase tracking-wider">
@@ -74,6 +95,30 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
           </a>
         </div>
       </div>
+    </div>
+  );
+
+  const enterClass =
+    direction === "right"
+      ? "animate-[slideInRight_0.6s_ease-in-out_forwards]"
+      : "animate-[slideInLeft_0.6s_ease-in-out_forwards]";
+
+  const exitClass =
+    direction === "right"
+      ? "animate-[slideOutLeft_0.6s_ease-in-out_forwards]"
+      : "animate-[slideOutRight_0.6s_ease-in-out_forwards]";
+
+  return (
+    <section className="relative w-full overflow-hidden" style={{ height: slideHeight }}>
+      {/* Previous slide animating out */}
+      {prevIndex !== null && renderSlide(slides[prevIndex], `prev-${prevIndex}`, exitClass)}
+
+      {/* Current slide animating in (or static) */}
+      {renderSlide(
+        slides[current],
+        `cur-${current}`,
+        prevIndex !== null ? enterClass : ""
+      )}
 
       {/* Arrows */}
       <button
@@ -94,8 +139,8 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
         {slides.map((_, i) => (
           <button
             key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-3 h-3 rounded-full ${
+            onClick={() => goTo(i, i > current ? "right" : "left")}
+            className={`w-3 h-3 rounded-full transition-colors ${
               i === current ? "bg-secondary" : "bg-background/50"
             }`}
           />
