@@ -71,7 +71,7 @@ const Header = () => {
 
   return (
     <div className="fixed left-0 right-0 z-50 transition-all duration-300" style={{ top: TOP_BAR_HEIGHT }} onMouseLeave={() => setOpenMega(null)}>
-      <header className="bg-primary border-t border-primary-foreground/20 transition-all duration-300" style={{ height: headerHeight }}>
+      <header className="bg-primary transition-all duration-300" style={{ height: headerHeight }}>
         <div className="container mx-auto flex items-center justify-between h-full px-4 py-2">
           {/* Logo */}
           <Link to="/" className="flex items-center">
