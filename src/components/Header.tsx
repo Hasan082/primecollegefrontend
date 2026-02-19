@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, ChevronDown } from "lucide-react";
 import logo from "@/assets/prime-logo-white-notext.png";
@@ -51,19 +51,31 @@ const simpleNavItems: SimpleNavItem[] = [
   { label: "Contact", href: "/contact" },
 ];
 
-const HEADER_HEIGHT = 72;
+const TOP_BAR_HEIGHT = 32;
+const HEADER_HEIGHT_FULL = 72;
+const HEADER_HEIGHT_SHRUNK = 52;
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const headerHeight = scrolled ? HEADER_HEIGHT_SHRUNK : HEADER_HEIGHT_FULL;
+
   return (
-    <div className="sticky top-0 z-50" onMouseLeave={() => setOpenMega(null)}>
-      <header className="bg-primary" style={{ height: HEADER_HEIGHT }}>
+    <div className="fixed left-0 right-0 z-50 transition-all duration-300" style={{ top: TOP_BAR_HEIGHT }} onMouseLeave={() => setOpenMega(null)}>
+      <header className="bg-primary transition-all duration-300" style={{ height: headerHeight }}>
         <div className="container mx-auto flex items-center justify-between h-full px-4 py-2">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="Prime College" className="h-16 w-auto" />
+            <img src={logo} alt="Prime College" className={`transition-all duration-300 w-auto ${scrolled ? "h-10" : "h-16"}`} />
           </Link>
 
           {/* Desktop Nav */}
@@ -219,5 +231,5 @@ const Header = () => {
   );
 };
 
-export { HEADER_HEIGHT };
+export { HEADER_HEIGHT_FULL, HEADER_HEIGHT_SHRUNK, TOP_BAR_HEIGHT };
 export default Header;

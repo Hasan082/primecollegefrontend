@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { HEADER_HEIGHT } from "./Header";
+import { HEADER_HEIGHT_FULL, TOP_BAR_HEIGHT } from "./Header";
 import heroClassroom from "@/assets/hero-classroom.jpg";
 import heroBusiness from "@/assets/hero-business.jpg";
 import heroLeadership from "@/assets/hero-leadership.jpg";
@@ -65,7 +65,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
 
   if (!slides.length) return null;
 
-  const slideHeight = `calc(100vh - ${HEADER_HEIGHT}px)`;
+  const slideHeight = `calc(100vh - ${HEADER_HEIGHT_FULL + TOP_BAR_HEIGHT}px)`;
 
   const renderSlide = (slide: Slide, key: string, animClass: string) => (
     <div
