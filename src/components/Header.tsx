@@ -66,7 +66,7 @@ const Header = () => {
         <div className="container mx-auto flex items-center justify-between h-full px-4">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="Prime College" className="h-12 w-auto" />
+            <img src={logo} alt="Prime College" className="h-16 w-auto" />
           </Link>
 
           {/* Desktop Nav */}
