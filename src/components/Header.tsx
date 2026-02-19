@@ -100,9 +100,9 @@ const Header = () => {
       onMouseLeave={() => setOpenMega(null)}
     >
       <header className="bg-primary transition-all duration-300" style={{ height: headerHeight }}>
-        <div className="container mx-auto flex items-center justify-between h-full px-4 py-1">
+        <div className="container mx-auto flex items-center justify-between h-full px-4 py-2">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center py-1">
             <img
               src={logo}
               alt="Prime College"
