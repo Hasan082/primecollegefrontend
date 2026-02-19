@@ -20,7 +20,7 @@ const QualificationCard = ({
   description,
 }: QualificationCardProps) => {
   return (
-    <div className="bg-card border border-border rounded p-6 flex flex-col">
+    <div className="bg-card border border-border rounded-lg p-6 flex flex-col">
       <div className="flex items-center gap-2 mb-3">
         <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
           {category}
