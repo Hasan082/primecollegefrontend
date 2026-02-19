@@ -76,8 +76,8 @@ const simpleNavItems: SimpleNavItem[] = [
 ];
 
 const TOP_BAR_HEIGHT = 36;
-const HEADER_HEIGHT_FULL = 72;
-const HEADER_HEIGHT_SHRUNK = 52;
+const HEADER_HEIGHT_FULL = 80;
+const HEADER_HEIGHT_SHRUNK = 60;
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -102,7 +102,7 @@ const Header = () => {
       <header className="bg-primary transition-all duration-300" style={{ height: headerHeight }}>
         <div className="container mx-auto flex items-center justify-between h-full px-4 py-2">
           {/* Logo */}
-          <Link to="/" className="flex items-center py-2">
+          <Link to="/" className="flex items-center">
             <img
               src={logo}
               alt="Prime College"
