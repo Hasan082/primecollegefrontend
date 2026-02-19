@@ -102,7 +102,7 @@ const Header = () => {
       <header className="bg-primary transition-all duration-300" style={{ height: headerHeight }}>
         <div className="container mx-auto flex items-center justify-between h-full px-4 py-2">
           {/* Logo */}
-          <Link to="/" className="flex items-center pt-1">
+          <Link to="/" className="flex items-center py-2">
             <img
               src={logo}
               alt="Prime College"
