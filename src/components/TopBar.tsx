@@ -7,7 +7,7 @@ const TopBar = () => {
   const { itemCount } = useCart();
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-primary text-primary-foreground text-xs py-[5px]">
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-primary text-primary-foreground text-xs py-[5px] border-b border-primary-foreground/20">
       <div className="container mx-auto flex items-center justify-between px-4 py-1.5">
         {/* Left: Phone & Email */}
         <div className="flex items-center gap-4">
