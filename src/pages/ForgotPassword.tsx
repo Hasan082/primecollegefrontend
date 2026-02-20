@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Home, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -90,7 +90,7 @@ const ForgotPassword = () => {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-primary-foreground hover:bg-primary hover:border-primary transition-colors"
           >
             Back to Home
-            <Home className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
