@@ -6,7 +6,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-bold mb-4">Prime College</h3>
+            <h3 className="text-lg font-bold mb-4">The Prime College</h3>
             <p className="text-sm text-primary-foreground/80">
               Leading provider of professional qualifications in Business,
               Management, and Health & Social Care in the UK.
@@ -55,7 +55,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="border-t border-primary-foreground/20 mt-8 pt-6 text-center text-sm text-primary-foreground/60">
-          © {new Date().getFullYear()} Prime College. All rights reserved.
+          © {new Date().getFullYear()} The Prime College. All rights reserved.
         </div>
       </div>
     </footer>

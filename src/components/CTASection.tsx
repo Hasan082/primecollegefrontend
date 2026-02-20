@@ -14,7 +14,7 @@ const CTASection = () => {
           Start Your Journey Today
         </h2>
         <p className="text-primary-foreground/80 max-w-2xl mx-auto mb-8">
-          Whether you are looking to start a new career, advance in your current role, or gain specialist knowledge, Prime College has a qualification for you. Contact us today to discuss your options.
+          Whether you are looking to start a new career, advance in your current role, or gain specialist knowledge, The Prime College has a qualification for you. Contact us today to discuss your options.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link

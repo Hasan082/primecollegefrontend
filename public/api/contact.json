@@ -1,6 +1,6 @@
 {
   "title": "Contact Us",
-  "intro": "Get in touch with Prime College. We'd love to hear from you.",
+  "intro": "Get in touch with The Prime College. We'd love to hear from you.",
   "details": {
     "address": "Aegon House (Left side), Ground Floor Suite, 13 Lanark Square, London E14 9QD",
     "email": "info@theprimecollege.org.uk",
@@ -15,7 +15,7 @@
     { "name": "message", "label": "Message", "type": "textarea", "required": true }
   ],
   "meta": {
-    "title": "Contact Us – Prime College",
-    "description": "Contact Prime College for enquiries about our professional qualifications and courses."
+    "title": "Contact Us – The Prime College",
+    "description": "Contact The Prime College for enquiries about our professional qualifications and courses."
   }
 }
