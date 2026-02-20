@@ -50,7 +50,7 @@ const Login = () => {
             Professional<br />Qualification<br />Assessment System
           </h1>
           <p className="text-primary-foreground/70 text-base max-w-lg mb-12">
-            Secure, regulated, and compliant qualification management for learners, trainers, and administrators.
+            Secure, regulated, and compliant qualification management for learners.
           </p>
 
           {/* Learner Portal card */}
