@@ -77,7 +77,7 @@ const ForgotPassword = () => {
           </form>
         </div>
 
-        <div className="flex items-center gap-3 mt-6">
+        <div className="flex items-center justify-between mt-6">
           <Link
             to="/login"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-primary-foreground hover:bg-primary hover:border-primary transition-colors"
@@ -89,8 +89,8 @@ const ForgotPassword = () => {
             to="/"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-primary-foreground hover:bg-primary hover:border-primary transition-colors"
           >
-            <Home className="w-4 h-4" />
             Back to Home
+            <Home className="w-4 h-4" />
           </Link>
         </div>
       </div>
