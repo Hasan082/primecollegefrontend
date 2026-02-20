@@ -170,12 +170,7 @@ const Login = () => {
               </button>
             </form>
 
-            <p className="text-center text-sm text-muted-foreground mt-6">
-              Don't have an account?{" "}
-              <button type="button" className="text-primary font-semibold hover:underline">
-                Register
-              </button>
-            </p>
+
           </div>
 
           <Link to="/" className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-primary-foreground hover:bg-primary hover:border-primary transition-colors">
