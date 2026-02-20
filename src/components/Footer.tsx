@@ -34,7 +34,7 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-3">Contact</h4>
             <ul className="space-y-2 text-sm text-primary-foreground/80">
-              <li>London, United Kingdom</li>
+              <li>Aegon House (Left side), Ground Floor Suite, 13 Lanark Square, London E14 9QD</li>
               <li><a href="mailto:info@theprimecollege.org.uk" className="hover:text-primary-foreground">info@theprimecollege.org.uk</a></li>
               <li><a href="tel:02081495431" className="hover:text-primary-foreground">0208 149 5431</a></li>
             </ul>

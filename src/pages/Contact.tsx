@@ -106,6 +106,26 @@ const Contact = () => {
           </div>
         </div>
       </Section>
+
+      {/* Map Section */}
+      <section className="bg-muted py-16 px-4">
+        <div className="container mx-auto max-w-5xl">
+          <h2 className="text-2xl font-bold text-foreground text-center mb-8">Find Us</h2>
+          <div className="rounded-xl overflow-hidden border border-border h-[400px]">
+            <iframe
+              title="Prime College Location"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.234!2d-0.0175!3d51.5075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487602d64e0e8b7f%3A0x1234567890abcdef!2s13%20Lanark%20Square%2C%20London%20E14%209QD!5e0!3m2!1sen!2suk!4v1700000000000"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      </section>
+
       <CTASection />
     </div>
   );
