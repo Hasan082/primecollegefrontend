@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff, Mail, CheckCircle2, Shield, FileCheck, Award } from "lucide-react";
+import { Eye, EyeOff, Mail, CheckCircle2, Shield, FileCheck, Award, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -178,9 +178,10 @@ const Login = () => {
             </p>
           </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            <Link to="/" className="hover:text-primary">← Back to Home</Link>
-          </p>
+          <Link to="/" className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
         </div>
       </div>
     </div>
