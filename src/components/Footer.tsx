@@ -25,10 +25,10 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-3">Qualifications</h4>
             <ul className="space-y-2 text-sm text-primary-foreground/80">
-              <li>Business Management</li>
-              <li>Strategic Leadership</li>
-              <li>Health & Social Care</li>
-              <li>Healthcare Management</li>
+              <li><Link to="/qualifications/othm-level-6-diploma-in-business-management" className="hover:text-primary-foreground">Business Management</Link></li>
+              <li><Link to="/qualifications/othm-level-7-diploma-in-strategic-management-and-leadership" className="hover:text-primary-foreground">Strategic Leadership</Link></li>
+              <li><Link to="/qualifications/qualifi-level-3-diploma-in-health-and-social-care" className="hover:text-primary-foreground">Health & Social Care</Link></li>
+              <li><Link to="/qualifications/othm-level-7-diploma-in-healthcare-management" className="hover:text-primary-foreground">Healthcare Management</Link></li>
             </ul>
           </div>
           <div>
