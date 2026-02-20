@@ -14,6 +14,7 @@ import QualificationDetail from "./pages/QualificationDetail";
 import Recruitment from "./pages/Recruitment";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import Checkout from "./pages/Checkout";
 import EnrollmentConfirmation from "./pages/EnrollmentConfirmation";
 import NotFound from "./pages/NotFound";
@@ -31,6 +32,7 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/enrollment-confirmation" element={<EnrollmentConfirmation />} />
             <Route path="*" element={
