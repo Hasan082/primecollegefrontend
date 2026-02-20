@@ -19,7 +19,6 @@ const Footer = () => {
               <li><Link to="/about" className="hover:text-primary-foreground">About Us</Link></li>
               <li><Link to="/qualifications" className="hover:text-primary-foreground">Qualifications</Link></li>
               <li><Link to="/recruitment" className="hover:text-primary-foreground">Recruitment</Link></li>
-              <li><Link to="/blog" className="hover:text-primary-foreground">Blog</Link></li>
               <li><Link to="/contact" className="hover:text-primary-foreground">Contact</Link></li>
             </ul>
           </div>
@@ -36,8 +35,8 @@ const Footer = () => {
             <h4 className="font-semibold mb-3">Contact</h4>
             <ul className="space-y-2 text-sm text-primary-foreground/80">
               <li>London, United Kingdom</li>
-              <li>info@primecollege.org.uk</li>
-              <li>+44 (0) 20 1234 5678</li>
+              <li><a href="mailto:info@theprimecollege.org.uk" className="hover:text-primary-foreground">info@theprimecollege.org.uk</a></li>
+              <li><a href="tel:02081495431" className="hover:text-primary-foreground">0208 149 5431</a></li>
             </ul>
           </div>
         </div>

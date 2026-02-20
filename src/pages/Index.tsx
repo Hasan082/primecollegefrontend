@@ -209,7 +209,7 @@ const Index = () => {
             <Section title={section.title} className="bg-muted">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {section.items?.map((item) => (
-                  <div key={item.title} className="bg-card p-6 rounded border border-border">
+                  <div key={item.title} className="bg-card p-6 rounded-xl border border-border">
                     <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
                     <p className="text-sm text-muted-foreground">{item.description}</p>
                   </div>
