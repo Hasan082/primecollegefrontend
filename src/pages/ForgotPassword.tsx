@@ -20,6 +20,7 @@ const ForgotPassword = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
+      setEmail("");
       toast({
         title: "Reset Link Sent",
         description: "Please check your email for further instructions to reset your password.",
