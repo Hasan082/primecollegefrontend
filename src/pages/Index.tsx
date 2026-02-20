@@ -149,11 +149,11 @@ const Index = () => {
                     to="/qualifications"
                     className="bg-card border border-border rounded-xl overflow-hidden group"
                   >
-                    <div className="aspect-[4/3] overflow-hidden rounded-xl m-3">
+                    <div className="aspect-[4/3] overflow-hidden m-2">
                       <img
                         src={heroImageMap[item.image || "classroom"] || heroClassroom}
                         alt={item.title}
-                        className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                     <div className="px-4 pb-5">
