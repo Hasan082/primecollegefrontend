@@ -36,7 +36,7 @@ const Login = () => {
         <div className="relative z-10">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-16">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center border border-primary-foreground/30 p-0.5">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center border border-primary-foreground/30 p-0.5">
               <img src={logo} alt="Prime College" className="w-full h-full object-contain" />
             </div>
             <div>
