@@ -143,33 +143,45 @@ const Index = () => {
           {section.type === "popular-qualifications" && (
             <Section title={section.title}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {section.items?.map((item) => (
-                  <Link
-                    key={item.title}
-                    to="/qualifications"
-                    className="bg-card border border-border rounded-xl overflow-hidden group"
-                  >
-                    <div className="aspect-[4/3] overflow-hidden rounded-t-xl m-2">
-                      <img
-                        src={heroImageMap[item.image || "classroom"] || heroClassroom}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="px-4 pb-5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
-                          {item.category}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{item.level}</span>
+                {section.items?.map((item) => {
+                  const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                  return (
+                    <div
+                      key={item.title}
+                      className="bg-card border border-border rounded-xl overflow-hidden group flex flex-col"
+                    >
+                      <Link to={`/qualifications/${slug}`}>
+                        <div className="aspect-[4/3] overflow-hidden rounded-t-xl m-2">
+                          <img
+                            src={heroImageMap[item.image || "classroom"] || heroClassroom}
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      </Link>
+                      <div className="px-4 pb-5 flex flex-col flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
+                            {item.category}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{item.level}</span>
+                        </div>
+                        <Link to={`/qualifications/${slug}`}>
+                          <h3 className="text-sm font-semibold text-foreground leading-snug mb-3 hover:text-primary">
+                            {item.title}
+                          </h3>
+                        </Link>
+                        <div className="text-lg font-bold text-primary mb-4">{item.price}</div>
+                        <Link
+                          to={`/qualifications/${slug}`}
+                          className="mt-auto inline-block bg-primary text-primary-foreground text-center px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
+                        >
+                          Enroll Now
+                        </Link>
                       </div>
-                      <h3 className="text-sm font-semibold text-foreground leading-snug mb-3">
-                        {item.title}
-                      </h3>
-                      <div className="text-lg font-bold text-primary">{item.price}</div>
                     </div>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
               <div className="text-center mt-8">
                 <Link
