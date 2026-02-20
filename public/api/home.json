@@ -46,8 +46,8 @@
   "sections": [
     {
       "id": "welcome",
-      "title": "Welcome to Prime College",
-      "content": "Prime College is a leading provider of professional qualifications in the UK. We offer a wide range of nationally and internationally recognised qualifications in Business, Management, and Health & Social Care. Our courses are designed to help you advance your career and achieve your professional goals.",
+      "title": "Welcome to The Prime College",
+      "content": "The Prime College is a leading provider of professional qualifications in the UK. We offer a wide range of nationally and internationally recognised qualifications in Business, Management, and Health & Social Care. Our courses are designed to help you advance your career and achieve your professional goals.",
       "type": "text"
     },
     {
@@ -122,7 +122,7 @@
     },
     {
       "id": "stats",
-      "title": "Prime College's Delivery Standard",
+      "title": "The Prime College's Delivery Standard",
       "content": "Through ISO9001 and Investors In People, our teaching model means we deliver qualifications that ensure we maintain a high standard of employer and learner satisfaction.",
       "type": "stats",
       "items": [
@@ -162,7 +162,7 @@
     {
       "id": "cta",
       "title": "Start Your Journey Today",
-      "content": "Whether you are looking to start a new career, advance in your current role, or gain specialist knowledge, Prime College has a qualification for you. Contact us today to discuss your options.",
+      "content": "Whether you are looking to start a new career, advance in your current role, or gain specialist knowledge, The Prime College has a qualification for you. Contact us today to discuss your options.",
       "type": "cta"
     },
     {
@@ -185,8 +185,8 @@
           "image": "executive"
         },
         {
-          "title": "Prime College Achieves 100% Learner Completion Rate",
-          "description": "We're proud to announce that Prime College has maintained a 100% completion rate across all programmes, reflecting our commitment to learner success and support.",
+          "title": "The Prime College Achieves 100% Learner Completion Rate",
+          "description": "We're proud to announce that The Prime College has maintained a 100% completion rate across all programmes, reflecting our commitment to learner success and support.",
           "date": "28 Jan 2026",
           "category": "College News",
           "image": "classroom"
@@ -195,7 +195,7 @@
     }
   ],
   "meta": {
-    "title": "Prime College – Professional Qualifications UK",
+    "title": "The Prime College – Professional Qualifications UK",
     "description": "Leading provider of professional qualifications in Business, Management, and Health & Social Care in the UK."
   }
 }

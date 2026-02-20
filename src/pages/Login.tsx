@@ -106,7 +106,7 @@ const Login = () => {
               <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                 <img src={logo} alt="Prime College" className="w-8 h-8 object-contain" />
               </div>
-              <span className="text-xl font-bold text-foreground">Prime College</span>
+              <span className="text-xl font-bold text-foreground">The Prime College</span>
             </Link>
           </div>
 
