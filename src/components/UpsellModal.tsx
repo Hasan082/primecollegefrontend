@@ -36,7 +36,7 @@ const UpsellModal = ({ currentSlug, onClose }: UpsellModalProps) => {
     (c) => c.category === currentCourse.category && c.slug !== currentSlug && !related.find((r) => r.slug === c.slug)
   );
 
-  const recommendations = [...related, ...sameCategory].slice(0, 3);
+  const recommendations = [...related, ...sameCategory].slice(0, 2);
 
   // Calculate bundle discount (10% off when 2+ courses)
   const bundleDiscount = items.length >= 2 ? 0.1 : 0;
