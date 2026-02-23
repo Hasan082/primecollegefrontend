@@ -61,6 +61,27 @@ const categoryNavItems: CategoryNav[] = [
       },
     ],
   },
+  {
+    label: "First Aid",
+    qualifications: [
+      {
+        label: "Paediatric First Aid Training (Level 3)",
+        href: "/qualifications/paediatric-first-aid-training-level-3",
+      },
+      {
+        label: "First Aid at Work Course (Level 3)",
+        href: "/qualifications/first-aid-at-work-course-level-3",
+      },
+      {
+        label: "Basic Life Support Training Course",
+        href: "/qualifications/basic-life-support-training-course",
+      },
+      {
+        label: "Emergency First Aid at Work Course (Level 3)",
+        href: "/qualifications/emergency-first-aid-at-work-course-level-3",
+      },
+    ],
+  },
 ];
 
 interface SimpleNavItem {
