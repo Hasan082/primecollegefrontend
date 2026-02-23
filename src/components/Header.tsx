@@ -146,7 +146,7 @@ const Header = () => {
               onMouseLeave={() => setOpenAbout(false)}
             >
               <button
-                className={`relative text-primary-foreground px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${openAbout ? "after:w-full" : ""}`}
+                className={`relative text-primary-foreground mx-2.5 py-1.5 text-xs font-medium flex items-center gap-1 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${openAbout ? "after:w-full" : ""}`}
                 onClick={() => navigate("/about")}
               >
                 About
@@ -172,7 +172,7 @@ const Header = () => {
             {categoryNavItems.map((cat) => (
               <button
                 key={cat.label}
-                className={`relative text-primary-foreground px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${openMega === cat.label ? "after:w-full" : ""}`}
+                className={`relative text-primary-foreground mx-2.5 py-1.5 text-xs font-medium flex items-center gap-1 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${openMega === cat.label ? "after:w-full" : ""}`}
                 onMouseEnter={() => { setOpenMega(cat.label); setOpenAbout(false); }}
                 onClick={() => {
                   setOpenMega(null);
@@ -188,7 +188,7 @@ const Header = () => {
               <Link
                 key={item.label}
                 to={item.href}
-                className="relative text-primary-foreground px-2.5 py-1.5 text-xs font-medium after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full"
+                className="relative text-primary-foreground mx-2.5 py-1.5 text-xs font-medium after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full"
               >
                 {item.label}
               </Link>
