@@ -80,16 +80,60 @@ const Recruitment = () => {
 
   return (
     <div>
-      <div className="relative h-[400px] overflow-hidden">
-        <img src={recruitmentBanner} alt="Recruitment at Prime College" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-primary/75" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center px-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">{data.title}</h1>
-            <p className="text-primary-foreground/90 max-w-2xl mx-auto text-lg">{data.intro}</p>
+      {/* Hero Section - Split Layout */}
+      <section className="bg-accent/30">
+        <div className="container mx-auto px-4 py-12 md:py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            {/* Left - Image */}
+            <div className="overflow-hidden rounded-sm shadow-lg">
+              <img
+                src={recruitmentBanner}
+                alt="Recruitment at Prime College"
+                className="w-full h-[350px] md:h-[480px] object-cover"
+              />
+            </div>
+
+            {/* Right - Content */}
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2">
+                  Prime Recruitment
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground font-medium">
+                  Filling Workforce Gaps, Building Futures.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h2 className="text-xl md:text-2xl font-bold text-foreground">
+                  Prime Recruitment – A Division of Prime College
+                </h2>
+                <p className="text-muted-foreground leading-relaxed">
+                  We are delighted to announce the launch of{" "}
+                  <strong className="text-foreground">Prime Recruitment</strong>, a new division of{" "}
+                  <strong className="text-foreground">Prime College</strong>.
+                </p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Prime Recruitment has been established to connect skilled professionals with
+                  outstanding career opportunities in the UK. With a strong focus on{" "}
+                  <strong className="text-foreground">
+                    placing qualified doctors and nurses into the NHS
+                  </strong>
+                  , while also addressing workforce needs across other industries, we are committed
+                  to supporting employers and international professionals alike.
+                </p>
+              </div>
+
+              <a
+                href="/contact"
+                className="inline-block bg-secondary text-secondary-foreground px-8 py-3 rounded font-semibold text-sm hover:opacity-90 transition-opacity"
+              >
+                Enquire
+              </a>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <Section title="Current Openings">
         <div className="space-y-6 max-w-3xl mx-auto">
