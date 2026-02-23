@@ -160,6 +160,25 @@ const Qualifications = () => {
           </Dialog>
         </div>
       </Section>
+
+      {/* More Than One Course Section */}
+      <section className="bg-accent/30 py-16 px-4">
+        <div className="container mx-auto max-w-3xl text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
+            More Than One Course?
+          </h2>
+          <p className="text-muted-foreground leading-relaxed mb-8">
+            If you are looking to upskill your team in management and leadership, we will offer you comprehensive and flexible solutions. We are excited to discuss how we can support your training objectives by providing customised course packages.
+          </p>
+          <Link
+            to="/contact"
+            className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded-full hover:opacity-90 text-sm"
+          >
+            Get A Quote
+          </Link>
+        </div>
+      </section>
+
       <CTASection />
     </div>
   );
