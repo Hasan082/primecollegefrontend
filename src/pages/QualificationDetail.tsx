@@ -43,7 +43,7 @@ const qualificationsData: Record<string, {
       { question: "Is this qualification recognised by employers?", answer: "Yes, OTHM qualifications are regulated by Ofqual and recognised by employers and universities across the UK and internationally." },
       { question: "Can I study while working full-time?", answer: "Absolutely. Our flexible learning approach allows you to study at your own pace alongside your professional commitments." },
     ],
-    relatedSlugs: ["othm-level-5-extended-diploma-in-business-management", "othm-level-6-diploma-in-business-management"],
+    relatedSlugs: ["othm-level-5-extended-diploma-in-business-management", "othm-level-6-diploma-in-business-management", "othm-level-7-diploma-in-strategic-management-and-leadership"],
   },
   "othm-level-5-extended-diploma-in-business-management": {
     title: "OTHM Level 5 Extended Diploma in Business Management",
@@ -66,7 +66,7 @@ const qualificationsData: Record<string, {
       { question: "How is the course assessed?", answer: "Assessment is through assignments and case studies. There are no exams." },
       { question: "Can I pay in instalments?", answer: "Yes, we offer flexible payment plans. Please contact us for more details." },
     ],
-    relatedSlugs: ["othm-level-4-diploma-in-business-management", "othm-level-6-diploma-in-business-management"],
+    relatedSlugs: ["othm-level-4-diploma-in-business-management", "othm-level-6-diploma-in-business-management", "othm-level-7-diploma-in-strategic-management-and-leadership"],
   },
   "othm-level-6-diploma-in-business-management": {
     title: "OTHM Level 6 Diploma in Business Management",
@@ -89,7 +89,7 @@ const qualificationsData: Record<string, {
       { question: "How long does it take to complete?", answer: "The standard duration is 9 months, but flexible study options are available." },
       { question: "Are there any exams?", answer: "No, assessment is entirely through coursework, assignments, and case studies." },
     ],
-    relatedSlugs: ["othm-level-5-extended-diploma-in-business-management", "othm-level-7-diploma-in-strategic-management-and-leadership"],
+    relatedSlugs: ["othm-level-5-extended-diploma-in-business-management", "othm-level-7-diploma-in-strategic-management-and-leadership", "othm-level-4-diploma-in-business-management"],
   },
   "othm-level-7-diploma-in-strategic-management-and-leadership": {
     title: "OTHM Level 7 Diploma in Strategic Management and Leadership",
@@ -112,7 +112,7 @@ const qualificationsData: Record<string, {
       { question: "Who is this qualification for?", answer: "This is ideal for senior managers, directors, and aspiring executives looking to enhance their strategic capabilities." },
       { question: "What is the mode of delivery?", answer: "We offer flexible blended learning combining online resources with face-to-face sessions." },
     ],
-    relatedSlugs: ["qualifi-level-7-diploma-in-strategic-management-and-leadership", "othm-level-6-diploma-in-business-management"],
+    relatedSlugs: ["qualifi-level-7-diploma-in-strategic-management-and-leadership", "othm-level-6-diploma-in-business-management", "othm-level-5-extended-diploma-in-business-management"],
   },
   "qualifi-level-7-diploma-in-strategic-management-and-leadership": {
     title: "QUALIFI Level 7 Diploma in Strategic Management and Leadership",
@@ -135,7 +135,7 @@ const qualificationsData: Record<string, {
       { question: "What are the entry requirements?", answer: "A Level 6 qualification or significant management experience at a senior level is required." },
       { question: "Can I pay in instalments?", answer: "Yes, flexible payment plans are available. Contact us to discuss options." },
     ],
-    relatedSlugs: ["othm-level-7-diploma-in-strategic-management-and-leadership", "othm-level-7-diploma-in-healthcare-management"],
+    relatedSlugs: ["othm-level-7-diploma-in-strategic-management-and-leadership", "othm-level-7-diploma-in-healthcare-management", "othm-level-6-diploma-in-business-management"],
   },
   "qualifi-level-3-diploma-in-health-and-social-care": {
     title: "QUALIFI Level 3 Diploma in Health and Social Care",
@@ -158,7 +158,7 @@ const qualificationsData: Record<string, {
       { question: "Will this help me get a job in care?", answer: "Yes, this qualification is widely recognised by care employers and provides a strong foundation for a care career." },
       { question: "Can I progress to higher-level qualifications?", answer: "Yes, successful completion can lead to Level 4 and Level 5 qualifications in Health and Social Care." },
     ],
-    relatedSlugs: ["othm-level-5-diploma-in-health-and-social-care-management", "othm-level-7-diploma-in-healthcare-management"],
+    relatedSlugs: ["othm-level-5-diploma-in-health-and-social-care-management", "othm-level-7-diploma-in-healthcare-management", "qualifi-level-7-diploma-in-strategic-management-and-leadership"],
   },
   "othm-level-5-diploma-in-health-and-social-care-management": {
     title: "OTHM Level 5 Diploma in Health and Social Care Management",
@@ -181,7 +181,7 @@ const qualificationsData: Record<string, {
       { question: "What career opportunities does this open?", answer: "Graduates can pursue roles such as Care Home Manager, Service Manager, or Health and Social Care Coordinator." },
       { question: "How is the course delivered?", answer: "Through a blend of online learning resources, assignments, and supported study sessions." },
     ],
-    relatedSlugs: ["qualifi-level-3-diploma-in-health-and-social-care", "othm-level-7-diploma-in-healthcare-management"],
+    relatedSlugs: ["qualifi-level-3-diploma-in-health-and-social-care", "othm-level-7-diploma-in-healthcare-management", "othm-level-7-diploma-in-strategic-management-and-leadership"],
   },
   "othm-level-7-diploma-in-healthcare-management": {
     title: "OTHM Level 7 Diploma in Healthcare Management",
@@ -204,7 +204,7 @@ const qualificationsData: Record<string, {
       { question: "Who should take this qualification?", answer: "Senior healthcare professionals, clinical managers, and those aspiring to director-level positions in healthcare organisations." },
       { question: "Is the qualification internationally recognised?", answer: "Yes, OTHM Level 7 qualifications are recognised globally, making it valuable for international healthcare careers." },
     ],
-    relatedSlugs: ["othm-level-5-diploma-in-health-and-social-care-management", "othm-level-7-diploma-in-strategic-management-and-leadership"],
+    relatedSlugs: ["othm-level-5-diploma-in-health-and-social-care-management", "othm-level-7-diploma-in-strategic-management-and-leadership", "qualifi-level-3-diploma-in-health-and-social-care"],
   },
 };
 
