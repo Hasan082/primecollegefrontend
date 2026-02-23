@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, Mail, CheckCircle2, Shield, FileCheck, Award, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,13 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleDemoLogin = () => {
+    login();
+    navigate("/learner/dashboard");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,7 +178,17 @@ const Login = () => {
               </button>
             </form>
 
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+              <div className="relative flex justify-center"><span className="bg-card px-3 text-xs text-muted-foreground">OR</span></div>
+            </div>
 
+            <button
+              onClick={handleDemoLogin}
+              className="w-full h-11 rounded-lg font-semibold text-sm border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+            >
+              🚀 Demo Login (One Click)
+            </button>
           </div>
 
           <Link to="/" className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-primary-foreground hover:bg-primary hover:border-primary transition-colors">
