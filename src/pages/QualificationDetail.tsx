@@ -6,6 +6,7 @@ import heroClassroom from "@/assets/hero-classroom.jpg";
 import heroBusiness from "@/assets/hero-business.jpg";
 import heroCare from "@/assets/hero-care.jpg";
 import CTASection from "@/components/CTASection";
+import Breadcrumb from "@/components/Breadcrumb";
 import UpsellModal from "@/components/UpsellModal";
 import { useCart } from "@/contexts/CartContext";
 
@@ -366,6 +367,7 @@ const QualificationDetail = () => {
           </div>
         </div>
       </section>
+      <Breadcrumb items={[{ label: "Qualifications", href: "/qualifications" }, { label: qual.title }]} />
 
       {/* Quick Enroll Bar */}
       <section className="bg-secondary py-4">

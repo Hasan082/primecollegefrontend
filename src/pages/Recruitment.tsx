@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import Breadcrumb from "@/components/Breadcrumb";
 import { Link } from "react-router-dom";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
@@ -84,6 +85,7 @@ const Recruitment = () => {
 
   return (
     <div>
+      <Breadcrumb items={[{ label: "Recruitment" }]} />
       {/* Hero Section - Split Layout */}
       <section className="bg-accent/30">
         <div className="container mx-auto px-4 py-12 md:py-16">

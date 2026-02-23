@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { GraduationCap, Clock, TrendingUp, Heart, RefreshCw, Users, Target, BarChart3, Shield, Lightbulb } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 import { fetchContent } from "@/lib/api";
 import CTASection from "@/components/CTASection";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -60,6 +61,7 @@ const About = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-background">{data.title}</h1>
         </div>
       </div>
+      <Breadcrumb items={[{ label: "About Us" }]} />
 
       {/* About Section - two column */}
       <section className="py-16 px-4">

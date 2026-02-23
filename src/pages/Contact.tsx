@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Breadcrumb from "@/components/Breadcrumb";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
 import CTASection from "@/components/CTASection";
@@ -43,6 +44,7 @@ const Contact = () => {
           </div>
         </div>
       </div>
+      <Breadcrumb items={[{ label: "Contact Us" }]} />
 
       <Section title="">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import Breadcrumb from "@/components/Breadcrumb";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
 import QualificationCard from "@/components/QualificationCard";
@@ -77,6 +78,7 @@ const Qualifications = () => {
           </div>
         </div>
       </div>
+      <Breadcrumb items={activeCategory !== "All" ? [{ label: "Qualifications", href: "/qualifications" }, { label: activeCategory }] : [{ label: "Qualifications" }]} />
 
       {/* Category Info Section */}
       {activeCategory !== "All" && data.categoryInfo[activeCategory] && (
