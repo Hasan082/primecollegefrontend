@@ -90,27 +90,9 @@ const Qualifications = () => {
                 {data.categoryInfo[activeCategory].headline}
               </p>
             </div>
-            <p className="text-primary-foreground/80 text-center leading-relaxed mb-8">
+            <p className="text-primary-foreground/80 text-center leading-relaxed">
               {data.categoryInfo[activeCategory].description}
             </p>
-            <div className="text-center">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="secondary" size="lg" className="gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    View Our Brochure
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-5xl w-[95vw] h-[85vh] p-0">
-                  <iframe
-                    src="https://online.fliphtml5.com/nghfk/fkpv/"
-                    className="w-full h-full rounded-lg"
-                    allowFullScreen
-                    title="The Prime College Brochure"
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
           </div>
         </section>
       )}
@@ -157,6 +139,26 @@ const Qualifications = () => {
             </Link>
           </div>
         )}
+
+        {/* Brochure Button */}
+        <div className="text-center mt-10">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="default" size="lg" className="gap-2">
+                <BookOpen className="w-5 h-5" />
+                View Our Brochure
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-5xl w-[95vw] h-[85vh] p-0">
+              <iframe
+                src="https://online.fliphtml5.com/nghfk/fkpv/"
+                className="w-full h-full rounded-lg"
+                allowFullScreen
+                title="The Prime College Brochure"
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </Section>
       <CTASection />
     </div>
