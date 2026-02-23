@@ -165,7 +165,7 @@ const Qualifications = () => {
       <section className="bg-primary/5 py-16 px-4">
         <div className="container mx-auto max-w-3xl text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6">
-            More Than One Course?
+            More Than One Qualification?
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-8">
             If you are looking to upskill your team in management and leadership, we will offer you comprehensive and flexible solutions. We are excited to discuss how we can support your training objectives by providing customised course packages.
