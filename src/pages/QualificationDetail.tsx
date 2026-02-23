@@ -333,7 +333,7 @@ const QualificationDetail = () => {
   return (
     <div>
       {/* Hero Section - Dark overlay on image */}
-      <section className="relative h-[400px] md:h-[480px] overflow-hidden">
+      <section className="relative h-[450px] md:h-[540px] overflow-hidden">
         <img
           src={imageMap[qual.image] || heroBusiness}
           alt={qual.title}
@@ -385,30 +385,6 @@ const QualificationDetail = () => {
       </section>
       <Breadcrumb items={[{ label: "Qualifications", href: "/qualifications" }, { label: qual.title }]} />
 
-      {/* Quick Enroll Bar */}
-      <section className="bg-secondary py-4">
-        <div className="container mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
-          <p className="text-secondary-foreground font-semibold text-sm md:text-base">
-            Ready to start your journey? Enroll today and transform your career.
-          </p>
-          <button
-            onClick={() => {
-              addItem({
-                slug: slug!,
-                title: qual.title,
-                level: qual.level,
-                duration: qual.duration,
-                price: qual.price,
-                category: qual.category,
-              });
-              setShowUpsell(true);
-            }}
-            className="bg-primary text-primary-foreground px-8 py-2.5 font-semibold rounded text-sm hover:opacity-90 transition-opacity whitespace-nowrap"
-          >
-            Enroll Now – {qual.price}
-          </button>
-        </div>
-      </section>
 
       {/* Two-column: Why This Qualification + Image */}
       <section className="py-16 px-4">
