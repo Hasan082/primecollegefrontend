@@ -6,6 +6,9 @@ import QualificationCard from "@/components/QualificationCard";
 import CTASection from "@/components/CTASection";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import qualificationsBanner from "@/assets/qualifications-banner.jpg";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { BookOpen } from "lucide-react";
 
 interface Qualification {
   id: string;
@@ -87,9 +90,27 @@ const Qualifications = () => {
                 {data.categoryInfo[activeCategory].headline}
               </p>
             </div>
-            <p className="text-primary-foreground/80 text-center leading-relaxed">
+            <p className="text-primary-foreground/80 text-center leading-relaxed mb-8">
               {data.categoryInfo[activeCategory].description}
             </p>
+            <div className="text-center">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="secondary" size="lg" className="gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    View Our Brochure
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-5xl w-[95vw] h-[85vh] p-0">
+                  <iframe
+                    src="https://online.fliphtml5.com/nghfk/fkpv/"
+                    className="w-full h-full rounded-lg"
+                    allowFullScreen
+                    title="The Prime College Brochure"
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </section>
       )}
