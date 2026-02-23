@@ -2,6 +2,28 @@
   "title": "Our Qualifications",
   "intro": "Explore our comprehensive range of professionally recognised qualifications across First Aid, Business, Management, and Health & Social Care.",
   "categories": ["All", "First Aid", "Business", "Management", "Care"],
+  "categoryInfo": {
+    "First Aid": {
+      "headline": "Training programs offer valuable opportunities to gain specialised skills and knowledge while earning internationally recognised qualifications.",
+      "description": "Irrespective of whether an individual is taking their first steps into the world of employment or well established in their role, first aid training programs serve as an excellent opportunity to learn life-saving knowledge and skills giving you the opportunity to protect those around you.",
+      "progressionTitle": "What progression paths you can choose:"
+    },
+    "Business": {
+      "headline": "Business qualifications equip you with the strategic thinking and operational expertise needed to excel in today's competitive marketplace.",
+      "description": "Whether you are starting your career in business or looking to progress into senior management, our business programmes provide the knowledge and practical skills required to lead teams, manage projects, and drive organisational success.",
+      "progressionTitle": "What progression paths you can choose:"
+    },
+    "Management": {
+      "headline": "Management qualifications develop your leadership capabilities, enabling you to inspire teams and deliver results at the highest level.",
+      "description": "Our management programmes are designed for aspiring and experienced leaders who want to enhance their strategic decision-making, people management, and organisational development skills to advance into senior leadership roles.",
+      "progressionTitle": "What progression paths you can choose:"
+    },
+    "Care": {
+      "headline": "Health and Social Care qualifications prepare you for a rewarding career supporting individuals and communities in need.",
+      "description": "From foundational diplomas to advanced healthcare management, our care programmes equip you with the knowledge, compassion, and professional competence to make a meaningful difference in people's lives.",
+      "progressionTitle": "What progression paths you can choose:"
+    }
+  },
   "qualifications": [
     {
       "id": "paediatric-first-aid-training-level-3",

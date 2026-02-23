@@ -17,10 +17,17 @@ interface Qualification {
   description: string;
 }
 
+interface CategoryInfo {
+  headline: string;
+  description: string;
+  progressionTitle: string;
+}
+
 interface QualData {
   title: string;
   intro: string;
   categories: string[];
+  categoryInfo: Record<string, CategoryInfo>;
   qualifications: Qualification[];
 }
 
@@ -67,6 +74,28 @@ const Qualifications = () => {
           </div>
         </div>
       </div>
+
+      {/* Category Info Section */}
+      {activeCategory !== "All" && data.categoryInfo[activeCategory] && (
+        <section className="bg-primary text-primary-foreground py-16 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="text-3xl font-bold text-center mb-8">
+              What is a Training Programme?
+            </h2>
+            <div className="bg-primary-foreground/10 border border-primary-foreground/20 rounded-xl p-6 mb-6">
+              <p className="text-primary-foreground text-lg leading-relaxed">
+                {data.categoryInfo[activeCategory].headline}
+              </p>
+            </div>
+            <p className="text-primary-foreground/80 text-center leading-relaxed mb-12">
+              {data.categoryInfo[activeCategory].description}
+            </p>
+            <h3 className="text-2xl font-bold text-center">
+              {data.categoryInfo[activeCategory].progressionTitle}
+            </h3>
+          </div>
+        </section>
+      )}
 
       <Section title="">
         {/* Dropdown Filters */}
