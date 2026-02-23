@@ -13,7 +13,7 @@ const TopBar = () => {
         <div className="flex items-center gap-4">
           <a href="tel:02081495431" className="flex items-center gap-1.5 hover:opacity-80">
             <Phone className="w-3 h-3" />
-            <span>0208 149 5431 2</span>
+            <span>0208 149 5431</span>
           </a>
           <span className="text-primary-foreground/40">|</span>
           <a href="mailto:info@theprimecollege.org.uk" className="flex items-center gap-1.5 hover:opacity-80">
