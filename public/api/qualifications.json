@@ -1,8 +1,44 @@
 {
   "title": "Our Qualifications",
-  "intro": "Explore our comprehensive range of professionally recognised qualifications across Business, Management, and Health & Social Care.",
-  "categories": ["All", "Business", "Management", "Care"],
+  "intro": "Explore our comprehensive range of professionally recognised qualifications across First Aid, Business, Management, and Health & Social Care.",
+  "categories": ["All", "First Aid", "Business", "Management", "Care"],
   "qualifications": [
+    {
+      "id": "paediatric-first-aid-training-level-3",
+      "title": "Paediatric First Aid Training (Level 3)",
+      "category": "First Aid",
+      "level": "Level 3",
+      "duration": "2 days",
+      "price": "£120",
+      "description": "A comprehensive paediatric first aid course covering emergency procedures for infants and children, suitable for childcare professionals and parents."
+    },
+    {
+      "id": "first-aid-at-work-course-level-3",
+      "title": "First Aid at Work Course (Level 3)",
+      "category": "First Aid",
+      "level": "Level 3",
+      "duration": "3 days",
+      "price": "£180",
+      "description": "An HSE-approved first aid at work course providing comprehensive training in workplace first aid procedures and emergency response."
+    },
+    {
+      "id": "basic-life-support-training-course",
+      "title": "Basic Life Support Training Course",
+      "category": "First Aid",
+      "level": "Level 2",
+      "duration": "1 day",
+      "price": "£75",
+      "description": "Essential life-saving skills including CPR, use of an AED, and management of choking for adults, children, and infants."
+    },
+    {
+      "id": "emergency-first-aid-at-work-course-level-3",
+      "title": "Emergency First Aid at Work Course (Level 3)",
+      "category": "First Aid",
+      "level": "Level 3",
+      "duration": "1 day",
+      "price": "£95",
+      "description": "A one-day emergency first aid course designed for low-risk workplaces, covering essential first aid skills and emergency procedures."
+    },
     {
       "id": "othm-level-7-diploma-in-strategic-management-and-leadership",
       "title": "OTHM Level 7 Diploma in Strategic Management and Leadership",
@@ -78,6 +114,6 @@
   ],
   "meta": {
     "title": "Qualifications – The Prime College",
-    "description": "Browse our professional qualifications in Business, Management, and Health & Social Care."
+    "description": "Browse our professional qualifications in First Aid, Business, Management, and Health & Social Care."
   }
 }

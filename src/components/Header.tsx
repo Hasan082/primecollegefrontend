@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import logo from "@/assets/prime-logo-white-notext.png";
 
 interface Qualification {
@@ -100,7 +100,10 @@ const TOP_BAR_HEIGHT = 36;
 const HEADER_HEIGHT_FULL = 80;
 const HEADER_HEIGHT_SHRUNK = 60;
 
+const getCategorySlug = (label: string) => encodeURIComponent(label);
+
 const Header = () => {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
@@ -149,6 +152,10 @@ const Header = () => {
                 key={cat.label}
                 className={`text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/80 rounded flex items-center gap-1 ${openMega === cat.label ? "bg-primary/80" : ""}`}
                 onMouseEnter={() => setOpenMega(cat.label)}
+                onClick={() => {
+                  setOpenMega(null);
+                  navigate(`/qualifications?category=${getCategorySlug(cat.label)}`);
+                }}
               >
                 {cat.label}
                 <ChevronDown className="w-3 h-3" />
@@ -190,9 +197,19 @@ const Header = () => {
               .filter((cat) => cat.label === openMega)
               .map((cat) => (
                 <div key={cat.label}>
-                  <h4 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-wider">
-                    {cat.label} Qualifications
-                  </h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                      {cat.label} Qualifications
+                    </h4>
+                    <Link
+                      to={`/qualifications?category=${getCategorySlug(cat.label)}`}
+                      className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                      onClick={() => setOpenMega(null)}
+                    >
+                      View All {cat.label} Courses
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
                   <div className="grid grid-cols-4 gap-4">
                     {cat.qualifications.map((q) => (
                       <Link
@@ -248,6 +265,14 @@ const Header = () => {
                       {q.label}
                     </Link>
                   ))}
+                  <Link
+                    to={`/qualifications?category=${getCategorySlug(cat.label)}`}
+                    className="block text-secondary font-semibold py-1.5 text-sm mt-1 flex items-center gap-1"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    View All {cat.label} Courses
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
                 </div>
               )}
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { fetchContent } from "@/lib/api";
 import Section from "@/components/Section";
 import QualificationCard from "@/components/QualificationCard";
@@ -25,16 +26,22 @@ interface QualData {
 
 const Qualifications = () => {
   const [data, setData] = useState<QualData | null>(null);
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get("category") || "All";
+  const [activeCategory, setActiveCategory] = useState(categoryParam);
   const [activeLevel, setActiveLevel] = useState("All");
 
   useEffect(() => {
     fetchContent<QualData>("qualifications").then(setData);
   }, []);
 
+  // Sync category from URL params
+  useEffect(() => {
+    setActiveCategory(categoryParam);
+  }, [categoryParam]);
+
   if (!data) return <LoadingSpinner />;
 
-  // Derive unique levels from data
   const levels = ["All", ...Array.from(new Set(data.qualifications.map((q) => q.level))).sort()];
 
   const filtered = data.qualifications.filter((q) => {
@@ -43,15 +50,20 @@ const Qualifications = () => {
     return catMatch && lvlMatch;
   });
 
+  const pageTitle = activeCategory !== "All" ? `${activeCategory} Courses` : data.title;
+  const pageIntro = activeCategory !== "All"
+    ? `Browse our ${activeCategory.toLowerCase()} courses and find the right qualification for your career.`
+    : data.intro;
+
   return (
     <div>
       <div className="relative">
-        <img src={qualificationsBanner} alt="Our Qualifications" className="w-full h-[300px] md:h-[400px] object-cover" />
+        <img src={qualificationsBanner} alt={pageTitle} className="w-full h-[300px] md:h-[400px] object-cover" />
         <div className="absolute inset-0 bg-primary/75" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center px-4">
-            <h1 className="text-4xl font-bold text-primary-foreground mb-4">{data.title}</h1>
-            <p className="text-primary-foreground/80 max-w-2xl mx-auto">{data.intro}</p>
+            <h1 className="text-4xl font-bold text-primary-foreground mb-4">{pageTitle}</h1>
+            <p className="text-primary-foreground/80 max-w-2xl mx-auto">{pageIntro}</p>
           </div>
         </div>
       </div>
@@ -84,11 +96,20 @@ const Qualifications = () => {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((q) => (
-            <QualificationCard key={q.id} {...q} />
-          ))}
-        </div>
+        {filtered.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((q) => (
+              <QualificationCard key={q.id} {...q} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground text-lg">No courses found matching your filters.</p>
+            <Link to="/qualifications" className="text-primary font-medium mt-2 inline-block hover:underline">
+              View all qualifications
+            </Link>
+          </div>
+        )}
       </Section>
       <CTASection />
     </div>
