@@ -25,6 +25,7 @@ import LoadingSpinner from "./components/LoadingSpinner";
 import LearnerLayout from "./components/learner/LearnerLayout";
 import Dashboard from "./pages/learner/Dashboard";
 import QualificationView from "./pages/learner/QualificationView";
+import UnitDetail from "./pages/learner/UnitDetail";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => {
                 <Route path="/learner" element={<LearnerLayout />}>
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="qualification/:id" element={<QualificationView />} />
+                  <Route path="qualification/:qualificationId/unit/:unitId" element={<UnitDetail />} />
                 </Route>
                 <Route path="*" element={
                   <>

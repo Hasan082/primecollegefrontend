@@ -92,9 +92,12 @@ const QualificationView = () => {
                     )}
                   </div>
                 </div>
-                <button className="bg-primary text-primary-foreground text-sm font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition-opacity flex-shrink-0">
+                <Link
+                  to={`/learner/qualification/${id}/unit/${unit.id}`}
+                  className="bg-primary text-primary-foreground text-sm font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition-opacity flex-shrink-0"
+                >
                   View Unit
-                </button>
+                </Link>
               </div>
             </div>
           );
