@@ -90,9 +90,12 @@ interface SimpleNavItem {
 }
 
 const simpleNavItems: SimpleNavItem[] = [
-  { label: "About", href: "/about" },
-  { label: "Recruitment", href: "/recruitment" },
   { label: "Contact", href: "/contact" },
+];
+
+const aboutDropdownItems = [
+  { label: "Recruitment", href: "/recruitment" },
+  { label: "Our Team", href: "/team" },
 ];
 
 const TOP_BAR_HEIGHT = 36;
@@ -105,6 +108,7 @@ const Header = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
+  const [openAbout, setOpenAbout] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
 
@@ -135,22 +139,41 @@ const Header = () => {
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-0">
-            {simpleNavItems.slice(0, 2).map((item) => (
-              <Link
-                key={item.label}
-                to={item.href}
-                className="relative text-primary-foreground px-2.5 py-1.5 text-xs font-medium after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full"
+            {/* About Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => { setOpenAbout(true); setOpenMega(null); }}
+              onMouseLeave={() => setOpenAbout(false)}
+            >
+              <button
+                className={`relative text-primary-foreground px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${openAbout ? "after:w-full" : ""}`}
+                onClick={() => navigate("/about")}
               >
-                {item.label}
-              </Link>
-            ))}
+                About
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              {openAbout && (
+                <div className="absolute top-full left-0 bg-popover border border-border rounded-lg shadow-lg py-2 w-44 z-50">
+                  {aboutDropdownItems.map((item) => (
+                    <Link
+                      key={item.label}
+                      to={item.href}
+                      className="block px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary"
+                      onClick={() => setOpenAbout(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Category Nav Items */}
             {categoryNavItems.map((cat) => (
               <button
                 key={cat.label}
                 className={`relative text-primary-foreground px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full ${openMega === cat.label ? "after:w-full" : ""}`}
-                onMouseEnter={() => setOpenMega(cat.label)}
+                onMouseEnter={() => { setOpenMega(cat.label); setOpenAbout(false); }}
                 onClick={() => {
                   setOpenMega(null);
                   navigate(`/qualifications?category=${getCategorySlug(cat.label)}`);
@@ -161,7 +184,7 @@ const Header = () => {
               </button>
             ))}
 
-            {simpleNavItems.slice(2).map((item) => (
+            {simpleNavItems.map((item) => (
               <Link
                 key={item.label}
                 to={item.href}
@@ -220,16 +243,30 @@ const Header = () => {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="lg:hidden bg-primary border-t border-primary-foreground/20 px-4 pb-4">
-          {simpleNavItems.slice(0, 2).map((item) => (
-            <Link
-              key={item.label}
-              to={item.href}
-              className="block text-primary-foreground py-2 text-sm font-medium"
-              onClick={() => setMobileOpen(false)}
+          {/* About with sub-items */}
+          <div>
+            <button
+              className="flex items-center justify-between w-full text-primary-foreground py-2 text-sm font-medium"
+              onClick={() => setMobileExpanded(mobileExpanded === "About" ? null : "About")}
             >
-              {item.label}
-            </Link>
-          ))}
+              <Link to="/about" onClick={() => setMobileOpen(false)} className="text-primary-foreground">About</Link>
+              <ChevronDown className={`w-3 h-3 transition-transform ${mobileExpanded === "About" ? "rotate-180" : ""}`} />
+            </button>
+            {mobileExpanded === "About" && (
+              <div className="pl-4 pb-2">
+                {aboutDropdownItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className="block text-primary-foreground/80 py-1 text-sm"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           {categoryNavItems.map((cat) => (
             <div key={cat.label}>
@@ -259,7 +296,7 @@ const Header = () => {
             </div>
           ))}
 
-          {simpleNavItems.slice(2).map((item) => (
+          {simpleNavItems.map((item) => (
             <Link
               key={item.label}
               to={item.href}
