@@ -134,12 +134,12 @@ const Header = () => {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0">
             {simpleNavItems.slice(0, 2).map((item) => (
               <Link
                 key={item.label}
                 to={item.href}
-                className="text-primary-foreground px-3 py-2 text-sm font-medium hover:bg-primary/80 rounded"
+                className="text-primary-foreground px-2.5 py-1.5 text-xs font-medium hover:bg-primary/80 rounded"
               >
                 {item.label}
               </Link>
@@ -149,7 +149,7 @@ const Header = () => {
             {categoryNavItems.map((cat) => (
               <button
                 key={cat.label}
-                className={`text-primary-foreground px-3 py-2 text-sm font-medium hover:bg-primary/80 rounded flex items-center gap-1 ${openMega === cat.label ? "bg-primary/80" : ""}`}
+                className={`text-primary-foreground px-2.5 py-1.5 text-xs font-medium hover:bg-primary/80 rounded flex items-center gap-1 ${openMega === cat.label ? "bg-primary/80" : ""}`}
                 onMouseEnter={() => setOpenMega(cat.label)}
                 onClick={() => {
                   setOpenMega(null);
@@ -165,7 +165,7 @@ const Header = () => {
               <Link
                 key={item.label}
                 to={item.href}
-                className="text-primary-foreground px-3 py-2 text-sm font-medium hover:bg-primary/80 rounded"
+                className="text-primary-foreground px-2.5 py-1.5 text-xs font-medium hover:bg-primary/80 rounded"
               >
                 {item.label}
               </Link>
@@ -173,7 +173,7 @@ const Header = () => {
 
             <Link
               to="/login"
-              className="ml-2 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
+              className="ml-1 bg-secondary text-secondary-foreground px-4 py-1.5 text-xs font-semibold rounded hover:opacity-90"
             >
               Login
             </Link>
