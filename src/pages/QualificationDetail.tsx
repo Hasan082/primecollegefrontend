@@ -339,7 +339,7 @@ const QualificationDetail = () => {
           alt={qual.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, hsl(var(--primary) / 0.95) 0%, hsl(var(--primary) / 0.88) 25%, hsl(var(--primary) / 0.7) 45%, hsl(var(--primary) / 0.45) 65%, hsl(var(--primary) / 0.2) 85%, hsl(var(--primary) / 0.08) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, hsl(var(--primary) / 1) 0%, hsl(var(--primary) / 0.8) 20%, hsl(var(--primary) / 0.6) 40%, hsl(var(--primary) / 0.4) 60%, hsl(var(--primary) / 0.2) 80%, hsl(var(--primary) / 0) 100%)' }} />
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
