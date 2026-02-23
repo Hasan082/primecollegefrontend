@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
+import { useState, useEffect } from "react";
 import TopBar from "./components/TopBar";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -19,45 +20,61 @@ import Checkout from "./pages/Checkout";
 import EnrollmentConfirmation from "./pages/EnrollmentConfirmation";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <CartProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/enrollment-confirmation" element={<EnrollmentConfirmation />} />
-            <Route path="*" element={
-              <>
-                <TopBar />
-                <Header />
-                <main className="min-h-screen" style={{ marginTop: 108 }}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/qualifications" element={<Qualifications />} />
-                    <Route path="/qualifications/:slug" element={<QualificationDetail />} />
-                    <Route path="/recruitment" element={<Recruitment />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-                <Footer />
-              </>
-            } />
-          </Routes>
-        </BrowserRouter>
-      </CartProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showLoading, setShowLoading] = useState(true);
+
+  useEffect(() => {
+    const minTimer = new Promise((res) => setTimeout(res, 2000));
+    const contentLoaded = new Promise((res) => {
+      if (document.readyState === "complete") return res(true);
+      window.addEventListener("load", () => res(true), { once: true });
+    });
+
+    Promise.all([minTimer, contentLoaded]).then(() => setShowLoading(false));
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <CartProvider>
+          {showLoading && <LoadingSpinner />}
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/enrollment-confirmation" element={<EnrollmentConfirmation />} />
+              <Route path="*" element={
+                <>
+                  <TopBar />
+                  <Header />
+                  <main className="min-h-screen" style={{ marginTop: 108 }}>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/qualifications" element={<Qualifications />} />
+                      <Route path="/qualifications/:slug" element={<QualificationDetail />} />
+                      <Route path="/recruitment" element={<Recruitment />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </>
+              } />
+            </Routes>
+          </BrowserRouter>
+        </CartProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
