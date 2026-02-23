@@ -32,7 +32,7 @@ const LoadingSpinner = () => {
         {/* Center circle with logo */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-16 h-16 rounded-full border-2 border-secondary/40 bg-primary flex items-center justify-center">
-            <img src={logo} alt="Prime College UK" className="w-10 h-10 object-contain" />
+            <img src={logo} alt="Prime College UK" className="w-10 h-10 object-contain" loading="eager" fetchPriority="high" />
           </div>
         </div>
       </div>
