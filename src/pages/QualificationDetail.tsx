@@ -363,6 +363,22 @@ const QualificationDetail = () => {
                   {qual.price}
                 </span>
               </div>
+              <button
+                onClick={() => {
+                  addItem({
+                    slug: slug!,
+                    title: qual.title,
+                    level: qual.level,
+                    duration: qual.duration,
+                    price: qual.price,
+                    category: qual.category,
+                  });
+                  setShowUpsell(true);
+                }}
+                className="mt-6 bg-secondary text-secondary-foreground px-8 py-3 font-bold rounded text-base hover:opacity-90 transition-opacity inline-block"
+              >
+                Enroll Now – {qual.price}
+              </button>
             </div>
           </div>
         </div>
