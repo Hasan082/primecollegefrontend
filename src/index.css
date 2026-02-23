@@ -56,6 +56,6 @@
   }
 
   .container {
-    @apply px-[30px];
+    padding-inline: 30px !important;
   }
 }
