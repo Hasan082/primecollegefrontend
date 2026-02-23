@@ -13,7 +13,7 @@ const LoadingSpinner = () => {
           <defs>
             <path
               id="circlePath"
-              d="M 60, 60 m -44, 0 a 44,44 0 1,1 88,0 a 44,44 0 1,1 -88,0"
+              d="M 60, 60 m -38, 0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"
             />
           </defs>
           <text
