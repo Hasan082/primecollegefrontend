@@ -87,17 +87,14 @@ const Qualifications = () => {
                 {data.categoryInfo[activeCategory].headline}
               </p>
             </div>
-            <p className="text-primary-foreground/80 text-center leading-relaxed mb-12">
+            <p className="text-primary-foreground/80 text-center leading-relaxed">
               {data.categoryInfo[activeCategory].description}
             </p>
-            <h3 className="text-2xl font-bold text-center">
-              {data.categoryInfo[activeCategory].progressionTitle}
-            </h3>
           </div>
         </section>
       )}
 
-      <Section title="">
+      <Section title={activeCategory !== "All" && data.categoryInfo[activeCategory] ? data.categoryInfo[activeCategory].progressionTitle : ""}>
         {/* Dropdown Filters */}
         <div className="flex flex-wrap justify-end gap-3 mb-8">
           <select
