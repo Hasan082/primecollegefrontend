@@ -246,7 +246,7 @@ const QualificationDetail = () => {
           alt={qual.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-primary/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-primary/30" />
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
