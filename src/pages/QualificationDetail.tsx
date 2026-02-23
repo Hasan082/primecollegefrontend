@@ -239,75 +239,106 @@ const QualificationDetail = () => {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="bg-muted">
-        <div className="container mx-auto px-4 py-12 md:py-16">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Image */}
-            <div className="relative rounded overflow-hidden">
-              <img
-                src={imageMap[qual.image] || heroBusiness}
-                alt={qual.title}
-                className="w-full h-[300px] md:h-[400px] object-cover"
-              />
-              <div className="absolute bottom-4 right-4 bg-primary p-2 rounded">
-                <img src="/placeholder.svg" alt="" className="w-10 h-10 opacity-0" />
-              </div>
-            </div>
-
-            {/* Content */}
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
+      {/* Hero Section - Dark overlay on image */}
+      <section className="relative h-[400px] md:h-[480px] overflow-hidden">
+        <img
+          src={imageMap[qual.image] || heroBusiness}
+          alt={qual.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-primary/80" />
+        <div className="absolute inset-0 flex items-center">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 leading-tight">
                 {qual.title}
               </h1>
-              <p className="text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-primary-foreground/85 leading-relaxed text-base md:text-lg mb-6 max-w-2xl">
                 {qual.description}
               </p>
-              <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex flex-wrap gap-3">
                 <span className="bg-secondary text-secondary-foreground text-xs font-bold px-4 py-2 rounded uppercase">
                   {qual.category}
                 </span>
-                <span className="bg-primary/10 text-primary text-xs font-bold px-4 py-2 rounded">
+                <span className="bg-primary-foreground/20 text-primary-foreground text-xs font-bold px-4 py-2 rounded">
                   {qual.level}
                 </span>
-                <span className="bg-primary/10 text-primary text-xs font-bold px-4 py-2 rounded">
+                <span className="bg-primary-foreground/20 text-primary-foreground text-xs font-bold px-4 py-2 rounded">
                   {qual.duration}
                 </span>
-                <span className="bg-primary/10 text-primary text-xs font-bold px-4 py-2 rounded">
+                <span className="bg-primary-foreground/20 text-primary-foreground text-xs font-bold px-4 py-2 rounded">
                   {qual.price}
                 </span>
               </div>
-              <button
-                onClick={() => {
-                  addItem({
-                    slug: slug!,
-                    title: qual.title,
-                    level: qual.level,
-                    duration: qual.duration,
-                    price: qual.price,
-                    category: qual.category,
-                  });
-                  setShowUpsell(true);
-                }}
-                className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
-              >
-                Enroll Now
-              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Enroll Bar */}
+      <section className="bg-secondary py-4">
+        <div className="container mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-secondary-foreground font-semibold text-sm md:text-base">
+            Ready to start your journey? Enroll today and transform your career.
+          </p>
+          <button
+            onClick={() => {
+              addItem({
+                slug: slug!,
+                title: qual.title,
+                level: qual.level,
+                duration: qual.duration,
+                price: qual.price,
+                category: qual.category,
+              });
+              setShowUpsell(true);
+            }}
+            className="bg-primary text-primary-foreground px-8 py-2.5 font-semibold rounded text-sm hover:opacity-90 transition-opacity whitespace-nowrap"
+          >
+            Enroll Now – {qual.price}
+          </button>
+        </div>
+      </section>
+
+      {/* Two-column: Why This Qualification + Image */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-secondary mb-2 block">
+                Why Choose This Qualification
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+                Build Confidence & Advance Your Career
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {qual.description}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                Our expert tutors are industry leaders with over 20 years of experience in coaching and mentoring learners. We provide live sessions with ongoing support and resources to ensure our learners succeed.
+              </p>
+            </div>
+            <div className="rounded-lg overflow-hidden shadow-lg">
+              <img
+                src={imageMap[qual.image] || heroBusiness}
+                alt={qual.title}
+                className="w-full h-[320px] object-cover"
+              />
             </div>
           </div>
         </div>
       </section>
 
       {/* Course Structure */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 bg-accent/30">
         <div className="container mx-auto">
           <div className="text-center mb-10">
             <span className="text-xs font-bold uppercase tracking-widest text-secondary">
               Flexible Learning
             </span>
-            <h2 className="text-3xl font-bold text-foreground mt-2">Course Structure</h2>
+            <h2 className="text-3xl font-bold text-foreground mt-2">Qualification Structure</h2>
             <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
-              This course covers a comprehensive range of topics to provide learners with the knowledge and skills needed for success.
+              This qualification covers a comprehensive range of topics to provide learners with the knowledge and skills needed for success.
             </p>
           </div>
 
@@ -315,17 +346,75 @@ const QualificationDetail = () => {
             {qual.courseStructure.map((module, index) => (
               <div
                 key={index}
-                className="bg-card border border-border rounded p-6 hover:border-secondary transition-colors"
+                className="bg-card border border-border rounded-lg p-6 hover:border-secondary hover:shadow-md transition-all"
               >
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <span className="text-primary font-bold text-sm">{String(index + 1).padStart(2, '0')}</span>
+                </div>
                 <h3 className="text-base font-semibold text-foreground mb-2">{module.title}</h3>
-                <p className="text-sm text-muted-foreground">{module.description}</p>
-                {index === qual.courseStructure.length - 1 && (
-                  <Link
-                    to="/contact"
-                    className="inline-block mt-4 bg-secondary text-secondary-foreground px-5 py-2 text-xs font-semibold rounded hover:opacity-90"
-                  >
-                    Find out more
-                  </Link>
+                <p className="text-sm text-muted-foreground leading-relaxed">{module.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Certification & Validity Banner */}
+      <section className="relative py-16 overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={qualificationsBanner}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-primary/90" />
+        </div>
+        <div className="relative container mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground mb-4">
+            Certification & Validity
+          </h2>
+          <p className="text-primary-foreground/85 max-w-2xl mx-auto leading-relaxed mb-6">
+            Upon successful completion, you will receive an internationally recognised qualification regulated by Ofqual. This certification is valued by employers across the UK and worldwide, opening doors to career advancement and further study.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <span className="bg-primary-foreground/15 text-primary-foreground text-xs font-bold px-5 py-2.5 rounded border border-primary-foreground/20">
+              Ofqual Regulated
+            </span>
+            <span className="bg-primary-foreground/15 text-primary-foreground text-xs font-bold px-5 py-2.5 rounded border border-primary-foreground/20">
+              Internationally Recognised
+            </span>
+            <span className="bg-primary-foreground/15 text-primary-foreground text-xs font-bold px-5 py-2.5 rounded border border-primary-foreground/20">
+              Employer Approved
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQs */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto max-w-3xl">
+          <div className="text-center mb-10">
+            <span className="text-xs font-bold uppercase tracking-widest text-secondary">
+              Have Questions?
+            </span>
+            <h2 className="text-3xl font-bold text-foreground mt-2">Frequently Asked Questions</h2>
+          </div>
+          <div className="space-y-0 border-t border-border">
+            {qual.faqs.map((faq, index) => (
+              <div key={index} className="border-b border-border">
+                <button
+                  className="w-full flex items-center justify-between py-5 text-left"
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                >
+                  <span className="font-medium text-foreground pr-4">{faq.question}</span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-secondary shrink-0 transition-transform duration-200 ${
+                      openFaq === index ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFaq === index && (
+                  <p className="text-muted-foreground pb-5 leading-relaxed">{faq.answer}</p>
                 )}
               </div>
             ))}
@@ -333,63 +422,27 @@ const QualificationDetail = () => {
         </div>
       </section>
 
-      {/* Why Choose + FAQ */}
-      <section className="py-16 px-4 bg-muted">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-start">
-            {/* Left */}
-            <div>
-              <h2 className="text-3xl font-bold text-foreground mb-4">Why Choose The Prime College?</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Our expert tutors are industry leaders with over 20 years of experience in coaching and mentoring learners. We provide live sessions with ongoing support and resources to ensure our learners succeed in their professional journeys.
-              </p>
-            </div>
-
-            {/* Right - FAQs */}
-            <div className="space-y-0">
-              {qual.faqs.map((faq, index) => (
-                <div key={index} className="border-b border-border">
-                  <button
-                    className="w-full flex items-center justify-between py-4 text-left"
-                    onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  >
-                    <span className="text-sm font-medium text-foreground pr-4">{faq.question}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${
-                        openFaq === index ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                  {openFaq === index && (
-                    <p className="text-sm text-muted-foreground pb-4">{faq.answer}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Related Courses */}
+      {/* Related Qualifications */}
       {relatedQuals.length > 0 && (
-        <section className="py-16 px-4">
+        <section className="py-16 px-4 bg-accent/30">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold text-foreground mb-8">Related Courses</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Related Qualifications</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedQuals.map((related) => (
                 <Link
                   key={related.slug}
                   to={`/qualifications/${related.slug}`}
-                  className="group relative rounded overflow-hidden block h-[200px]"
+                  className="group relative rounded-lg overflow-hidden block h-[220px]"
                 >
                   <img
                     src={imageMap[related.image] || heroBusiness}
                     alt={related.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-foreground/50 group-hover:bg-foreground/60 transition-colors" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="text-sm font-semibold text-background">{related.title}</h3>
+                  <div className="absolute inset-0 bg-primary/60 group-hover:bg-primary/70 transition-colors" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <h3 className="text-sm font-semibold text-primary-foreground">{related.title}</h3>
+                    <span className="text-xs text-primary-foreground/70 mt-1 block">{related.level} · {related.duration}</span>
                   </div>
                 </Link>
               ))}
@@ -397,6 +450,26 @@ const QualificationDetail = () => {
           </div>
         </section>
       )}
+
+      {/* More Than One Qualification */}
+      <section className="py-16 md:py-20 px-4">
+        <div className="container mx-auto text-center max-w-3xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+            More Than One Qualification?
+          </h2>
+          <p className="text-muted-foreground leading-relaxed mb-8">
+            If you are looking to upskill your team in management and leadership, we will offer you
+            comprehensive and flexible solutions. We are excited to discuss how we can support your
+            training objectives by providing customised qualification packages.
+          </p>
+          <Link
+            to="/contact"
+            className="inline-block bg-secondary text-secondary-foreground px-8 py-3 rounded font-semibold text-sm hover:opacity-90 transition-opacity"
+          >
+            Contact Us
+          </Link>
+        </div>
+      </section>
 
       {/* CTA */}
       <CTASection />
