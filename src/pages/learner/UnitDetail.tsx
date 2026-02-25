@@ -332,7 +332,7 @@ const UnitDetail = () => {
               <p className="text-sm text-muted-foreground mb-5">Complete the following assignments for this unit</p>
 
               <div className="space-y-3">
-                {detail.assignments.map((a) => {
+                {detail.assignments.filter((a) => a.type !== "file_upload").map((a) => {
                   const Icon = assignmentIcon[a.type];
                   const isOpen = activeAssignment === a.id;
                   const isSubmitted = submittedAssignments.has(a.id) || a.status === "submitted" || a.status === "assessed";
@@ -384,14 +384,6 @@ const UnitDetail = () => {
                           {a.type === "written" && isSubmitted && (
                             <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
                               <CheckCircle2 className="w-5 h-5" /> Written assignment submitted — awaiting assessment
-                            </div>
-                          )}
-                          {a.type === "file_upload" && !isSubmitted && (
-                            <FileUploadAssignment assignment={a} onSubmitted={() => setSubmittedAssignments((prev) => new Set(prev).add(a.id))} />
-                          )}
-                          {a.type === "file_upload" && isSubmitted && (
-                            <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
-                              <CheckCircle2 className="w-5 h-5" /> Evidence submitted — awaiting assessment
                             </div>
                           )}
                         </div>

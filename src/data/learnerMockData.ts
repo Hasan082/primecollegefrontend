@@ -121,13 +121,6 @@ const writtenAssignment = (unitId: string, title: string, desc: string, wordLimi
   status: "not_started",
 });
 
-const fileUploadAssignment = (unitId: string): AssignmentData => ({
-  id: `${unitId}-portfolio`,
-  title: "Portfolio of Evidence",
-  type: "file_upload",
-  description: "Upload your compiled portfolio of evidence demonstrating competence across all assessment criteria for this unit.",
-  status: "not_started",
-});
 
 export const learnerQualifications: QualificationData[] = [
   {
@@ -168,7 +161,7 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u1"),
             writtenAssignment("u1", "Reflective Account", "Write a reflective account describing a situation where you had to balance duty of care with individual rights. Discuss the dilemma, how you handled it, and what you learned.", 1500),
-            fileUploadAssignment("u1"),
+            
           ],
         }
       },
@@ -196,7 +189,7 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u2"),
             writtenAssignment("u2", "Case Study Analysis", "Analyse the provided case study and discuss how equality, diversity and inclusion principles should be applied. Reference relevant legislation.", 2000),
-            fileUploadAssignment("u2"),
+            
           ],
         }
       },
@@ -225,7 +218,7 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u3"),
             writtenAssignment("u3", "Risk Assessment Report", "Complete a risk assessment for a care setting scenario. Identify hazards, assess risks, and propose control measures following the HSE 5-step approach.", 2500),
-            fileUploadAssignment("u3"),
+            
           ],
         }
       },
@@ -254,7 +247,7 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u4"),
             writtenAssignment("u4", "Safeguarding Scenario Response", "Describe how you would respond to a safeguarding concern in your workplace. Include the steps you would take and who you would report to.", 1500),
-            fileUploadAssignment("u4"),
+            
           ],
         }
       },
@@ -317,7 +310,7 @@ export const learnerQualifications: QualificationData[] = [
               ],
             },
             writtenAssignment("u5", "Reflective Account", "Write a reflective account describing how you promote person-centred values in your daily practice. Include specific examples of how you support choice, dignity, and independence.", 2000),
-            fileUploadAssignment("u5"),
+            
           ],
         }
       },
