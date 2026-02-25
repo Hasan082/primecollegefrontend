@@ -7,6 +7,7 @@ import {
 import { learnerQualifications } from "@/data/learnerMockData";
 import type { UnitData, AssignmentData, QuizQuestion } from "@/data/learnerMockData";
 import { useToast } from "@/hooks/use-toast";
+import StrictQuizModal from "@/components/learner/StrictQuizModal";
 
 /* ── Status config ── */
 const statusConfig: Record<UnitData["status"], { label: string; color: string }> = {
@@ -239,6 +240,7 @@ const assignmentIcon: Record<AssignmentData["type"], typeof ClipboardList> = {
 const UnitDetail = () => {
   const { qualificationId, unitId } = useParams();
   const [activeAssignment, setActiveAssignment] = useState<string | null>(null);
+  const [strictQuizAssignment, setStrictQuizAssignment] = useState<AssignmentData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [extraUploads, setExtraUploads] = useState<{ name: string; size: string; date: string }[]>([]);
   const { toast } = useToast();
@@ -274,6 +276,13 @@ const UnitDetail = () => {
 
   return (
     <div>
+      {strictQuizAssignment && (
+        <StrictQuizModal
+          assignment={strictQuizAssignment}
+          onClose={() => setStrictQuizAssignment(null)}
+          onSubmitted={() => setStrictQuizAssignment(null)}
+        />
+      )}
       <Link
         to={`/learner/qualification/${qualificationId}`}
         className="inline-flex items-center gap-2 text-primary hover:underline mb-6 text-sm font-medium"
@@ -346,7 +355,14 @@ const UnitDetail = () => {
                       {isOpen && (
                         <div className="p-5 pt-0 border-t border-border">
                           <p className="text-sm text-muted-foreground mb-5 pt-4">{a.description}</p>
-                          {a.type === "quiz" && <QuizAssignment assignment={a} />}
+                          {a.type === "quiz" && (
+                            <button
+                              onClick={() => setStrictQuizAssignment(a)}
+                              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+                            >
+                              <ClipboardList className="w-4 h-4" /> Launch Quiz (Strict Mode)
+                            </button>
+                          )}
                           {a.type === "written" && <WrittenAssignment assignment={a} />}
                           {a.type === "file_upload" && <FileUploadAssignment assignment={a} />}
                         </div>
