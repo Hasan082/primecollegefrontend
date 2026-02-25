@@ -241,6 +241,7 @@ const UnitDetail = () => {
   const { qualificationId, unitId } = useParams();
   const [activeAssignment, setActiveAssignment] = useState<string | null>(null);
   const [strictQuizAssignment, setStrictQuizAssignment] = useState<AssignmentData | null>(null);
+  const [submittedAssignments, setSubmittedAssignments] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [extraUploads, setExtraUploads] = useState<{ name: string; size: string; date: string }[]>([]);
   const { toast } = useToast();
@@ -280,7 +281,12 @@ const UnitDetail = () => {
         <StrictQuizModal
           assignment={strictQuizAssignment}
           onClose={() => setStrictQuizAssignment(null)}
-          onSubmitted={() => setStrictQuizAssignment(null)}
+          onSubmitted={() => {
+            if (strictQuizAssignment) {
+              setSubmittedAssignments((prev) => new Set(prev).add(strictQuizAssignment.id));
+            }
+            setStrictQuizAssignment(null);
+          }}
         />
       )}
       <Link
@@ -327,6 +333,8 @@ const UnitDetail = () => {
                 {detail.assignments.map((a) => {
                   const Icon = assignmentIcon[a.type];
                   const isOpen = activeAssignment === a.id;
+                  const isSubmitted = submittedAssignments.has(a.id) || a.status === "submitted" || a.status === "assessed";
+                  const displayStatus = isSubmitted ? "submitted" : a.status;
 
                   return (
                     <div key={a.id} className="border border-border rounded-xl overflow-hidden">
@@ -342,26 +350,31 @@ const UnitDetail = () => {
                           <p className="text-xs text-muted-foreground capitalize">{a.type.replace("_", " ")}</p>
                         </div>
                         <span className={`text-xs font-bold px-2.5 py-1 rounded ${
-                          a.status === "submitted" || a.status === "assessed"
+                          displayStatus === "submitted" || displayStatus === "assessed"
                             ? "bg-green-600 text-white"
-                            : a.status === "in_progress"
+                            : displayStatus === "in_progress"
                             ? "bg-amber-500 text-white"
                             : "bg-muted text-muted-foreground"
                         }`}>
-                          {a.status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                          {displayStatus === "submitted" ? "Submitted" : displayStatus.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                         </span>
                       </button>
 
                       {isOpen && (
                         <div className="p-5 pt-0 border-t border-border">
                           <p className="text-sm text-muted-foreground mb-5 pt-4">{a.description}</p>
-                          {a.type === "quiz" && (
+                          {a.type === "quiz" && !isSubmitted && (
                             <button
                               onClick={() => setStrictQuizAssignment(a)}
                               className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity inline-flex items-center gap-2"
                             >
                               <ClipboardList className="w-4 h-4" /> Launch Quiz (Strict Mode)
                             </button>
+                          )}
+                          {a.type === "quiz" && isSubmitted && (
+                            <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
+                              <CheckCircle2 className="w-5 h-5" /> Quiz submitted — awaiting assessment
+                            </div>
                           )}
                           {a.type === "written" && <WrittenAssignment assignment={a} />}
                           {a.type === "file_upload" && <FileUploadAssignment assignment={a} />}
