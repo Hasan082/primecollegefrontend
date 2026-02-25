@@ -107,7 +107,7 @@ const QuizAssignment = ({ assignment }: { assignment: AssignmentData }) => {
 };
 
 /* ── Written Assignment Component ── */
-const WrittenAssignment = ({ assignment }: { assignment: AssignmentData }) => {
+const WrittenAssignment = ({ assignment, onSubmitted }: { assignment: AssignmentData; onSubmitted?: () => void }) => {
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
@@ -120,6 +120,7 @@ const WrittenAssignment = ({ assignment }: { assignment: AssignmentData }) => {
       return;
     }
     setSubmitted(true);
+    onSubmitted?.();
     toast({ title: "Assignment Submitted", description: "Your written assignment has been submitted for assessment." });
   };
 
@@ -155,7 +156,7 @@ const WrittenAssignment = ({ assignment }: { assignment: AssignmentData }) => {
 };
 
 /* ── File Upload Assignment Component ── */
-const FileUploadAssignment = ({ assignment }: { assignment: AssignmentData }) => {
+const FileUploadAssignment = ({ assignment, onSubmitted }: { assignment: AssignmentData; onSubmitted?: () => void }) => {
   const [files, setFiles] = useState<{ name: string; size: string }[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -181,6 +182,7 @@ const FileUploadAssignment = ({ assignment }: { assignment: AssignmentData }) =>
       return;
     }
     setSubmitted(true);
+    onSubmitted?.();
     toast({ title: "Evidence Submitted", description: "Your files have been uploaded for assessment." });
   };
 
@@ -376,8 +378,22 @@ const UnitDetail = () => {
                               <CheckCircle2 className="w-5 h-5" /> Quiz submitted — awaiting assessment
                             </div>
                           )}
-                          {a.type === "written" && <WrittenAssignment assignment={a} />}
-                          {a.type === "file_upload" && <FileUploadAssignment assignment={a} />}
+                          {a.type === "written" && !isSubmitted && (
+                            <WrittenAssignment assignment={a} onSubmitted={() => setSubmittedAssignments((prev) => new Set(prev).add(a.id))} />
+                          )}
+                          {a.type === "written" && isSubmitted && (
+                            <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
+                              <CheckCircle2 className="w-5 h-5" /> Written assignment submitted — awaiting assessment
+                            </div>
+                          )}
+                          {a.type === "file_upload" && !isSubmitted && (
+                            <FileUploadAssignment assignment={a} onSubmitted={() => setSubmittedAssignments((prev) => new Set(prev).add(a.id))} />
+                          )}
+                          {a.type === "file_upload" && isSubmitted && (
+                            <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
+                              <CheckCircle2 className="w-5 h-5" /> Evidence submitted — awaiting assessment
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
