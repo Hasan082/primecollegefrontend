@@ -25,6 +25,7 @@ import LoadingSpinner from "./components/LoadingSpinner";
 import LearnerLayout from "./components/learner/LearnerLayout";
 import Dashboard from "./pages/learner/Dashboard";
 import QualificationView from "./pages/learner/QualificationView";
+import MyQualifications from "./pages/learner/MyQualifications";
 import UnitDetail from "./pages/learner/UnitDetail";
 import Profile from "./pages/learner/Profile";
 import ChangePassword from "./pages/learner/ChangePassword";
@@ -61,6 +62,7 @@ const App = () => {
                 <Route path="/enrollment-confirmation" element={<EnrollmentConfirmation />} />
                 <Route path="/learner" element={<LearnerLayout />}>
                   <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="qualifications" element={<MyQualifications />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="change-password" element={<ChangePassword />} />
                   <Route path="qualification/:id" element={<QualificationView />} />
