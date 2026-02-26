@@ -34,6 +34,7 @@ import TrainerDashboard from "./pages/trainer/Dashboard";
 import AssessmentReview from "./pages/trainer/AssessmentReview";
 import AssignedLearners from "./pages/trainer/AssignedLearners";
 import AssessmentHistory from "./pages/trainer/AssessmentHistory";
+import AssessmentRecord from "./pages/trainer/AssessmentRecord";
 import StaffLogin from "./pages/StaffLogin";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,7 @@ const App = () => {
                   <Route path="learners" element={<AssignedLearners />} />
                   <Route path="history" element={<AssessmentHistory />} />
                   <Route path="review/:id" element={<AssessmentReview />} />
+                  <Route path="record/:id" element={<AssessmentRecord />} />
                 </Route>
                 <Route path="*" element={
                   <>

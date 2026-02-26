@@ -1,12 +1,15 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FileText } from "lucide-react";
+import { Link } from "react-router-dom";
 import { recentAssessments } from "@/data/trainerMockData";
 
 const outcomeColors: Record<string, string> = {
-  "Competent": "bg-green-100 text-green-800",
-  "Resubmission Required": "bg-secondary/20 text-secondary-foreground",
-  "Not Yet Competent": "bg-destructive/10 text-destructive",
+  "Competent": "bg-green-600 text-white",
+  "Resubmission Required": "bg-secondary text-secondary-foreground",
+  "Not Yet Competent": "bg-destructive text-destructive-foreground",
 };
 
 const AssessmentHistory = () => {
@@ -21,18 +24,26 @@ const AssessmentHistory = () => {
             <TableRow>
               <TableHead>Learner</TableHead>
               <TableHead>Unit</TableHead>
-              <TableHead>Date</TableHead>
               <TableHead>Outcome</TableHead>
+              <TableHead>Assessed Date</TableHead>
+              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {recentAssessments.map((a) => (
               <TableRow key={a.id}>
-                <TableCell className="font-medium">{a.learnerName}</TableCell>
-                <TableCell className="text-sm">{a.unitTitle}</TableCell>
-                <TableCell className="text-sm">{a.assessedDate}</TableCell>
+                <TableCell className="font-medium text-primary">{a.learnerName}</TableCell>
+                <TableCell className="text-sm">{a.unitCode}: {a.unitTitle}</TableCell>
                 <TableCell>
                   <Badge className={outcomeColors[a.outcome]}>{a.outcome}</Badge>
+                </TableCell>
+                <TableCell className="text-sm">{a.assessedDate}</TableCell>
+                <TableCell>
+                  <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                    <Link to={`/trainer/record/${a.id}`}>
+                      <FileText className="h-4 w-4" />
+                    </Link>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
