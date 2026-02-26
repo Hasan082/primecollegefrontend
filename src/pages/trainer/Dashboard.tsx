@@ -1,11 +1,12 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, Clock, CheckCircle, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Clock, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { pendingSubmissions, trainerLearners, recentAssessments } from "@/data/trainerMockData";
+import { FileText } from "lucide-react";
 
 const stats = [
   { label: "Assigned Learners", value: trainerLearners.length, icon: Users, color: "bg-primary text-primary-foreground" },
@@ -15,9 +16,9 @@ const stats = [
 ];
 
 const outcomeColors: Record<string, string> = {
-  "Competent": "bg-green-100 text-green-800",
-  "Resubmission Required": "bg-secondary/20 text-secondary-foreground",
-  "Not Yet Competent": "bg-destructive/10 text-destructive",
+  "Competent": "bg-green-600 text-white",
+  "Resubmission Required": "bg-secondary text-secondary-foreground",
+  "Not Yet Competent": "bg-destructive text-destructive-foreground",
 };
 
 const TrainerDashboard = () => {
@@ -106,35 +107,42 @@ const TrainerDashboard = () => {
         <TabsContent value="learners">
           <Card className="p-6">
             <h2 className="text-lg font-bold text-primary mb-1">Assigned Learners</h2>
-            <p className="text-sm text-muted-foreground mb-4">Learners under your assessment</p>
+            <p className="text-sm text-muted-foreground mb-4">Monitor progress of learners in your cohort</p>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Learner</TableHead>
-                  <TableHead>ID</TableHead>
+                  <TableHead>Learner Name</TableHead>
                   <TableHead>Qualification</TableHead>
                   <TableHead>Progress</TableHead>
-                  <TableHead>Units</TableHead>
+                  <TableHead>Pending</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {trainerLearners.map((l) => (
                   <TableRow key={l.id}>
                     <TableCell className="font-medium text-primary">{l.name}</TableCell>
-                    <TableCell className="text-sm">{l.learnerId}</TableCell>
                     <TableCell>
                       <div className="text-sm">{l.qualification}</div>
                       <Badge className="bg-primary text-primary-foreground text-[10px] mt-0.5">{l.qualificationCategory}</Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${l.progress}%` }} />
-                        </div>
-                        <span className="text-xs text-muted-foreground">{l.progress}%</span>
-                      </div>
+                    <TableCell className="text-sm">
+                      {l.unitsCompleted}/{l.totalUnits} ({l.progress}%)
                     </TableCell>
-                    <TableCell className="text-sm">{l.unitsCompleted}/{l.totalUnits}</TableCell>
+                    <TableCell>
+                      {l.pendingSubmissions > 0 ? (
+                        <Badge className="bg-secondary text-secondary-foreground text-xs">{l.pendingSubmissions}</Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                        <Link to={`/trainer/learners`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -146,24 +154,32 @@ const TrainerDashboard = () => {
         <TabsContent value="recent">
           <Card className="p-6">
             <h2 className="text-lg font-bold text-primary mb-1">Recent Assessments</h2>
-            <p className="text-sm text-muted-foreground mb-4">Your latest assessment decisions</p>
+            <p className="text-sm text-muted-foreground mb-4">Your recently completed assessments</p>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Learner</TableHead>
                   <TableHead>Unit</TableHead>
-                  <TableHead>Date</TableHead>
                   <TableHead>Outcome</TableHead>
+                  <TableHead>Assessed Date</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {recentAssessments.map((a) => (
                   <TableRow key={a.id}>
-                    <TableCell className="font-medium">{a.learnerName}</TableCell>
-                    <TableCell className="text-sm">{a.unitTitle}</TableCell>
-                    <TableCell className="text-sm">{a.assessedDate}</TableCell>
+                    <TableCell className="font-medium text-primary">{a.learnerName}</TableCell>
+                    <TableCell className="text-sm">{a.unitCode}: {a.unitTitle}</TableCell>
                     <TableCell>
                       <Badge className={outcomeColors[a.outcome]}>{a.outcome}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">{a.assessedDate}</TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                        <Link to={`/trainer/record/${a.id}`}>
+                          <FileText className="h-4 w-4" />
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
