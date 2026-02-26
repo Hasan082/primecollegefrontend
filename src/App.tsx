@@ -26,6 +26,8 @@ import LearnerLayout from "./components/learner/LearnerLayout";
 import Dashboard from "./pages/learner/Dashboard";
 import QualificationView from "./pages/learner/QualificationView";
 import UnitDetail from "./pages/learner/UnitDetail";
+import Profile from "./pages/learner/Profile";
+import ChangePassword from "./pages/learner/ChangePassword";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,8 @@ const App = () => {
                 <Route path="/enrollment-confirmation" element={<EnrollmentConfirmation />} />
                 <Route path="/learner" element={<LearnerLayout />}>
                   <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="change-password" element={<ChangePassword />} />
                   <Route path="qualification/:id" element={<QualificationView />} />
                   <Route path="qualification/:qualificationId/unit/:unitId" element={<UnitDetail />} />
                 </Route>
