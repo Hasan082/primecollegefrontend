@@ -34,6 +34,7 @@ import TrainerDashboard from "./pages/trainer/Dashboard";
 import AssessmentReview from "./pages/trainer/AssessmentReview";
 import AssignedLearners from "./pages/trainer/AssignedLearners";
 import AssessmentHistory from "./pages/trainer/AssessmentHistory";
+import StaffLogin from "./pages/StaffLogin";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => {
               <ScrollToTop />
               <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/staff-login" element={<StaffLogin />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/enrollment-confirmation" element={<EnrollmentConfirmation />} />

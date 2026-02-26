@@ -1,24 +1,52 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-import { Eye, EyeOff, Mail, CheckCircle2, Shield, FileCheck, Award, ArrowLeft, Lock, GraduationCap } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, Shield, FileCheck, Award, ArrowLeft, Lock, Users, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/prime-logo-white-notext.png";
 
-const Login = () => {
+type StaffRole = "trainer" | "admin";
+
+const ROLE_CONFIG = {
+  trainer: {
+    icon: Users,
+    label: "Trainer",
+    description: "Review submissions, provide feedback, and assess learner evidence",
+    features: ["Review pending submissions", "Provide detailed feedback", "Track learner progress"],
+    cardTitle: "Trainer / Assessor Portal",
+    signInLabel: "Sign In to Trainer Portal",
+    demoRedirect: "/trainer/dashboard",
+    placeholder: "trainer@primecollege.edu",
+  },
+  admin: {
+    icon: Settings,
+    label: "Admin",
+    description: "Manage qualifications, learners, trainers, and platform settings",
+    features: ["Manage qualifications & units", "Enrol learners & assign trainers", "Monitor progress & reporting"],
+    cardTitle: "Administration Portal",
+    signInLabel: "Sign In to Admin Portal",
+    demoRedirect: "/admin/dashboard",
+    placeholder: "admin@primecollege.edu",
+  },
+} as const;
+
+const StaffLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<StaffRole>("trainer");
   const { toast } = useToast();
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const config = ROLE_CONFIG[selectedRole];
+
   const handleDemoLogin = () => {
-    login("learner");
-    navigate("/learner/dashboard");
+    login(selectedRole);
+    navigate(config.demoRedirect);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,21 +82,22 @@ const Login = () => {
             Professional<br />Qualification<br />Assessment System
           </h1>
           <p className="text-primary-foreground/70 text-base max-w-lg mb-12">
-            Secure, regulated, and compliant qualification management for learners.
+            Secure, regulated, and compliant qualification management for learners, trainers, and administrators.
           </p>
 
-          <div className="border border-primary-foreground/20 rounded-xl p-6 bg-primary-foreground/5">
+          {/* Dynamic role card */}
+          <div className="border border-primary-foreground/20 rounded-xl p-6 bg-primary-foreground/5 transition-all">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
-                <Mail className="w-5 h-5 text-secondary-foreground" />
+                <config.icon className="w-5 h-5 text-secondary-foreground" />
               </div>
               <div>
-                <h3 className="font-semibold text-primary-foreground text-sm">Learner Portal</h3>
-                <p className="text-primary-foreground/60 text-xs">Access your qualifications, submit evidence, and track your progress</p>
+                <h3 className="font-semibold text-primary-foreground text-sm">{config.cardTitle}</h3>
+                <p className="text-primary-foreground/60 text-xs">{config.description}</p>
               </div>
             </div>
             <div className="space-y-2.5">
-              {["View enrolled qualifications", "Submit evidence for assessment", "Track unit completion"].map((item) => (
+              {config.features.map((item) => (
                 <div key={item} className="flex items-center gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-secondary flex-shrink-0" />
                   <span className="text-primary-foreground/80 text-sm">{item}</span>
@@ -112,18 +141,43 @@ const Login = () => {
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground">Welcome Back</h2>
-              <p className="text-muted-foreground text-sm mt-1">Sign in to access your learning dashboard</p>
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Lock className="w-5 h-5 text-foreground" />
+                <h2 className="text-2xl font-bold text-foreground">Secure Access</h2>
+              </div>
+              <p className="text-muted-foreground text-sm">Select your role and sign in to continue</p>
+            </div>
+
+            {/* Role Tabs - Trainer & Admin only */}
+            <div className="flex gap-1 bg-muted rounded-xl p-1 mb-6">
+              {(["trainer", "admin"] as StaffRole[]).map((role) => {
+                const Icon = ROLE_CONFIG[role].icon;
+                const isActive = selectedRole === role;
+                return (
+                  <button
+                    key={role}
+                    onClick={() => setSelectedRole(role)}
+                    className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {ROLE_CONFIG[role].label}
+                  </button>
+                );
+              })}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="login-email">Email</Label>
+                <Label htmlFor="staff-email">Email Address</Label>
                 <Input
-                  id="login-email"
+                  id="staff-email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={config.placeholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   maxLength={255}
@@ -133,10 +187,10 @@ const Login = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="login-password">Password</Label>
+                <Label htmlFor="staff-password">Password</Label>
                 <div className="relative">
                   <Input
-                    id="login-password"
+                    id="staff-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
@@ -156,18 +210,13 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="text-right">
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline font-medium">
-                  Forgot Password?
-                </Link>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-secondary text-secondary-foreground h-11 rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+                className="w-full bg-secondary text-secondary-foreground h-11 rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center gap-2"
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? "Signing in..." : config.signInLabel}
+                {!loading && <span>→</span>}
               </button>
             </form>
 
@@ -180,7 +229,7 @@ const Login = () => {
               onClick={handleDemoLogin}
               className="w-full h-11 rounded-lg font-semibold text-sm border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
             >
-              🚀 Demo Login (One Click)
+              🚀 Demo {ROLE_CONFIG[selectedRole].label} Login
             </button>
 
             <div className="flex items-center justify-center gap-1.5 mt-5 text-xs text-muted-foreground">
@@ -199,4 +248,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default StaffLogin;
