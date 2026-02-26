@@ -21,7 +21,7 @@ const LearnerSidebar = () => {
   const location = useLocation();
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border">
+    <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border top-14">
       <SidebarContent>
         <SidebarGroup className="pt-4">
           
