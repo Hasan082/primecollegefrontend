@@ -54,7 +54,7 @@ const ChangePassword = () => {
   );
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <h1 className="text-2xl font-bold text-foreground mb-1">Change Password</h1>
       <p className="text-muted-foreground mb-8">Update your account password</p>
 

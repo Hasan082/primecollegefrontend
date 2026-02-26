@@ -31,7 +31,7 @@ const QualificationView = () => {
   const pct = Math.round((completed / total) * 100);
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       <Link to="/learner/dashboard" className="inline-flex items-center gap-2 text-primary hover:underline mb-6 text-sm font-medium">
         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
       </Link>

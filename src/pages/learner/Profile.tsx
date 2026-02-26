@@ -22,7 +22,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <h1 className="text-2xl font-bold text-foreground mb-1">My Profile</h1>
       <p className="text-muted-foreground mb-8">Manage your personal information</p>
 

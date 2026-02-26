@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 
 const MyQualifications = () => {
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       <h1 className="text-3xl font-bold text-foreground mb-1">My Qualifications</h1>
       <p className="text-muted-foreground mb-8">View and manage your enrolled qualifications</p>
 

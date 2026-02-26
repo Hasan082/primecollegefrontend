@@ -81,7 +81,9 @@ const LearnerLayout = () => {
         <div className="flex flex-1">
           <LearnerSidebar />
           <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
-            <Outlet />
+            <div className="max-w-5xl mx-auto w-full">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>
