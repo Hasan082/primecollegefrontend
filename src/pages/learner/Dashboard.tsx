@@ -58,7 +58,16 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold text-foreground mb-1">My Dashboard</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-3xl font-bold text-foreground">My Dashboard</h1>
+        <Link
+          to="/learner/qualifications"
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
+        >
+          <GraduationCap className="w-4 h-4" />
+          My Qualifications
+        </Link>
+      </div>
       <p className="text-muted-foreground mb-8">Track your progress and submit evidence for assessment</p>
 
       {/* Stats */}
@@ -94,15 +103,6 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
-
-      {/* My Qualifications Button */}
-      <Link
-        to="/learner/qualifications"
-        className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
-      >
-        <GraduationCap className="w-5 h-5" />
-        My Qualifications
-      </Link>
     </div>
   );
 };
