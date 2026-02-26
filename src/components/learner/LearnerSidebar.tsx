@@ -23,7 +23,7 @@ const LearnerSidebar = () => {
   return (
     <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border">
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="pt-6">
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
