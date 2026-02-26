@@ -1,6 +1,6 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Menu } from "lucide-react";
+import { User } from "lucide-react";
 import logo from "@/assets/prime-logo-white-notext.png";
 import { useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -27,9 +27,7 @@ const LearnerLayout = () => {
           <header className="bg-primary text-primary-foreground sticky top-0 z-30">
             <div className="px-4 sm:px-6 h-14 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <SidebarTrigger className="text-primary-foreground hover:bg-sidebar-accent rounded-md p-1.5">
-                  <Menu className="w-5 h-5" />
-                </SidebarTrigger>
+                <SidebarTrigger className="text-primary-foreground hover:bg-sidebar-accent rounded-md p-1.5 xl:hidden" />
                 <div className="w-8 h-8 rounded-full border border-primary-foreground/30 p-0.5">
                   <img src={logo} alt="Prime College" className="w-full h-full object-contain" />
                 </div>
