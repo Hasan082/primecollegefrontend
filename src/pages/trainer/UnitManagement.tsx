@@ -104,9 +104,11 @@ const UnitManagement = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className="bg-amber-500 text-white text-xs">Awaiting Review</Badge>
-                    <Button size="sm" variant="outline" className="gap-1">
-                      <Eye className="w-3.5 h-3.5" /> Review
-                    </Button>
+                    <Link to={`/trainer/review/${sub.id}`}>
+                      <Button size="sm" variant="outline" className="gap-1">
+                        <Eye className="w-3.5 h-3.5" /> Review
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </Card>
