@@ -5,7 +5,7 @@ import {
   AlertTriangle, Circle, ClipboardList, PenLine, File as FileIcon
 } from "lucide-react";
 import { learnerQualifications } from "@/data/learnerMockData";
-import type { UnitData, AssignmentData, QuizQuestion } from "@/data/learnerMockData";
+import type { UnitData, AssignmentData } from "@/data/learnerMockData";
 import { useToast } from "@/hooks/use-toast";
 import StrictQuizModal from "@/components/learner/StrictQuizModal";
 
@@ -242,7 +242,7 @@ const assignmentIcon: Record<AssignmentData["type"], typeof ClipboardList> = {
 const UnitDetail = () => {
   const { qualificationId, unitId } = useParams();
   const [activeAssignment, setActiveAssignment] = useState<string | null>(null);
-  const [strictQuizAssignment, setStrictQuizAssignment] = useState<AssignmentData | null>(null);
+  const [showStrictQuiz, setShowStrictQuiz] = useState(false);
   const [submittedAssignments, setSubmittedAssignments] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [extraUploads, setExtraUploads] = useState<{ name: string; size: string; date: string }[]>([]);
@@ -279,15 +279,18 @@ const UnitDetail = () => {
 
   return (
     <div>
-      {strictQuizAssignment && (
+      {showStrictQuiz && unit.code && qualificationId && (
         <StrictQuizModal
-          assignment={strictQuizAssignment}
-          onClose={() => setStrictQuizAssignment(null)}
-          onSubmitted={() => {
-            if (strictQuizAssignment) {
-              setSubmittedAssignments((prev) => new Set(prev).add(strictQuizAssignment.id));
-            }
-            setStrictQuizAssignment(null);
+          qualificationId={qualificationId}
+          unitCode={unit.code}
+          unitName={unit.title}
+          onClose={() => setShowStrictQuiz(false)}
+          onSubmitted={(result) => {
+            // Mark quiz assignments as submitted
+            detail?.assignments.filter(a => a.type === "quiz").forEach(a => {
+              setSubmittedAssignments((prev) => new Set(prev).add(a.id));
+            });
+            setShowStrictQuiz(false);
           }}
         />
       )}
@@ -367,7 +370,7 @@ const UnitDetail = () => {
                           <p className="text-sm text-muted-foreground mb-5 pt-4">{a.description}</p>
                           {a.type === "quiz" && !isSubmitted && (
                             <button
-                              onClick={() => setStrictQuizAssignment(a)}
+                              onClick={() => setShowStrictQuiz(true)}
                               className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity inline-flex items-center gap-2"
                             >
                               <ClipboardList className="w-4 h-4" /> Launch Quiz (Strict Mode)

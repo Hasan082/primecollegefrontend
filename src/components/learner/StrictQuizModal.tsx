@@ -1,120 +1,136 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { CheckCircle2, AlertTriangle, Shield, Maximize, Eye, X } from "lucide-react";
-import type { AssignmentData } from "@/data/learnerMockData";
+import { CheckCircle2, AlertTriangle, Shield, Maximize, Eye, X, Clock, Trophy, XCircle, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  generateQuiz,
+  scoreQuiz,
+  recordAttempt,
+  getAttempts,
+  canAttempt,
+  type QuizInstance,
+  type QuizResult,
+} from "@/lib/quizEngine";
+import { Progress } from "@/components/ui/progress";
 
 interface StrictQuizModalProps {
-  assignment: AssignmentData;
+  qualificationId: string;
+  unitCode: string;
+  unitName: string;
   onClose: () => void;
-  onSubmitted: () => void;
+  onSubmitted: (result: QuizResult) => void;
 }
 
 const MAX_WARNINGS = 3;
 
-const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalProps) => {
-  const [phase, setPhase] = useState<"intro" | "active" | "submitted">("intro");
+const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmitted }: StrictQuizModalProps) => {
+  const [phase, setPhase] = useState<"intro" | "active" | "results">("intro");
+  const [quiz, setQuiz] = useState<QuizInstance | null>(null);
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
-  const [submitted, setSubmitted] = useState(false);
   const [warnings, setWarnings] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [tabSwitchLog, setTabSwitchLog] = useState<string[]>([]);
+  const [result, setResult] = useState<QuizResult | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Request fullscreen
+  const previousAttempts = getAttempts(qualificationId, unitCode);
+  const canTake = canAttempt(qualificationId, unitCode);
+
+  // Generate quiz on mount
+  useEffect(() => {
+    const q = generateQuiz(qualificationId, unitCode);
+    if (q) {
+      setQuiz(q);
+      if (q.config.timeLimit > 0) {
+        setTimeLeft(q.config.timeLimit * 60);
+      }
+    }
+  }, [qualificationId, unitCode]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (phase !== "active" || timeLeft === null) return;
+    if (timeLeft <= 0) {
+      handleAutoSubmit();
+      return;
+    }
+    const interval = setInterval(() => setTimeLeft((t) => (t !== null ? t - 1 : null)), 1000);
+    return () => clearInterval(interval);
+  }, [phase, timeLeft]);
+
+  const handleAutoSubmit = useCallback(() => {
+    if (!quiz) return;
+    const r = scoreQuiz(quiz, answers, warnings);
+    recordAttempt(qualificationId, unitCode, r);
+    setResult(r);
+    setPhase("results");
+    exitFullscreen();
+  }, [quiz, answers, warnings, qualificationId, unitCode]);
+
+  // Fullscreen helpers
   const enterFullscreen = useCallback(async () => {
     try {
       const el = document.documentElement;
-      if (el.requestFullscreen) {
-        await el.requestFullscreen();
-      } else if ((el as any).webkitRequestFullscreen) {
-        await (el as any).webkitRequestFullscreen();
-      }
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if ((el as any).webkitRequestFullscreen) await (el as any).webkitRequestFullscreen();
       setIsFullscreen(true);
     } catch {
-      // Fullscreen may not be supported in iframe/preview
-      setIsFullscreen(true); // Continue anyway
+      setIsFullscreen(true);
     }
   }, []);
 
   const exitFullscreen = useCallback(() => {
     try {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      }
+      if (document.fullscreenElement) document.exitFullscreen();
     } catch {}
     setIsFullscreen(false);
   }, []);
 
-  // Trigger a warning
+  // Warning system
   const triggerWarning = useCallback((reason: string) => {
-    if (submitted) return;
+    if (result) return;
     const timestamp = new Date().toLocaleTimeString();
     setTabSwitchLog((prev) => [...prev, `${timestamp} - ${reason}`]);
     setWarnings((prev) => {
       const next = prev + 1;
       if (next >= MAX_WARNINGS) {
-        setWarningMessage(`⚠️ Maximum violations reached (${MAX_WARNINGS}). Your quiz has been auto-submitted with a flag for review.`);
+        setWarningMessage(`⚠️ Maximum violations reached (${MAX_WARNINGS}). Quiz auto-submitted.`);
         setShowWarning(true);
-        // Auto-submit
-        setTimeout(() => {
-          setSubmitted(true);
-          setPhase("submitted");
-        }, 2000);
+        setTimeout(() => handleAutoSubmit(), 2000);
       } else {
-        setWarningMessage(`⚠️ Warning ${next}/${MAX_WARNINGS}: ${reason}. After ${MAX_WARNINGS} violations, your quiz will be auto-submitted.`);
+        setWarningMessage(`⚠️ Warning ${next}/${MAX_WARNINGS}: ${reason}`);
         setShowWarning(true);
         setTimeout(() => setShowWarning(false), 4000);
       }
       return next;
     });
-  }, [submitted]);
+  }, [result, handleAutoSubmit]);
 
-  // Monitor tab visibility
+  // Anti-cheat monitoring
   useEffect(() => {
-    if (phase !== "active") return;
+    if (phase !== "active" || !quiz?.config.strictMode) return;
 
-    const handleVisibility = () => {
-      if (document.hidden) {
-        triggerWarning("Tab switch or window change detected");
-      }
-    };
-
-    const handleBlur = () => {
-      triggerWarning("Browser window lost focus");
-    };
-
+    const handleVisibility = () => { if (document.hidden) triggerWarning("Tab switch detected"); };
+    const handleBlur = () => triggerWarning("Window lost focus");
     const handleFullscreenChange = () => {
       const inFS = !!document.fullscreenElement;
       setIsFullscreen(inFS);
-      if (!inFS && phase === "active" && !submitted) {
-        triggerWarning("Exited fullscreen mode");
-      }
+      if (!inFS && phase === "active" && !result) triggerWarning("Exited fullscreen");
     };
-
-    // Prevent right-click
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-      triggerWarning("Right-click attempted");
-    };
-
-    // Prevent copy/paste shortcuts
+    const handleContextMenu = (e: MouseEvent) => { e.preventDefault(); triggerWarning("Right-click attempted"); };
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Block Ctrl+C, Ctrl+V, Ctrl+A, Ctrl+P, F12, Alt+Tab won't be caught but blur will
       if (
         (e.ctrlKey && ["c", "v", "a", "p", "u"].includes(e.key.toLowerCase())) ||
         e.key === "F12" ||
         (e.ctrlKey && e.shiftKey && ["i", "j"].includes(e.key.toLowerCase()))
       ) {
         e.preventDefault();
-        triggerWarning("Restricted keyboard shortcut detected");
+        triggerWarning("Restricted shortcut detected");
       }
-      // Block Escape in fullscreen
-      if (e.key === "Escape") {
-        e.preventDefault();
-      }
+      if (e.key === "Escape") e.preventDefault();
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
@@ -122,7 +138,6 @@ const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalPr
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("contextmenu", handleContextMenu);
     document.addEventListener("keydown", handleKeyDown);
-
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("blur", handleBlur);
@@ -130,29 +145,28 @@ const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalPr
       document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [phase, submitted, triggerWarning]);
+  }, [phase, result, triggerWarning, quiz]);
 
-  // Cleanup fullscreen on unmount
   useEffect(() => {
-    return () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-    };
+    return () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); };
   }, []);
 
   const startQuiz = async () => {
-    await enterFullscreen();
+    if (!canTake) {
+      toast({ title: "No attempts remaining", description: "You have used all available attempts.", variant: "destructive" });
+      return;
+    }
+    if (quiz?.config.strictMode) await enterFullscreen();
     setPhase("active");
   };
 
   const handleSingle = (qId: string, idx: number) => {
-    if (submitted) return;
+    if (result) return;
     setAnswers((prev) => ({ ...prev, [qId]: [idx] }));
   };
 
   const handleMultiple = (qId: string, idx: number) => {
-    if (submitted) return;
+    if (result) return;
     setAnswers((prev) => {
       const current = prev[qId] || [];
       return { ...prev, [qId]: current.includes(idx) ? current.filter((i) => i !== idx) : [...current, idx] };
@@ -160,25 +174,44 @@ const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalPr
   };
 
   const handleSubmit = () => {
-    const unanswered = (assignment.questions || []).filter((q) => !answers[q.id]?.length);
+    if (!quiz) return;
+    const unanswered = quiz.questions.filter((q) => !answers[q.id]?.length);
     if (unanswered.length) {
-      toast({ title: "Please answer all questions before submitting", variant: "destructive" });
+      toast({ title: `${unanswered.length} question(s) unanswered`, description: "Please answer all questions before submitting.", variant: "destructive" });
       return;
     }
-    setSubmitted(true);
-    setPhase("submitted");
+    const r = scoreQuiz(quiz, answers, warnings);
+    recordAttempt(qualificationId, unitCode, r);
+    setResult(r);
+    setPhase("results");
     exitFullscreen();
-    toast({ title: "Quiz Submitted", description: "Your answers have been recorded." });
   };
 
   const handleClose = () => {
     exitFullscreen();
-    if (submitted) onSubmitted();
+    if (result) onSubmitted(result);
     onClose();
   };
 
-  const totalQuestions = assignment.questions?.length || 0;
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const totalQuestions = quiz?.questions.length || 0;
   const answeredCount = Object.keys(answers).filter((k) => answers[k]?.length > 0).length;
+
+  if (!quiz) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">No questions available for this unit yet.</p>
+          <button onClick={onClose} className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm">Close</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[9999] bg-background flex flex-col" ref={containerRef}>
@@ -188,28 +221,28 @@ const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalPr
           <Shield className="w-5 h-5" />
           <span className="font-bold text-sm">Strict Assessment Mode</span>
           {phase === "active" && (
-            <span className="text-xs opacity-80 ml-2">
-              {answeredCount}/{totalQuestions} answered
-            </span>
+            <span className="text-xs opacity-80 ml-2">{answeredCount}/{totalQuestions} answered</span>
           )}
         </div>
         <div className="flex items-center gap-4">
           {phase === "active" && (
             <>
+              {timeLeft !== null && (
+                <div className={`flex items-center gap-1.5 text-xs font-mono ${timeLeft < 300 ? "text-yellow-300 animate-pulse" : ""}`}>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{formatTime(timeLeft)}</span>
+                </div>
+              )}
               <div className="flex items-center gap-1.5 text-xs">
-                <Eye className="w-3.5 h-3.5" />
-                <span>Proctored</span>
+                <Eye className="w-3.5 h-3.5" /><span>Proctored</span>
               </div>
               <div className={`flex items-center gap-1.5 text-xs ${warnings > 0 ? "text-yellow-300" : ""}`}>
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>{warnings}/{MAX_WARNINGS} warnings</span>
+                <AlertTriangle className="w-3.5 h-3.5" /><span>{warnings}/{MAX_WARNINGS}</span>
               </div>
             </>
           )}
-          {(phase === "intro" || phase === "submitted") && (
-            <button onClick={handleClose} className="p-1 hover:opacity-80">
-              <X className="w-5 h-5" />
-            </button>
+          {(phase === "intro" || phase === "results") && (
+            <button onClick={handleClose} className="p-1 hover:opacity-80"><X className="w-5 h-5" /></button>
           )}
         </div>
       </div>
@@ -217,8 +250,7 @@ const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalPr
       {/* Warning Banner */}
       {showWarning && (
         <div className="bg-destructive text-destructive-foreground px-6 py-3 text-sm font-semibold flex items-center gap-2 animate-pulse flex-shrink-0">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          {warningMessage}
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" />{warningMessage}
         </div>
       )}
 
@@ -230,55 +262,124 @@ const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalPr
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <Shield className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-3">{assignment.title}</h2>
-            <p className="text-muted-foreground mb-8">{assignment.description}</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">{unitCode}: {unitName}</h2>
+            <p className="text-muted-foreground mb-8">Knowledge Assessment Quiz</p>
 
-            <div className="bg-card border border-border rounded-xl p-6 text-left mb-8">
-              <h3 className="font-bold text-foreground mb-4">📋 Assessment Rules</h3>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-start gap-3">
-                  <Maximize className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span>The quiz will open in <strong className="text-foreground">fullscreen mode</strong>. Do not exit fullscreen.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Eye className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-foreground">Tab switching</strong> and window changes are monitored and logged.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <AlertTriangle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span>After <strong className="text-foreground">{MAX_WARNINGS} violations</strong>, the quiz will be auto-submitted and flagged.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-foreground">Copy, paste, right-click, and dev tools</strong> are disabled during the quiz.</span>
-                </li>
-              </ul>
+            {/* Quiz Info */}
+            <div className="bg-card border border-border rounded-xl p-6 text-left mb-6">
+              <h3 className="font-bold text-foreground mb-4">📊 Quiz Details</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Questions</p>
+                  <p className="font-semibold text-foreground">{totalQuestions} (randomised)</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Time Limit</p>
+                  <p className="font-semibold text-foreground">{quiz.config.timeLimit > 0 ? `${quiz.config.timeLimit} minutes` : "No limit"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Pass Score</p>
+                  <p className="font-semibold text-foreground">{quiz.config.passScore}%</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Attempts</p>
+                  <p className="font-semibold text-foreground">
+                    {previousAttempts.length}/{quiz.config.maxAttempts === 0 ? "∞" : quiz.config.maxAttempts}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <p className="text-xs text-muted-foreground mb-6">
-              {totalQuestions} question{totalQuestions !== 1 ? "s" : ""} • All violations are logged and reported to your assessor
-            </p>
+            {/* Previous Attempts */}
+            {previousAttempts.length > 0 && (
+              <div className="bg-card border border-border rounded-xl p-6 text-left mb-6">
+                <h3 className="font-bold text-foreground mb-3">📝 Previous Attempts</h3>
+                <div className="space-y-2">
+                  {previousAttempts.map((a, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Attempt {i + 1}</span>
+                        {a.violations > 0 && (
+                          <span className="text-xs text-amber-600">({a.violations} violation{a.violations !== 1 ? "s" : ""})</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold">{a.scorePercent}%</span>
+                        {a.passed ? (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded bg-green-600 text-white">PASS</span>
+                        ) : (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded bg-destructive text-destructive-foreground">FAIL</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            <button
-              onClick={startQuiz}
-              className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity"
-            >
-              I Understand — Start Quiz
-            </button>
+            {/* Rules */}
+            {quiz.config.strictMode && (
+              <div className="bg-card border border-border rounded-xl p-6 text-left mb-8">
+                <h3 className="font-bold text-foreground mb-4">📋 Assessment Rules</h3>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <Maximize className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span>Quiz opens in <strong className="text-foreground">fullscreen mode</strong>. Do not exit.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Eye className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span><strong className="text-foreground">Tab switching</strong> is monitored and logged.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <AlertTriangle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span>After <strong className="text-foreground">{MAX_WARNINGS} violations</strong>, quiz auto-submits.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span><strong className="text-foreground">Copy, paste, right-click, dev tools</strong> are disabled.</span>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {canTake ? (
+              <button onClick={startQuiz} className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
+                I Understand — Start Quiz
+              </button>
+            ) : (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
+                <p className="text-sm font-semibold text-destructive">No attempts remaining</p>
+                <p className="text-xs text-muted-foreground mt-1">You have used all {quiz.config.maxAttempts} attempts for this quiz.</p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Active Quiz */}
         {phase === "active" && (
           <div className="max-w-3xl mx-auto py-8 px-6">
-            <h2 className="text-xl font-bold text-foreground mb-6">{assignment.title}</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-foreground">{unitCode}: {unitName}</h2>
+              {timeLeft !== null && (
+                <div className={`text-sm font-mono font-semibold px-3 py-1 rounded-lg ${timeLeft < 300 ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground"}`}>
+                  ⏱ {formatTime(timeLeft)}
+                </div>
+              )}
+            </div>
+
+            {/* Progress bar */}
+            <div className="mb-6">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>Progress</span>
+                <span>{answeredCount}/{totalQuestions}</span>
+              </div>
+              <Progress value={(answeredCount / totalQuestions) * 100} className="h-2" />
+            </div>
 
             <div className="space-y-6">
-              {assignment.questions?.map((q, qi) => (
+              {quiz.questions.map((q, qi) => (
                 <div key={q.id} className="bg-card border border-border rounded-xl p-5">
-                  <p className="font-semibold text-foreground mb-3">
-                    {qi + 1}. {q.question}
-                  </p>
+                  <p className="font-semibold text-foreground mb-3">{qi + 1}. {q.question}</p>
                   <p className="text-xs text-muted-foreground mb-3">
                     {q.type === "single" ? "Select one answer" : "Select all that apply"}
                   </p>
@@ -286,27 +387,11 @@ const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalPr
                     {q.options.map((opt, oi) => {
                       const selected = answers[q.id]?.includes(oi);
                       return (
-                        <label
-                          key={oi}
-                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors select-none ${
-                            selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                          }`}
-                        >
+                        <label key={oi} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors select-none ${selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
                           {q.type === "single" ? (
-                            <input
-                              type="radio"
-                              name={q.id}
-                              checked={selected || false}
-                              onChange={() => handleSingle(q.id, oi)}
-                              className="accent-primary w-4 h-4"
-                            />
+                            <input type="radio" name={q.id} checked={selected || false} onChange={() => handleSingle(q.id, oi)} className="accent-primary w-4 h-4" />
                           ) : (
-                            <input
-                              type="checkbox"
-                              checked={selected || false}
-                              onChange={() => handleMultiple(q.id, oi)}
-                              className="accent-primary w-4 h-4 rounded"
-                            />
+                            <input type="checkbox" checked={selected || false} onChange={() => handleMultiple(q.id, oi)} className="accent-primary w-4 h-4 rounded" />
                           )}
                           <span className="text-sm text-foreground select-none">{opt}</span>
                         </label>
@@ -318,59 +403,90 @@ const StrictQuizModal = ({ assignment, onClose, onSubmitted }: StrictQuizModalPr
             </div>
 
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-              <p className="text-sm text-muted-foreground">
-                {answeredCount} of {totalQuestions} questions answered
-              </p>
-              <button
-                onClick={handleSubmit}
-                className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity"
-              >
+              <p className="text-sm text-muted-foreground">{answeredCount} of {totalQuestions} answered</p>
+              <button onClick={handleSubmit} className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
                 Submit Quiz
               </button>
             </div>
           </div>
         )}
 
-        {/* Submitted Screen */}
-        {phase === "submitted" && (
+        {/* Results Screen */}
+        {phase === "results" && result && (
           <div className="max-w-xl mx-auto py-16 px-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${result.passed ? "bg-green-100" : "bg-destructive/10"}`}>
+              {result.passed ? <Trophy className="w-10 h-10 text-green-600" /> : <XCircle className="w-10 h-10 text-destructive" />}
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-3">Quiz Submitted</h2>
-            <p className="text-muted-foreground mb-6">
-              Your answers have been recorded and will be reviewed by your assessor.
+
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              {result.passed ? "Quiz Passed! 🎉" : "Quiz Not Passed"}
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              {result.passed
+                ? "Congratulations! You've demonstrated sufficient knowledge."
+                : `You need ${result.passScore}% to pass. You can review and try again.`}
             </p>
 
+            {/* Score Circle */}
+            <div className="mb-8">
+              <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full border-4 ${result.passed ? "border-green-500" : "border-destructive"}`}>
+                <div>
+                  <p className={`text-3xl font-bold ${result.passed ? "text-green-600" : "text-destructive"}`}>{result.scorePercent}%</p>
+                  <p className="text-xs text-muted-foreground">Score</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="bg-card border border-border rounded-xl p-5 mb-6 text-left">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Correct answers</span>
+                  <span className="font-semibold text-foreground">{result.correctCount}/{result.totalQuestions}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Pass mark</span>
+                  <span className="font-semibold text-foreground">{result.passScore}%</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Time taken</span>
+                  <span className="font-semibold text-foreground">{formatTime(result.timeTakenSeconds)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Violations</span>
+                  <span className={`font-semibold ${result.violations > 0 ? "text-amber-600" : "text-green-600"}`}>{result.violations}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Violations log */}
             {warnings > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
-                <p className="text-sm font-semibold text-amber-800 mb-2">
-                  ⚠️ {warnings} violation{warnings !== 1 ? "s" : ""} recorded
-                </p>
+                <p className="text-sm font-semibold text-amber-800 mb-2">⚠️ {warnings} violation{warnings !== 1 ? "s" : ""} recorded</p>
                 <ul className="space-y-1">
                   {tabSwitchLog.map((log, i) => (
                     <li key={i} className="text-xs text-amber-700">{log}</li>
                   ))}
                 </ul>
-                <p className="text-xs text-amber-600 mt-2">These have been logged and will be visible to your assessor.</p>
+                <p className="text-xs text-amber-600 mt-2">Logged and visible to your assessor.</p>
               </div>
             )}
 
-            <div className="bg-card border border-border rounded-xl p-4 mb-8 text-left">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Questions answered</span>
-                <span className="font-semibold text-foreground">{answeredCount}/{totalQuestions}</span>
+            {/* Remaining attempts */}
+            {!result.passed && (
+              <div className="mb-6">
+                {canAttempt(qualificationId, unitCode) ? (
+                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                    <RotateCcw className="w-4 h-4" />
+                    You can retake this quiz. Close and relaunch to try again.
+                  </p>
+                ) : (
+                  <p className="text-sm text-destructive">No attempts remaining. Contact your assessor.</p>
+                )}
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Violations</span>
-                <span className={`font-semibold ${warnings > 0 ? "text-amber-600" : "text-green-600"}`}>{warnings}</span>
-              </div>
-            </div>
+            )}
 
-            <button
-              onClick={handleClose}
-              className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity"
-            >
+            <button onClick={handleClose} className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
               Close & Return to Unit
             </button>
           </div>
