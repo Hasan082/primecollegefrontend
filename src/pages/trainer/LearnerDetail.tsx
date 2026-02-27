@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Mail, Phone, Calendar, GraduationCap, TrendingUp, CheckCircle, Clock, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ const statusConfig: Record<string, { className: string; icon: typeof CheckCircle
 
 const LearnerDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const learner = trainerLearners.find((l) => l.id === id);
 
   if (!learner) {
@@ -107,6 +108,7 @@ const LearnerDetail = () => {
               <TableHead>Unit Name</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Completed Date</TableHead>
+              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -114,7 +116,7 @@ const LearnerDetail = () => {
               const config = statusConfig[unit.status];
               const Icon = config.icon;
               return (
-                <TableRow key={unit.code}>
+                <TableRow key={unit.code} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/trainer/learner/${id}/unit/${unit.code}`)}>
                   <TableCell className="font-medium text-primary">{unit.code}</TableCell>
                   <TableCell className="text-sm">{unit.name}</TableCell>
                   <TableCell>
@@ -124,6 +126,11 @@ const LearnerDetail = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">{unit.completedDate || "—"}</TableCell>
+                  <TableCell>
+                    <Link to={`/trainer/learner/${id}/unit/${unit.code}`} className="text-primary hover:underline text-xs font-medium" onClick={(e) => e.stopPropagation()}>
+                      Manage
+                    </Link>
+                  </TableCell>
                 </TableRow>
               );
             })}
