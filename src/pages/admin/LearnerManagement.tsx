@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import TablePagination from "@/components/admin/TablePagination";
 
 const LearnerManagement = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const { toast } = useToast();
 
   const filtered = adminLearners.filter((l) => {
@@ -122,7 +125,7 @@ const LearnerManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((l) => (
+              {filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((l) => (
                 <TableRow key={l.id}>
                   <TableCell>
                     <div>
@@ -148,6 +151,12 @@ const LearnerManagement = () => {
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            currentPage={currentPage}
+            totalItems={filtered.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
     </div>

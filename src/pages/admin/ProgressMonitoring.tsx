@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +8,13 @@ import { adminLearners } from "@/data/adminMockData";
 import { Search, ArrowLeft, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TablePagination from "@/components/admin/TablePagination";
 
 const ProgressMonitoring = () => {
   const [search, setSearch] = useState("");
   const [progressFilter, setProgressFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filtered = adminLearners.filter((l) => {
     const matchesSearch = l.name.toLowerCase().includes(search.toLowerCase());
@@ -94,7 +97,7 @@ const ProgressMonitoring = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((l) => (
+              {filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((l) => (
                 <TableRow key={l.id}>
                   <TableCell>
                     <p className="font-medium text-sm">{l.name}</p>
@@ -122,6 +125,12 @@ const ProgressMonitoring = () => {
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            currentPage={currentPage}
+            totalItems={filtered.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
     </div>
