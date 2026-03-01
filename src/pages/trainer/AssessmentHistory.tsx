@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { FileText, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { recentAssessments } from "@/data/trainerMockData";
+import TablePagination from "@/components/admin/TablePagination";
 
 const outcomeColors: Record<string, string> = {
   "Competent": "bg-green-600 text-white",
@@ -12,7 +14,11 @@ const outcomeColors: Record<string, string> = {
   "Not Yet Competent": "bg-destructive text-destructive-foreground",
 };
 
+const ITEMS_PER_PAGE = 10;
+
 const AssessmentHistory = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+
   return (
     <div>
       <Link to="/trainer/dashboard" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6">
@@ -33,7 +39,7 @@ const AssessmentHistory = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {recentAssessments.map((a) => (
+            {recentAssessments.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((a) => (
               <TableRow key={a.id}>
                 <TableCell className="font-medium text-primary">{a.learnerName}</TableCell>
                 <TableCell className="text-sm">{a.unitCode}: {a.unitTitle}</TableCell>
@@ -52,6 +58,7 @@ const AssessmentHistory = () => {
             ))}
           </TableBody>
         </Table>
+        <TablePagination currentPage={currentPage} totalItems={recentAssessments.length} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
       </Card>
     </div>
   );
