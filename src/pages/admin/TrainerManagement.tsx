@@ -3,26 +3,40 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { adminTrainers, adminLearners } from "@/data/adminMockData";
-import { Search, Plus, ArrowLeft, UserCheck, Users } from "lucide-react";
+import { Search, Plus, ArrowLeft, UserCheck, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import TablePagination from "@/components/admin/TablePagination";
+
+const ITEMS_PER_PAGE = 10;
 
 const TrainerManagement = () => {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reassignDialog, setReassignDialog] = useState<string | null>(null);
+  const [expandedTrainers, setExpandedTrainers] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   const filtered = adminTrainers.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase()) || t.email.toLowerCase().includes(search.toLowerCase())
   );
 
+  const paginatedTrainers = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   const getTrainerLearners = (name: string) => adminLearners.filter((l) => l.assignedTrainer === name);
+
+  const toggleExpand = (id: string) => {
+    setExpandedTrainers(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -67,8 +81,9 @@ const TrainerManagement = () => {
       </div>
 
       <div className="grid gap-4">
-        {filtered.map((t) => {
+        {paginatedTrainers.map((t) => {
           const learners = getTrainerLearners(t.name);
+          const isExpanded = expandedTrainers.has(t.id);
           return (
             <Card key={t.id}>
               <CardContent className="p-5">
@@ -102,41 +117,48 @@ const TrainerManagement = () => {
 
                 {learners.length > 0 && (
                   <div className="mt-4 border-t pt-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                      <Users className="w-3 h-3" /> Assigned Learners
-                    </p>
-                    <div className="space-y-1.5">
-                      {learners.map((l) => (
-                        <div key={l.id} className="flex items-center justify-between text-sm bg-muted/30 rounded-md px-3 py-1.5">
-                          <span>{l.name} — <span className="text-muted-foreground">{l.qualification}</span></span>
-                          <Dialog open={reassignDialog === l.id} onOpenChange={(o) => setReassignDialog(o ? l.id : null)}>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="text-xs h-7">Reassign</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader><DialogTitle>Reassign {l.name}</DialogTitle></DialogHeader>
-                              <div className="space-y-4 pt-2">
-                                <p className="text-sm text-muted-foreground">Currently assigned to <strong>{t.name}</strong></p>
-                                <div className="space-y-1.5">
-                                  <Label>New Trainer</Label>
-                                  <Select>
-                                    <SelectTrigger><SelectValue placeholder="Select trainer" /></SelectTrigger>
-                                    <SelectContent>
-                                      {adminTrainers.filter(tr => tr.id !== t.id && tr.status === "active").map(tr => (
-                                        <SelectItem key={tr.id} value={tr.id}>{tr.name}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                    <button
+                      onClick={() => toggleExpand(t.id)}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+                    >
+                      <Users className="w-3 h-3" />
+                      Assigned Learners ({learners.length})
+                      {isExpanded ? <ChevronUp className="w-3 h-3 ml-auto" /> : <ChevronDown className="w-3 h-3 ml-auto" />}
+                    </button>
+                    {isExpanded && (
+                      <div className="space-y-1.5 mt-2">
+                        {learners.map((l) => (
+                          <div key={l.id} className="flex items-center justify-between text-sm bg-muted/30 rounded-md px-3 py-1.5">
+                            <span>{l.name} — <span className="text-muted-foreground">{l.qualification}</span></span>
+                            <Dialog open={reassignDialog === l.id} onOpenChange={(o) => setReassignDialog(o ? l.id : null)}>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-xs h-7">Reassign</Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader><DialogTitle>Reassign {l.name}</DialogTitle></DialogHeader>
+                                <div className="space-y-4 pt-2">
+                                  <p className="text-sm text-muted-foreground">Currently assigned to <strong>{t.name}</strong></p>
+                                  <div className="space-y-1.5">
+                                    <Label>New Trainer</Label>
+                                    <Select>
+                                      <SelectTrigger><SelectValue placeholder="Select trainer" /></SelectTrigger>
+                                      <SelectContent>
+                                        {adminTrainers.filter(tr => tr.id !== t.id && tr.status === "active").map(tr => (
+                                          <SelectItem key={tr.id} value={tr.id}>{tr.name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <Button className="w-full" onClick={() => { setReassignDialog(null); toast({ title: "Learner reassigned (demo)" }); }}>
+                                    Confirm Reassignment
+                                  </Button>
                                 </div>
-                                <Button className="w-full" onClick={() => { setReassignDialog(null); toast({ title: "Learner reassigned (demo)" }); }}>
-                                  Confirm Reassignment
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      ))}
-                    </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -144,6 +166,13 @@ const TrainerManagement = () => {
           );
         })}
       </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalItems={filtered.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
