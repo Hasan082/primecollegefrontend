@@ -40,6 +40,13 @@ import UnitManagement from "./pages/trainer/UnitManagement";
 import QuestionBank from "./pages/trainer/QuestionBank";
 import QuestionBankEditor from "./pages/trainer/QuestionBankEditor";
 import StaffLogin from "./pages/StaffLogin";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import QualificationManagement from "./pages/admin/QualificationManagement";
+import LearnerManagement from "./pages/admin/LearnerManagement";
+import TrainerManagement from "./pages/admin/TrainerManagement";
+import ProgressMonitoring from "./pages/admin/ProgressMonitoring";
+import Reports from "./pages/admin/Reports";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +86,14 @@ const App = () => {
                   <Route path="change-password" element={<ChangePassword />} />
                   <Route path="qualification/:id" element={<QualificationView />} />
                   <Route path="qualification/:qualificationId/unit/:unitId" element={<UnitDetail />} />
+                </Route>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="qualifications" element={<QualificationManagement />} />
+                  <Route path="learners" element={<LearnerManagement />} />
+                  <Route path="trainers" element={<TrainerManagement />} />
+                  <Route path="progress" element={<ProgressMonitoring />} />
+                  <Route path="reports" element={<Reports />} />
                 </Route>
                 <Route path="/trainer" element={<TrainerLayout />}>
                   <Route path="dashboard" element={<TrainerDashboard />} />
