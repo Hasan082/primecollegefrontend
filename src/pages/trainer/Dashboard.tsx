@@ -1,17 +1,18 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, Clock, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Users, Clock, CheckCircle, AlertCircle, Eye, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { pendingSubmissions, trainerLearners, recentAssessments } from "@/data/trainerMockData";
+import TablePagination from "@/components/admin/TablePagination";
 
 const findLearnerId = (lrnCode: string) => {
   const learner = trainerLearners.find((l) => l.learnerId === lrnCode);
   return learner?.id || "";
 };
-import { FileText } from "lucide-react";
 
 const stats = [
   { label: "Assigned Learners", value: trainerLearners.length, icon: Users, color: "bg-primary text-primary-foreground" },
@@ -26,7 +27,13 @@ const outcomeColors: Record<string, string> = {
   "Not Yet Competent": "bg-destructive text-destructive-foreground",
 };
 
+const ITEMS_PER_PAGE = 10;
+
 const TrainerDashboard = () => {
+  const [pendingPage, setPendingPage] = useState(1);
+  const [learnersPage, setLearnersPage] = useState(1);
+  const [recentPage, setRecentPage] = useState(1);
+
   return (
     <div>
       <h1 className="text-3xl font-bold text-foreground mb-1">Assessment Dashboard</h1>
@@ -72,7 +79,7 @@ const TrainerDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pendingSubmissions.map((sub) => (
+                {pendingSubmissions.slice((pendingPage - 1) * ITEMS_PER_PAGE, pendingPage * ITEMS_PER_PAGE).map((sub) => (
                   <TableRow key={sub.id}>
                     <TableCell className="font-medium text-primary">{sub.learnerName}</TableCell>
                     <TableCell>
@@ -98,13 +105,7 @@ const TrainerDashboard = () => {
                 ))}
               </TableBody>
             </Table>
-            <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-              <span>Showing 1–{pendingSubmissions.length} of {pendingSubmissions.length}</span>
-              <div className="flex gap-1">
-                <button className="p-1.5 rounded border border-border hover:bg-muted" disabled><ChevronLeft className="w-4 h-4" /></button>
-                <button className="p-1.5 rounded border border-border hover:bg-muted" disabled><ChevronRight className="w-4 h-4" /></button>
-              </div>
-            </div>
+            <TablePagination currentPage={pendingPage} totalItems={pendingSubmissions.length} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setPendingPage} />
           </Card>
         </TabsContent>
 
@@ -124,7 +125,7 @@ const TrainerDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {trainerLearners.map((l) => (
+                {trainerLearners.slice((learnersPage - 1) * ITEMS_PER_PAGE, learnersPage * ITEMS_PER_PAGE).map((l) => (
                   <TableRow key={l.id}>
                     <TableCell className="font-medium text-primary">{l.name}</TableCell>
                     <TableCell>
@@ -152,6 +153,7 @@ const TrainerDashboard = () => {
                 ))}
               </TableBody>
             </Table>
+            <TablePagination currentPage={learnersPage} totalItems={trainerLearners.length} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setLearnersPage} />
           </Card>
         </TabsContent>
 
@@ -171,7 +173,7 @@ const TrainerDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentAssessments.map((a) => (
+                {recentAssessments.slice((recentPage - 1) * ITEMS_PER_PAGE, recentPage * ITEMS_PER_PAGE).map((a) => (
                   <TableRow key={a.id}>
                     <TableCell className="font-medium text-primary">{a.learnerName}</TableCell>
                     <TableCell className="text-sm">{a.unitCode}: {a.unitTitle}</TableCell>
@@ -190,6 +192,7 @@ const TrainerDashboard = () => {
                 ))}
               </TableBody>
             </Table>
+            <TablePagination currentPage={recentPage} totalItems={recentAssessments.length} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setRecentPage} />
           </Card>
         </TabsContent>
       </Tabs>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Mail, Phone, Calendar, GraduationCap, TrendingUp, CheckCircle, Clock, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trainerLearners } from "@/data/trainerMockData";
+import TablePagination from "@/components/admin/TablePagination";
+
+const ITEMS_PER_PAGE = 10;
 
 const statusConfig: Record<string, { className: string; icon: typeof CheckCircle }> = {
   "Competent": { className: "bg-green-600 text-white", icon: CheckCircle },
@@ -16,6 +20,7 @@ const statusConfig: Record<string, { className: string; icon: typeof CheckCircle
 const LearnerDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
   const learner = trainerLearners.find((l) => l.id === id);
 
   if (!learner) {
@@ -112,7 +117,7 @@ const LearnerDetail = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {learner.units.map((unit) => {
+            {learner.units.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((unit) => {
               const config = statusConfig[unit.status];
               const Icon = config.icon;
               return (
@@ -136,6 +141,7 @@ const LearnerDetail = () => {
             })}
           </TableBody>
         </Table>
+        <TablePagination currentPage={currentPage} totalItems={learner.units.length} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
       </Card>
     </div>
   );

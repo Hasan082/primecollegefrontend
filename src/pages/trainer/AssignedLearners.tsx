@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -5,8 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trainerLearners } from "@/data/trainerMockData";
+import TablePagination from "@/components/admin/TablePagination";
+
+const ITEMS_PER_PAGE = 10;
 
 const AssignedLearners = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+
   return (
     <div>
       <Link to="/trainer/dashboard" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6">
@@ -28,7 +34,7 @@ const AssignedLearners = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {trainerLearners.map((l) => (
+            {trainerLearners.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((l) => (
               <TableRow key={l.id}>
                 <TableCell className="font-medium text-primary">{l.name}</TableCell>
                 <TableCell className="text-sm">{l.learnerId}</TableCell>
@@ -57,6 +63,7 @@ const AssignedLearners = () => {
             ))}
           </TableBody>
         </Table>
+        <TablePagination currentPage={currentPage} totalItems={trainerLearners.length} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
       </Card>
     </div>
   );
