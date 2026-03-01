@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { AdminTrainer } from "@/data/adminMockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { adminTrainers, adminLearners } from "@/data/adminMockData";
-import { Search, Plus, ArrowLeft, UserCheck, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Plus, ArrowLeft, UserCheck, Users, ChevronDown, ChevronUp, Power } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -20,9 +21,10 @@ const TrainerManagement = () => {
   const [reassignDialog, setReassignDialog] = useState<string | null>(null);
   const [expandedTrainers, setExpandedTrainers] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [trainers, setTrainers] = useState<AdminTrainer[]>(adminTrainers);
   const { toast } = useToast();
 
-  const filtered = adminTrainers.filter((t) =>
+  const filtered = trainers.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase()) || t.email.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -36,6 +38,14 @@ const TrainerManagement = () => {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  };
+
+  const toggleTrainerStatus = (id: string) => {
+    const trainer = trainers.find(t => t.id === id);
+    if (!trainer) return;
+    const newStatus = trainer.status === "active" ? "inactive" as const : "active" as const;
+    setTrainers(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
+    toast({ title: `${trainer.name} ${newStatus === "active" ? "activated" : "deactivated"}` });
   };
 
   return (
@@ -112,6 +122,15 @@ const TrainerManagement = () => {
                     <Badge variant={t.status === "active" ? "default" : "secondary"}>
                       {t.status.charAt(0).toUpperCase() + t.status.slice(1)}
                     </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => toggleTrainerStatus(t.id)}
+                      title={t.status === "active" ? "Deactivate trainer" : "Activate trainer"}
+                    >
+                      <Power className={`w-4 h-4 ${t.status === "active" ? "text-destructive" : "text-green-600"}`} />
+                    </Button>
                   </div>
                 </div>
 
@@ -143,7 +162,7 @@ const TrainerManagement = () => {
                                     <Select>
                                       <SelectTrigger><SelectValue placeholder="Select trainer" /></SelectTrigger>
                                       <SelectContent>
-                                        {adminTrainers.filter(tr => tr.id !== t.id && tr.status === "active").map(tr => (
+                                        {trainers.filter(tr => tr.id !== t.id && tr.status === "active").map(tr => (
                                           <SelectItem key={tr.id} value={tr.id}>{tr.name}</SelectItem>
                                         ))}
                                       </SelectContent>
