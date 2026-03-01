@@ -9,7 +9,7 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accen
 const AdminDashboard = () => {
   const recentEnrolments = adminLearners
     .sort((a, b) => b.enrolledDate.localeCompare(a.enrolledDate))
-    .slice(0, 5);
+    .slice(0, 7);
 
   return (
     <div className="space-y-6">

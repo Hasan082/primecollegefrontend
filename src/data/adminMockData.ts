@@ -58,6 +58,8 @@ export const adminLearners: AdminLearner[] = [
   { id: "l6", name: "Lisa Anderson", email: "l.anderson@example.com", phone: "+44 7700 900987", learnerId: "LRN-2024-006", qualification: "Level 2 Certificate in Customer Service", qualificationId: "q5", assignedTrainer: "Mark Thompson", enrolledDate: "12/12/2024", paymentMethod: "online", paymentStatus: "paid", progress: 100, status: "completed", accessExpiry: "12/06/2025" },
   { id: "l7", name: "James White", email: "j.white@example.com", phone: "+44 7700 900111", learnerId: "LRN-2024-007", qualification: "Level 3 Diploma in Business Administration", qualificationId: "q1", assignedTrainer: "Sarah Jones", enrolledDate: "01/11/2024", paymentMethod: "employer", paymentStatus: "pending", progress: 25, status: "active", accessExpiry: "01/11/2025" },
   { id: "l8", name: "Rachel Green", email: "r.green@example.com", phone: "+44 7700 900222", learnerId: "LRN-2024-008", qualification: "Level 4 Diploma in Adult Care", qualificationId: "q2", assignedTrainer: "Sarah Jones", enrolledDate: "20/01/2025", paymentMethod: "online", paymentStatus: "paid", progress: 10, status: "active", accessExpiry: "20/07/2026" },
+  { id: "l9", name: "Sophie Turner", email: "s.turner@example.com", phone: "+44 7700 900333", learnerId: "LRN-2025-009", qualification: "Level 2 Certificate in Mental Health Awareness", qualificationId: "q4", assignedTrainer: "Mark Thompson", enrolledDate: "05/02/2025", paymentMethod: "online", paymentStatus: "paid", progress: 5, status: "active", accessExpiry: "05/08/2025" },
+  { id: "l10", name: "Daniel Harris", email: "d.harris@example.com", phone: "+44 7700 900444", learnerId: "LRN-2025-010", qualification: "Level 4 Diploma in Management and Leadership", qualificationId: "q3", assignedTrainer: "Mark Thompson", enrolledDate: "10/02/2025", paymentMethod: "employer", paymentStatus: "paid", progress: 3, status: "active", accessExpiry: "10/08/2026" },
 ];
 
 export const adminTrainers: AdminTrainer[] = [
@@ -67,8 +69,8 @@ export const adminTrainers: AdminTrainer[] = [
 ];
 
 export const adminStats = {
-  totalLearners: 8,
-  activeLearners: 7,
+  totalLearners: 10,
+  activeLearners: 9,
   completedLearners: 1,
   totalQualifications: 6,
   activeQualifications: 5,
