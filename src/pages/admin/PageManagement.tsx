@@ -42,7 +42,7 @@ const PageManagement = () => {
   const qualPages = pages.filter((p) => p.type === "qualification");
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
+    <div className="p-6 space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Page Builder</h1>
