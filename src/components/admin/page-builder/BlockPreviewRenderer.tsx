@@ -44,19 +44,22 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
               </div>
             );
 
-          case "text":
+          case "text": {
+            const align = (d.alignment as string) || "center";
+            const alignClass = align === "left" ? "text-left" : align === "right" ? "text-right" : "text-center";
             return (
-              <div key={block.id} className="py-6 px-5 text-center bg-background">
+              <div key={block.id} className={`py-6 px-5 bg-background ${alignClass}`}>
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 {d.content && typeof d.content === "string" && (
                   d.content.startsWith("<") ? (
-                    <div className="text-[10px] text-muted-foreground leading-relaxed max-w-[90%] mx-auto prose prose-xs" dangerouslySetInnerHTML={{ __html: d.content }} />
+                    <div className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${align === "center" ? "mx-auto" : ""} prose prose-xs`} dangerouslySetInnerHTML={{ __html: d.content }} />
                   ) : (
-                    <p className="text-[10px] text-muted-foreground leading-relaxed max-w-[90%] mx-auto">{d.content}</p>
+                    <p className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${align === "center" ? "mx-auto" : ""}`}>{d.content}</p>
                   )
                 )}
               </div>
             );
+          }
 
           case "image-text":
             return (

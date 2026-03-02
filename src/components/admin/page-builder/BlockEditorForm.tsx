@@ -30,7 +30,32 @@ const BlockEditorForm = ({ block, onChange, onClose }: BlockEditorFormProps) => 
   return (
     <div className="space-y-4 py-2">
       {typeof local.title === "string" && (
-        <Field label="Title" value={local.title as string} onChange={(v) => update("title", v)} />
+        <div>
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Field label="Title" value={local.title as string} onChange={(v) => update("title", v)} />
+            </div>
+            {block.type === "text" && (
+              <div className="shrink-0">
+                <Label className="text-xs text-muted-foreground mb-1 block">Align</Label>
+                <div className="flex gap-1">
+                  {(["left", "center", "right"] as const).map((align) => (
+                    <Button
+                      key={align}
+                      type="button"
+                      variant={(local.alignment as string || "center") === align ? "default" : "outline"}
+                      size="sm"
+                      className="h-9 w-9 p-0 text-xs capitalize"
+                      onClick={() => update("alignment", align)}
+                    >
+                      {align === "left" ? "L" : align === "center" ? "C" : "R"}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
       {typeof local.subtitle === "string" && (
         <Field label="Subtitle" value={local.subtitle as string} onChange={(v) => update("subtitle", v)} />
