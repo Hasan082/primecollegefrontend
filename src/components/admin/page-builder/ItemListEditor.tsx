@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, GripVertical, Upload, ImageIcon, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import type { BlockType } from "@/types/pageBuilder";
+import dynamicIconImports from "lucide-react/dynamicIconImports";
 
 type AnyItem = Record<string, string | undefined>;
 
@@ -54,12 +55,42 @@ const ITEM_FIELDS: Partial<Record<BlockType, ItemField[]>> = {
   ],
 };
 
-// Available Lucide icon names for the picker
-const ICON_PRESETS = [
-  "Users", "Shield", "Award", "BookOpen", "Target", "Heart",
-  "Star", "Lightbulb", "TrendingUp", "CheckCircle", "Globe",
-  "Zap", "Clock", "ThumbsUp", "Layers", "Briefcase",
+// Icon name mapping: PascalCase display → kebab-case key for dynamicIconImports
+const ICON_PRESETS: { name: string; key: keyof typeof dynamicIconImports }[] = [
+  { name: "Users", key: "users" },
+  { name: "Shield", key: "shield" },
+  { name: "Award", key: "award" },
+  { name: "BookOpen", key: "book-open" },
+  { name: "Target", key: "target" },
+  { name: "Heart", key: "heart" },
+  { name: "Star", key: "star" },
+  { name: "Lightbulb", key: "lightbulb" },
+  { name: "TrendingUp", key: "trending-up" },
+  { name: "CheckCircle", key: "circle-check" },
+  { name: "Globe", key: "globe" },
+  { name: "Zap", key: "zap" },
+  { name: "Clock", key: "clock" },
+  { name: "ThumbsUp", key: "thumbs-up" },
+  { name: "Layers", key: "layers" },
+  { name: "Briefcase", key: "briefcase" },
+  { name: "GraduationCap", key: "graduation-cap" },
+  { name: "Building", key: "building" },
+  { name: "Rocket", key: "rocket" },
+  { name: "Megaphone", key: "megaphone" },
 ];
+
+// Dynamic icon component with lazy loading
+const DynamicIcon = ({ iconKey, size = 16, className }: { iconKey: string; size?: number; className?: string }) => {
+  const kebab = ICON_PRESETS.find((p) => p.name === iconKey)?.key || iconKey.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+  const importFn = dynamicIconImports[kebab as keyof typeof dynamicIconImports];
+  if (!importFn) return <Smile size={size} className={className} />;
+  const LazyIcon = lazy(importFn);
+  return (
+    <Suspense fallback={<div className="rounded bg-muted" style={{ width: size, height: size }} />}>
+      <LazyIcon size={size} className={className} />
+    </Suspense>
+  );
+};
 
 const getNewItem = (blockType: BlockType): AnyItem => {
   const fields = ITEM_FIELDS[blockType];
@@ -131,18 +162,19 @@ const MediaPicker = ({
       {mediaType === "icon" && (
         <div>
           <Label className="text-[10px] text-muted-foreground mb-1 block">Choose icon</Label>
-          <div className="grid grid-cols-8 gap-1">
-            {ICON_PRESETS.map((name) => (
+          <div className="grid grid-cols-5 gap-1">
+            {ICON_PRESETS.map((preset) => (
               <Button
-                key={name}
+                key={preset.name}
                 type="button"
-                variant={iconName === name ? "default" : "outline"}
+                variant={iconName === preset.name ? "default" : "outline"}
                 size="sm"
-                className="h-8 w-full p-0 text-[9px]"
-                title={name}
-                onClick={() => onUpdate("icon", name)}
+                className="h-9 w-full p-0 flex flex-col items-center justify-center gap-0.5"
+                title={preset.name}
+                onClick={() => onUpdate("icon", preset.name)}
               >
-                {name.slice(0, 2)}
+                <DynamicIcon iconKey={preset.name} size={14} />
+                <span className="text-[7px] leading-none">{preset.name.replace(/([A-Z])/g, " $1").trim().split(" ")[0]}</span>
               </Button>
             ))}
           </div>

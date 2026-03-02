@@ -1,7 +1,7 @@
 import {
   Users, Award, CheckCircle, Shield, BookOpen, Target, Heart,
   Star, Lightbulb, TrendingUp, Globe, Zap, Clock, ThumbsUp,
-  Layers, Briefcase, Smile,
+  Layers, Briefcase, Smile, GraduationCap, Building, Rocket, Megaphone,
 } from "lucide-react";
 import type { ContentBlock, BlockStyle, TextAlignment } from "@/types/pageBuilder";
 import React from "react";
@@ -14,7 +14,7 @@ interface BlockPreviewRendererProps {
 const iconMap: Record<string, React.ElementType> = {
   Users, Award, CheckCircle, Shield, BookOpen, Target, Heart,
   Star, Lightbulb, TrendingUp, Globe, Zap, Clock, ThumbsUp,
-  Layers, Briefcase, Smile,
+  Layers, Briefcase, Smile, GraduationCap, Building, Rocket, Megaphone,
 };
 
 /** Build inline style from BlockStyle */
