@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { ContentBlock, TextAlignment, BlockStyle } from "@/types/pageBuilder";
 import RichTextEditor from "./RichTextEditor";
 import BlockStylePanel from "./BlockStylePanel";
+import ItemListEditor from "./ItemListEditor";
 
 interface BlockEditorFormProps {
   block: ContentBlock;
@@ -114,21 +115,11 @@ const BlockEditorForm = ({ block, onChange, onBlockMetaChange, onClose }: BlockE
       )}
 
       {Array.isArray(local.items) && (
-        <div>
-          <Label>Items ({(local.items as unknown[]).length})</Label>
-          <div className="border border-border rounded-md p-3 mt-1 space-y-2 max-h-48 overflow-y-auto bg-muted/30">
-            {(local.items as { title?: string; question?: string }[]).map((item, i) => (
-              <div key={i} className="text-sm text-muted-foreground flex items-center gap-2">
-                <Badge variant="outline" className="shrink-0 text-[10px]">{i + 1}</Badge>
-                <span className="truncate">{item.title || item.question || "Item"}</span>
-              </div>
-            ))}
-            {(local.items as unknown[]).length === 0 && (
-              <p className="text-xs text-muted-foreground italic">No items yet</p>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Item editing will be available when connected to a backend</p>
-        </div>
+        <ItemListEditor
+          blockType={block.type}
+          items={local.items as Record<string, string | undefined>[]}
+          onChange={(items) => update("items", items)}
+        />
       )}
 
       {Array.isArray(local.paragraphs) && (
