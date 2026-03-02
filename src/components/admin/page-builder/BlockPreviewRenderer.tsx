@@ -1,5 +1,6 @@
 import { Users, Award, CheckCircle } from "lucide-react";
-import type { ContentBlock } from "@/types/pageBuilder";
+import type { ContentBlock, BlockStyle, TextAlignment } from "@/types/pageBuilder";
+import React from "react";
 
 interface BlockPreviewRendererProps {
   blocks: ContentBlock[];
@@ -10,6 +11,52 @@ const iconMap: Record<string, React.ElementType> = {
   Users,
   Award,
   CheckCircle,
+};
+
+/** Build inline style from BlockStyle */
+const buildBlockStyle = (style?: BlockStyle): React.CSSProperties => {
+  if (!style) return {};
+  const s: React.CSSProperties = {};
+  if (style.textColor) s.color = style.textColor;
+  if (style.bgColor) s.backgroundColor = style.bgColor;
+  if (style.bgImage) {
+    s.backgroundImage = `url(${style.bgImage})`;
+    s.backgroundSize = "cover";
+    s.backgroundPosition = "center";
+  }
+  if (style.paddingTop) s.paddingTop = `${style.paddingTop}px`;
+  if (style.paddingBottom) s.paddingBottom = `${style.paddingBottom}px`;
+  if (style.paddingLeft) s.paddingLeft = `${style.paddingLeft}px`;
+  if (style.paddingRight) s.paddingRight = `${style.paddingRight}px`;
+  if (style.marginTop) s.marginTop = `${style.marginTop}px`;
+  if (style.marginBottom) s.marginBottom = `${style.marginBottom}px`;
+  return s;
+};
+
+const alignClass = (a?: TextAlignment) =>
+  a === "left" ? "text-left" : a === "right" ? "text-right" : "text-center";
+
+/** Wrapper that applies style + overlay */
+const StyledWrapper = ({
+  block,
+  defaultClass,
+  children,
+}: {
+  block: ContentBlock;
+  defaultClass: string;
+  children: React.ReactNode;
+}) => {
+  const style = buildBlockStyle(block.style);
+  const hasBgImage = block.style?.bgImage;
+
+  return (
+    <div key={block.id} className={`relative ${defaultClass}`} style={style}>
+      {hasBgImage && block.style?.bgOverlay && (
+        <div className="absolute inset-0" style={{ backgroundColor: block.style.bgOverlay }} />
+      )}
+      <div className={`relative z-10 ${alignClass(block.alignment)}`}>{children}</div>
+    </div>
+  );
 };
 
 const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) => {
@@ -28,11 +75,11 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
         switch (block.type) {
           case "hero":
             return (
-              <div key={block.id} className="relative bg-primary text-primary-foreground p-8 min-h-[100px] flex items-center justify-center overflow-hidden">
+              <StyledWrapper key={block.id} block={block} defaultClass="bg-primary text-primary-foreground p-8 min-h-[100px] flex items-center justify-center overflow-hidden">
                 {d.image && typeof d.image === "string" && d.image.startsWith("data:") && (
                   <img src={d.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
                 )}
-                <div className="relative z-10 text-center">
+                <div className="relative z-10">
                   <h2 className="text-base font-bold leading-tight">{d.title as string}</h2>
                   {d.subtitle && <p className="text-[10px] opacity-80 mt-1">{d.subtitle as string}</p>}
                   {d.ctaLabel && (
@@ -41,20 +88,22 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     </span>
                   )}
                 </div>
-              </div>
+              </StyledWrapper>
             );
 
           case "text": {
-            const align = (d.alignment as string) || "center";
-            const alignClass = align === "left" ? "text-left" : align === "right" ? "text-right" : "text-center";
+            // Text block uses its own data.alignment for backward compat
+            const textAlign = (d.alignment as string) || block.alignment || "center";
+            const tAlignClass = textAlign === "left" ? "text-left" : textAlign === "right" ? "text-right" : "text-center";
+            const inlineStyle = buildBlockStyle(block.style);
             return (
-              <div key={block.id} className={`py-6 px-5 bg-background ${alignClass}`}>
+              <div key={block.id} className={`py-6 px-5 bg-background ${tAlignClass}`} style={inlineStyle}>
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 {d.content && typeof d.content === "string" && (
                   d.content.startsWith("<") ? (
-                    <div className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${align === "center" ? "mx-auto" : ""} prose prose-xs [&_table]:w-full [&_table]:border-collapse [&_table]:mx-auto [&_table_td]:border [&_table_td]:border-border [&_table_td]:p-1 [&_table_td]:text-[9px] [&_table_th]:border [&_table_th]:border-border [&_table_th]:p-1 [&_table_th]:text-[9px] [&_table_th]:bg-muted [&_table_th]:font-semibold overflow-x-auto`} dangerouslySetInnerHTML={{ __html: d.content }} />
+                    <div className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${textAlign === "center" ? "mx-auto" : ""} prose prose-xs [&_table]:w-full [&_table]:border-collapse [&_table]:mx-auto [&_table_td]:border [&_table_td]:border-border [&_table_td]:p-1 [&_table_td]:text-[9px] [&_table_th]:border [&_table_th]:border-border [&_table_th]:p-1 [&_table_th]:text-[9px] [&_table_th]:bg-muted [&_table_th]:font-semibold overflow-x-auto`} dangerouslySetInnerHTML={{ __html: d.content }} />
                   ) : (
-                    <p className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${align === "center" ? "mx-auto" : ""}`}>{d.content}</p>
+                    <p className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${textAlign === "center" ? "mx-auto" : ""}`}>{d.content}</p>
                   )
                 )}
               </div>
@@ -63,7 +112,7 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
 
           case "image-text":
             return (
-              <div key={block.id} className="bg-primary text-primary-foreground py-6 px-5">
+              <StyledWrapper key={block.id} block={block} defaultClass="bg-primary text-primary-foreground py-6 px-5">
                 <div className={`flex gap-4 ${d.imagePosition === "left" ? "flex-row" : "flex-row-reverse"}`}>
                   <div className="flex-1">
                     <h3 className="text-[11px] font-bold leading-snug mb-2">{d.headline as string}</h3>
@@ -83,15 +132,15 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     ))}
                   </div>
                 </div>
-              </div>
+              </StyledWrapper>
             );
 
           case "why-us":
             return (
-              <div key={block.id} className="bg-muted py-6 px-4">
-                {d.title && <h3 className="text-[11px] font-bold text-center text-foreground mb-1">{d.title as string}</h3>}
+              <StyledWrapper key={block.id} block={block} defaultClass="bg-muted py-6 px-4">
+                {d.title && <h3 className="text-[11px] font-bold text-foreground mb-1">{d.title as string}</h3>}
                 {d.content && (
-                  <p className="text-[9px] text-muted-foreground text-center mb-3 max-w-[90%] mx-auto">{d.content as string}</p>
+                  <p className="text-[9px] text-muted-foreground mb-3 max-w-[90%] mx-auto">{d.content as string}</p>
                 )}
                 <div className="flex gap-2 justify-center">
                   {Array.isArray(d.items) && (d.items as { title: string; description?: string; icon?: string }[]).map((item, i) => {
@@ -109,13 +158,13 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     );
                   })}
                 </div>
-              </div>
+              </StyledWrapper>
             );
 
           case "cards":
             return (
-              <div key={block.id} className="py-6 px-4 bg-background">
-                {d.title && <h3 className="text-[11px] font-bold text-center text-foreground mb-3">{d.title as string}</h3>}
+              <StyledWrapper key={block.id} block={block} defaultClass="py-6 px-4 bg-background">
+                {d.title && <h3 className="text-[11px] font-bold text-foreground mb-3">{d.title as string}</h3>}
                 <div className="grid grid-cols-2 gap-2">
                   {Array.isArray(d.items) && (d.items as { title: string; category?: string; level?: string; price?: string }[]).slice(0, 4).map((item, i) => (
                     <div key={i} className="bg-card border border-border rounded-lg overflow-hidden">
@@ -140,14 +189,14 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     <p className="text-[9px] text-muted-foreground col-span-2 italic text-center">No cards added</p>
                   )}
                 </div>
-              </div>
+              </StyledWrapper>
             );
 
           case "stats":
             return (
-              <div key={block.id} className="bg-primary text-primary-foreground py-6 px-4">
-                {d.title && <h3 className="text-[11px] font-bold text-center mb-1">{d.title as string}</h3>}
-                {d.subtitle && <p className="text-[8px] text-center opacity-70 mb-3 max-w-[90%] mx-auto">{d.subtitle as string}</p>}
+              <StyledWrapper key={block.id} block={block} defaultClass="bg-primary text-primary-foreground py-6 px-4">
+                {d.title && <h3 className="text-[11px] font-bold mb-1">{d.title as string}</h3>}
+                {d.subtitle && <p className="text-[8px] opacity-70 mb-3 max-w-[90%] mx-auto">{d.subtitle as string}</p>}
                 <div className="flex gap-2 justify-center">
                   {Array.isArray(d.items) && (d.items as { value: string; title: string; description?: string }[]).map((item, i) => (
                     <div key={i} className="text-center flex-1">
@@ -157,12 +206,12 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     </div>
                   ))}
                 </div>
-              </div>
+              </StyledWrapper>
             );
 
           case "logos":
             return (
-              <div key={block.id} className="py-5 px-4 bg-background text-center">
+              <StyledWrapper key={block.id} block={block} defaultClass="py-5 px-4 bg-background">
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 <div className="flex gap-2 justify-center flex-wrap">
                   {Array.isArray(d.items) && (d.items as { title: string }[]).map((item, i) => (
@@ -171,17 +220,19 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     </div>
                   ))}
                 </div>
-              </div>
+              </StyledWrapper>
             );
 
           case "cta": {
             const bgMode = d.bgMode as string;
-            const style: React.CSSProperties = bgMode === "image" && d.bgImage
+            const ctaStyle: React.CSSProperties = bgMode === "image" && d.bgImage
               ? { backgroundImage: `url(${d.bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }
               : {};
             const usesImage = bgMode === "image" && d.bgImage;
+            // Merge block-level style
+            const mergedStyle = { ...ctaStyle, ...buildBlockStyle(block.style) };
             return (
-              <div key={block.id} className={`relative py-8 px-5 text-center ${usesImage ? '' : 'bg-primary text-primary-foreground'}`} style={style}>
+              <div key={block.id} className={`relative py-8 px-5 ${usesImage ? '' : 'bg-primary text-primary-foreground'} ${alignClass(block.alignment)}`} style={mergedStyle}>
                 {usesImage && (
                   <div className="absolute inset-0" style={{ backgroundColor: (d.overlayColor as string) || "rgba(0,0,0,0.5)" }} />
                 )}
@@ -200,19 +251,19 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
 
           case "faq":
             return (
-              <div key={block.id} className="py-5 px-4 bg-background">
+              <StyledWrapper key={block.id} block={block} defaultClass="py-5 px-4 bg-background">
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 {Array.isArray(d.items) && (d.items as { question: string }[]).slice(0, 4).map((item, i) => (
                   <div key={i} className="border border-border rounded-md px-2.5 py-1.5 mt-1.5 text-[9px] font-medium text-foreground bg-muted/50">
                     {item.question}
                   </div>
                 ))}
-              </div>
+              </StyledWrapper>
             );
 
           case "modules":
             return (
-              <div key={block.id} className="py-5 px-4 bg-background">
+              <StyledWrapper key={block.id} block={block} defaultClass="py-5 px-4 bg-background">
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 {Array.isArray(d.items) && (d.items as { title: string }[]).slice(0, 4).map((item, i) => (
                   <div key={i} className="flex items-center gap-2 mt-1.5">
@@ -222,13 +273,13 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     <span className="text-[9px] text-foreground">{item.title}</span>
                   </div>
                 ))}
-              </div>
+              </StyledWrapper>
             );
 
           case "blog":
             return (
-              <div key={block.id} className="py-5 px-4 bg-background">
-                {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2 text-center">{d.title as string}</h3>}
+              <StyledWrapper key={block.id} block={block} defaultClass="py-5 px-4 bg-background">
+                {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 <div className="grid grid-cols-3 gap-1.5">
                   {Array.isArray(d.items) && (d.items as { title: string; category?: string }[]).slice(0, 3).map((item, i) => (
                     <div key={i} className="bg-card border border-border rounded-md overflow-hidden">
@@ -245,15 +296,15 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     </div>
                   ))}
                 </div>
-              </div>
+              </StyledWrapper>
             );
 
           case "pricing":
             return (
-              <div key={block.id} className="py-5 px-4 bg-muted text-center">
+              <StyledWrapper key={block.id} block={block} defaultClass="py-5 px-4 bg-muted">
                 <p className="text-base font-bold text-primary">{d.price as string}</p>
                 {d.duration && <p className="text-[9px] text-muted-foreground mt-0.5">{d.duration as string}</p>}
-              </div>
+              </StyledWrapper>
             );
 
           default: {

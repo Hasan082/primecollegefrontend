@@ -14,10 +14,27 @@ export type BlockType =
   | "why-us"
   | "pricing";
 
+export type TextAlignment = "left" | "center" | "right";
+
+export interface BlockStyle {
+  textColor?: string;
+  bgColor?: string;
+  bgImage?: string;
+  bgOverlay?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+  paddingLeft?: string;
+  paddingRight?: string;
+  marginTop?: string;
+  marginBottom?: string;
+}
+
 export interface BlockBase {
   id: string;
   type: BlockType;
   label: string;
+  alignment?: TextAlignment;
+  style?: BlockStyle;
 }
 
 export interface HeroBlock extends BlockBase {
@@ -37,7 +54,7 @@ export interface TextBlock extends BlockBase {
   data: {
     title?: string;
     content: string;
-    alignment?: "left" | "center";
+    alignment?: "left" | "center" | "right";
   };
 }
 
