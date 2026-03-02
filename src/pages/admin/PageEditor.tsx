@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, ChevronUp, ChevronDown, Trash2, GripVertical, Eye, Upload, ImageIcon, AlignLeft, AlignRight } from "lucide-react";
+import { ArrowLeft, Plus, ChevronUp, ChevronDown, Trash2, GripVertical, Eye, Upload, ImageIcon, AlignLeft, AlignRight, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -262,6 +262,11 @@ const BlockEditorForm = ({
         </div>
       )}
 
+      {/* CTA Background Controls */}
+      {block.type === "cta" && (
+        <CTABackgroundEditor local={local} update={update} />
+      )}
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={onClose}>Cancel</Button>
         <Button onClick={handleSave}>Save Changes</Button>
@@ -276,6 +281,123 @@ const Field = ({ label, value, onChange }: { label: string; value: string; onCha
     <Input value={value} onChange={(e) => onChange(e.target.value)} />
   </div>
 );
+
+// ─── CTA Background Editor ───
+const CTABackgroundEditor = ({ local, update }: { local: Record<string, unknown>; update: (key: string, value: unknown) => void }) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const bgMode = (local.bgMode as string) || "color";
+  const bgColor = (local.bgColor as string) || "#0c2d6b";
+  const bgImage = (local.bgImage as string) || "";
+  const overlayColor = (local.overlayColor as string) || "rgba(0,0,0,0.5)";
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") update("bgImage", reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/20">
+      <Label className="flex items-center gap-2 text-sm font-semibold">
+        <Palette className="h-4 w-4" /> Background Style
+      </Label>
+
+      {/* Mode Toggle */}
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant={bgMode === "color" ? "default" : "outline"}
+          size="sm"
+          className="flex-1"
+          onClick={() => update("bgMode", "color")}
+        >
+          Solid Color
+        </Button>
+        <Button
+          type="button"
+          variant={bgMode === "image" ? "default" : "outline"}
+          size="sm"
+          className="flex-1"
+          onClick={() => update("bgMode", "image")}
+        >
+          Background Image
+        </Button>
+      </div>
+
+      {bgMode === "color" && (
+        <div>
+          <Label className="text-xs text-muted-foreground">Background Color</Label>
+          <div className="flex items-center gap-2 mt-1">
+            <input
+              type="color"
+              value={bgColor}
+              onChange={(e) => update("bgColor", e.target.value)}
+              className="w-10 h-9 rounded border border-border cursor-pointer"
+            />
+            <Input
+              value={bgColor}
+              onChange={(e) => update("bgColor", e.target.value)}
+              className="flex-1 h-9 font-mono text-sm"
+              placeholder="#0c2d6b"
+            />
+          </div>
+        </div>
+      )}
+
+      {bgMode === "image" && (
+        <div className="space-y-3">
+          {/* Image Preview */}
+          {bgImage && (
+            <div className="rounded-lg border border-border overflow-hidden bg-muted/30 max-h-32 flex items-center justify-center relative">
+              <img src={bgImage} alt="BG Preview" className="max-h-32 w-full object-cover" />
+              <div className="absolute inset-0" style={{ backgroundColor: overlayColor }} />
+              <span className="absolute text-white text-xs font-medium z-10">Preview with overlay</span>
+            </div>
+          )}
+
+          {/* Upload */}
+          <div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+            <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => fileRef.current?.click()}>
+              <Upload className="h-3.5 w-3.5 mr-1.5" /> {bgImage ? "Change Image" : "Upload Background Image"}
+            </Button>
+          </div>
+
+          {/* Overlay Color */}
+          <div>
+            <Label className="text-xs text-muted-foreground">Overlay Color</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <input
+                type="color"
+                value={overlayColor.startsWith("rgba") ? "#000000" : overlayColor}
+                onChange={(e) => {
+                  // Convert hex to rgba with 0.5 opacity
+                  const hex = e.target.value;
+                  const r = parseInt(hex.slice(1, 3), 16);
+                  const g = parseInt(hex.slice(3, 5), 16);
+                  const b = parseInt(hex.slice(5, 7), 16);
+                  update("overlayColor", `rgba(${r},${g},${b},0.5)`);
+                }}
+                className="w-10 h-9 rounded border border-border cursor-pointer"
+              />
+              <Input
+                value={overlayColor}
+                onChange={(e) => update("overlayColor", e.target.value)}
+                className="flex-1 h-9 font-mono text-sm"
+                placeholder="rgba(0,0,0,0.5)"
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">Use rgba format to control opacity, e.g. rgba(0,0,0,0.5)</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─── Image Field with Upload + Position ───
 const PRESET_IMAGES = ["classroom", "business", "leadership", "executive", "care"];
