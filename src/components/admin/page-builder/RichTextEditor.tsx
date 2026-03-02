@@ -133,7 +133,7 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none min-h-[120px] p-3 focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_p]:my-1 [&_hr]:my-3 [&_.tiptap-table]:border-collapse [&_.tiptap-table]:mx-auto [&_.tiptap-table_td]:border [&_.tiptap-table_td]:border-border [&_.tiptap-table_td]:p-2 [&_.tiptap-table_td]:text-sm [&_.tiptap-table_th]:border [&_.tiptap-table_th]:border-border [&_.tiptap-table_th]:p-2 [&_.tiptap-table_th]:text-sm [&_.tiptap-table_th]:bg-muted [&_.tiptap-table_th]:font-semibold [&_.tiptap-table.table-full-width]:w-full [&_.tiptap-table.table-full-width]:table-fixed [&_.tiptap-table:not(.table-full-width)]:w-auto [&_u]:underline [&_s]:line-through",
+          "prose prose-sm max-w-none min-h-[120px] p-3 focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_p]:my-1 [&_hr]:my-3 [&_.tiptap-table]:border-collapse [&_.tiptap-table]:mx-auto [&_.tiptap-table]:w-full [&_.tiptap-table_td]:border [&_.tiptap-table_td]:border-border [&_.tiptap-table_td]:p-2 [&_.tiptap-table_td]:text-sm [&_.tiptap-table_th]:border [&_.tiptap-table_th]:border-border [&_.tiptap-table_th]:p-2 [&_.tiptap-table_th]:text-sm [&_.tiptap-table_th]:bg-muted [&_.tiptap-table_th]:font-semibold [&_u]:underline [&_s]:line-through",
       },
     },
   });
@@ -361,6 +361,7 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
                                 const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table') as HTMLElement;
                                 if (tableNode) {
                                   tableNode.style.width = '100%';
+                                  tableNode.style.maxWidth = '';
                                   tableNode.style.tableLayout = 'fixed';
                                 }
                               }}
@@ -376,7 +377,8 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
                                 setTableWidthMode("fixed");
                                 const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table') as HTMLElement;
                                 if (tableNode) {
-                                  tableNode.style.width = `${tableFixedWidth}px`;
+                                  tableNode.style.width = '100%';
+                                  tableNode.style.maxWidth = `${tableFixedWidth}px`;
                                   tableNode.style.tableLayout = 'auto';
                                 }
                               }}
@@ -393,7 +395,8 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
                                   setTableFixedWidth(e.target.value);
                                   const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table') as HTMLElement;
                                   if (tableNode && e.target.value) {
-                                    tableNode.style.width = `${e.target.value}px`;
+                                    tableNode.style.width = '100%';
+                                    tableNode.style.maxWidth = `${e.target.value}px`;
                                   }
                                 }}
                                 className="h-7 text-xs w-20"
