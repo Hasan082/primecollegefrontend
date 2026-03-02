@@ -1,4 +1,8 @@
-import { Users, Award, CheckCircle } from "lucide-react";
+import {
+  Users, Award, CheckCircle, Shield, BookOpen, Target, Heart,
+  Star, Lightbulb, TrendingUp, Globe, Zap, Clock, ThumbsUp,
+  Layers, Briefcase, Smile,
+} from "lucide-react";
 import type { ContentBlock, BlockStyle, TextAlignment } from "@/types/pageBuilder";
 import React from "react";
 
@@ -8,9 +12,9 @@ interface BlockPreviewRendererProps {
 }
 
 const iconMap: Record<string, React.ElementType> = {
-  Users,
-  Award,
-  CheckCircle,
+  Users, Award, CheckCircle, Shield, BookOpen, Target, Heart,
+  Star, Lightbulb, TrendingUp, Globe, Zap, Clock, ThumbsUp,
+  Layers, Briefcase, Smile,
 };
 
 /** Build inline style from BlockStyle */
@@ -143,13 +147,20 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                   <p className="text-[9px] text-muted-foreground mb-3 max-w-[90%] mx-auto">{d.content as string}</p>
                 )}
                 <div className="flex gap-2 justify-center">
-                  {Array.isArray(d.items) && (d.items as { title: string; description?: string; icon?: string }[]).map((item, i) => {
+                  {Array.isArray(d.items) && (d.items as { title: string; description?: string; icon?: string; image?: string; mediaType?: string }[]).map((item, i) => {
+                    const useImage = item.mediaType === "image" && item.image;
                     const Icon = iconMap[item.icon || ""] || Users;
                     return (
                       <div key={i} className="flex-1 text-center">
-                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mx-auto mb-1">
-                          <Icon className="w-4 h-4 text-primary-foreground" strokeWidth={1.5} />
-                        </div>
+                        {useImage ? (
+                          <div className="w-10 h-10 rounded-full overflow-hidden mx-auto mb-1 border border-border">
+                            <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mx-auto mb-1">
+                            <Icon className="w-4 h-4 text-primary-foreground" strokeWidth={1.5} />
+                          </div>
+                        )}
                         <p className="text-[9px] font-semibold text-foreground">{item.title}</p>
                         {item.description && (
                           <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">{item.description}</p>
@@ -166,25 +177,37 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
               <StyledWrapper key={block.id} block={block} defaultClass="py-6 px-4 bg-background">
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-3">{d.title as string}</h3>}
                 <div className="grid grid-cols-2 gap-2">
-                  {Array.isArray(d.items) && (d.items as { title: string; category?: string; level?: string; price?: string }[]).slice(0, 4).map((item, i) => (
-                    <div key={i} className="bg-card border border-border rounded-lg overflow-hidden">
-                      <div className="h-10 bg-muted" />
-                      <div className="p-1.5">
-                        <div className="flex gap-1 mb-0.5">
-                          {item.category && (
-                            <span className="bg-secondary text-secondary-foreground text-[7px] font-bold px-1 py-0.5 rounded uppercase">
-                              {item.category}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[8px] font-semibold text-foreground leading-tight line-clamp-2">{item.title}</p>
-                        {item.price && <p className="text-[9px] font-bold text-primary mt-0.5">{item.price}</p>}
-                        <div className="mt-1 bg-primary text-primary-foreground text-center text-[7px] font-semibold py-0.5 rounded">
-                          Enroll Now
+                  {Array.isArray(d.items) && (d.items as { title: string; category?: string; level?: string; price?: string; image?: string; mediaType?: string; icon?: string }[]).slice(0, 4).map((item, i) => {
+                    const useImage = item.mediaType === "image" && item.image;
+                    const Icon = iconMap[item.icon || ""] || null;
+                    return (
+                      <div key={i} className="bg-card border border-border rounded-lg overflow-hidden">
+                        {useImage ? (
+                          <img src={item.image} alt={item.title} className="w-full h-12 object-cover" />
+                        ) : Icon ? (
+                          <div className="h-10 bg-muted flex items-center justify-center">
+                            <Icon className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                          </div>
+                        ) : (
+                          <div className="h-10 bg-muted" />
+                        )}
+                        <div className="p-1.5">
+                          <div className="flex gap-1 mb-0.5">
+                            {item.category && (
+                              <span className="bg-secondary text-secondary-foreground text-[7px] font-bold px-1 py-0.5 rounded uppercase">
+                                {item.category}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[8px] font-semibold text-foreground leading-tight line-clamp-2">{item.title}</p>
+                          {item.price && <p className="text-[9px] font-bold text-primary mt-0.5">{item.price}</p>}
+                          <div className="mt-1 bg-primary text-primary-foreground text-center text-[7px] font-semibold py-0.5 rounded">
+                            Enroll Now
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {(!Array.isArray(d.items) || (d.items as unknown[]).length === 0) && (
                     <p className="text-[9px] text-muted-foreground col-span-2 italic text-center">No cards added</p>
                   )}
@@ -214,9 +237,13 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
               <StyledWrapper key={block.id} block={block} defaultClass="py-5 px-4 bg-background">
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 <div className="flex gap-2 justify-center flex-wrap">
-                  {Array.isArray(d.items) && (d.items as { title: string }[]).map((item, i) => (
-                    <div key={i} className="bg-muted rounded-md px-2 py-1.5 text-[8px] font-medium text-muted-foreground border border-border">
-                      {item.title}
+                  {Array.isArray(d.items) && (d.items as { title: string; image?: string; mediaType?: string }[]).map((item, i) => (
+                    <div key={i} className="bg-muted rounded-md px-2 py-1.5 text-[8px] font-medium text-muted-foreground border border-border flex items-center gap-1.5">
+                      {item.mediaType === "image" && item.image ? (
+                        <img src={item.image} alt={item.title} className="h-5 w-auto object-contain" />
+                      ) : (
+                        <span>{item.title}</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -281,9 +308,13 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
               <StyledWrapper key={block.id} block={block} defaultClass="py-5 px-4 bg-background">
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 <div className="grid grid-cols-3 gap-1.5">
-                  {Array.isArray(d.items) && (d.items as { title: string; category?: string }[]).slice(0, 3).map((item, i) => (
+                  {Array.isArray(d.items) && (d.items as { title: string; category?: string; image?: string; mediaType?: string }[]).slice(0, 3).map((item, i) => (
                     <div key={i} className="bg-card border border-border rounded-md overflow-hidden">
-                      <div className="h-8 bg-muted" />
+                      {item.mediaType === "image" && item.image ? (
+                        <img src={item.image} alt={item.title} className="w-full h-8 object-cover" />
+                      ) : (
+                        <div className="h-8 bg-muted" />
+                      )}
                       <div className="p-1.5">
                         {item.category && (
                           <span className="bg-secondary text-secondary-foreground text-[6px] font-bold px-1 py-0.5 rounded uppercase">
