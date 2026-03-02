@@ -52,7 +52,7 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 {d.content && typeof d.content === "string" && (
                   d.content.startsWith("<") ? (
-                    <div className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${align === "center" ? "mx-auto" : ""} prose prose-xs [&_table]:w-full [&_table]:border-collapse [&_table]:mx-auto [&_table]:table-fixed [&_table_td]:border [&_table_td]:border-border [&_table_td]:p-1 [&_table_td]:text-[9px] [&_table_th]:border [&_table_th]:border-border [&_table_th]:p-1 [&_table_th]:text-[9px] [&_table_th]:bg-muted [&_table_th]:font-semibold`} dangerouslySetInnerHTML={{ __html: d.content }} />
+                    <div className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${align === "center" ? "mx-auto" : ""} prose prose-xs [&_table]:w-full [&_table]:border-collapse [&_table]:mx-auto [&_table_td]:border [&_table_td]:border-border [&_table_td]:p-1 [&_table_td]:text-[9px] [&_table_th]:border [&_table_th]:border-border [&_table_th]:p-1 [&_table_th]:text-[9px] [&_table_th]:bg-muted [&_table_th]:font-semibold overflow-x-auto`} dangerouslySetInnerHTML={{ __html: d.content }} />
                   ) : (
                     <p className={`text-[10px] text-muted-foreground leading-relaxed max-w-[90%] ${align === "center" ? "mx-auto" : ""}`}>{d.content}</p>
                   )
