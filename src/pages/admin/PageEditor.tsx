@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import type { ContentBlock, BlockType } from "@/types/pageBuilder";
+import type { ContentBlock, BlockType, TextAlignment, BlockStyle } from "@/types/pageBuilder";
 import { BLOCK_TYPE_LABELS, getDefaultBlockData } from "@/types/pageBuilder";
 import { defaultPages } from "@/data/defaultPages";
 import SortableBlock from "@/components/admin/page-builder/SortableBlock";
@@ -76,6 +76,10 @@ const PageEditor = () => {
 
   const updateBlockData = useCallback((id: string, data: Record<string, unknown>) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, data: { ...(b.data as Record<string, unknown>), ...data } } as ContentBlock : b)));
+  }, []);
+
+  const updateBlockMeta = useCallback((id: string, meta: { alignment?: TextAlignment; style?: BlockStyle }) => {
+    setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, ...meta } as ContentBlock : b)));
   }, []);
 
   const handleSave = () => {
@@ -195,6 +199,7 @@ const PageEditor = () => {
             <BlockEditorForm
               block={editBlock}
               onChange={(data) => updateBlockData(editBlock.id, data)}
+              onBlockMetaChange={(meta) => updateBlockMeta(editBlock.id, meta)}
               onClose={() => setEditBlock(null)}
             />
           )}

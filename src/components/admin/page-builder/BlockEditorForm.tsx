@@ -1,4 +1,4 @@
-import { useState, useRef, lazy, Suspense } from "react";
+import { useState, useRef } from "react";
 import { Upload, ImageIcon, AlignLeft, AlignRight, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,17 +6,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ContentBlock } from "@/types/pageBuilder";
+import type { ContentBlock, TextAlignment, BlockStyle } from "@/types/pageBuilder";
 import RichTextEditor from "./RichTextEditor";
+import BlockStylePanel from "./BlockStylePanel";
 
 interface BlockEditorFormProps {
   block: ContentBlock;
   onChange: (data: Record<string, unknown>) => void;
+  onBlockMetaChange?: (meta: { alignment?: TextAlignment; style?: BlockStyle }) => void;
   onClose: () => void;
 }
 
-const BlockEditorForm = ({ block, onChange, onClose }: BlockEditorFormProps) => {
+const BlockEditorForm = ({ block, onChange, onBlockMetaChange, onClose }: BlockEditorFormProps) => {
   const [local, setLocal] = useState<Record<string, unknown>>(block.data as Record<string, unknown>);
+  const [alignment, setAlignment] = useState<TextAlignment>(block.alignment || "center");
+  const [blockStyle, setBlockStyle] = useState<BlockStyle>(block.style || {});
 
   const update = (key: string, value: unknown) => {
     setLocal((prev) => ({ ...prev, [key]: value }));
@@ -24,44 +28,58 @@ const BlockEditorForm = ({ block, onChange, onClose }: BlockEditorFormProps) => 
 
   const handleSave = () => {
     onChange(local);
+    onBlockMetaChange?.({ alignment, style: blockStyle });
     onClose();
   };
 
+  // Text block uses its own data.alignment for backward compat
+  const showGlobalAlignment = block.type !== "text";
+
   return (
     <div className="space-y-4 py-2">
+      {/* Title + Alignment row */}
       {typeof local.title === "string" && (
         <div>
           <div className="flex items-end gap-3">
             <div className="flex-1">
               <Field label="Title" value={local.title as string} onChange={(v) => update("title", v)} />
             </div>
-            {block.type === "text" && (
-              <div className="shrink-0">
-                <Label className="text-xs text-muted-foreground mb-1 block">Align</Label>
-                <div className="flex gap-1">
-                  {(["left", "center", "right"] as const).map((align) => (
-                    <Button
-                      key={align}
-                      type="button"
-                      variant={(local.alignment as string || "center") === align ? "default" : "outline"}
-                      size="sm"
-                      className="h-9 w-9 p-0 text-xs capitalize"
-                      onClick={() => update("alignment", align)}
-                    >
-                      {align === "left" ? "L" : align === "center" ? "C" : "R"}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+            {block.type === "text" ? (
+              <AlignmentToggle
+                value={(local.alignment as TextAlignment) || "center"}
+                onChange={(v) => update("alignment", v)}
+              />
+            ) : (
+              <AlignmentToggle value={alignment} onChange={setAlignment} />
             )}
           </div>
         </div>
       )}
+
+      {/* For blocks without title but with headline */}
+      {typeof local.headline === "string" && (
+        <div>
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Field label="Headline" value={local.headline as string} onChange={(v) => update("headline", v)} />
+            </div>
+            {showGlobalAlignment && !local.title && (
+              <AlignmentToggle value={alignment} onChange={setAlignment} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* For blocks without title or headline (e.g. pricing) — show alignment standalone */}
+      {typeof local.title !== "string" && typeof local.headline !== "string" && showGlobalAlignment && (
+        <div className="flex items-center gap-3">
+          <Label className="text-xs text-muted-foreground">Align</Label>
+          <AlignmentToggle value={alignment} onChange={setAlignment} />
+        </div>
+      )}
+
       {typeof local.subtitle === "string" && (
         <Field label="Subtitle" value={local.subtitle as string} onChange={(v) => update("subtitle", v)} />
-      )}
-      {typeof local.headline === "string" && (
-        <Field label="Headline" value={local.headline as string} onChange={(v) => update("headline", v)} />
       )}
       {typeof local.content === "string" && (
         <div>
@@ -133,6 +151,9 @@ const BlockEditorForm = ({ block, onChange, onClose }: BlockEditorFormProps) => 
 
       {block.type === "cta" && <CTABackgroundEditor local={local} update={update} />}
 
+      {/* Block Style Panel — available for ALL blocks */}
+      <BlockStylePanel style={blockStyle} onChange={setBlockStyle} />
+
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={onClose}>Cancel</Button>
         <Button onClick={handleSave}>Save Changes</Button>
@@ -140,6 +161,27 @@ const BlockEditorForm = ({ block, onChange, onClose }: BlockEditorFormProps) => 
     </div>
   );
 };
+
+// ─── Alignment Toggle ───
+const AlignmentToggle = ({ value, onChange }: { value: TextAlignment; onChange: (v: TextAlignment) => void }) => (
+  <div className="shrink-0">
+    <Label className="text-xs text-muted-foreground mb-1 block">Align</Label>
+    <div className="flex gap-1">
+      {(["left", "center", "right"] as const).map((align) => (
+        <Button
+          key={align}
+          type="button"
+          variant={value === align ? "default" : "outline"}
+          size="sm"
+          className="h-9 w-9 p-0 text-xs capitalize"
+          onClick={() => onChange(align)}
+        >
+          {align === "left" ? "L" : align === "center" ? "C" : "R"}
+        </Button>
+      ))}
+    </div>
+  </div>
+);
 
 // ─── Field ───
 const Field = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
@@ -170,7 +212,7 @@ const CTABackgroundEditor = ({ local, update }: { local: Record<string, unknown>
   return (
     <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/20">
       <Label className="flex items-center gap-2 text-sm font-semibold">
-        <Palette className="h-4 w-4" /> Background Style
+        <Palette className="h-4 w-4" /> CTA Background Style
       </Label>
       <div className="flex gap-2">
         <Button type="button" variant={bgMode === "color" ? "default" : "outline"} size="sm" className="flex-1" onClick={() => update("bgMode", "color")}>
