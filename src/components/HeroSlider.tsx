@@ -21,6 +21,7 @@ interface Slide {
   price: string;
   cta: string;
   image: string;
+  slug?: string;
 }
 
 interface HeroSliderProps {
@@ -88,7 +89,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
           </h1>
           <p className="text-2xl font-semibold text-secondary mb-6">{slide.price}</p>
           <a
-            href="/qualifications"
+            href={slide.slug ? `/qualifications/${slide.slug}` : "/qualifications"}
             className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
           >
             {slide.cta}
