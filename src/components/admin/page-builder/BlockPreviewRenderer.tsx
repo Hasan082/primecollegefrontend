@@ -326,6 +326,11 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                         {hasFullImage ? (
                           <div className="relative">
                             <img src={item.image} alt={item.title} className="w-full h-12 object-cover" />
+                            {item.category && (
+                              <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[5px] font-bold px-1 py-0.5 rounded">
+                                {item.category}
+                              </span>
+                            )}
                           </div>
                         ) : hasIconImage ? (
                           <div className="h-8 bg-muted flex items-center justify-center">
