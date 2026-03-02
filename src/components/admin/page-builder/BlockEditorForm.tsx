@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { Upload, ImageIcon, AlignLeft, AlignRight, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ContentBlock } from "@/types/pageBuilder";
+import RichTextEditor from "./RichTextEditor";
 
 interface BlockEditorFormProps {
   block: ContentBlock;
@@ -40,7 +41,7 @@ const BlockEditorForm = ({ block, onChange, onClose }: BlockEditorFormProps) => 
       {typeof local.content === "string" && (
         <div>
           <Label>Content</Label>
-          <Textarea value={local.content as string} onChange={(e) => update("content", e.target.value)} rows={4} />
+          <RichTextEditor value={local.content as string} onChange={(v) => update("content", v)} />
         </div>
       )}
       {typeof local.image === "string" && (
@@ -88,17 +89,16 @@ const BlockEditorForm = ({ block, onChange, onClose }: BlockEditorFormProps) => 
         <div>
           <Label>Paragraphs</Label>
           {(local.paragraphs as string[]).map((p, i) => (
-            <Textarea
-              key={i}
-              value={p}
-              onChange={(e) => {
-                const next = [...(local.paragraphs as string[])];
-                next[i] = e.target.value;
-                update("paragraphs", next);
-              }}
-              rows={2}
-              className="mt-2"
-            />
+            <div key={i} className="mt-2">
+              <RichTextEditor
+                value={p}
+                onChange={(val) => {
+                  const next = [...(local.paragraphs as string[])];
+                  next[i] = val;
+                  update("paragraphs", next);
+                }}
+              />
+            </div>
           ))}
         </div>
       )}
