@@ -85,6 +85,10 @@ export interface CTABlock extends BlockBase {
     content?: string;
     ctaLabel?: string;
     ctaHref?: string;
+    bgMode?: "color" | "image";
+    bgColor?: string;
+    bgImage?: string;
+    overlayColor?: string;
   };
 }
 
@@ -184,7 +188,7 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
     modules: () => ({ id, type: "modules", label, data: { title: "Modules", items: [{ title: "Module 1", description: "Description" }] } }),
     faq: () => ({ id, type: "faq", label, data: { title: "FAQs", items: [{ question: "Question?", answer: "Answer." }] } }),
     stats: () => ({ id, type: "stats", label, data: { title: "Key Stats", items: [{ title: "Stat", value: "100", description: "Description" }] } }),
-    cta: () => ({ id, type: "cta", label, data: { title: "Ready to Start?", content: "Contact us today.", ctaLabel: "Get Started", ctaHref: "/contact" } }),
+    cta: () => ({ id, type: "cta", label, data: { title: "Ready to Start?", content: "Contact us today.", ctaLabel: "Get Started", ctaHref: "/contact", bgMode: "color", bgColor: "#0c2d6b", bgImage: "", overlayColor: "rgba(0,0,0,0.5)" } }),
     cards: () => ({ id, type: "cards", label, data: { title: "Featured Items", items: [] } }),
     logos: () => ({ id, type: "logos", label, data: { title: "Our Partners", items: [] } }),
     blog: () => ({ id, type: "blog", label, data: { title: "Latest News", items: [] } }),
