@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, ChevronUp, ChevronDown, Trash2, GripVertical, Eye } from "lucide-react";
+import { ArrowLeft, Plus, ChevronUp, ChevronDown, Trash2, GripVertical, Eye, Upload, ImageIcon, AlignLeft, AlignRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -201,17 +201,12 @@ const BlockEditorForm = ({
         </div>
       )}
       {typeof local.image === "string" && (
-        <div>
-          <Label>Image Key</Label>
-          <Select value={local.image as string} onValueChange={(v) => update("image", v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {["classroom", "business", "leadership", "executive", "care"].map((img) => (
-                <SelectItem key={img} value={img}>{img}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ImageField
+          value={local.image as string}
+          onChange={(v) => update("image", v)}
+          imagePosition={local.imagePosition as string | undefined}
+          onPositionChange={local.imagePosition !== undefined ? (v) => update("imagePosition", v) : undefined}
+        />
       )}
       {typeof local.ctaLabel === "string" && (
         <div className="grid grid-cols-2 gap-3">
@@ -281,6 +276,102 @@ const Field = ({ label, value, onChange }: { label: string; value: string; onCha
     <Input value={value} onChange={(e) => onChange(e.target.value)} />
   </div>
 );
+
+// ─── Image Field with Upload + Position ───
+const PRESET_IMAGES = ["classroom", "business", "leadership", "executive", "care"];
+
+const ImageField = ({
+  value,
+  onChange,
+  imagePosition,
+  onPositionChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  imagePosition?: string;
+  onPositionChange?: (v: string) => void;
+}) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") onChange(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const isDataUrl = value.startsWith("data:");
+  const isUrl = value.startsWith("http");
+
+  return (
+    <div className="space-y-3">
+      <Label className="flex items-center gap-2">
+        <ImageIcon className="h-4 w-4" /> Image
+      </Label>
+
+      {/* Preview */}
+      {(isDataUrl || isUrl) && (
+        <div className="rounded-lg border border-border overflow-hidden bg-muted/30 max-h-40 flex items-center justify-center">
+          <img src={value} alt="Preview" className="max-h-40 object-contain" />
+        </div>
+      )}
+      {!isDataUrl && !isUrl && value && (
+        <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground flex items-center gap-2">
+          <ImageIcon className="h-4 w-4 shrink-0" />
+          Preset: <span className="font-medium text-foreground">{value}</span>
+        </div>
+      )}
+
+      {/* Upload + Preset */}
+      <div className="flex gap-2">
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+        <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => fileRef.current?.click()}>
+          <Upload className="h-3.5 w-3.5 mr-1.5" /> Upload Image
+        </Button>
+        <Select value={isDataUrl || isUrl ? "" : value} onValueChange={onChange}>
+          <SelectTrigger className="flex-1 h-9">
+            <SelectValue placeholder="Or choose preset" />
+          </SelectTrigger>
+          <SelectContent>
+            {PRESET_IMAGES.map((img) => (
+              <SelectItem key={img} value={img}>{img}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Image Position Toggle */}
+      {onPositionChange && (
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1.5 block">Image Position</Label>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={imagePosition === "left" ? "default" : "outline"}
+              size="sm"
+              className="flex-1"
+              onClick={() => onPositionChange("left")}
+            >
+              <AlignLeft className="h-3.5 w-3.5 mr-1.5" /> Left
+            </Button>
+            <Button
+              type="button"
+              variant={imagePosition === "right" ? "default" : "outline"}
+              size="sm"
+              className="flex-1"
+              onClick={() => onPositionChange("right")}
+            >
+              <AlignRight className="h-3.5 w-3.5 mr-1.5" /> Right
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const getBlockPreview = (block: ContentBlock): string => {
   const d = block.data as Record<string, unknown>;
