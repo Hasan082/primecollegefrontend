@@ -64,13 +64,21 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        fadeSlideIn: {
-          "0%": { opacity: "0", transform: "scale(1.04)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
+        slideInRight: {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
         },
-        fadeSlideOut: {
-          "0%": { opacity: "1", transform: "scale(1)" },
-          "100%": { opacity: "0", transform: "scale(0.96)" },
+        slideOutLeft: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-100%)" },
+        },
+        slideInLeft: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        slideOutRight: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(100%)" },
         },
       },
     },
