@@ -79,12 +79,23 @@ const ICON_PRESETS: { name: string; key: keyof typeof dynamicIconImports }[] = [
   { name: "Megaphone", key: "megaphone" },
 ];
 
+// Cache lazy components to avoid recreating on every render
+const lazyIconCache: Record<string, React.LazyExoticComponent<React.ComponentType<{ size?: number; className?: string }>>> = {};
+
+const getLazyIcon = (kebab: string) => {
+  if (!lazyIconCache[kebab]) {
+    const importFn = dynamicIconImports[kebab as keyof typeof dynamicIconImports];
+    if (!importFn) return null;
+    lazyIconCache[kebab] = lazy(importFn) as React.LazyExoticComponent<React.ComponentType<{ size?: number; className?: string }>>;
+  }
+  return lazyIconCache[kebab];
+};
+
 // Dynamic icon component with lazy loading
 const DynamicIcon = ({ iconKey, size = 16, className }: { iconKey: string; size?: number; className?: string }) => {
   const kebab = ICON_PRESETS.find((p) => p.name === iconKey)?.key || iconKey.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-  const importFn = dynamicIconImports[kebab as keyof typeof dynamicIconImports];
-  if (!importFn) return <Smile size={size} className={className} />;
-  const LazyIcon = lazy(importFn);
+  const LazyIcon = getLazyIcon(kebab);
+  if (!LazyIcon) return <Smile size={size} className={className} />;
   return (
     <Suspense fallback={<div className="rounded bg-muted" style={{ width: size, height: size }} />}>
       <LazyIcon size={size} className={className} />
