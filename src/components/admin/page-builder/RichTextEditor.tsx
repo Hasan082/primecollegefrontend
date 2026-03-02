@@ -31,6 +31,8 @@ import {
   Plus,
   Trash2,
   Type,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -128,7 +130,7 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none min-h-[120px] p-3 focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_p]:my-1 [&_hr]:my-3 [&_.tiptap-table]:w-full [&_.tiptap-table]:border-collapse [&_.tiptap-table]:mx-auto [&_.tiptap-table]:table-fixed [&_.tiptap-table_td]:border [&_.tiptap-table_td]:border-border [&_.tiptap-table_td]:p-2 [&_.tiptap-table_td]:text-sm [&_.tiptap-table_th]:border [&_.tiptap-table_th]:border-border [&_.tiptap-table_th]:p-2 [&_.tiptap-table_th]:text-sm [&_.tiptap-table_th]:bg-muted [&_.tiptap-table_th]:font-semibold [&_u]:underline [&_s]:line-through",
+          "prose prose-sm max-w-none min-h-[120px] p-3 focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_p]:my-1 [&_hr]:my-3 [&_.tiptap-table]:border-collapse [&_.tiptap-table]:mx-auto [&_.tiptap-table_td]:border [&_.tiptap-table_td]:border-border [&_.tiptap-table_td]:p-2 [&_.tiptap-table_td]:text-sm [&_.tiptap-table_th]:border [&_.tiptap-table_th]:border-border [&_.tiptap-table_th]:p-2 [&_.tiptap-table_th]:text-sm [&_.tiptap-table_th]:bg-muted [&_.tiptap-table_th]:font-semibold [&_.tiptap-table.table-full-width]:w-full [&_.tiptap-table.table-full-width]:table-fixed [&_.tiptap-table:not(.table-full-width)]:w-auto [&_u]:underline [&_s]:line-through",
       },
     },
   });
@@ -331,6 +333,11 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
                       className="w-full justify-start h-7 text-xs"
                       onClick={() => {
                         editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+                        // Default to full width
+                        setTimeout(() => {
+                          const tableEl = editor.view.dom.querySelector('.tiptap-table:not(.table-full-width):not(.table-fixed-width)');
+                          if (tableEl) tableEl.classList.add('table-full-width');
+                        }, 50);
                         setTableOpen(false);
                       }}
                     >
@@ -338,18 +345,59 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
                     </Button>
                     {editor.isActive("table") && (
                       <>
-                        <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().addColumnAfter().run(); setTableOpen(false); }}>
-                          Add Column
-                        </Button>
-                        <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().addRowAfter().run(); setTableOpen(false); }}>
-                          Add Row
-                        </Button>
-                        <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().deleteColumn().run(); setTableOpen(false); }}>
-                          Delete Column
-                        </Button>
-                        <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().deleteRow().run(); setTableOpen(false); }}>
-                          Delete Row
-                        </Button>
+                        <div className="border-t border-border pt-1 mt-1">
+                          <p className="text-[10px] font-medium text-muted-foreground mb-1 px-1">Table Width</p>
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 h-7 text-[10px] gap-1"
+                              onClick={() => {
+                                const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table');
+                                if (tableNode) {
+                                  tableNode.classList.add('table-full-width');
+                                  tableNode.classList.remove('table-fixed-width');
+                                  editor.commands.focus();
+                                }
+                                setTableOpen(false);
+                              }}
+                            >
+                              <Maximize2 className="h-3 w-3" /> Full Width
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 h-7 text-[10px] gap-1"
+                              onClick={() => {
+                                const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table');
+                                if (tableNode) {
+                                  tableNode.classList.remove('table-full-width');
+                                  tableNode.classList.add('table-fixed-width');
+                                  editor.commands.focus();
+                                }
+                                setTableOpen(false);
+                              }}
+                            >
+                              <Minimize2 className="h-3 w-3" /> Fixed
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="border-t border-border pt-1 mt-1">
+                          <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().addColumnAfter().run(); setTableOpen(false); }}>
+                            Add Column
+                          </Button>
+                          <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().addRowAfter().run(); setTableOpen(false); }}>
+                            Add Row
+                          </Button>
+                          <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().deleteColumn().run(); setTableOpen(false); }}>
+                            Delete Column
+                          </Button>
+                          <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().deleteRow().run(); setTableOpen(false); }}>
+                            Delete Row
+                          </Button>
+                        </div>
                         <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs text-destructive" onClick={() => { editor.chain().focus().deleteTable().run(); setTableOpen(false); }}>
                           <Trash2 className="h-3 w-3 mr-1.5" /> Delete Table
                         </Button>
