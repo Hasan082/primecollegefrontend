@@ -131,6 +131,7 @@ const MediaPicker = ({
   const mediaType = item.mediaType || "icon";
   const iconName = item.icon || "";
   const imageSrc = item.image || "";
+  const imageSize = item.imageSize || "icon";
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -197,11 +198,42 @@ const MediaPicker = ({
 
       {mediaType === "image" && (
         <div className="space-y-2">
+          {/* Image display size toggle */}
+          <div>
+            <Label className="text-[10px] text-muted-foreground mb-1 block">Display size</Label>
+            <div className="flex gap-1.5">
+              <Button
+                type="button"
+                variant={imageSize === "icon" ? "default" : "outline"}
+                size="sm"
+                className="flex-1 h-7 text-[10px]"
+                onClick={() => onUpdate("imageSize", "icon")}
+              >
+                🔵 Icon Size
+              </Button>
+              <Button
+                type="button"
+                variant={imageSize === "full" ? "default" : "outline"}
+                size="sm"
+                className="flex-1 h-7 text-[10px]"
+                onClick={() => onUpdate("imageSize", "full")}
+              >
+                🖼 Full Width
+              </Button>
+            </div>
+          </div>
+
+          {/* Preview */}
           {imageSrc && (
-            <div className="rounded-md border border-border overflow-hidden bg-muted/30">
-              <img src={imageSrc} alt="Item" className="w-full h-20 object-cover" />
+            <div className="rounded-md border border-border overflow-hidden bg-muted/30 flex items-center justify-center p-2">
+              {imageSize === "icon" ? (
+                <img src={imageSrc} alt="Item" className="h-10 w-10 rounded-full object-cover border border-border" />
+              ) : (
+                <img src={imageSrc} alt="Item" className="w-full h-20 object-cover rounded" />
+              )}
             </div>
           )}
+
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
           <Button
             type="button"

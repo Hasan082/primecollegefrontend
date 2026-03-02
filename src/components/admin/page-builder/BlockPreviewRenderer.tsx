@@ -147,12 +147,16 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                   <p className="text-[9px] text-muted-foreground mb-3 max-w-[90%] mx-auto">{d.content as string}</p>
                 )}
                 <div className="flex gap-2 justify-center">
-                  {Array.isArray(d.items) && (d.items as { title: string; description?: string; icon?: string; image?: string; mediaType?: string }[]).map((item, i) => {
+                  {Array.isArray(d.items) && (d.items as { title: string; description?: string; icon?: string; image?: string; mediaType?: string; imageSize?: string }[]).map((item, i) => {
                     const useImage = item.mediaType === "image" && item.image;
                     const Icon = iconMap[item.icon || ""] || Users;
                     return (
                       <div key={i} className="flex-1 text-center">
-                        {useImage ? (
+                        {useImage && item.imageSize === "full" ? (
+                          <div className="w-full h-12 overflow-hidden mx-auto mb-1 rounded border border-border">
+                            <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                          </div>
+                        ) : useImage ? (
                           <div className="w-10 h-10 rounded-full overflow-hidden mx-auto mb-1 border border-border">
                             <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                           </div>
@@ -177,13 +181,18 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
               <StyledWrapper key={block.id} block={block} defaultClass="py-6 px-4 bg-background">
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-3">{d.title as string}</h3>}
                 <div className="grid grid-cols-2 gap-2">
-                  {Array.isArray(d.items) && (d.items as { title: string; category?: string; level?: string; price?: string; image?: string; mediaType?: string; icon?: string }[]).slice(0, 4).map((item, i) => {
+                  {Array.isArray(d.items) && (d.items as { title: string; category?: string; level?: string; price?: string; image?: string; mediaType?: string; icon?: string; imageSize?: string }[]).slice(0, 4).map((item, i) => {
                     const useImage = item.mediaType === "image" && item.image;
+                    const isIconSize = item.imageSize !== "full";
                     const Icon = iconMap[item.icon || ""] || null;
                     return (
                       <div key={i} className="bg-card border border-border rounded-lg overflow-hidden">
-                        {useImage ? (
+                        {useImage && !isIconSize ? (
                           <img src={item.image} alt={item.title} className="w-full h-12 object-cover" />
+                        ) : useImage && isIconSize ? (
+                          <div className="h-10 bg-muted flex items-center justify-center">
+                            <img src={item.image} alt={item.title} className="h-7 w-7 rounded-full object-cover border border-border" />
+                          </div>
                         ) : Icon ? (
                           <div className="h-10 bg-muted flex items-center justify-center">
                             <Icon className="w-5 h-5 text-primary" strokeWidth={1.5} />
