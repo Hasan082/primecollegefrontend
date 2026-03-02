@@ -35,6 +35,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +102,8 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
   const [colorOpen, setColorOpen] = useState(false);
   const [tableOpen, setTableOpen] = useState(false);
   const [fontSizeOpen, setFontSizeOpen] = useState(false);
+  const [tableWidthMode, setTableWidthMode] = useState<"full" | "fixed">("full");
+  const [tableFixedWidth, setTableFixedWidth] = useState("600");
   const customColorRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
@@ -345,44 +348,61 @@ const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) =
                     </Button>
                     {editor.isActive("table") && (
                       <>
-                        <div className="border-t border-border pt-1 mt-1">
+                         <div className="border-t border-border pt-1 mt-1">
                           <p className="text-[10px] font-medium text-muted-foreground mb-1 px-1">Table Width</p>
-                          <div className="flex gap-1">
+                          <div className="flex gap-1 mb-1.5">
                             <Button
                               type="button"
-                              variant="outline"
+                              variant={tableWidthMode === "full" ? "default" : "outline"}
                               size="sm"
                               className="flex-1 h-7 text-[10px] gap-1"
                               onClick={() => {
-                                const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table');
+                                setTableWidthMode("full");
+                                const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table') as HTMLElement;
                                 if (tableNode) {
-                                  tableNode.classList.add('table-full-width');
-                                  tableNode.classList.remove('table-fixed-width');
-                                  editor.commands.focus();
+                                  tableNode.style.width = '100%';
+                                  tableNode.style.tableLayout = 'fixed';
                                 }
-                                setTableOpen(false);
                               }}
                             >
-                              <Maximize2 className="h-3 w-3" /> Full Width
+                              <Maximize2 className="h-3 w-3" /> Full
                             </Button>
                             <Button
                               type="button"
-                              variant="outline"
+                              variant={tableWidthMode === "fixed" ? "default" : "outline"}
                               size="sm"
                               className="flex-1 h-7 text-[10px] gap-1"
                               onClick={() => {
-                                const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table');
+                                setTableWidthMode("fixed");
+                                const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table') as HTMLElement;
                                 if (tableNode) {
-                                  tableNode.classList.remove('table-full-width');
-                                  tableNode.classList.add('table-fixed-width');
-                                  editor.commands.focus();
+                                  tableNode.style.width = `${tableFixedWidth}px`;
+                                  tableNode.style.tableLayout = 'auto';
                                 }
-                                setTableOpen(false);
                               }}
                             >
                               <Minimize2 className="h-3 w-3" /> Fixed
                             </Button>
                           </div>
+                          {tableWidthMode === "fixed" && (
+                            <div className="flex items-center gap-1.5 px-1">
+                              <Input
+                                type="number"
+                                value={tableFixedWidth}
+                                onChange={(e) => {
+                                  setTableFixedWidth(e.target.value);
+                                  const tableNode = editor.view.dom.querySelector('.ProseMirror .tiptap-table') as HTMLElement;
+                                  if (tableNode && e.target.value) {
+                                    tableNode.style.width = `${e.target.value}px`;
+                                  }
+                                }}
+                                className="h-7 text-xs w-20"
+                                min={200}
+                                max={1200}
+                              />
+                              <span className="text-[10px] text-muted-foreground">px</span>
+                            </div>
+                          )}
                         </div>
                         <div className="border-t border-border pt-1 mt-1">
                           <Button type="button" variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => { editor.chain().focus().addColumnAfter().run(); setTableOpen(false); }}>
