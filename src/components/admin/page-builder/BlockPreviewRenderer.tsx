@@ -186,9 +186,16 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                     const isIconSize = item.imageSize !== "full";
                     const Icon = iconMap[item.icon || ""] || null;
                     return (
-                      <div key={i} className="bg-card border border-border rounded-lg overflow-hidden">
+                      <div key={i} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                         {useImage && !isIconSize ? (
-                          <img src={item.image} alt={item.title} className="w-full h-12 object-cover" />
+                          <div className="relative">
+                            <img src={item.image} alt={item.title} className="w-full h-16 object-cover" />
+                            {item.category && (
+                              <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[6px] font-bold px-1.5 py-0.5 rounded">
+                                {item.category}
+                              </span>
+                            )}
+                          </div>
                         ) : useImage && isIconSize ? (
                           <div className="h-10 bg-muted flex items-center justify-center">
                             <img src={item.image} alt={item.title} className="h-7 w-7 rounded-full object-cover border border-border" />
@@ -200,17 +207,16 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                         ) : (
                           <div className="h-10 bg-muted" />
                         )}
-                        <div className="p-1.5">
-                          <div className="flex gap-1 mb-0.5">
-                            {item.category && (
-                              <span className="bg-secondary text-secondary-foreground text-[7px] font-bold px-1 py-0.5 rounded uppercase">
-                                {item.category}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[8px] font-semibold text-foreground leading-tight line-clamp-2">{item.title}</p>
+                        <div className="p-2">
+                          {/* Show category inline if no full-width image or icon size */}
+                          {item.category && (!useImage || isIconSize) && (
+                            <span className="bg-secondary text-secondary-foreground text-[6px] font-bold px-1 py-0.5 rounded uppercase">
+                              {item.category}
+                            </span>
+                          )}
+                          <p className="text-[8px] font-bold text-foreground leading-tight line-clamp-2 mt-0.5">{item.title}</p>
                           {item.price && <p className="text-[9px] font-bold text-primary mt-0.5">{item.price}</p>}
-                          <div className="mt-1 bg-primary text-primary-foreground text-center text-[7px] font-semibold py-0.5 rounded">
+                          <div className="mt-1.5 bg-primary text-primary-foreground text-center text-[7px] font-semibold py-0.5 rounded">
                             Enroll Now
                           </div>
                         </div>
@@ -317,24 +323,42 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
               <StyledWrapper key={block.id} block={block} defaultClass="py-5 px-4 bg-background">
                 {d.title && <h3 className="text-[11px] font-bold text-foreground mb-2">{d.title as string}</h3>}
                 <div className="grid grid-cols-3 gap-1.5">
-                  {Array.isArray(d.items) && (d.items as { title: string; category?: string; image?: string; mediaType?: string }[]).slice(0, 3).map((item, i) => (
-                    <div key={i} className="bg-card border border-border rounded-md overflow-hidden">
-                      {item.mediaType === "image" && item.image ? (
-                        <img src={item.image} alt={item.title} className="w-full h-8 object-cover" />
-                      ) : (
-                        <div className="h-8 bg-muted" />
-                      )}
-                      <div className="p-1.5">
-                        {item.category && (
-                          <span className="bg-secondary text-secondary-foreground text-[6px] font-bold px-1 py-0.5 rounded uppercase">
-                            {item.category}
-                          </span>
+                  {Array.isArray(d.items) && (d.items as { title: string; description?: string; category?: string; image?: string; mediaType?: string; imageSize?: string }[]).slice(0, 3).map((item, i) => {
+                    const hasFullImage = item.mediaType === "image" && item.image && item.imageSize === "full";
+                    const hasIconImage = item.mediaType === "image" && item.image && item.imageSize !== "full";
+                    return (
+                      <div key={i} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+                        {hasFullImage ? (
+                          <div className="relative">
+                            <img src={item.image} alt={item.title} className="w-full h-12 object-cover" />
+                            {item.category && (
+                              <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[5px] font-bold px-1 py-0.5 rounded">
+                                {item.category}
+                              </span>
+                            )}
+                          </div>
+                        ) : hasIconImage ? (
+                          <div className="h-8 bg-muted flex items-center justify-center">
+                            <img src={item.image} alt={item.title} className="h-5 w-5 rounded-full object-cover border border-border" />
+                          </div>
+                        ) : (
+                          <div className="h-8 bg-muted" />
                         )}
-                        <p className="text-[7px] font-semibold text-foreground mt-0.5 line-clamp-2">{item.title}</p>
-                        <span className="text-[7px] font-semibold text-primary">Read More →</span>
+                        <div className="p-1.5">
+                          {item.category && !hasFullImage && (
+                            <span className="bg-secondary text-secondary-foreground text-[5px] font-bold px-1 py-0.5 rounded uppercase">
+                              {item.category}
+                            </span>
+                          )}
+                          <p className="text-[7px] font-bold text-foreground mt-0.5 line-clamp-2">{item.title}</p>
+                          {item.description && (
+                            <p className="text-[6px] text-muted-foreground mt-0.5 line-clamp-2 leading-tight">{item.description}</p>
+                          )}
+                          <span className="text-[6px] font-semibold text-primary mt-0.5 inline-block">Read More →</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </StyledWrapper>
             );
