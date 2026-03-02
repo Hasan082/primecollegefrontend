@@ -35,6 +35,11 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                 <div className="relative z-10 text-center">
                   <h2 className="text-base font-bold leading-tight">{d.title as string}</h2>
                   {d.subtitle && <p className="text-[10px] opacity-80 mt-1">{d.subtitle as string}</p>}
+                  {d.ctaLabel && (
+                    <span className="inline-block mt-2 px-3 py-1 bg-secondary text-secondary-foreground rounded text-[8px] font-semibold">
+                      {d.ctaLabel as string}
+                    </span>
+                  )}
                 </div>
               </div>
             );

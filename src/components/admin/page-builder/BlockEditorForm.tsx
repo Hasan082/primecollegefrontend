@@ -52,10 +52,13 @@ const BlockEditorForm = ({ block, onChange, onClose }: BlockEditorFormProps) => 
           onPositionChange={local.imagePosition !== undefined ? (v) => update("imagePosition", v) : undefined}
         />
       )}
-      {typeof local.ctaLabel === "string" && (
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="CTA Label" value={local.ctaLabel as string} onChange={(v) => update("ctaLabel", v)} />
-          <Field label="CTA Link" value={(local.ctaHref as string) || ""} onChange={(v) => update("ctaHref", v)} />
+      {(typeof local.ctaLabel === "string" || block.type === "hero") && (
+        <div className="space-y-1">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Button Label" value={(local.ctaLabel as string) || ""} onChange={(v) => update("ctaLabel", v)} />
+            <Field label="Button Link" value={(local.ctaHref as string) || ""} onChange={(v) => update("ctaHref", v)} />
+          </div>
+          <p className="text-[10px] text-muted-foreground">Leave empty to hide the button</p>
         </div>
       )}
       {typeof local.price === "string" && (
