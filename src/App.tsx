@@ -47,6 +47,8 @@ import LearnerManagement from "./pages/admin/LearnerManagement";
 import TrainerManagement from "./pages/admin/TrainerManagement";
 import ProgressMonitoring from "./pages/admin/ProgressMonitoring";
 import Reports from "./pages/admin/Reports";
+import PageManagement from "./pages/admin/PageManagement";
+import PageEditor from "./pages/admin/PageEditor";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +96,8 @@ const App = () => {
                   <Route path="trainers" element={<TrainerManagement />} />
                   <Route path="progress" element={<ProgressMonitoring />} />
                   <Route path="reports" element={<Reports />} />
+                  <Route path="pages" element={<PageManagement />} />
+                  <Route path="pages/:pageId" element={<PageEditor />} />
                 </Route>
                 <Route path="/trainer" element={<TrainerLayout />}>
                   <Route path="dashboard" element={<TrainerDashboard />} />
