@@ -469,6 +469,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
               })()}
             </TabsContent>
             <TabsContent value="payment" className="mt-0 space-y-4">
+              <Card>
                 <CardContent className="p-4 space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-sm">
