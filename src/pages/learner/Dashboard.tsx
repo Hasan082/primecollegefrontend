@@ -130,22 +130,34 @@ const Dashboard = () => {
                   <p className="text-sm font-medium text-foreground">{alert.unit}</p>
                   <p className="text-xs text-muted-foreground">
                     {alert.status === "overdue"
-                      ? `Overdue by ${Math.abs(alert.daysLeft)} days — contact your trainer`
+                      ? `Overdue by ${Math.abs(alert.daysLeft)} days`
                       : `${alert.daysLeft} days remaining`
                     }
                   </p>
                 </div>
-                <Badge variant={alert.status === "overdue" || alert.status === "urgent" ? "destructive" : "secondary"} className="text-[10px]">
-                  {alert.status === "overdue" ? "Overdue" : alert.status === "urgent" ? "Urgent" : "Warning"}
-                </Badge>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {alert.status === "overdue" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-[10px] gap-1 border-destructive/30 text-destructive hover:bg-destructive/10"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const qual = learnerQualifications.find(q => q.id === alert.qualId);
+                        setExtensionQualTitle(qual?.title || "");
+                        setExtensionOpen(true);
+                      }}
+                    >
+                      <CalendarPlus className="w-3 h-3" /> Extend
+                    </Button>
+                  )}
+                  <Badge variant={alert.status === "overdue" || alert.status === "urgent" ? "destructive" : "secondary"} className="text-[10px]">
+                    {alert.status === "overdue" ? "Overdue" : alert.status === "urgent" ? "Urgent" : "Warning"}
+                  </Badge>
+                </div>
               </Link>
             ))}
           </div>
-          {deadlineAlerts.some(a => a.status === "overdue" || a.status === "urgent") && (
-            <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => setExtensionOpen(true)}>
-              <CalendarPlus className="w-3.5 h-3.5" /> Request Deadline Extension
-            </Button>
-          )}
         </div>
       )}
 
