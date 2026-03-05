@@ -51,7 +51,7 @@ const mockUnits = (progress: number): UnitData[] => {
     } else if (status === "in-progress") {
       timeline = [
         { date: `${10 + i}/02/2025`, event: `Resubmission uploaded`, type: "submission" },
-        { date: `${05 + i}/02/2025`, event: `Resubmission Required — feedback provided`, type: "feedback" },
+        { date: `${5 + i}/02/2025`, event: `Resubmission Required — feedback provided`, type: "feedback" },
         { date: `${28}/01/2025`, event: `Evidence submitted for assessment`, type: "submission" },
       ];
     }
