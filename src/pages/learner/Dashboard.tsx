@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Clock, CheckCircle2, AlertTriangle, FileText, MessageSquare, Upload, GraduationCap, Timer } from "lucide-react";
+import { BookOpen, Clock, CheckCircle2, AlertTriangle, FileText, MessageSquare, Upload, GraduationCap, Timer, CalendarPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { learnerQualifications } from "@/data/learnerMockData";
+import ExtensionRequestModal from "@/components/learner/ExtensionRequestModal";
 
 // Build recent activity from mock data
 const buildRecentActivity = () => {
