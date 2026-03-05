@@ -45,11 +45,11 @@ const buildRecentActivity = () => {
   return activities.slice(0, 5);
 };
 
-// Mock deadline alerts for demo
+// Mock deadline alerts for demo — grouped by qualification
 const deadlineAlerts = [
-  { unit: "Unit 5: Person-Centred Approaches", daysLeft: 5, status: "warning" as const, link: "/learner/qualification/adult-care-l4/unit/u5" },
-  { unit: "Unit 4: Safeguarding and Protection", daysLeft: 2, status: "urgent" as const, link: "/learner/qualification/adult-care-l4/unit/u4" },
-  { unit: "Unit 6: Communication in Care Settings", daysLeft: -3, status: "overdue" as const, link: "/learner/qualification/adult-care-l4/unit/u6" },
+  { unit: "Unit 5: Person-Centred Approaches", daysLeft: 5, status: "warning" as const, link: "/learner/qualification/adult-care-l4/unit/u5", qualId: "adult-care-l4" },
+  { unit: "Unit 4: Safeguarding and Protection", daysLeft: 2, status: "urgent" as const, link: "/learner/qualification/adult-care-l4/unit/u4", qualId: "adult-care-l4" },
+  { unit: "Unit 6: Communication in Care Settings", daysLeft: -3, status: "overdue" as const, link: "/learner/qualification/adult-care-l4/unit/u6", qualId: "adult-care-l4" },
 ];
 
 const Dashboard = () => {
