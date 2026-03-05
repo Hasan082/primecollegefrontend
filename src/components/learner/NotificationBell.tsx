@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, CheckCircle2, AlertTriangle, MessageSquare, Info, FileText } from "lucide-react";
+import { Bell, CheckCircle2, AlertTriangle, MessageSquare, Info, FileText, Timer, AlertCircle } from "lucide-react";
 import { mockNotifications, NotificationData } from "@/data/notificationsMockData";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +9,9 @@ const typeIcon: Record<NotificationData["type"], typeof Bell> = {
   competent: CheckCircle2,
   system: Info,
   resource: FileText,
+  deadline_warning: Timer,
+  deadline_urgent: AlertCircle,
+  deadline_overdue: AlertTriangle,
 };
 
 const typeColor: Record<NotificationData["type"], string> = {
@@ -17,6 +20,9 @@ const typeColor: Record<NotificationData["type"], string> = {
   competent: "text-green-500",
   system: "text-muted-foreground",
   resource: "text-purple-500",
+  deadline_warning: "text-amber-500",
+  deadline_urgent: "text-destructive",
+  deadline_overdue: "text-destructive",
 };
 
 function timeAgo(dateStr: string) {
