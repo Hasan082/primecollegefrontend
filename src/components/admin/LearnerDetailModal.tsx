@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCircle2, AlertTriangle, FileText, Pencil, Save, X } from "lucide-react";
+import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCircle2, AlertTriangle, FileText, Pencil, Save, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AdminLearner } from "@/data/adminMockData";
 import { adminTrainers } from "@/data/adminMockData";
@@ -21,27 +21,49 @@ interface Props {
   onUpdate?: (updated: AdminLearner) => void;
 }
 
-const mockUnits = (progress: number) => {
+interface UnitTimeline {
+  date: string;
+  event: string;
+  type: "submission" | "assessment" | "feedback" | "enrolment";
+}
+
+interface UnitData {
+  name: string;
+  status: "completed" | "in-progress" | "not-started";
+  lastSubmission: string | null;
+  timeline: UnitTimeline[];
+}
+
+const mockUnits = (progress: number): UnitData[] => {
   const total = 6;
   const completed = Math.round((progress / 100) * total);
-  return Array.from({ length: total }, (_, i) => ({
-    name: `Unit ${i + 1}: ${["Introduction & Fundamentals", "Core Principles", "Applied Practice", "Professional Skills", "Advanced Concepts", "Final Portfolio"][i]}`,
-    status: i < completed ? "completed" as const : i === completed ? "in-progress" as const : "not-started" as const,
-    submissions: i < completed ? 1 : i === completed ? 1 : 0,
-    lastSubmission: i <= completed ? `${15 + i}/01/2025` : null,
-  }));
-};
+  const unitNames = ["Introduction & Fundamentals", "Core Principles", "Applied Practice", "Professional Skills", "Advanced Concepts", "Final Portfolio"];
 
-const mockTimeline = (name: string) => [
-  { date: "15/02/2025", event: "Unit 3 submitted for assessment", type: "submission" },
-  { date: "12/02/2025", event: "Unit 2 marked as Competent by Sarah Jones", type: "assessment" },
-  { date: "08/02/2025", event: "Unit 2 resubmission uploaded", type: "submission" },
-  { date: "01/02/2025", event: "Unit 2 — Resubmission Required", type: "feedback" },
-  { date: "25/01/2025", event: "Unit 2 submitted for assessment", type: "submission" },
-  { date: "20/01/2025", event: "Unit 1 marked as Competent by Sarah Jones", type: "assessment" },
-  { date: "15/01/2025", event: "Unit 1 submitted for assessment", type: "submission" },
-  { date: "10/01/2025", event: `${name} enrolled on qualification`, type: "enrolment" },
-];
+  return Array.from({ length: total }, (_, i) => {
+    const status = i < completed ? "completed" as const : i === completed ? "in-progress" as const : "not-started" as const;
+    let timeline: UnitTimeline[] = [];
+
+    if (status === "completed") {
+      timeline = [
+        { date: `${20 + i}/01/2025`, event: `Marked as Competent by Sarah Jones`, type: "assessment" },
+        { date: `${15 + i}/01/2025`, event: `Evidence submitted for assessment`, type: "submission" },
+      ];
+    } else if (status === "in-progress") {
+      timeline = [
+        { date: `${10 + i}/02/2025`, event: `Resubmission uploaded`, type: "submission" },
+        { date: `${5 + i}/02/2025`, event: `Resubmission Required — feedback provided`, type: "feedback" },
+        { date: `${28}/01/2025`, event: `Evidence submitted for assessment`, type: "submission" },
+      ];
+    }
+
+    return {
+      name: `Unit ${i + 1}: ${unitNames[i]}`,
+      status,
+      lastSubmission: timeline.length > 0 ? timeline[0].date : null,
+      timeline,
+    };
+  });
+};
 
 const paymentBadge = (status: string) => {
   const map: Record<string, "default" | "secondary" | "destructive"> = { paid: "default", pending: "secondary", overdue: "destructive" };
@@ -55,21 +77,29 @@ const unitStatusBadge = (status: string) => {
 };
 
 const timelineIcon = (type: string) => {
-  if (type === "submission") return <FileText className="w-3.5 h-3.5 text-primary" />;
-  if (type === "assessment") return <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />;
-  if (type === "feedback") return <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />;
-  return <Calendar className="w-3.5 h-3.5 text-muted-foreground" />;
+  if (type === "submission") return <FileText className="w-3 h-3 text-primary" />;
+  if (type === "assessment") return <CheckCircle2 className="w-3 h-3 text-green-600" />;
+  if (type === "feedback") return <AlertTriangle className="w-3 h-3 text-amber-500" />;
+  return <Calendar className="w-3 h-3 text-muted-foreground" />;
 };
 
 const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ name: "", email: "", phone: "", assignedTrainer: "", status: "" as AdminLearner["status"] });
+  const [expandedUnits, setExpandedUnits] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   if (!learner) return null;
 
   const units = mockUnits(learner.progress);
-  const timeline = mockTimeline(learner.name);
+
+  const toggleUnit = (i: number) => {
+    setExpandedUnits(prev => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  };
 
   const startEditing = () => {
     setEditData({
@@ -106,7 +136,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
   const activeTrainers = adminTrainers.filter(t => t.status === "active");
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) setIsEditing(false); onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { setIsEditing(false); setExpandedUnits(new Set()); } onOpenChange(o); }}>
       <DialogContent className="max-w-2xl max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
@@ -124,11 +154,10 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
         </DialogHeader>
 
         <Tabs defaultValue="info" className="mt-2">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="info" className="text-xs">Personal Info</TabsTrigger>
             <TabsTrigger value="progress" className="text-xs">Unit Progress</TabsTrigger>
             <TabsTrigger value="payment" className="text-xs">Payment</TabsTrigger>
-            <TabsTrigger value="timeline" className="text-xs">Timeline</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="h-[400px] mt-3 pr-3">
@@ -250,19 +279,56 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
             </TabsContent>
 
             <TabsContent value="progress" className="mt-0 space-y-2">
-              {units.map((unit, i) => (
-                <Card key={i}>
-                  <CardContent className="p-3 flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{unit.name}</p>
-                      {unit.lastSubmission && (
-                        <p className="text-xs text-muted-foreground">Last submission: {unit.lastSubmission}</p>
+              {units.map((unit, i) => {
+                const isExpanded = expandedUnits.has(i);
+                const hasTimeline = unit.timeline.length > 0;
+                return (
+                  <Card key={i}>
+                    <CardContent className="p-0">
+                      <button
+                        className="w-full p-3 flex items-center justify-between gap-3 text-left hover:bg-muted/30 transition-colors rounded-lg"
+                        onClick={() => hasTimeline && toggleUnit(i)}
+                        disabled={!hasTimeline}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{unit.name}</p>
+                          {unit.lastSubmission && (
+                            <p className="text-xs text-muted-foreground">Last activity: {unit.lastSubmission}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {unitStatusBadge(unit.status)}
+                          {hasTimeline && (
+                            isExpanded
+                              ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                              : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                      </button>
+
+                      {isExpanded && hasTimeline && (
+                        <div className="px-4 pb-3 pt-1 border-t border-border">
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Activity Timeline</p>
+                          <div className="relative pl-5 space-y-3">
+                            <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border" />
+                            {unit.timeline.map((item, j) => (
+                              <div key={j} className="relative flex items-start gap-2.5">
+                                <div className="absolute -left-5 top-0.5 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center">
+                                  {timelineIcon(item.type)}
+                                </div>
+                                <div>
+                                  <p className="text-xs">{item.event}</p>
+                                  <p className="text-[10px] text-muted-foreground">{item.date}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       )}
-                    </div>
-                    {unitStatusBadge(unit.status)}
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </TabsContent>
 
             <TabsContent value="payment" className="mt-0 space-y-4">
@@ -296,23 +362,6 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-
-            <TabsContent value="timeline" className="mt-0">
-              <div className="relative pl-6 space-y-4">
-                <div className="absolute left-[11px] top-1 bottom-1 w-px bg-border" />
-                {timeline.map((item, i) => (
-                  <div key={i} className="relative flex items-start gap-3">
-                    <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-background border border-border flex items-center justify-center">
-                      {timelineIcon(item.type)}
-                    </div>
-                    <div>
-                      <p className="text-sm">{item.event}</p>
-                      <p className="text-xs text-muted-foreground">{item.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </TabsContent>
           </ScrollArea>
         </Tabs>
