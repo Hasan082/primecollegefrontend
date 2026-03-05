@@ -53,6 +53,7 @@ const deadlineAlerts = [
 ];
 
 const Dashboard = () => {
+  const [extensionOpen, setExtensionOpen] = useState(false);
   const allUnits = learnerQualifications.flatMap((q) => q.units);
   const enrolled = learnerQualifications.length;
   const awaiting = allUnits.filter((u) => u.status === "awaiting_assessment").length;
