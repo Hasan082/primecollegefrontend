@@ -130,7 +130,7 @@ const LearnerManagement = () => {
                 <TableHead>Progress</TableHead>
                 <TableHead className="hidden md:table-cell">Payment</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-[60px]"></TableHead>
+                <TableHead className="w-[60px]">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
