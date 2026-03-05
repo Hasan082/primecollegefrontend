@@ -400,7 +400,74 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
               })}
             </TabsContent>
 
-            <TabsContent value="payment" className="mt-0 space-y-4">
+            <TabsContent value="extensions" className="mt-0 space-y-3">
+              {(() => {
+                const learnerRequests = extensionRequests.filter(r => r.learnerId === learner.id);
+                if (learnerRequests.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CalendarPlus className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No extension requests</p>
+                    </div>
+                  );
+                }
+
+                const handleAction = (reqId: string, action: "approved" | "rejected") => {
+                  setExtensionRequests(prev => prev.map(r =>
+                    r.id === reqId ? { ...r, status: action, reviewedBy: "Admin", reviewedDate: new Date().toLocaleDateString("en-GB") } : r
+                  ));
+                  toast({ title: `Extension ${action}`, description: action === "approved" ? "Learner access has been extended." : "Request has been rejected." });
+                };
+
+                return learnerRequests.map(req => (
+                  <Card key={req.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                          <p className="text-sm font-medium">{req.plan.label} Extension</p>
+                          <p className="text-xs text-muted-foreground">{req.qualificationTitle}</p>
+                        </div>
+                        <Badge
+                          variant={req.status === "pending" ? "secondary" : req.status === "approved" ? "default" : "destructive"}
+                          className="text-[10px]"
+                        >
+                          {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-3">
+                        <div>
+                          <p className="font-medium text-foreground">£{req.plan.price}</p>
+                          <p>Extension fee</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{req.plan.months} month{req.plan.months > 1 ? "s" : ""}</p>
+                          <p>Duration</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{req.requestedDate}</p>
+                          <p>Requested</p>
+                        </div>
+                      </div>
+                      {req.status === "pending" && (
+                        <div className="flex gap-2">
+                          <Button size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleAction(req.id, "approved")}>
+                            <Check className="w-3 h-3" /> Approve
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1 text-destructive" onClick={() => handleAction(req.id, "rejected")}>
+                            <XCircle className="w-3 h-3" /> Reject
+                          </Button>
+                        </div>
+                      )}
+                      {req.reviewedBy && (
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          Reviewed by {req.reviewedBy} on {req.reviewedDate}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ));
+              })()}
+            </TabsContent>
               <Card>
                 <CardContent className="p-4 space-y-3">
                   <div className="grid grid-cols-2 gap-4">
