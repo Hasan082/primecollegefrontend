@@ -81,3 +81,36 @@ export const getDeadlineBadgeVariant = (status: DeadlineStatus): "default" | "se
     default: return "outline";
   }
 };
+
+/* ── Extension Plans ── */
+
+export interface ExtensionPlan {
+  id: string;
+  label: string;
+  months: number;
+  price: number; // GBP
+}
+
+export const EXTENSION_PLANS: ExtensionPlan[] = [
+  { id: "ext-1m", label: "1 Month", months: 1, price: 50 },
+  { id: "ext-2m", label: "2 Months", months: 2, price: 90 },
+  { id: "ext-3m", label: "3 Months", months: 3, price: 120 },
+  { id: "ext-6m", label: "6 Months", months: 6, price: 200 },
+  { id: "ext-12m", label: "1 Year", months: 12, price: 350 },
+];
+
+export type ExtensionRequestStatus = "pending" | "approved" | "rejected";
+
+export interface ExtensionRequest {
+  id: string;
+  learnerId: string;
+  learnerName: string;
+  qualificationId: string;
+  qualificationTitle: string;
+  plan: ExtensionPlan;
+  requestedDate: string; // DD/MM/YYYY
+  status: ExtensionRequestStatus;
+  reviewedBy?: string;
+  reviewedDate?: string;
+  note?: string;
+}
