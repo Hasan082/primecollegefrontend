@@ -162,7 +162,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <Label className="text-xs">Email</Label>
-                          <Input type="email" value={editData.email} onChange={(e) => setEditData(d => ({ ...d, email: e.target.value }))} />
+                          <Input type="email" value={editData.email} disabled className="bg-muted/50 cursor-not-allowed" />
                         </div>
                         <div className="space-y-1.5">
                           <Label className="text-xs">Phone</Label>
