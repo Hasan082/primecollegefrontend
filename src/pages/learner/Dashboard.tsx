@@ -194,8 +194,8 @@ const Dashboard = () => {
       <ExtensionRequestModal
         open={extensionOpen}
         onOpenChange={setExtensionOpen}
-        qualificationTitle={extensionQualTitle}
-        currentExpiry="20/02/2026"
+        qualificationTitle={extensionQual.title}
+        currentExpiry={extensionQual.expiry}
       />
     </div>
   );
