@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Mail, Phone, Calendar, GraduationCap, TrendingUp, CheckCircle, Clock, XCircle, Timer } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, Calendar, GraduationCap, TrendingUp, CheckCircle, Clock, XCircle, Timer, CalendarPlus, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { trainerLearners } from "@/data/trainerMockData";
 import { useToast } from "@/hooks/use-toast";
 import TablePagination from "@/components/admin/TablePagination";
-import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, type UnitDeadline } from "@/lib/deadlines";
+import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, type UnitDeadline, type ExtensionRequest } from "@/lib/deadlines";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { mockExtensionRequests } from "@/data/extensionRequestsMockData";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -26,6 +27,7 @@ const LearnerDetail = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [unitDeadlines, setUnitDeadlines] = useState<Map<string, UnitDeadline>>(new Map());
+  const [extensionRequests, setExtensionRequests] = useState<ExtensionRequest[]>(mockExtensionRequests);
   const { toast } = useToast();
   const learner = trainerLearners.find((l) => l.id === id);
 
@@ -106,6 +108,47 @@ const LearnerDetail = () => {
         </div>
         <p className="text-sm text-muted-foreground mt-2">{learner.unitsCompleted} of {learner.totalUnits} units completed</p>
       </Card>
+
+      {/* Extension Requests */}
+      {(() => {
+        const learnerReqs = extensionRequests.filter(r => r.learnerId === id);
+        const pendingReqs = learnerReqs.filter(r => r.status === "pending");
+        if (pendingReqs.length === 0) return null;
+
+        const handleAction = (reqId: string, action: "approved" | "rejected") => {
+          setExtensionRequests(prev => prev.map(r =>
+            r.id === reqId ? { ...r, status: action, reviewedBy: "Trainer", reviewedDate: new Date().toLocaleDateString("en-GB") } : r
+          ));
+          toast({ title: `Extension ${action}` });
+        };
+
+        return (
+          <Card className="p-6 mb-6 border-amber-500/30 bg-amber-500/5">
+            <h2 className="text-sm font-bold flex items-center gap-2 mb-3">
+              <CalendarPlus className="w-4 h-4" /> Pending Extension Requests
+              <Badge variant="secondary" className="text-[10px]">{pendingReqs.length}</Badge>
+            </h2>
+            <div className="space-y-2">
+              {pendingReqs.map(req => (
+                <div key={req.id} className="flex items-center justify-between gap-3 bg-card rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">{req.plan.label} — £{req.plan.price}</p>
+                    <p className="text-xs text-muted-foreground">{req.qualificationTitle} • Requested {req.requestedDate}</p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button size="sm" className="h-7 text-xs gap-1" onClick={() => handleAction(req.id, "approved")}>
+                      <Check className="w-3 h-3" /> Approve
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1 text-destructive" onClick={() => handleAction(req.id, "rejected")}>
+                      <XCircle className="w-3 h-3" /> Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* Unit Progress Table */}
       <Card className="p-6">

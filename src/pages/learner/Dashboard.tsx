@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Clock, CheckCircle2, AlertTriangle, FileText, MessageSquare, Upload, GraduationCap, Timer } from "lucide-react";
+import { BookOpen, Clock, CheckCircle2, AlertTriangle, FileText, MessageSquare, Upload, GraduationCap, Timer, CalendarPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { learnerQualifications } from "@/data/learnerMockData";
+import ExtensionRequestModal from "@/components/learner/ExtensionRequestModal";
 
 // Build recent activity from mock data
 const buildRecentActivity = () => {
@@ -50,6 +53,7 @@ const deadlineAlerts = [
 ];
 
 const Dashboard = () => {
+  const [extensionOpen, setExtensionOpen] = useState(false);
   const allUnits = learnerQualifications.flatMap((q) => q.units);
   const enrolled = learnerQualifications.length;
   const awaiting = allUnits.filter((u) => u.status === "awaiting_assessment").length;
@@ -136,6 +140,11 @@ const Dashboard = () => {
               </Link>
             ))}
           </div>
+          {deadlineAlerts.some(a => a.status === "overdue" || a.status === "urgent") && (
+            <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => setExtensionOpen(true)}>
+              <CalendarPlus className="w-3.5 h-3.5" /> Request Deadline Extension
+            </Button>
+          )}
         </div>
       )}
 
@@ -157,6 +166,13 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+
+      <ExtensionRequestModal
+        open={extensionOpen}
+        onOpenChange={setExtensionOpen}
+        qualificationTitle={learnerQualifications[0]?.title || ""}
+        currentExpiry="20/02/2026"
+      />
     </div>
   );
 };
