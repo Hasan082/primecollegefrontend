@@ -189,17 +189,6 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-muted-foreground" /> Uploaded Documents
-                  </h4>
-                  <div className="space-y-1.5 text-sm text-muted-foreground">
-                    <p className="bg-muted/30 rounded-md px-3 py-2">ID Verification — uploaded 10/01/2025</p>
-                    <p className="bg-muted/30 rounded-md px-3 py-2">Enrolment Agreement — signed 10/01/2025</p>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
 
             <TabsContent value="timeline" className="mt-0">
