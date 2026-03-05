@@ -284,13 +284,32 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
               {units.map((unit, i) => {
                 const isExpanded = expandedUnits.has(i);
                 const hasTimeline = unit.timeline.length > 0;
+                const unitKey = `unit-${i}`;
+                const deadline = unitDeadlines.get(unitKey);
+                const deadlineStatus = deadline ? getDeadlineStatus(deadline.deadlineDate) : "none";
+                const daysLeft = deadline ? getDaysRemaining(deadline.deadlineDate) : 0;
+
+                const setDeadline = (days: number) => {
+                  const dl = createDeadline(days, unitKey);
+                  setUnitDeadlines(prev => new Map(prev).set(unitKey, dl));
+                  toast({ title: "Deadline set", description: `${unit.name} — ${days} day deadline assigned` });
+                };
+
+                const removeDeadline = () => {
+                  setUnitDeadlines(prev => {
+                    const next = new Map(prev);
+                    next.delete(unitKey);
+                    return next;
+                  });
+                  toast({ title: "Deadline removed" });
+                };
+
                 return (
                   <Card key={i}>
                     <CardContent className="p-0">
                       <button
                         className="w-full p-3 flex items-center justify-between gap-3 text-left hover:bg-muted/30 transition-colors rounded-lg"
-                        onClick={() => hasTimeline && toggleUnit(i)}
-                        disabled={!hasTimeline}
+                        onClick={() => toggleUnit(i)}
                       >
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{unit.name}</p>
@@ -299,32 +318,70 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          {unitStatusBadge(unit.status)}
-                          {hasTimeline && (
-                            isExpanded
-                              ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                              : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          {deadline && unit.status !== "completed" && (
+                            <Badge variant={getDeadlineBadgeVariant(deadlineStatus)} className="text-[10px] gap-1">
+                              <Timer className="w-3 h-3" />
+                              {getDeadlineLabel(deadlineStatus, daysLeft)}
+                            </Badge>
                           )}
+                          {unitStatusBadge(unit.status)}
+                          {isExpanded
+                            ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                            : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          }
                         </div>
                       </button>
 
-                      {isExpanded && hasTimeline && (
-                        <div className="px-4 pb-3 pt-1 border-t border-border">
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Activity Timeline</p>
-                          <div className="relative pl-5 space-y-3">
-                            <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border" />
-                            {unit.timeline.map((item, j) => (
-                              <div key={j} className="relative flex items-start gap-2.5">
-                                <div className="absolute -left-5 top-0.5 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center">
-                                  {timelineIcon(item.type)}
+                      {isExpanded && (
+                        <div className="px-4 pb-3 pt-1 border-t border-border space-y-3">
+                          {/* Deadline Setting */}
+                          {unit.status !== "completed" && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                                <Timer className="w-3 h-3 inline mr-1" />Deadline
+                              </p>
+                              {deadline ? (
+                                <div className="flex items-center gap-2 text-xs">
+                                  <Badge variant={getDeadlineBadgeVariant(deadlineStatus)} className="text-[10px]">
+                                    {getDeadlineLabel(deadlineStatus, daysLeft)}
+                                  </Badge>
+                                  <span className="text-muted-foreground">Due: {deadline.deadlineDate}</span>
+                                  <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px] text-destructive" onClick={removeDeadline}>
+                                    Remove
+                                  </Button>
                                 </div>
-                                <div>
-                                  <p className="text-xs">{item.event}</p>
-                                  <p className="text-[10px] text-muted-foreground">{item.date}</p>
+                              ) : (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {DEADLINE_PRESETS.map(p => (
+                                    <Button key={p.value} variant="outline" size="sm" className="h-6 text-[10px] px-2" onClick={() => setDeadline(p.value)}>
+                                      {p.label}
+                                    </Button>
+                                  ))}
                                 </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Activity Timeline */}
+                          {hasTimeline && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Activity Timeline</p>
+                              <div className="relative pl-5 space-y-3">
+                                <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border" />
+                                {unit.timeline.map((item, j) => (
+                                  <div key={j} className="relative flex items-start gap-2.5">
+                                    <div className="absolute -left-5 top-0.5 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center">
+                                      {timelineIcon(item.type)}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs">{item.event}</p>
+                                      <p className="text-[10px] text-muted-foreground">{item.date}</p>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </CardContent>
