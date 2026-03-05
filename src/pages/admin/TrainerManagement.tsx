@@ -25,6 +25,7 @@ const TrainerManagement = () => {
   const [trainers, setTrainers] = useState<AdminTrainer[]>(adminTrainers);
   const [selectedTrainer, setSelectedTrainer] = useState<AdminTrainer | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const { toast } = useToast();
 
   const filtered = trainers.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase()) || t.email.toLowerCase().includes(search.toLowerCase())
