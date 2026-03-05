@@ -121,7 +121,7 @@ const TrainerDetailModal = ({ trainer, open, onOpenChange, onUpdate }: Props) =>
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">Email</Label>
-                    <Input type="email" value={editData.email} onChange={(e) => setEditData(d => ({ ...d, email: e.target.value }))} />
+                    <Input type="email" value={editData.email} disabled className="bg-muted/50 cursor-not-allowed" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">Status</Label>
