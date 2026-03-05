@@ -1,16 +1,24 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCircle2, AlertTriangle, FileText, Pencil, Save, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import type { AdminLearner } from "@/data/adminMockData";
+import { adminTrainers } from "@/data/adminMockData";
 
 interface Props {
   learner: AdminLearner | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdate?: (updated: AdminLearner) => void;
 }
 
 const mockUnits = (progress: number) => {
@@ -35,11 +43,6 @@ const mockTimeline = (name: string) => [
   { date: "10/01/2025", event: `${name} enrolled on qualification`, type: "enrolment" },
 ];
 
-const statusBadge = (status: string) => {
-  const v = status === "active" ? "default" : status === "completed" ? "secondary" : "destructive";
-  return <Badge variant={v}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
-};
-
 const paymentBadge = (status: string) => {
   const map: Record<string, "default" | "secondary" | "destructive"> = { paid: "default", pending: "secondary", overdue: "destructive" };
   return <Badge variant={map[status] || "outline"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
@@ -58,14 +61,52 @@ const timelineIcon = (type: string) => {
   return <Calendar className="w-3.5 h-3.5 text-muted-foreground" />;
 };
 
-const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
+const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({ name: "", email: "", phone: "", assignedTrainer: "", status: "" as AdminLearner["status"] });
+  const { toast } = useToast();
+
   if (!learner) return null;
 
   const units = mockUnits(learner.progress);
   const timeline = mockTimeline(learner.name);
 
+  const startEditing = () => {
+    setEditData({
+      name: learner.name,
+      email: learner.email,
+      phone: learner.phone,
+      assignedTrainer: learner.assignedTrainer,
+      status: learner.status,
+    });
+    setIsEditing(true);
+  };
+
+  const saveChanges = () => {
+    const updated: AdminLearner = {
+      ...learner,
+      name: editData.name.trim(),
+      email: editData.email.trim(),
+      phone: editData.phone.trim(),
+      assignedTrainer: editData.assignedTrainer,
+      status: editData.status,
+    };
+    onUpdate?.(updated);
+    setIsEditing(false);
+    toast({ title: "Learner updated", description: `${updated.name}'s details have been saved.` });
+  };
+
+  const cancelEditing = () => setIsEditing(false);
+
+  const statusBadge = (status: string) => {
+    const v = status === "active" ? "default" : status === "completed" ? "secondary" : "destructive";
+    return <Badge variant={v}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+  };
+
+  const activeTrainers = adminTrainers.filter(t => t.status === "active");
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) setIsEditing(false); onOpenChange(o); }}>
       <DialogContent className="max-w-2xl max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
@@ -73,10 +114,12 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
               <User className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <span>{learner.name}</span>
+              <span>{isEditing ? editData.name : learner.name}</span>
               <p className="text-xs text-muted-foreground font-normal">{learner.learnerId}</p>
             </div>
-            <div className="ml-auto">{statusBadge(learner.status)}</div>
+            <div className="ml-auto flex items-center gap-2">
+              {statusBadge(isEditing ? editData.status : learner.status)}
+            </div>
           </DialogTitle>
         </DialogHeader>
 
@@ -90,56 +133,120 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
 
           <ScrollArea className="h-[400px] mt-3 pr-3">
             <TabsContent value="info" className="mt-0 space-y-4">
+              {/* Edit / Save / Cancel buttons */}
+              <div className="flex justify-end gap-2">
+                {isEditing ? (
+                  <>
+                    <Button variant="outline" size="sm" onClick={cancelEditing}>
+                      <X className="w-3.5 h-3.5 mr-1" /> Cancel
+                    </Button>
+                    <Button size="sm" onClick={saveChanges}>
+                      <Save className="w-3.5 h-3.5 mr-1" /> Save Changes
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={startEditing}>
+                    <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
+                  </Button>
+                )}
+              </div>
+
               <Card>
                 <CardContent className="p-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Email</p>
-                        <p className="font-medium">{learner.email}</p>
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Full Name</Label>
+                        <Input value={editData.name} onChange={(e) => setEditData(d => ({ ...d, name: e.target.value }))} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Email</Label>
+                          <Input type="email" value={editData.email} onChange={(e) => setEditData(d => ({ ...d, email: e.target.value }))} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Phone</Label>
+                          <Input value={editData.phone} onChange={(e) => setEditData(d => ({ ...d, phone: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Assigned Trainer</Label>
+                          <Select value={editData.assignedTrainer} onValueChange={(v) => setEditData(d => ({ ...d, assignedTrainer: v }))}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {activeTrainers.map(t => (
+                                <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Status</Label>
+                          <Select value={editData.status} onValueChange={(v) => setEditData(d => ({ ...d, status: v as AdminLearner["status"] }))}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="suspended">Suspended</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Phone</p>
-                        <p className="font-medium">{learner.phone}</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Email</p>
+                          <p className="font-medium">{learner.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Phone</p>
+                          <p className="font-medium">{learner.phone}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Enrolled Date</p>
+                          <p className="font-medium">{learner.enrolledDate}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Access Expiry</p>
+                          <p className="font-medium">{learner.accessExpiry}</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Enrolled Date</p>
-                        <p className="font-medium">{learner.enrolledDate}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Access Expiry</p>
-                        <p className="font-medium">{learner.accessExpiry}</p>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-sm mb-2">
-                    <GraduationCap className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Qualification</p>
-                      <p className="font-medium">{learner.qualification}</p>
+
+              {!isEditing && (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 text-sm mb-2">
+                      <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Qualification</p>
+                        <p className="font-medium">{learner.qualification}</p>
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">Assigned Trainer: <span className="font-medium text-foreground">{learner.assignedTrainer}</span></p>
-                  <div className="mt-3 flex items-center gap-3">
-                    <Progress value={learner.progress} className="flex-1 h-2" />
-                    <span className="text-sm font-bold">{learner.progress}%</span>
-                  </div>
-                </CardContent>
-              </Card>
+                    <p className="text-xs text-muted-foreground mt-2">Assigned Trainer: <span className="font-medium text-foreground">{learner.assignedTrainer}</span></p>
+                    <div className="mt-3 flex items-center gap-3">
+                      <Progress value={learner.progress} className="flex-1 h-2" />
+                      <span className="text-sm font-bold">{learner.progress}%</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="progress" className="mt-0 space-y-2">

@@ -22,9 +22,15 @@ const LearnerManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLearner, setSelectedLearner] = useState<AdminLearner | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [learners, setLearners] = useState<AdminLearner[]>(adminLearners);
   const { toast } = useToast();
 
-  const filtered = adminLearners.filter((l) => {
+  const handleLearnerUpdate = (updated: AdminLearner) => {
+    setLearners(prev => prev.map(l => l.id === updated.id ? updated : l));
+    setSelectedLearner(updated);
+  };
+
+  const filtered = learners.filter((l) => {
     const matchesSearch = l.name.toLowerCase().includes(search.toLowerCase()) || l.learnerId.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || l.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -168,7 +174,7 @@ const LearnerManagement = () => {
         </CardContent>
       </Card>
 
-      <LearnerDetailModal learner={selectedLearner} open={detailOpen} onOpenChange={setDetailOpen} />
+      <LearnerDetailModal learner={selectedLearner} open={detailOpen} onOpenChange={setDetailOpen} onUpdate={handleLearnerUpdate} />
     </div>
   );
 };
