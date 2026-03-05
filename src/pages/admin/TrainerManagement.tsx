@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { adminTrainers, adminLearners } from "@/data/adminMockData";
-import { Search, Plus, ArrowLeft, UserCheck, Users, ChevronDown, ChevronUp, Power } from "lucide-react";
+import { Search, Plus, ArrowLeft, UserCheck, Users, ChevronDown, ChevronUp, Power, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import TablePagination from "@/components/admin/TablePagination";
+import TrainerDetailModal from "@/components/admin/TrainerDetailModal";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -22,7 +23,8 @@ const TrainerManagement = () => {
   const [expandedTrainers, setExpandedTrainers] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [trainers, setTrainers] = useState<AdminTrainer[]>(adminTrainers);
-  const { toast } = useToast();
+  const [selectedTrainer, setSelectedTrainer] = useState<AdminTrainer | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const filtered = trainers.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase()) || t.email.toLowerCase().includes(search.toLowerCase())
@@ -122,6 +124,15 @@ const TrainerManagement = () => {
                     <Badge variant={t.status === "active" ? "default" : "secondary"}>
                       {t.status.charAt(0).toUpperCase() + t.status.slice(1)}
                     </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => { setSelectedTrainer(t); setDetailOpen(true); }}
+                      title="View details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
