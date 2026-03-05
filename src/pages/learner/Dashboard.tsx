@@ -140,6 +140,11 @@ const Dashboard = () => {
               </Link>
             ))}
           </div>
+          {deadlineAlerts.some(a => a.status === "overdue" || a.status === "urgent") && (
+            <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => setExtensionOpen(true)}>
+              <CalendarPlus className="w-3.5 h-3.5" /> Request Deadline Extension
+            </Button>
+          )}
         </div>
       )}
 
@@ -161,6 +166,13 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+
+      <ExtensionRequestModal
+        open={extensionOpen}
+        onOpenChange={setExtensionOpen}
+        qualificationTitle={learnerQualifications[0]?.title || ""}
+        currentExpiry="20/02/2026"
+      />
     </div>
   );
 };
