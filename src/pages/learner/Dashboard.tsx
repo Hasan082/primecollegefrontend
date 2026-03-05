@@ -183,7 +183,7 @@ const Dashboard = () => {
       <ExtensionRequestModal
         open={extensionOpen}
         onOpenChange={setExtensionOpen}
-        qualificationTitle={learnerQualifications[0]?.title || ""}
+        qualificationTitle={extensionQualTitle}
         currentExpiry="20/02/2026"
       />
     </div>
