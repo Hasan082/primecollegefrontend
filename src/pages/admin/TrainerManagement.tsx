@@ -204,6 +204,8 @@ const TrainerManagement = () => {
         itemsPerPage={ITEMS_PER_PAGE}
         onPageChange={setCurrentPage}
       />
+
+      <TrainerDetailModal trainer={selectedTrainer} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>
   );
 };
