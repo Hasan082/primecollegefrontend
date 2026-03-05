@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Mail, Phone, Calendar, GraduationCap, TrendingUp, CheckCircle, Clock, XCircle, Timer } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, Calendar, GraduationCap, TrendingUp, CheckCircle, Clock, XCircle, Timer, CalendarPlus, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { trainerLearners } from "@/data/trainerMockData";
 import { useToast } from "@/hooks/use-toast";
 import TablePagination from "@/components/admin/TablePagination";
-import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, type UnitDeadline } from "@/lib/deadlines";
+import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, type UnitDeadline, type ExtensionRequest } from "@/lib/deadlines";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { mockExtensionRequests } from "@/data/extensionRequestsMockData";
 
 const ITEMS_PER_PAGE = 10;
 
