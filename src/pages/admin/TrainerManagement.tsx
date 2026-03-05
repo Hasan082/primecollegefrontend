@@ -205,7 +205,10 @@ const TrainerManagement = () => {
         onPageChange={setCurrentPage}
       />
 
-      <TrainerDetailModal trainer={selectedTrainer} open={detailOpen} onOpenChange={setDetailOpen} />
+      <TrainerDetailModal trainer={selectedTrainer} open={detailOpen} onOpenChange={setDetailOpen} onUpdate={(updated) => {
+        setTrainers(prev => prev.map(t => t.id === updated.id ? updated : t));
+        setSelectedTrainer(updated);
+      }} />
     </div>
   );
 };
