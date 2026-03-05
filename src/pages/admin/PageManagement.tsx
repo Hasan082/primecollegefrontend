@@ -42,7 +42,10 @@ const PageManagement = () => {
   const qualPages = pages.filter((p) => p.type === "qualification");
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-6">
+      <Link to="/admin/dashboard" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm">
+        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+      </Link>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Page Builder</h1>
