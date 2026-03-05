@@ -9,11 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCircle2, AlertTriangle, FileText, Pencil, Save, X, ChevronDown, ChevronUp, Timer } from "lucide-react";
+import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCircle2, AlertTriangle, FileText, Pencil, Save, X, ChevronDown, ChevronUp, Timer, CalendarPlus, Check, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AdminLearner } from "@/data/adminMockData";
 import { adminTrainers } from "@/data/adminMockData";
-import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, type UnitDeadline } from "@/lib/deadlines";
+import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, type UnitDeadline, type ExtensionRequest } from "@/lib/deadlines";
+import { mockExtensionRequests } from "@/data/extensionRequestsMockData";
 
 interface Props {
   learner: AdminLearner | null;
@@ -89,6 +90,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
   const [editData, setEditData] = useState({ name: "", email: "", phone: "", assignedTrainer: "", status: "" as AdminLearner["status"] });
   const [expandedUnits, setExpandedUnits] = useState<Set<number>>(new Set());
   const [unitDeadlines, setUnitDeadlines] = useState<Map<string, UnitDeadline>>(new Map());
+  const [extensionRequests, setExtensionRequests] = useState<ExtensionRequest[]>(mockExtensionRequests);
   const { toast } = useToast();
 
   if (!learner) return null;
@@ -156,9 +158,17 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
         </DialogHeader>
 
         <Tabs defaultValue="info" className="mt-2">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="info" className="text-xs">Personal Info</TabsTrigger>
             <TabsTrigger value="progress" className="text-xs">Unit Progress</TabsTrigger>
+            <TabsTrigger value="extensions" className="text-xs">
+              Extensions
+              {extensionRequests.filter(r => r.learnerId === learner.id && r.status === "pending").length > 0 && (
+                <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-[9px] rounded-full">
+                  {extensionRequests.filter(r => r.learnerId === learner.id && r.status === "pending").length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="payment" className="text-xs">Payment</TabsTrigger>
           </TabsList>
 
