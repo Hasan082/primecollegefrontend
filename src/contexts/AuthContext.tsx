@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export type UserRole = "learner" | "trainer" | "admin";
+export type UserRole = "learner" | "trainer" | "admin" | "iqa";
 
 interface DemoUser {
   name: string;
