@@ -107,6 +107,10 @@ const App = () => {
                   <Route path="trainers" element={<TrainerManagement />} />
                   <Route path="progress" element={<ProgressMonitoring />} />
                   <Route path="reports" element={<Reports />} />
+                  <Route path="question-bank" element={<AdminQuestionBank />} />
+                  <Route path="question-bank/:qualificationId/:unitCode" element={<AdminQuestionBankEditor />} />
+                  <Route path="final-assessments" element={<FinalAssessments />} />
+                  <Route path="eqa-export" element={<EQAExport />} />
                   <Route path="pages" element={<PageManagement />} />
                   <Route path="pages/:pageId" element={<PageEditor />} />
                 </Route>
