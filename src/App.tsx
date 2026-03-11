@@ -49,6 +49,10 @@ import ProgressMonitoring from "./pages/admin/ProgressMonitoring";
 import Reports from "./pages/admin/Reports";
 import PageManagement from "./pages/admin/PageManagement";
 import PageEditor from "./pages/admin/PageEditor";
+import AdminQuestionBank from "./pages/admin/AdminQuestionBank";
+import AdminQuestionBankEditor from "./pages/admin/AdminQuestionBankEditor";
+import FinalAssessments from "./pages/admin/FinalAssessments";
+import EQAExport from "./pages/admin/EQAExport";
 import IQALayout from "./components/iqa/IQALayout";
 import IQADashboard from "./pages/iqa/Dashboard";
 import SamplingQueue from "./pages/iqa/SamplingQueue";
@@ -103,6 +107,10 @@ const App = () => {
                   <Route path="trainers" element={<TrainerManagement />} />
                   <Route path="progress" element={<ProgressMonitoring />} />
                   <Route path="reports" element={<Reports />} />
+                  <Route path="question-bank" element={<AdminQuestionBank />} />
+                  <Route path="question-bank/:qualificationId/:unitCode" element={<AdminQuestionBankEditor />} />
+                  <Route path="final-assessments" element={<FinalAssessments />} />
+                  <Route path="eqa-export" element={<EQAExport />} />
                   <Route path="pages" element={<PageManagement />} />
                   <Route path="pages/:pageId" element={<PageEditor />} />
                 </Route>

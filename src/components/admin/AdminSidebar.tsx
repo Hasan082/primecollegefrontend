@@ -1,4 +1,4 @@
-import { LayoutDashboard, GraduationCap, Users, UserCheck, BarChart3, FileText, Blocks } from "lucide-react";
+import { LayoutDashboard, GraduationCap, Users, UserCheck, BarChart3, FileText, Blocks, BookOpen, ClipboardCheck, Download } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -19,10 +19,16 @@ const mainNavItems = [
   { title: "Learners", url: "/admin/learners", icon: Users },
   { title: "Trainers", url: "/admin/trainers", icon: UserCheck },
   { title: "Progress", url: "/admin/progress", icon: BarChart3 },
-  { title: "Reports", url: "/admin/reports", icon: FileText },
+];
+
+const assessmentNavItems = [
+  { title: "Question Bank", url: "/admin/question-bank", icon: BookOpen },
+  { title: "Final Assessments", url: "/admin/final-assessments", icon: ClipboardCheck },
 ];
 
 const toolsNavItems = [
+  { title: "Reports", url: "/admin/reports", icon: FileText },
+  { title: "EQA Export", url: "/admin/eqa-export", icon: Download },
   { title: "Page Builder", url: "/admin/pages", icon: Blocks },
 ];
 
@@ -56,6 +62,17 @@ const AdminSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {renderNavItems(mainNavItems)}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Assessment</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {renderNavItems(assessmentNavItems)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
