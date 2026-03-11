@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/prime-logo-white-notext.png";
 
-type StaffRole = "trainer" | "admin";
+type StaffRole = "trainer" | "admin" | "iqa";
 
 const ROLE_CONFIG = {
   trainer: {
@@ -29,6 +29,16 @@ const ROLE_CONFIG = {
     signInLabel: "Sign In to Admin Portal",
     demoRedirect: "/admin/dashboard",
     placeholder: "admin@primecollege.edu",
+  },
+  iqa: {
+    icon: Shield,
+    label: "IQA",
+    description: "Monitor assessment quality and ensure regulatory compliance",
+    features: ["Review sampled assessments", "Monitor trainer quality", "Generate compliance reports"],
+    cardTitle: "IQA Portal",
+    signInLabel: "Sign In to IQA Portal",
+    demoRedirect: "/iqa/dashboard",
+    placeholder: "iqa@primecollege.edu",
   },
 } as const;
 
