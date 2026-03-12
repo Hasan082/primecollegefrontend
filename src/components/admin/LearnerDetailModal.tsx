@@ -163,11 +163,6 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
             <TabsTrigger value="progress" className="text-xs">Unit Progress</TabsTrigger>
             <TabsTrigger value="extensions" className="text-xs">
               Extensions
-              {extensionRequests.filter(r => r.learnerId === learner.id && r.status === "pending").length > 0 && (
-                <Badge variant="destructive" className="ml-1 h-4 w-4 p-0 text-[9px] rounded-full">
-                  {extensionRequests.filter(r => r.learnerId === learner.id && r.status === "pending").length}
-                </Badge>
-              )}
             </TabsTrigger>
             <TabsTrigger value="payment" className="text-xs">Payment</TabsTrigger>
           </TabsList>
