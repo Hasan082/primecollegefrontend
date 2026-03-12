@@ -180,7 +180,13 @@ const UnitManagement = () => {
   }
 
   const cfg = statusConfig[unit.status] || statusConfig["Not Started"];
-  const submissions = getMockSubmissions(learnerId!, unitCode!);
+  const allSubmissions = getMockSubmissions(learnerId!, unitCode!);
+  const submissions = allSubmissions.filter((sub) => {
+    if (sub.type === "quiz" && !assessmentConfig.quizRequired) return false;
+    if (sub.type === "written" && !assessmentConfig.writtenRequired) return false;
+    if (sub.type === "evidence" && !assessmentConfig.evidenceRequired) return false;
+    return true;
+  });
 
   const handleSubmitReview = (subId: string) => {
     if (!outcome) {
