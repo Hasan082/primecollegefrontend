@@ -146,6 +146,7 @@ const UnitManagement = () => {
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
   const [criteriaState, setCriteriaState] = useState<Record<string, Criterion[]>>({});
   const [isSignedOff, setIsSignedOff] = useState(false);
+  const [assessmentConfig, setAssessmentConfig] = useState<UnitAssessmentRequirements>(() => loadUnitConfig(unitCode || ""));
 
   // Load persisted decisions on mount
   useEffect(() => {
