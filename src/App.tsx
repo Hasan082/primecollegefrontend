@@ -104,6 +104,7 @@ const App = () => {
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route path="dashboard" element={<AdminDashboard />} />
                   <Route path="qualifications" element={<QualificationManagement />} />
+                  <Route path="qualifications/:qualificationId" element={<AdminQualificationDetail />} />
                   <Route path="learners" element={<LearnerManagement />} />
                   <Route path="trainers" element={<TrainerManagement />} />
                   <Route path="progress" element={<ProgressMonitoring />} />
