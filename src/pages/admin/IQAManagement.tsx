@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { adminQualifications } from "@/data/adminMockData";
 import TablePagination from "@/components/admin/TablePagination";
+import IQADetailModal from "@/components/admin/IQADetailModal";
 
 interface IQAUser {
   id: string;
@@ -55,7 +56,15 @@ const IQAManagement = () => {
   const [newEmail, setNewEmail] = useState("");
   const [selectedQual, setSelectedQual] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [detailIqa, setDetailIqa] = useState<IQAUser | null>(null);
   const { toast } = useToast();
+
+  const handleIqaUpdate = (updated: IQAUser) => {
+    const newList = iqas.map((i) => (i.id === updated.id ? updated : i));
+    setIqas(newList);
+    saveIQAs(newList);
+    setDetailIqa(updated);
+  };
 
   const filtered = iqas.filter(
     (i) => i.name.toLowerCase().includes(search.toLowerCase()) || i.email.toLowerCase().includes(search.toLowerCase())
@@ -181,9 +190,12 @@ const IQAManagement = () => {
                   <Badge variant={iqa.status === "active" ? "default" : "secondary"}>
                     {iqa.status.charAt(0).toUpperCase() + iqa.status.slice(1)}
                   </Badge>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleStatus(iqa.id)} title={iqa.status === "active" ? "Deactivate" : "Activate"}>
-                    <Power className={`w-4 h-4 ${iqa.status === "active" ? "text-destructive" : "text-green-600"}`} />
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setDetailIqa(iqa)} title="View Details">
+                    <Eye className="w-4 h-4" />
                   </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleStatus(iqa.id)} title={iqa.status === "active" ? "Deactivate" : "Activate"}>
+                     <Power className={`w-4 h-4 ${iqa.status === "active" ? "text-destructive" : "text-green-600"}`} />
+                   </Button>
                 </div>
               </div>
 
@@ -244,6 +256,13 @@ const IQAManagement = () => {
         totalItems={filtered.length}
         itemsPerPage={ITEMS_PER_PAGE}
         onPageChange={setCurrentPage}
+      />
+
+      <IQADetailModal
+        iqa={detailIqa}
+        open={!!detailIqa}
+        onOpenChange={(o) => !o && setDetailIqa(null)}
+        onUpdate={handleIqaUpdate}
       />
     </div>
   );
