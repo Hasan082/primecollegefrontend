@@ -15,6 +15,7 @@ import CriteriaChecklist, { type Criterion } from "@/components/trainer/Criteria
 import FeedbackFileUpload from "@/components/trainer/FeedbackFileUpload";
 import ResubmissionHistory, { type SubmissionVersion } from "@/components/trainer/ResubmissionHistory";
 import UnitSignOff from "@/components/trainer/UnitSignOff";
+import UnitAssessmentConfig, { loadUnitConfig, type UnitAssessmentRequirements } from "@/components/trainer/UnitAssessmentConfig";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   Competent: { label: "Competent", className: "bg-green-600 text-white" },
@@ -145,6 +146,7 @@ const UnitManagement = () => {
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
   const [criteriaState, setCriteriaState] = useState<Record<string, Criterion[]>>({});
   const [isSignedOff, setIsSignedOff] = useState(false);
+  const [assessmentConfig, setAssessmentConfig] = useState<UnitAssessmentRequirements>(() => loadUnitConfig(unitCode || ""));
 
   // Load persisted decisions on mount
   useEffect(() => {
@@ -178,7 +180,13 @@ const UnitManagement = () => {
   }
 
   const cfg = statusConfig[unit.status] || statusConfig["Not Started"];
-  const submissions = getMockSubmissions(learnerId!, unitCode!);
+  const allSubmissions = getMockSubmissions(learnerId!, unitCode!);
+  const submissions = allSubmissions.filter((sub) => {
+    if (sub.type === "quiz" && !assessmentConfig.quizRequired) return false;
+    if (sub.type === "written" && !assessmentConfig.writtenRequired) return false;
+    if (sub.type === "evidence" && !assessmentConfig.evidenceRequired) return false;
+    return true;
+  });
 
   const handleSubmitReview = (subId: string) => {
     if (!outcome) {
@@ -245,6 +253,15 @@ const UnitManagement = () => {
           <Badge className={`text-xs font-bold ${cfg.className}`}>{cfg.label}</Badge>
         </div>
       </Card>
+
+      {/* Assessment Requirements Config */}
+      <div className="mb-6">
+        <UnitAssessmentConfig
+          unitCode={unit.code}
+          unitName={unit.name}
+          onChange={(config) => setAssessmentConfig(config)}
+        />
+      </div>
 
       {/* Unit Sign-Off */}
       <div className="mb-6">
