@@ -18,6 +18,7 @@ const mainNavItems = [
   { title: "Qualifications", url: "/admin/qualifications", icon: GraduationCap },
   { title: "Learners", url: "/admin/learners", icon: Users },
   { title: "Trainers", url: "/admin/trainers", icon: UserCheck },
+  { title: "IQA", url: "/admin/iqa", icon: Shield },
   { title: "Progress", url: "/admin/progress", icon: BarChart3 },
 ];
 

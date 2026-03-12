@@ -114,6 +114,7 @@ const App = () => {
                   <Route path="question-bank/:qualificationId/:unitCode" element={<AdminQuestionBankEditor />} />
                   <Route path="final-assessments" element={<FinalAssessments />} />
                   <Route path="eqa-export" element={<EQAExport />} />
+                  <Route path="iqa" element={<IQAManagement />} />
                   <Route path="pages" element={<PageManagement />} />
                   <Route path="pages/:pageId" element={<PageEditor />} />
                 </Route>
