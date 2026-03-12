@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import {
-  ArrowLeft, FileText, CheckCircle2, Clock, AlertTriangle,
+  ArrowLeft, FileText, CheckCircle2, Clock,
   ClipboardList, PenLine, Download, Eye, MessageSquare, Send
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -9,8 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { trainerLearners } from "@/data/trainerMockData";
+import { trainerLearners, pendingSubmissions } from "@/data/trainerMockData";
 import QuizResultsPanel from "@/components/trainer/QuizResultsPanel";
+import CriteriaChecklist, { type Criterion } from "@/components/trainer/CriteriaChecklist";
+import FeedbackFileUpload from "@/components/trainer/FeedbackFileUpload";
+import ResubmissionHistory, { type SubmissionVersion } from "@/components/trainer/ResubmissionHistory";
+import UnitSignOff from "@/components/trainer/UnitSignOff";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   Competent: { label: "Competent", className: "bg-green-600 text-white" },
@@ -21,7 +25,6 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 type Outcome = "Competent" | "Resubmission Required" | "Not Yet Competent" | "";
 
-/* Mock submissions per unit - keyed by learnerId::unitCode */
 interface UnitSubmission {
   id: string;
   type: "quiz" | "written" | "evidence";
@@ -29,17 +32,36 @@ interface UnitSubmission {
   submittedDate: string;
   status: "awaiting_review" | "reviewed";
   wordCount?: number;
-  score?: number;
   files?: string[];
-  quizDetails?: { totalQuestions: number; answered: number; violations: number; timeTaken: string };
   writtenContent?: string;
+  versions: SubmissionVersion[];
+  criteria: Criterion[];
+}
+
+function getDefaultCriteria(unitCode: string): Criterion[] {
+  const sub = pendingSubmissions.find(s => s.unitCode === unitCode);
+  if (sub) {
+    return sub.criteria.map((c, i) => ({
+      code: `${i + 1}.1`,
+      title: c,
+      met: false,
+    }));
+  }
+  return [
+    { code: "1.1", title: "Demonstrate understanding of key concepts", met: false },
+    { code: "1.2", title: "Apply knowledge to practical scenarios", met: false },
+    { code: "2.1", title: "Provide relevant evidence to support claims", met: false },
+    { code: "2.2", title: "Reflect on professional practice", met: false },
+  ];
 }
 
 function getMockSubmissions(learnerId: string, unitCode: string): UnitSubmission[] {
-  // Generate contextual submissions based on unit status
   const learner = trainerLearners.find((l) => l.id === learnerId);
   const unit = learner?.units.find((u) => u.code === unitCode);
   if (!unit || unit.status === "Not Started") return [];
+
+  const criteria = getDefaultCriteria(unitCode);
+  const isResubmission = unit.status === "Resubmission Required";
 
   return [
     {
@@ -48,7 +70,13 @@ function getMockSubmissions(learnerId: string, unitCode: string): UnitSubmission
       title: "Knowledge Assessment Quiz",
       submittedDate: "05/02/2025",
       status: "awaiting_review",
-      quizDetails: { totalQuestions: 25, answered: 25, violations: 0, timeTaken: "32:15" },
+      criteria,
+      versions: isResubmission
+        ? [
+            { version: 2, submittedDate: "05/02/2025", outcome: "Awaiting Review" },
+            { version: 1, submittedDate: "20/01/2025", outcome: "Resubmission Required", assessedDate: "22/01/2025", assessorName: "Sarah Jones", feedback: "Score below pass mark. Please review sections on safeguarding legislation and revise." },
+          ]
+        : [{ version: 1, submittedDate: "05/02/2025", outcome: "Awaiting Review" }],
     },
     {
       id: `${learnerId}-${unitCode}-written`,
@@ -58,6 +86,14 @@ function getMockSubmissions(learnerId: string, unitCode: string): UnitSubmission
       status: "awaiting_review",
       wordCount: 1420,
       writtenContent: "This is a sample written submission discussing the key principles and practical applications within the context of this unit. The learner has demonstrated understanding through real-world examples from their workplace...",
+      criteria,
+      versions: isResubmission
+        ? [
+            { version: 3, submittedDate: "03/02/2025", outcome: "Awaiting Review" },
+            { version: 2, submittedDate: "18/01/2025", outcome: "Resubmission Required", assessedDate: "20/01/2025", assessorName: "Sarah Jones", feedback: "Good improvement but criterion 2.1 still not adequately evidenced. Please provide a specific workplace example." },
+            { version: 1, submittedDate: "05/01/2025", outcome: "Not Yet Competent", assessedDate: "08/01/2025", assessorName: "Sarah Jones", feedback: "Insufficient depth. Criteria 1.2 and 2.1 not met. Please expand on practical application." },
+          ]
+        : [{ version: 1, submittedDate: "03/02/2025", outcome: "Awaiting Review" }],
     },
     {
       id: `${learnerId}-${unitCode}-evidence`,
@@ -66,13 +102,37 @@ function getMockSubmissions(learnerId: string, unitCode: string): UnitSubmission
       submittedDate: "01/02/2025",
       status: "awaiting_review",
       files: [`${unit.name.replace(/\s/g, "_")}_Portfolio.pdf`, "Workplace_Observation.pdf"],
+      criteria,
+      versions: [{ version: 1, submittedDate: "01/02/2025", outcome: "Awaiting Review" }],
     },
   ];
 }
 
+// Persistence helpers
+const STORAGE_KEY = "trainer_assessment_decisions";
+
+interface StoredDecision {
+  outcome: Outcome;
+  feedback: string;
+  criteriaState: Criterion[];
+  assessedDate: string;
+  feedbackFileNames: string[];
+}
+
+function loadDecisions(): Record<string, StoredDecision> {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  } catch { return {}; }
+}
+
+function saveDecision(subId: string, decision: StoredDecision) {
+  const all = loadDecisions();
+  all[subId] = decision;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+}
+
 const UnitManagement = () => {
   const { learnerId, unitCode } = useParams();
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const learner = trainerLearners.find((l) => l.id === learnerId);
@@ -81,7 +141,32 @@ const UnitManagement = () => {
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<Outcome>("");
   const [feedback, setFeedback] = useState("");
+  const [feedbackFiles, setFeedbackFiles] = useState<File[]>([]);
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+  const [criteriaState, setCriteriaState] = useState<Record<string, Criterion[]>>({});
+  const [isSignedOff, setIsSignedOff] = useState(false);
+
+  // Load persisted decisions on mount
+  useEffect(() => {
+    const stored = loadDecisions();
+    const restoredIds = new Set<string>();
+    const restoredCriteria: Record<string, Criterion[]> = {};
+    Object.entries(stored).forEach(([subId, decision]) => {
+      if (subId.startsWith(`${learnerId}-${unitCode}`)) {
+        restoredIds.add(subId);
+        restoredCriteria[subId] = decision.criteriaState;
+      }
+    });
+    if (restoredIds.size > 0) {
+      setReviewedIds(restoredIds);
+      setCriteriaState(restoredCriteria);
+    }
+    // Check sign-off
+    const signOffKey = `unit_signoff_${learnerId}_${unitCode}`;
+    if (localStorage.getItem(signOffKey) === "true") {
+      setIsSignedOff(true);
+    }
+  }, [learnerId, unitCode]);
 
   if (!learner || !unit) {
     return (
@@ -104,12 +189,35 @@ const UnitManagement = () => {
       toast({ title: "Please provide feedback", variant: "destructive" });
       return;
     }
+    const currentCriteria = criteriaState[subId] || [];
+    saveDecision(subId, {
+      outcome,
+      feedback,
+      criteriaState: currentCriteria,
+      assessedDate: new Date().toLocaleDateString("en-GB"),
+      feedbackFileNames: feedbackFiles.map(f => f.name),
+    });
     setReviewedIds((prev) => new Set(prev).add(subId));
     setReviewingId(null);
     setOutcome("");
     setFeedback("");
+    setFeedbackFiles([]);
     toast({ title: "Assessment submitted", description: `Outcome: ${outcome}` });
   };
+
+  const handleCriteriaChange = (subId: string, criteria: Criterion[]) => {
+    setCriteriaState(prev => ({ ...prev, [subId]: criteria }));
+  };
+
+  const handleSignOff = () => {
+    setIsSignedOff(true);
+    localStorage.setItem(`unit_signoff_${learnerId}_${unitCode}`, "true");
+    toast({ title: "Unit signed off", description: `${unit.code}: ${unit.name} marked as Competent` });
+  };
+
+  const allSubmissionsReviewed = submissions.length > 0 && submissions.every(s => reviewedIds.has(s.id));
+  const allCriteriaMet = Object.values(criteriaState).length > 0 &&
+    Object.values(criteriaState).every(criteria => criteria.every(c => c.met));
 
   const outcomes: { value: Outcome; label: string; desc: string; color: string }[] = [
     { value: "Competent", label: "Competent / Pass", desc: "All criteria met", color: "border-green-500 bg-green-50" },
@@ -138,6 +246,19 @@ const UnitManagement = () => {
         </div>
       </Card>
 
+      {/* Unit Sign-Off */}
+      <div className="mb-6">
+        <UnitSignOff
+          unitCode={unit.code}
+          unitName={unit.name}
+          learnerName={learner.name}
+          allCriteriaMet={allCriteriaMet}
+          allSubmissionsReviewed={allSubmissionsReviewed}
+          isSignedOff={isSignedOff}
+          onSignOff={handleSignOff}
+        />
+      </div>
+
       {/* Submissions */}
       <h2 className="text-lg font-bold text-foreground mb-4">Learner Submissions</h2>
 
@@ -153,6 +274,8 @@ const UnitManagement = () => {
             const Icon = sub.type === "quiz" ? ClipboardList : sub.type === "written" ? PenLine : FileText;
             const isReviewed = reviewedIds.has(sub.id);
             const isReviewing = reviewingId === sub.id;
+            const resubCount = sub.versions.length - 1;
+            const storedDecision = loadDecisions()[sub.id];
 
             return (
               <Card key={sub.id} className="overflow-hidden">
@@ -174,6 +297,14 @@ const UnitManagement = () => {
                             <span className="text-xs text-muted-foreground">{sub.wordCount} words</span>
                           </>
                         )}
+                        {resubCount > 0 && (
+                          <>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <Badge variant="outline" className="text-[10px] text-orange-600 border-orange-300">
+                              {resubCount} resubmission{resubCount !== 1 ? "s" : ""}
+                            </Badge>
+                          </>
+                        )}
                       </div>
                       {sub.files && (
                         <div className="flex gap-2 mt-2">
@@ -189,6 +320,7 @@ const UnitManagement = () => {
                       {isReviewed ? (
                         <Badge className="bg-green-600 text-white text-xs gap-1">
                           <CheckCircle2 className="w-3 h-3" /> Reviewed
+                          {storedDecision && ` — ${storedDecision.outcome}`}
                         </Badge>
                       ) : (
                         <Badge className="bg-amber-500 text-white text-xs">Awaiting Review</Badge>
@@ -210,6 +342,13 @@ const UnitManagement = () => {
                 {/* Expanded Review Panel */}
                 {isReviewing && (
                   <div className="border-t border-border p-5 bg-muted/20">
+                    {/* Resubmission History */}
+                    {sub.versions.length > 1 && (
+                      <div className="mb-6">
+                        <ResubmissionHistory versions={sub.versions} />
+                      </div>
+                    )}
+
                     {/* Submission Details */}
                     <div className="mb-6">
                       <h4 className="font-bold text-foreground text-sm mb-3">📋 Submission Details</h4>
@@ -252,6 +391,14 @@ const UnitManagement = () => {
                       )}
                     </div>
 
+                    {/* Criteria Checklist */}
+                    <div className="mb-6">
+                      <CriteriaChecklist
+                        criteria={criteriaState[sub.id] || sub.criteria}
+                        onChange={(c) => handleCriteriaChange(sub.id, c)}
+                      />
+                    </div>
+
                     {/* Assessment Form */}
                     <div className="border-t border-border pt-5">
                       <h4 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
@@ -281,6 +428,11 @@ const UnitManagement = () => {
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
                       />
+
+                      {/* Feedback File Upload */}
+                      <div className="mt-3">
+                        <FeedbackFileUpload files={feedbackFiles} onChange={setFeedbackFiles} />
+                      </div>
 
                       <div className="flex justify-end mt-3">
                         <Button onClick={() => handleSubmitReview(sub.id)} className="gap-2">
