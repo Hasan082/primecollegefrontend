@@ -401,23 +401,55 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
             </TabsContent>
 
             <TabsContent value="extensions" className="mt-0 space-y-3">
+              {/* Admin Manual Extension */}
+              <Card className="border-dashed">
+                <CardContent className="p-4 space-y-3">
+                  <p className="text-sm font-semibold flex items-center gap-1.5">
+                    <CalendarPlus className="w-4 h-4" /> Grant Manual Extension
+                  </p>
+                  <p className="text-xs text-muted-foreground">Extend this learner's access without requiring payment (e.g. employer-funded, goodwill).</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {EXTENSION_PLANS.map(plan => (
+                      <Button
+                        key={plan.id}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => {
+                          const newReq: ExtensionRequest = {
+                            id: `er-manual-${Date.now()}`,
+                            learnerId: learner.id,
+                            learnerName: learner.name,
+                            qualificationId: "q1",
+                            qualificationTitle: learner.qualification,
+                            plan,
+                            requestedDate: new Date().toLocaleDateString("en-GB"),
+                            status: "approved",
+                            reviewedBy: "Admin (Manual)",
+                            reviewedDate: new Date().toLocaleDateString("en-GB"),
+                            note: "Manually extended by admin — no payment required",
+                          };
+                          setExtensionRequests(prev => [newReq, ...prev]);
+                          toast({ title: "Extension granted", description: `${plan.label} extension activated for ${learner.name} — no payment required.` });
+                        }}
+                      >
+                        <CalendarPlus className="w-3 h-3" /> {plan.label}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Extension History */}
               {(() => {
                 const learnerRequests = extensionRequests.filter(r => r.learnerId === learner.id);
                 if (learnerRequests.length === 0) {
                   return (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CalendarPlus className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No extension requests</p>
+                    <div className="text-center py-6 text-muted-foreground">
+                      <p className="text-sm">No extensions yet</p>
                     </div>
                   );
                 }
-
-                const handleAction = (reqId: string, action: "approved" | "rejected") => {
-                  setExtensionRequests(prev => prev.map(r =>
-                    r.id === reqId ? { ...r, status: action, reviewedBy: "Admin", reviewedDate: new Date().toLocaleDateString("en-GB") } : r
-                  ));
-                  toast({ title: `Extension ${action}`, description: action === "approved" ? "Learner access has been extended." : "Request has been rejected." });
-                };
 
                 return learnerRequests.map(req => (
                   <Card key={req.id}>
@@ -428,16 +460,16 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                           <p className="text-xs text-muted-foreground">{req.qualificationTitle}</p>
                         </div>
                         <Badge
-                          variant={req.status === "pending" ? "secondary" : req.status === "approved" ? "default" : "destructive"}
+                          variant={req.status === "approved" ? "default" : "secondary"}
                           className="text-[10px]"
                         >
-                          {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
+                          {req.note?.includes("no payment") ? "Manual" : "Paid"} — Active
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-3">
+                      <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-2">
                         <div>
-                          <p className="font-medium text-foreground">£{req.plan.price}</p>
-                          <p>Extension fee</p>
+                          <p className="font-medium text-foreground">{req.note?.includes("no payment") ? "£0 (waived)" : `£${req.plan.price}`}</p>
+                          <p>Fee</p>
                         </div>
                         <div>
                           <p className="font-medium text-foreground">{req.plan.months} month{req.plan.months > 1 ? "s" : ""}</p>
@@ -445,22 +477,15 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                         </div>
                         <div>
                           <p className="font-medium text-foreground">{req.requestedDate}</p>
-                          <p>Requested</p>
+                          <p>Date</p>
                         </div>
                       </div>
-                      {req.status === "pending" && (
-                        <div className="flex gap-2">
-                          <Button size="sm" className="flex-1 h-7 text-xs gap-1" onClick={() => handleAction(req.id, "approved")}>
-                            <Check className="w-3 h-3" /> Approve
-                          </Button>
-                          <Button variant="outline" size="sm" className="flex-1 h-7 text-xs gap-1 text-destructive" onClick={() => handleAction(req.id, "rejected")}>
-                            <XCircle className="w-3 h-3" /> Reject
-                          </Button>
-                        </div>
+                      {req.note && (
+                        <p className="text-[10px] text-muted-foreground italic">{req.note}</p>
                       )}
                       {req.reviewedBy && (
-                        <p className="text-[10px] text-muted-foreground mt-2">
-                          Reviewed by {req.reviewedBy} on {req.reviewedDate}
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          By {req.reviewedBy} on {req.reviewedDate}
                         </p>
                       )}
                     </CardContent>
