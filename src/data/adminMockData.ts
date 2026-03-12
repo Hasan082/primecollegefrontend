@@ -1,3 +1,8 @@
+export interface QualificationUnit {
+  code: string;
+  name: string;
+}
+
 export interface AdminQualification {
   id: string;
   title: string;
@@ -11,6 +16,7 @@ export interface AdminQualification {
   totalUnits: number;
   enrolledLearners: number;
   createdDate: string;
+  units?: QualificationUnit[];
 }
 
 export interface AdminLearner {
