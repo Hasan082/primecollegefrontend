@@ -13,7 +13,7 @@ import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCir
 import { useToast } from "@/hooks/use-toast";
 import type { AdminLearner } from "@/data/adminMockData";
 import { adminTrainers } from "@/data/adminMockData";
-import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, type UnitDeadline, type ExtensionRequest } from "@/lib/deadlines";
+import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, EXTENSION_PLANS, type UnitDeadline, type ExtensionRequest } from "@/lib/deadlines";
 import { mockExtensionRequests } from "@/data/extensionRequestsMockData";
 
 interface Props {
