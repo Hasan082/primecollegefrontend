@@ -1107,7 +1107,7 @@ prime-college-evidence/
 ### 7.1 Quiz Scoring (Server-Side Only)
 
 ```python
-# quizzes/services.py
+# apps/quizzes/services/quiz_scoring_service.py
 
 class QuizScoringService:
     """
