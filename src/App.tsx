@@ -124,6 +124,7 @@ const App = () => {
                 </Route>
                 <Route path="/iqa" element={<IQALayout />}>
                   <Route path="dashboard" element={<IQADashboard />} />
+                  <Route path="qualifications" element={<QualificationTreeView />} />
                   <Route path="sampling" element={<SamplingQueue />} />
                   <Route path="review/:id" element={<IQAAssessmentReview />} />
                   <Route path="trainers" element={<TrainerPerformance />} />
