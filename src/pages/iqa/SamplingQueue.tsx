@@ -114,9 +114,9 @@ const SamplingQueue = () => {
 
   return (
     <div className="space-y-6">
-      <Link to="/iqa/dashboard" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm">
+      <Button variant="outline" size="sm" className="gap-2" onClick={() => window.history.back()}>
         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-      </Link>
+      </Button>
 
       <div className="flex items-center justify-between">
         <div>
@@ -264,10 +264,18 @@ const SamplingQueue = () => {
                     <Badge variant="outline" className="text-xs">{s.samplingReason}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    {s.iqaStatus !== "Not Sampled" && (
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/iqa/review/${s.id}`}><Eye className="w-4 h-4" /></Link>
+                    {s.iqaStatus === "Pending IQA Review" ? (
+                      <Button variant="default" size="sm" className="gap-1.5" asChild>
+                        <Link to={`/iqa/review/${s.id}`}><Eye className="w-3.5 h-3.5" /> Review</Link>
                       </Button>
+                    ) : s.iqaStatus !== "Not Sampled" ? (
+                      <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                        <Link to={`/iqa/review/${s.id}`}><Eye className="w-3.5 h-3.5" /> View</Link>
+                      </Button>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Signed Off
+                      </Badge>
                     )}
                   </TableCell>
                 </TableRow>

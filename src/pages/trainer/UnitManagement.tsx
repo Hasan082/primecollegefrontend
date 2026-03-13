@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { trainerLearners, pendingSubmissions } from "@/data/trainerMockData";
 import QuizResultsPanel from "@/components/trainer/QuizResultsPanel";
+import UnitCriteriaTracker from "@/components/trainer/UnitCriteriaTracker";
 import CriteriaChecklist, { type Criterion } from "@/components/trainer/CriteriaChecklist";
 import FeedbackFileUpload from "@/components/trainer/FeedbackFileUpload";
 import ResubmissionHistory, { type SubmissionVersion } from "@/components/trainer/ResubmissionHistory";
@@ -174,8 +175,10 @@ const UnitManagement = () => {
   if (!learner || !unit) {
     return (
       <div className="text-center py-20">
-        <p className="text-muted-foreground">Unit not found.</p>
-        <Link to="/trainer/learners" className="text-primary underline mt-2 inline-block">Back to Learners</Link>
+        <p className="text-muted-foreground mb-4">Unit not found.</p>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => window.history.back()}>
+          <ArrowLeft className="w-4 h-4" /> Back to Learners
+        </Button>
       </div>
     );
   }
@@ -257,12 +260,14 @@ const UnitManagement = () => {
 
   return (
     <div>
-      <Link
-        to={`/trainer/learner/${learnerId}`}
-        className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6"
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-2 mb-6"
+        onClick={() => window.history.back()}
       >
         <ArrowLeft className="w-4 h-4" /> Back to Learner Details
-      </Link>
+      </Button>
 
       {/* Unit Header */}
       <Card className="bg-primary text-primary-foreground p-6 mb-6">
@@ -282,6 +287,16 @@ const UnitManagement = () => {
           unitCode={unit.code}
           unitName={unit.name}
           onChange={(config) => setAssessmentConfig(config)}
+        />
+      </div>
+
+      {/* Unit Criteria Progress Tracker */}
+      <div className="mb-6">
+        <UnitCriteriaTracker
+          unitCode={unit.code}
+          unitName={unit.name}
+          criteriaState={criteriaState}
+          submissions={submissions.map(s => ({ id: s.id, title: s.title }))}
         />
       </div>
 
