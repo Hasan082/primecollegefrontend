@@ -104,8 +104,17 @@ const AssessmentReview = () => {
         iqaReviewDate: new Date().toLocaleDateString("en-GB"),
       });
     }
+    // Send approval notification to assessor
+    addIQANotification(createApprovalNotification({
+      learnerId: sample.learnerName,
+      learnerName: sample.learnerName,
+      qualification: sample.qualification,
+      unitCode: sample.unit.split(":")[0]?.trim() || "",
+      unitName: sample.unit,
+      iqaComments: comments,
+    }));
     setSubmitted(true);
-    toast({ title: "✅ IQA Approved", description: "Assessment verified and approved." });
+    toast({ title: "✅ IQA Approved", description: "Assessment verified. Assessor notified." });
   };
 
   const handleNotSampled = () => {
@@ -117,7 +126,7 @@ const AssessmentReview = () => {
       });
     }
     setSubmitted(true);
-    toast({ title: "Unit marked as Not Sampled", description: "Quick sign-off recorded. Unit completion confirmed." });
+    toast({ title: "Unit marked as Not Sampled", description: "Quick sign-off recorded." });
     setTimeout(() => navigate("/iqa/sampling"), 1000);
   };
 
@@ -135,11 +144,23 @@ const AssessmentReview = () => {
         iqaReviewDate: new Date().toLocaleDateString("en-GB"),
       });
     }
+    // Send disagree notification to assessor
+    addIQANotification(createDisagreeNotification({
+      learnerId: sample.learnerName,
+      learnerName: sample.learnerName,
+      qualification: sample.qualification,
+      unitCode: sample.unit.split(":")[0]?.trim() || "",
+      unitName: sample.unit,
+      action: disagreeDecision.action,
+      reason: disagreeDecision.reason,
+      affectedCriteria: disagreeDecision.specificCriteria,
+      iqaComments: comments,
+    }));
     setSubmitted(true);
     setShowDisagreeForm(false);
     toast({
       title: "⚠️ Assessor Action Required",
-      description: `Action sent to assessor: ${disagreeDecision.action.replace(/_/g, " ")}`,
+      description: `Notification sent to assessor: ${disagreeDecision.action.replace(/_/g, " ")}`,
     });
   };
 
