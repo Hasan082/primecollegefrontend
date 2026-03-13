@@ -16,6 +16,7 @@ import FeedbackFileUpload from "@/components/trainer/FeedbackFileUpload";
 import ResubmissionHistory, { type SubmissionVersion } from "@/components/trainer/ResubmissionHistory";
 import UnitSignOff from "@/components/trainer/UnitSignOff";
 import UnitAssessmentConfig, { loadUnitConfig, type UnitAssessmentRequirements } from "@/components/trainer/UnitAssessmentConfig";
+import { addToIQAQueue, createIQAEntryFromSignOff } from "@/lib/iqaQueue";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   Competent: { label: "Competent", className: "bg-green-600 text-white" },
