@@ -38,16 +38,16 @@ const UnitSignOff = ({
 
   if (isSignedOff) {
     return (
-      <Card className="p-4 bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800">
+      <Card className="p-4 bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="w-6 h-6 text-green-600" />
+          <ShieldCheck className="w-6 h-6 text-amber-600" />
           <div>
-            <p className="text-sm font-bold text-green-700 dark:text-green-400">Unit Signed Off as Complete</p>
-            <p className="text-xs text-green-600/80 dark:text-green-500">
-              {unitCode}: {unitName} — all criteria met for {learnerName}
+            <p className="text-sm font-bold text-amber-700 dark:text-amber-400">Unit Signed Off — Awaiting IQA</p>
+            <p className="text-xs text-amber-600/80 dark:text-amber-500">
+              {unitCode}: {unitName} — all criteria met for {learnerName}. Sent to IQA queue for verification.
             </p>
           </div>
-          <Badge className="ml-auto bg-green-600 text-white text-xs">Competent</Badge>
+          <Badge className="ml-auto bg-amber-500 text-white text-xs">Awaiting IQA</Badge>
         </div>
       </Card>
     );
