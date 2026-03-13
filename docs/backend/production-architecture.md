@@ -1231,7 +1231,7 @@ class QuizScoringService:
 Trainers mark **individual assessment criteria** (UK standard), not just units:
 
 ```python
-# trainer_api/views.py
+# apps/assessments/views/assessment_views.py
 
 class MarkCriteriaView(APIView):
     permission_classes = [IsAuthenticated, IsTrainer, IsAssignedTrainer]
