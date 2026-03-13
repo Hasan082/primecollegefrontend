@@ -333,24 +333,27 @@ class IsSubmissionOwner(BasePermission):
 
 When migrating from mock data to DRF:
 
-| Frontend Component | Current Data Source | DRF Endpoint |
-|---|---|---|
-| `UnitManagement.tsx` submissions list | `getMockSubmissions()` | `GET /api/trainer/learners/{id}/units/{code}/submissions/` |
-| `QuizResultsPanel.tsx` | `getMockQuizResult()` | `GET /api/trainer/quiz-attempts/{id}/` |
-| Assessment form submit | `handleSubmitReview()` (local state) | `POST /api/trainer/submissions/{id}/assess/` |
-| `StrictQuizModal.tsx` quiz submit | `scoreQuiz()` (client-side) | `POST /api/learner/units/{code}/quiz/submit/` |
+| Frontend Component | Current Data Source | DRF Endpoint | Backend File |
+|---|---|---|---|
+| `UnitManagement.tsx` submissions list | `getMockSubmissions()` | `GET /api/trainer/learners/{id}/units/{code}/submissions/` | `apps/assessments/views/assessment_views.py` |
+| `QuizResultsPanel.tsx` | `getMockQuizResult()` | `GET /api/trainer/quiz-attempts/{id}/` | `apps/quizzes/views/result_views.py` |
+| Assessment form submit | `handleSubmitReview()` (local state) | `POST /api/trainer/submissions/{id}/assess/` | `apps/assessments/services/assessment_service.py` |
+| `StrictQuizModal.tsx` quiz submit | `scoreQuiz()` (client-side) | `POST /api/learner/units/{code}/quiz/submit/` | `apps/quizzes/services/quiz_scoring_service.py` |
 
 ---
 
 ## 7. Migration Steps
 
 1. Create Django models and run migrations
-2. Create serializers and viewsets
-3. Add URL routing under `/api/trainer/` and `/api/learner/`
-4. Replace `getMockSubmissions()` with API call using React Query
-5. Replace `getMockQuizResult()` with API call using React Query
-6. Move quiz scoring from `quizEngine.ts` to backend
-7. Update `handleSubmitReview()` to POST to the assessment endpoint
-8. Add JWT authentication middleware
-9. Add file upload handling for evidence submissions
-10. Add notification triggers (Django signals) for assessment outcomes
+2. Create serializers in `apps/quizzes/serializers/` and `apps/assessments/serializers/`
+3. Create services in `apps/quizzes/services/quiz_scoring_service.py`
+4. Create views in `apps/quizzes/views/result_views.py` and `apps/assessments/views/assessment_views.py`
+5. Add URL routing under `apps/quizzes/urls/learner.py` and `apps/quizzes/urls/trainer.py`
+6. Add signals in `apps/quizzes/signals/quiz_signals.py` for post-quiz notifications
+7. Replace `getMockSubmissions()` with API call using React Query
+8. Replace `getMockQuizResult()` with API call using React Query
+9. Move quiz scoring from `quizEngine.ts` to `apps/quizzes/services/quiz_scoring_service.py`
+10. Update `handleSubmitReview()` to POST to the assessment endpoint
+11. Add JWT authentication middleware
+12. Add file upload handling via `apps/assessments/services/file_service.py`
+13. Add notification triggers in `apps/notifications/signals/notification_signals.py`
