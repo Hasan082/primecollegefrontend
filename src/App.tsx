@@ -55,6 +55,7 @@ import FinalAssessments from "./pages/admin/FinalAssessments";
 import EQAExport from "./pages/admin/EQAExport";
 import AdminQualificationDetail from "./pages/admin/QualificationDetail";
 import IQAManagement from "./pages/admin/IQAManagement";
+import ChecklistBuilder from "./pages/admin/ChecklistBuilder";
 import IQALayout from "./components/iqa/IQALayout";
 import IQADashboard from "./pages/iqa/Dashboard";
 import SamplingQueue from "./pages/iqa/SamplingQueue";
