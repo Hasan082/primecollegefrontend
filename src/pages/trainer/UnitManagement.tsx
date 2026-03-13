@@ -258,12 +258,14 @@ const UnitManagement = () => {
 
   return (
     <div>
-      <Link
-        to={`/trainer/learner/${learnerId}`}
-        className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6"
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-2 mb-6"
+        onClick={() => window.history.back()}
       >
         <ArrowLeft className="w-4 h-4" /> Back to Learner Details
-      </Link>
+      </Button>
 
       {/* Unit Header */}
       <Card className="bg-primary text-primary-foreground p-6 mb-6">
