@@ -1312,7 +1312,7 @@ class ComplianceMiddleware:
 ### 8.3 EQA Portfolio Export
 
 ```python
-# admin_api/services.py
+# apps/reports/services/eqa_export_service.py
 
 class EQAExportService:
     """Generate complete learner portfolio for External Quality Assurance."""
