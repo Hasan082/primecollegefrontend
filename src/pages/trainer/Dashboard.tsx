@@ -16,11 +16,13 @@ const findLearnerId = (lrnCode: string) => {
   return learner?.id || "";
 };
 
+const iqaActionCount = getActionRequiredCount();
+
 const stats = [
   { label: "Assigned Learners", value: trainerLearners.length, icon: Users, color: "bg-primary text-primary-foreground" },
   { label: "Pending Assessments", value: pendingSubmissions.length, icon: Clock, color: "bg-secondary text-secondary-foreground" },
   { label: "Assessed This Week", value: 12, icon: CheckCircle, color: "bg-green-600 text-white" },
-  { label: "Overdue (7+ days)", value: 0, icon: AlertCircle, color: "bg-destructive text-destructive-foreground" },
+  { label: "IQA Actions", value: iqaActionCount, icon: ShieldAlert, color: iqaActionCount > 0 ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground" },
 ];
 
 const outcomeColors: Record<string, string> = {
