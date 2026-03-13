@@ -1349,7 +1349,7 @@ class EQAExportService:
 ### 9.1 Notification Triggers
 
 ```python
-# notifications/signals.py
+# apps/notifications/signals/notification_signals.py
 
 @receiver(post_save, sender=AssessmentDecision)
 def notify_learner_of_assessment(sender, instance, created, **kwargs):
