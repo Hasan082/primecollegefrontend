@@ -1440,7 +1440,7 @@ def send_access_expiry_warning():
 ### 10.1 Stripe Integration
 
 ```python
-# payments/views.py
+# apps/payments/views/checkout_views.py
 
 class CreateCheckoutSessionView(APIView):
     """Create Stripe Checkout session for qualification purchase."""
