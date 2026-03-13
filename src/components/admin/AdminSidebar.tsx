@@ -1,4 +1,4 @@
-import { LayoutDashboard, GraduationCap, Users, UserCheck, BarChart3, FileText, Blocks, BookOpen, ClipboardCheck, Download, Shield } from "lucide-react";
+import { LayoutDashboard, GraduationCap, Users, UserCheck, BarChart3, FileText, Blocks, BookOpen, ClipboardCheck, Download, Shield, ClipboardList } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -19,6 +19,7 @@ const mainNavItems = [
   { title: "Learners", url: "/admin/learners", icon: Users },
   { title: "Trainers", url: "/admin/trainers", icon: UserCheck },
   { title: "IQA", url: "/admin/iqa", icon: Shield },
+  { title: "IQA Checklists", url: "/admin/checklists", icon: ClipboardList },
   { title: "Progress", url: "/admin/progress", icon: BarChart3 },
 ];
 

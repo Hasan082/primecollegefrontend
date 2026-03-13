@@ -55,6 +55,7 @@ import FinalAssessments from "./pages/admin/FinalAssessments";
 import EQAExport from "./pages/admin/EQAExport";
 import AdminQualificationDetail from "./pages/admin/QualificationDetail";
 import IQAManagement from "./pages/admin/IQAManagement";
+import ChecklistBuilder from "./pages/admin/ChecklistBuilder";
 import IQALayout from "./components/iqa/IQALayout";
 import IQADashboard from "./pages/iqa/Dashboard";
 import SamplingQueue from "./pages/iqa/SamplingQueue";
@@ -62,6 +63,7 @@ import IQAAssessmentReview from "./pages/iqa/AssessmentReview";
 import TrainerPerformance from "./pages/iqa/TrainerPerformance";
 import IQAReports from "./pages/iqa/Reports";
 import SamplingSettings from "./pages/iqa/SamplingSettings";
+import VerificationChecklists from "./pages/iqa/VerificationChecklists";
 
 const queryClient = new QueryClient();
 
@@ -115,6 +117,7 @@ const App = () => {
                   <Route path="final-assessments" element={<FinalAssessments />} />
                   <Route path="eqa-export" element={<EQAExport />} />
                   <Route path="iqa" element={<IQAManagement />} />
+                  <Route path="checklists" element={<ChecklistBuilder />} />
                   <Route path="pages" element={<PageManagement />} />
                   <Route path="pages/:pageId" element={<PageEditor />} />
                 </Route>
@@ -125,6 +128,7 @@ const App = () => {
                   <Route path="trainers" element={<TrainerPerformance />} />
                   <Route path="reports" element={<IQAReports />} />
                   <Route path="settings" element={<SamplingSettings />} />
+                  <Route path="checklists" element={<VerificationChecklists />} />
                 </Route>
                 <Route path="/trainer" element={<TrainerLayout />}>
                   <Route path="dashboard" element={<TrainerDashboard />} />
