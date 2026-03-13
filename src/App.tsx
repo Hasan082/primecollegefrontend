@@ -64,6 +64,7 @@ import TrainerPerformance from "./pages/iqa/TrainerPerformance";
 import IQAReports from "./pages/iqa/Reports";
 import SamplingSettings from "./pages/iqa/SamplingSettings";
 import VerificationChecklists from "./pages/iqa/VerificationChecklists";
+import QualificationTreeView from "./pages/iqa/QualificationTreeView";
 
 const queryClient = new QueryClient();
 
