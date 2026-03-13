@@ -63,6 +63,7 @@ import IQAAssessmentReview from "./pages/iqa/AssessmentReview";
 import TrainerPerformance from "./pages/iqa/TrainerPerformance";
 import IQAReports from "./pages/iqa/Reports";
 import SamplingSettings from "./pages/iqa/SamplingSettings";
+import VerificationChecklists from "./pages/iqa/VerificationChecklists";
 
 const queryClient = new QueryClient();
 
