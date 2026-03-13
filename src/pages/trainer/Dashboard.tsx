@@ -58,6 +58,9 @@ const TrainerDashboard = () => {
         ))}
       </div>
 
+      {/* IQA Notifications */}
+      <IQANotificationsPanel />
+
       {/* Tabs */}
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
