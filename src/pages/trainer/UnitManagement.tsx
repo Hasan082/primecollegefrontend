@@ -16,6 +16,7 @@ import FeedbackFileUpload from "@/components/trainer/FeedbackFileUpload";
 import ResubmissionHistory, { type SubmissionVersion } from "@/components/trainer/ResubmissionHistory";
 import UnitSignOff from "@/components/trainer/UnitSignOff";
 import UnitAssessmentConfig, { loadUnitConfig, type UnitAssessmentRequirements } from "@/components/trainer/UnitAssessmentConfig";
+import { addToIQAQueue, createIQAEntryFromSignOff } from "@/lib/iqaQueue";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   Competent: { label: "Competent", className: "bg-green-600 text-white" },
@@ -220,7 +221,28 @@ const UnitManagement = () => {
   const handleSignOff = () => {
     setIsSignedOff(true);
     localStorage.setItem(`unit_signoff_${learnerId}_${unitCode}`, "true");
-    toast({ title: "Unit signed off", description: `${unit.code}: ${unit.name} marked as Competent` });
+
+    // Auto-flip: create IQA queue entry
+    const allCriteria = Object.values(criteriaState).flat();
+    const iqaEntry = createIQAEntryFromSignOff({
+      learnerId: learnerId!,
+      learnerName: learner.name,
+      qualification: learner.qualification,
+      unitCode: unit.code,
+      unitName: unit.name,
+      trainerName: "Sarah Jones", // current trainer
+      criteria: allCriteria,
+    });
+    addToIQAQueue(iqaEntry);
+
+    const statusMsg = iqaEntry.autoSelected
+      ? "Unit auto-selected for IQA review"
+      : "Unit signed off (not sampled for IQA)";
+
+    toast({
+      title: "Unit signed off — Awaiting IQA",
+      description: `${unit.code}: ${unit.name} → ${statusMsg}`,
+    });
   };
 
   const allSubmissionsReviewed = submissions.length > 0 && submissions.every(s => reviewedIds.has(s.id));
