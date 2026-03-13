@@ -1893,6 +1893,8 @@ class Command(BaseCommand):
 
 ## Appendix A: Django App Structure
 
+Each app follows a consistent internal layout using `views/`, `services/`, `signals/`, `mixins/`, and `utils/` folders to keep code organised and maintainable as the codebase grows.
+
 ```
 prime_college_backend/
 ├── manage.py
@@ -1904,46 +1906,214 @@ prime_college_backend/
 │   │   └── production.py
 │   ├── urls.py
 │   └── wsgi.py
+│
+├── core/                              # Shared cross-app utilities
+│   ├── mixins/
+│   │   ├── __init__.py
+│   │   ├── response_mixin.py          # Standardised API response format
+│   │   ├── audit_mixin.py             # Auto audit-log on create/update
+│   │   └── pagination_mixin.py        # Reusable pagination helpers
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── response_utils.py          # success_response(), error_response()
+│   │   ├── email_utils.py             # send_templated_email() via SES
+│   │   ├── s3_utils.py                # Pre-signed URL generation
+│   │   └── ref_utils.py               # generate_learner_ref(), etc.
+│   ├── permissions.py                 # HasRole, IsLearner, IsTrainer, IsIQA, IsAdmin
+│   └── middleware.py                  # ComplianceMiddleware, RequestLoggingMiddleware
+│
 ├── apps/
 │   ├── users/
-│   │   ├── models.py          # UserProfile, UserRole
-│   │   ├── serializers.py
-│   │   ├── views.py
-│   │   ├── permissions.py
+│   │   ├── models.py                  # UserProfile, UserRole
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   ├── auth_views.py          # Login, Register, PasswordReset, RefreshToken
+│   │   │   └── profile_views.py       # Me, UpdateProfile
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   └── user_service.py        # create_user_with_role(), assign_role()
+│   │   ├── serializers/
+│   │   │   ├── __init__.py
+│   │   │   ├── auth_serializers.py     # CustomTokenObtainSerializer, RegisterSerializer
+│   │   │   └── profile_serializers.py  # UserProfileSerializer
 │   │   └── urls/
+│   │       ├── __init__.py
+│   │       └── auth.py
+│   │
 │   ├── qualifications/
-│   │   ├── models.py          # Qualification, Unit, AssessmentCriteria, UnitResource
-│   │   ├── serializers.py
-│   │   └── views.py
+│   │   ├── models.py                  # Qualification, Unit, AssessmentCriteria, UnitResource
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   ├── public_views.py        # Catalogue listing, detail (no auth)
+│   │   │   └── admin_views.py         # CRUD qualifications, units, criteria, resources
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   └── qualification_service.py  # create_qualification(), archive(), duplicate()
+│   │   ├── serializers/
+│   │   │   ├── __init__.py
+│   │   │   ├── public_serializers.py
+│   │   │   └── admin_serializers.py
+│   │   └── urls/
+│   │       ├── __init__.py
+│   │       ├── public.py
+│   │       └── admin.py
+│   │
 │   ├── enrolments/
-│   │   ├── models.py          # Enrolment
-│   │   ├── serializers.py
-│   │   └── views.py
+│   │   ├── models.py                  # Enrolment
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   ├── learner_views.py       # My enrolments, progress
+│   │   │   └── admin_views.py         # Manual enrol, assign trainer/IQA, suspend
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── enrolment_service.py   # create_enrolment(), extend_access()
+│   │   │   └── progress_service.py    # calculate_progress(), check_completion()
+│   │   ├── signals/
+│   │   │   ├── __init__.py
+│   │   │   └── enrolment_signals.py   # Post-enrolment: create unit trackers, welcome email
+│   │   ├── serializers/
+│   │   │   ├── __init__.py
+│   │   │   ├── learner_serializers.py
+│   │   │   └── admin_serializers.py
+│   │   └── urls/
+│   │       ├── __init__.py
+│   │       ├── learner.py
+│   │       └── admin.py
+│   │
 │   ├── assessments/
-│   │   ├── models.py          # Submission, SubmissionFile, AssessmentDecision, CriteriaStatus
-│   │   ├── serializers.py
-│   │   ├── services.py
-│   │   └── views.py
+│   │   ├── models.py                  # Submission, SubmissionFile, AssessmentDecision, CriteriaStatus
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   ├── submission_views.py    # Learner: upload, submit evidence
+│   │   │   ├── assessment_views.py    # Trainer: review, assess, mark criteria
+│   │   │   └── admin_views.py         # Admin: view all submissions, reports
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── submission_service.py  # create_submission(), handle_resubmission()
+│   │   │   ├── assessment_service.py  # submit_assessment(), criteria marking logic
+│   │   │   └── file_service.py        # generate_upload_url(), verify_checksum()
+│   │   ├── signals/
+│   │   │   ├── __init__.py
+│   │   │   └── assessment_signals.py  # Post-assessment: update progress, notify learner
+│   │   ├── serializers/
+│   │   │   ├── __init__.py
+│   │   │   ├── submission_serializers.py
+│   │   │   └── assessment_serializers.py
+│   │   └── urls/
+│   │       ├── __init__.py
+│   │       ├── learner.py
+│   │       └── trainer.py
+│   │
 │   ├── quizzes/
-│   │   ├── models.py          # Question, QuizAttempt, QuizAnswer, IntegrityViolation
-│   │   ├── services.py        # QuizScoringService
-│   │   └── views.py
+│   │   ├── models.py                  # Question, QuizAttempt, QuizAnswer, IntegrityViolation
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   ├── quiz_views.py          # Learner: submit quiz answers
+│   │   │   ├── result_views.py        # Trainer: view quiz results detail
+│   │   │   └── question_bank_views.py # Trainer/Admin: CRUD questions, bulk import
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── quiz_scoring_service.py   # generate_quiz(), score_attempt() — server-side only
+│   │   │   └── question_bank_service.py  # bulk_import(), validate_questions()
+│   │   ├── signals/
+│   │   │   ├── __init__.py
+│   │   │   └── quiz_signals.py        # Post-quiz: create submission record, notify trainer
+│   │   ├── serializers/
+│   │   │   ├── __init__.py
+│   │   │   ├── quiz_serializers.py
+│   │   │   └── question_serializers.py
+│   │   └── urls/
+│   │       ├── __init__.py
+│   │       ├── learner.py
+│   │       └── trainer.py
+│   │
 │   ├── iqa/
-│   │   ├── models.py          # IQASample, IQAReview, SamplingSetting
-│   │   ├── services.py        # SamplingService
-│   │   └── views.py
+│   │   ├── models.py                  # IQASample, IQAReview, SamplingSetting, VerificationChecklist
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   ├── sampling_views.py      # Sampling queue, sample detail
+│   │   │   ├── review_views.py        # Submit IQA review
+│   │   │   ├── checklist_views.py     # Complete verification checklists
+│   │   │   ├── report_views.py        # Trainer performance, compliance reports
+│   │   │   └── settings_views.py      # Sampling config
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── sampling_service.py    # Auto-generate samples, calculate rates
+│   │   │   ├── checklist_service.py   # Manage dynamic checklists per qualification/unit
+│   │   │   └── report_service.py      # Generate IQA reports + stats
+│   │   ├── signals/
+│   │   │   ├── __init__.py
+│   │   │   └── iqa_signals.py         # Post-assessment: auto-create sample if rate met
+│   │   ├── serializers/
+│   │   │   ├── __init__.py
+│   │   │   ├── sample_serializers.py
+│   │   │   ├── review_serializers.py
+│   │   │   └── checklist_serializers.py
+│   │   └── urls/
+│   │       └── __init__.py
+│   │
 │   ├── payments/
-│   │   ├── views.py           # Stripe checkout + webhooks
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   ├── checkout_views.py      # CreateCheckoutSession
+│   │   │   └── webhook_views.py       # StripeWebhookView
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   └── payment_service.py     # handle_successful_payment(), refund()
+│   │   ├── signals/
+│   │   │   ├── __init__.py
+│   │   │   └── payment_signals.py     # Post-payment: trigger enrolment creation
 │   │   └── urls.py
+│   │
 │   ├── notifications/
-│   │   ├── models.py          # Notification
-│   │   ├── signals.py
-│   │   ├── tasks.py           # Celery email tasks
-│   │   └── views.py
-│   └── audit/
-│       ├── models.py          # AuditLog
-│       ├── middleware.py
-│       └── views.py
+│   │   ├── models.py                  # Notification
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   └── notification_views.py  # List, mark read, mark all read
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   └── notification_service.py # create_notification(), bulk_notify()
+│   │   ├── signals/
+│   │   │   ├── __init__.py
+│   │   │   └── notification_signals.py # Listen to assessment, submission, IQA events
+│   │   ├── tasks/
+│   │   │   ├── __init__.py
+│   │   │   ├── email_tasks.py         # send_assessment_email, send_welcome_email (Celery)
+│   │   │   └── reminder_tasks.py      # send_access_expiry_warning (Celery beat)
+│   │   ├── serializers/
+│   │   │   └── __init__.py
+│   │   └── urls/
+│   │       └── __init__.py
+│   │
+│   ├── audit/
+│   │   ├── models.py                  # AuditLog (immutable)
+│   │   ├── views/
+│   │   │   ├── __init__.py
+│   │   │   └── audit_views.py         # Admin: paginated audit log, filtered search
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   └── audit_service.py       # log_action(), bulk_log()
+│   │   ├── mixins/
+│   │   │   ├── __init__.py
+│   │   │   └── auditable_mixin.py     # Auto-log on model save/delete
+│   │   ├── serializers/
+│   │   │   └── __init__.py
+│   │   └── urls/
+│   │       └── __init__.py
+│   │
+│   └── reports/
+│       ├── views/
+│       │   ├── __init__.py
+│       │   ├── progress_report_views.py  # Admin: learner progress reports
+│       │   ├── assessment_report_views.py # Admin: assessment stats
+│       │   └── compliance_report_views.py # Admin: compliance / Ofsted export
+│       ├── services/
+│       │   ├── __init__.py
+│       │   ├── eqa_export_service.py     # Generate EQA portfolio PDF
+│       │   └── report_generator_service.py # Build CSV/Excel exports
+│       └── urls/
+│           └── __init__.py
+│
 ├── requirements/
 │   ├── base.txt
 │   ├── development.txt
@@ -1952,6 +2122,27 @@ prime_college_backend/
 ├── docker-compose.yml
 └── .github/workflows/deploy.yml
 ```
+
+### App Structure Convention
+
+Every app follows this consistent pattern:
+
+| Folder | Purpose | Example |
+|--------|---------|---------|
+| `views/` | API endpoint handlers, one file per domain concern | `checkout_views.py`, `webhook_views.py` |
+| `services/` | Business logic, separated from views for testability | `payment_service.py`, `quiz_scoring_service.py` |
+| `signals/` | Django signals for cross-app event handling | `assessment_signals.py`, `payment_signals.py` |
+| `serializers/` | DRF serializers, split by role or domain | `admin_serializers.py`, `public_serializers.py` |
+| `mixins/` | Reusable view/model mixins | `response_mixin.py`, `auditable_mixin.py` |
+| `utils/` | Pure utility functions (no Django dependencies ideally) | `email_utils.py`, `s3_utils.py` |
+| `tasks/` | Celery async tasks | `email_tasks.py`, `reminder_tasks.py` |
+| `urls/` | URL routing, split by role namespace | `learner.py`, `admin.py` |
+
+**Rules:**
+- Views call services; views should NOT contain business logic
+- Services are the single source of truth for business rules
+- Signals handle cross-app side effects (notifications, audit logging, progress recalculation)
+- Shared utilities live in `core/` — app-specific utilities stay in the app's `utils/`
 
 ---
 
