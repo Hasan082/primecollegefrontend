@@ -128,6 +128,7 @@ const App = () => {
                   <Route path="trainers" element={<TrainerPerformance />} />
                   <Route path="reports" element={<IQAReports />} />
                   <Route path="settings" element={<SamplingSettings />} />
+                  <Route path="checklists" element={<VerificationChecklists />} />
                 </Route>
                 <Route path="/trainer" element={<TrainerLayout />}>
                   <Route path="dashboard" element={<TrainerDashboard />} />
