@@ -401,12 +401,13 @@ const UnitDetail = () => {
             </div>
           )}
 
-          {/* Downloadable Resources */}
-          {detail?.resources && detail.resources.length > 0 && (
+          {/* Downloadable Resources — with locking */}
+          {!qualification.paymentConfirmed && detail?.resources && detail.resources.length > 0 ? (
+            <ResourceLock qualificationTitle={qualification.title} />
+          ) : detail?.resources && detail.resources.length > 0 && (
             <div className="bg-card border border-border rounded-xl p-6">
               <h3 className="text-base font-bold text-primary mb-1">Downloadable Resources</h3>
               <p className="text-sm text-muted-foreground mb-5">Access unit specifications, templates, and guidance materials</p>
-
               <div className="space-y-3">
                 {detail.resources.map((r, i) => (
                   <div key={i} className="flex items-center gap-3 p-3 border border-border rounded-lg">
@@ -424,59 +425,44 @@ const UnitDetail = () => {
             </div>
           )}
 
-          {/* Upload Evidence */}
-          {detail && (
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h3 className="text-base font-bold text-primary mb-1">Upload Evidence</h3>
-              <p className="text-sm text-muted-foreground mb-5">Upload your completed evidence files for this unit</p>
+          {/* Evidence Upload Form — with description + criteria linking */}
+          {detail && qualification.paymentConfirmed && (
+            <EvidenceUploadForm
+              requirements={detail.requirements}
+              isLocked={!qualification.paymentConfirmed}
+              onSubmit={(data) => {
+                const version = (detail.submissionHistory?.length || 0) + extraUploads.length + 1;
+                setExtraUploads((prev) => [
+                  ...prev,
+                  ...data.files.map((f) => ({
+                    name: f.name,
+                    size: f.size,
+                    date: new Date().toLocaleDateString("en-GB"),
+                    evidenceRef: data.evidenceRef,
+                    description: data.description,
+                    linkedCriteria: data.linkedCriteria,
+                    version,
+                  })),
+                ]);
+              }}
+            />
+          )}
 
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); handleExtraUpload(e.dataTransfer.files); }}
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 transition-colors mb-4"
-              >
-                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm"><span className="text-primary font-medium underline">Click to upload</span> <span className="text-muted-foreground">or drag and drop</span></p>
-                <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, XLSX (max. 10MB)</p>
-              </div>
-              <input ref={fileInputRef} type="file" multiple accept=".pdf,.docx,.xlsx,.doc,.xls" className="hidden" onChange={(e) => handleExtraUpload(e.target.files)} />
+          {/* Evidence not paid lock */}
+          {detail && !qualification.paymentConfirmed && (
+            <EvidenceUploadForm
+              requirements={detail.requirements}
+              isLocked={true}
+              onSubmit={() => {}}
+            />
+          )}
 
-              {/* Uploaded files list */}
-              {(detail.uploadedFiles.length > 0 || extraUploads.length > 0) && (
-                <>
-                  <h4 className="text-sm font-bold text-primary mt-6 mb-3">Uploaded Files</h4>
-                  <div className="space-y-2">
-                    {detail.uploadedFiles.map((f, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                        <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground">{f.name}</p>
-                          <p className="text-xs text-muted-foreground">Uploaded: {f.uploadedDate} • {f.size}</p>
-                        </div>
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded ${
-                          f.status === "assessed" ? "bg-green-600 text-white"
-                            : f.status === "awaiting_assessment" ? "bg-amber-500 text-white"
-                            : "bg-orange-500 text-white"
-                        }`}>
-                          {f.status === "awaiting_assessment" ? "Awaiting Assessment" : f.status === "assessed" ? "Assessed" : "Resubmission"}
-                        </span>
-                      </div>
-                    ))}
-                    {extraUploads.map((f, i) => (
-                      <div key={`extra-${i}`} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                        <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground">{f.name}</p>
-                          <p className="text-xs text-muted-foreground">Uploaded: {f.date} • {f.size}</p>
-                        </div>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded bg-amber-500 text-white">Awaiting Assessment</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+          {/* Submission History / Evidence Versioning */}
+          {detail?.submissionHistory && detail.submissionHistory.length > 0 && (
+            <SubmissionHistory
+              submissions={detail.submissionHistory}
+              unitTitle={`${unit.code}: ${unit.title}`}
+            />
           )}
         </div>
 
