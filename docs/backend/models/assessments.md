@@ -7,7 +7,7 @@
 
 ## Submission
 
-A piece of evidence submitted by a learner for a unit.
+A piece of evidence submitted by a learner for a unit. Supports **versioning** — resubmissions create new Submission records linked via `previous_version`.
 
 ```python
 class Submission(models.Model):
@@ -31,6 +31,21 @@ class Submission(models.Model):
     title = models.CharField(max_length=255)
     status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='draft')
 
+    # Evidence reference number (auto-generated, e.g. EV-2026-001)
+    evidence_ref = models.CharField(max_length=20, unique=True)
+
+    # Evidence description — learner explains what they uploaded
+    evidence_description = models.TextField(
+        blank=True,
+        help_text="Learner's explanation of the evidence and how it meets assessment criteria"
+    )
+
+    # Linked assessment criteria
+    linked_criteria = models.JSONField(
+        default=list,
+        help_text='List of criteria IDs this evidence covers, e.g. ["AC 1.1", "AC 2.3"]'
+    )
+
     # Written evidence
     written_content = models.TextField(blank=True)
     word_count = models.IntegerField(null=True, blank=True)
@@ -40,7 +55,7 @@ class Submission(models.Model):
         'quizzes.QuizAttempt', null=True, blank=True, on_delete=models.SET_NULL
     )
 
-    # Version tracking
+    # Version tracking — resubmissions link to previous version
     version = models.IntegerField(default=1)
     previous_version = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.SET_NULL,
@@ -58,7 +73,57 @@ class Submission(models.Model):
             models.Index(fields=['enrolment', 'unit']),
             models.Index(fields=['status']),
             models.Index(fields=['submitted_at']),
+            models.Index(fields=['evidence_ref']),
         ]
+
+    def create_resubmission(self):
+        """Create a new version linked to this submission."""
+        return Submission.objects.create(
+            enrolment=self.enrolment,
+            unit=self.unit,
+            submission_type=self.submission_type,
+            title=self.title,
+            version=self.version + 1,
+            previous_version=self,
+            evidence_ref=generate_evidence_ref(),  # New unique ref
+        )
+
+    def get_version_chain(self):
+        """Return all versions of this submission (oldest first)."""
+        chain = [self]
+        current = self
+        while current.previous_version:
+            current = current.previous_version
+            chain.append(current)
+        chain.reverse()
+        return chain
+```
+
+### Evidence Numbering
+
+Evidence references are auto-generated in format `EV-YYYY-NNN` using a database sequence:
+
+```python
+# utils/evidence_ref.py
+from django.db import connection
+
+def generate_evidence_ref():
+    """Generate unique evidence reference like EV-2026-001."""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT nextval('evidence_ref_seq')")
+        seq = cursor.fetchone()[0]
+    year = timezone.now().year
+    return f"EV-{year}-{str(seq).zfill(3)}"
+```
+
+### Versioning Flow
+
+```
+Learner uploads evidence → Submission v1 (status: submitted)
+    ↓ Assessor marks resubmission_required
+Learner uploads improved work → Submission v2 (previous_version → v1)
+    ↓ Assessor marks competent
+Submission v2 (status: assessed, outcome: competent)
 ```
 
 ---

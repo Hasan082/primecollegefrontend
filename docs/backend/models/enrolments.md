@@ -44,6 +44,10 @@ class Enrolment(models.Model):
     payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUSES, default='pending')
     stripe_payment_id = models.CharField(max_length=255, blank=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    payment_confirmed = models.BooleanField(
+        default=False,
+        help_text="Set to True when payment is verified. Controls resource access locking."
+    )
 
     # Access control
     enrolled_at = models.DateTimeField(auto_now_add=True)
