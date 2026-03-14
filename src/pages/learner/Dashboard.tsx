@@ -70,6 +70,7 @@ const Dashboard = () => {
   const stats = [
     { label: "Enrolled", value: enrolled, icon: BookOpen, color: "bg-primary" },
     { label: "Awaiting Assessment", value: awaiting, icon: Clock, color: "bg-amber-500" },
+    { label: "Awaiting IQA", value: awaitingIqa, icon: ShieldCheck, color: "bg-blue-600" },
     { label: "Competent", value: competent, icon: CheckCircle2, color: "bg-green-600" },
     { label: "Resubmission Required", value: resubmission, icon: AlertTriangle, color: "bg-orange-500" },
   ];
