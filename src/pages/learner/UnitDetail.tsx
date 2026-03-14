@@ -95,12 +95,12 @@ const QuizAssignment = ({ assignment }: { assignment: AssignmentData }) => {
         </div>
       ))}
       {!submitted && (
-        <button
+        <Button
           onClick={handleSubmit}
-          className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+          disabled={submitted}
         >
-          Submit Quiz
-        </button>
+          {submitted ? "Quiz Submitted" : "Submit Quiz"}
+        </Button>
       )}
       {submitted && (
         <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
