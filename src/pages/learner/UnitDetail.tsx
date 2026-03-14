@@ -423,9 +423,9 @@ const UnitDetail = () => {
                       <p className="text-sm font-medium text-primary">{r.name}</p>
                       <p className="text-xs text-muted-foreground">{r.type} • {r.size}</p>
                     </div>
-                    <button className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+                    <Button variant="ghost" size="sm" className="gap-1.5">
                       <Download className="w-4 h-4" /> Download
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
