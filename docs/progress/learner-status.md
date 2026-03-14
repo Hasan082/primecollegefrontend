@@ -10,26 +10,31 @@
 
 | Feature | File(s) | Notes |
 |---------|---------|-------|
-| Learner Dashboard | `src/pages/learner/Dashboard.tsx` | Stats, recent activity, deadline alerts |
+| Learner Dashboard | `src/pages/learner/Dashboard.tsx` | Stats, recent activity, deadline alerts, Awaiting IQA stat |
 | My Qualifications list | `src/pages/learner/MyQualifications.tsx` | Progress bars, expiry display |
-| Qualification View (unit list) | `src/pages/learner/QualificationView.tsx` | Status badges, feedback inline |
+| Qualification View (unit list) | `src/pages/learner/QualificationView.tsx` | Status badges incl. Awaiting IQA, feedback inline |
 | Unit Detail page | `src/pages/learner/UnitDetail.tsx` | Resources, assignments, evidence, sidebar |
 | Evidence Upload (file + description + criteria linking) | `src/components/learner/EvidenceUploadForm.tsx` | EV-numbering, mandatory fields |
+| **Learner Declaration** | `src/components/learner/EvidenceUploadForm.tsx` | ✅ Regulatory checkbox — must confirm work is own before submitting |
 | Submission History (versioned timeline) | `src/components/learner/SubmissionHistory.tsx` | v1/v2/v3, IQA verified badge |
 | Resource Locking (payment gate) | `src/components/learner/ResourceLock.tsx` | 🔒 UI when unpaid |
 | Evidence Upload Locking (payment gate) | `src/pages/learner/UnitDetail.tsx` | Locked form when `paymentConfirmed=false` |
+| **Access Expiry Enforcement** | `src/pages/learner/UnitDetail.tsx` | ✅ Blocks evidence upload when qualification is expired |
 | Strict Quiz (fullscreen, anti-cheat, timer) | `src/components/learner/StrictQuizModal.tsx` | Tab monitoring, auto-submit, attempt tracking |
 | Written Assignments (word count, min 50) | `src/pages/learner/UnitDetail.tsx` | Inline component |
 | File Upload Assignments | `src/pages/learner/UnitDetail.tsx` | Drag & drop |
 | Extension Request + Payment modal | `src/components/learner/ExtensionRequestModal.tsx` | Plan selection, mock payment |
 | Notification Bell (dropdown) | `src/components/learner/NotificationBell.tsx` | Mark read, navigate on click |
-| Profile page | `src/pages/learner/Profile.tsx` | Name, email, phone, address |
+| **Profile page (email read-only)** | `src/pages/learner/Profile.tsx` | ✅ Email cannot be edited; "contact support" message shown |
 | Change Password | `src/pages/learner/ChangePassword.tsx` | Validation, show/hide toggle |
 | Layout + Sidebar | `src/components/learner/LearnerLayout.tsx` | Header, sidebar, user dropdown |
 | Checkout (qualification purchase) | `src/pages/Checkout.tsx` | Cart, billing, order summary |
 | Enrollment Confirmation | `src/pages/EnrollmentConfirmation.tsx` | Post-purchase redirect |
 | Deadline warnings (unit-level) | `src/pages/learner/Dashboard.tsx` | Urgent / warning badges |
 | Expired qualification alerts | `src/pages/learner/Dashboard.tsx` | Overdue days, "Extend & Pay" CTA |
+| **Awaiting IQA status** | Multiple files | ✅ New status in unit lifecycle — visible in dashboard, qualification view, unit detail |
+| **Submit for Assessment persists** | `src/pages/learner/UnitDetail.tsx` | ✅ Button disables after click; shows "Submitted — Awaiting Assessment" |
+| **Accessibility: proper `<Button>` components** | Multiple files | ✅ All clickable elements use `<Button>` component |
 
 ### Mock Data Coverage
 | Qualification | Units with full detail | Units skeleton only |
@@ -39,22 +44,15 @@
 
 ---
 
-## ❌ GAPS — Missing / Incomplete
+## ❌ Remaining Gaps
 
-### Critical Gaps (Compliance / Functionality)
+### Frontend (Low Priority)
 
-| # | Gap | Impact | Priority |
-|---|-----|--------|----------|
-| 1 | **No Learner Declaration** before submission | Regulatory requirement — learners must confirm work is their own before submitting evidence | 🔴 High |
-| 2 | **Checkout uses fake payment** — no Stripe integration | No real payment processing; `paymentConfirmed` is hardcoded in mock data | 🔴 High |
-| 3 | **No "Awaiting IQA" status visible to learner** | Learner sees "Competent" but doesn't know unit is pending IQA verification | 🟡 Medium |
-| 4 | **Profile email is editable** | Should be read-only (same rule as Admin/IQA portals) | 🟡 Medium |
-| 5 | **Access expiry not enforced** | Dashboard shows expiry alerts but doesn't actually block resource/submission access | 🟡 Medium |
-| 6 | **Units u6–u10 have no detail data** | Clicking "View Unit" shows empty page for 5 of 10 units in Adult Care qualification | 🟡 Medium |
-| 7 | **No dedicated Notifications page** | Only bell dropdown — no full list view, no filtering, no pagination | 🟢 Low |
-| 8 | **No learner-facing IQA feedback visibility** | Learner can't see IQA comments (by design — IQA comments are internal), but should see "IQA Verified" status | 🟢 Low |
-| 9 | **Submit for Assessment button** doesn't change unit status | Toast-only — no state persistence after clicking | 🟡 Medium |
-| 10 | **No file size validation** on evidence upload | Accepts any file size despite "max 10MB" label | 🟢 Low |
+| # | Gap | Priority |
+|---|-----|----------|
+| 1 | Units u6–u10 have no detail data (Adult Care) | 🟡 Medium |
+| 2 | No dedicated Notifications page (only bell dropdown) | 🟢 Low |
+| 3 | No file size validation on evidence upload | 🟢 Low |
 
 ### Backend Dependencies (Cannot fix without API)
 
@@ -84,26 +82,29 @@ ADMIN                          TRAINER                        LEARNER           
                                                               7. Payment confirmed ──────────► Resources unlocked
                                                               8. Download resources
                                                               9. Upload evidence (EV-ref)
-                                                              10. Link to criteria
-                                                              11. Submit for assessment ──────►
-                               12. Review evidence                                             
-                               13. Mark criteria met/not met                                   
-                               14. Provide feedback                                            
-                               15. Set outcome ────────────────► 16. Receive notification       
-                                                              17. View feedback                
-                                                              18. Resubmit if needed (v2, v3)  
-                               19. 100% criteria → sign off ──────────────────────────────────► 20. Auto-queued for sampling
-                                                                                               21. VACS verification
-                                                                                               22. Agree / Disagree
-                                                              23. See "IQA Verified" badge     
-                               24. If disagree → action req'd                                  
-                               25. Re-assess and resubmit ────────────────────────────────────► 26. Re-review
+                                                              10. Learner Declaration ✅
+                                                              11. Link to criteria
+                                                              12. Submit for assessment ──────►
+                               13. Review evidence                                             
+                               14. Mark criteria met/not met                                   
+                               15. Provide feedback                                            
+                               16. Set outcome ────────────────► 17. Receive notification       
+                                                              18. View feedback                
+                                                              19. Resubmit if needed (v2, v3)  
+                               20. 100% criteria → sign off ──────────────────────────────────► 21. Auto-queued for sampling
+                                                              22. See "Awaiting IQA" status    
+                                                                                               23. VACS verification
+                                                                                               24. Agree / Disagree
+                                                              25. See "IQA Verified" badge     
+                               26. If disagree → action req'd                                  
+                               27. Re-assess and resubmit ────────────────────────────────────► 28. Re-review
 ```
 
 ---
 
 ## Notes
 - All state currently uses `localStorage` / in-memory mock data
-- Learner Declaration was documented in memory but not yet implemented in UI
 - Extension payment uses simulated flow (no real payment gateway)
 - Quiz scoring is client-side (must move to server for production)
+- Learner Declaration implemented as regulatory compliance requirement
+- Profile email is read-only — changes require admin support
