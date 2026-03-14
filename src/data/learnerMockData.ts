@@ -157,6 +157,7 @@ export const learnerQualifications: QualificationData[] = [
         status: "competent", submittedDate: "15/12/2024", assessedDate: "20/12/2024",
         feedback: "All criteria met successfully. Excellent understanding of duty of care principles.",
         detail: {
+
           overview: "This unit focuses on understanding the concept of duty of care and how it applies to your own role in adult care settings. You will learn about dilemmas that may arise and how to address complaints.",
           requirements: [
             "Understand the implications of duty of care",
