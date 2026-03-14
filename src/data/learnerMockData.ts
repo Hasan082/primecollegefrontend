@@ -29,6 +29,22 @@ export interface AssignmentData {
   status: "not_started" | "in_progress" | "submitted" | "assessed";
 }
 
+export interface SubmissionVersionData {
+  id: string;
+  version: number;
+  evidenceRef: string;
+  files: { name: string; size: string }[];
+  description: string;
+  linkedCriteria: string[];
+  submittedDate: string;
+  status: "submitted" | "under_review" | "competent" | "resubmission_required" | "not_yet_competent";
+  feedback?: string;
+  assessedDate?: string;
+  assessorName?: string;
+  iqaVerified?: boolean;
+  iqaDate?: string;
+}
+
 export interface UnitDetail {
   overview: string;
   requirements: string[];
@@ -38,6 +54,7 @@ export interface UnitDetail {
   resources: ResourceFile[];
   uploadedFiles: UploadedFile[];
   assignments: AssignmentData[];
+  submissionHistory?: SubmissionVersionData[];
 }
 
 export interface UnitData {
