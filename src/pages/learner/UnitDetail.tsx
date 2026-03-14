@@ -2,12 +2,15 @@ import { useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, Download, Upload, FileText, CheckCircle2, Clock,
-  AlertTriangle, Circle, ClipboardList, PenLine, File as FileIcon
+  AlertTriangle, Circle, ClipboardList, PenLine, File as FileIcon, Lock
 } from "lucide-react";
 import { learnerQualifications } from "@/data/learnerMockData";
 import type { UnitData, AssignmentData } from "@/data/learnerMockData";
 import { useToast } from "@/hooks/use-toast";
 import StrictQuizModal from "@/components/learner/StrictQuizModal";
+import SubmissionHistory from "@/components/learner/SubmissionHistory";
+import EvidenceUploadForm from "@/components/learner/EvidenceUploadForm";
+import ResourceLock from "@/components/learner/ResourceLock";
 
 /* ── Status config ── */
 const statusConfig: Record<UnitData["status"], { label: string; color: string }> = {
