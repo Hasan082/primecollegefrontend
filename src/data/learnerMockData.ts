@@ -266,7 +266,31 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u4"),
             writtenAssignment("u4", "Safeguarding Scenario Response", "Describe how you would respond to a safeguarding concern in your workplace. Include the steps you would take and who you would report to.", 1500),
-            
+          ],
+          submissionHistory: [
+            {
+              id: "sub-u4-v2",
+              version: 2,
+              evidenceRef: "EV-2025-014",
+              files: [{ name: "Safeguarding_Portfolio_v2.pdf", size: "2.8 MB" }],
+              description: "Updated portfolio with additional workplace examples for criteria 2.3 and 3.1 as requested by assessor.",
+              linkedCriteria: ["AC 1.1", "AC 2.3", "AC 3.1"],
+              submittedDate: "20/01/2025",
+              status: "submitted",
+            },
+            {
+              id: "sub-u4-v1",
+              version: 1,
+              evidenceRef: "EV-2025-008",
+              files: [{ name: "Safeguarding_Portfolio_v1.pdf", size: "2.4 MB" }],
+              description: "Initial safeguarding portfolio covering all assessment criteria with workplace observations and professional discussion notes.",
+              linkedCriteria: ["AC 1.1", "AC 2.1", "AC 2.3", "AC 3.1"],
+              submittedDate: "10/01/2025",
+              status: "resubmission_required",
+              feedback: "Good attempt but criteria 2.3 and 3.1 need more detailed evidence. Please provide specific workplace examples.",
+              assessedDate: "15/01/2025",
+              assessorName: "Sarah Thompson",
+            },
           ],
         }
       },
