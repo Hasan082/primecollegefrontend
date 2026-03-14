@@ -180,7 +180,23 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u1"),
             writtenAssignment("u1", "Reflective Account", "Write a reflective account describing a situation where you had to balance duty of care with individual rights. Discuss the dilemma, how you handled it, and what you learned.", 1500),
-            
+          ],
+          submissionHistory: [
+            {
+              id: "sub-u1-v1",
+              version: 1,
+              evidenceRef: "EV-2024-001",
+              files: [{ name: "Duty_of_Care_Portfolio.pdf", size: "2.1 MB" }],
+              description: "Complete portfolio covering duty of care principles, dilemmas between duty of care and individual rights, and risk management procedures.",
+              linkedCriteria: ["AC 1.1", "AC 2.1", "AC 3.1"],
+              submittedDate: "15/12/2024",
+              status: "competent",
+              feedback: "All criteria met successfully. Excellent understanding of duty of care principles.",
+              assessedDate: "20/12/2024",
+              assessorName: "Sarah Thompson",
+              iqaVerified: true,
+              iqaDate: "22/12/2024",
+            },
           ],
         }
       },
