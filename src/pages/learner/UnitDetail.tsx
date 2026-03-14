@@ -211,7 +211,7 @@ const FileUploadAssignment = ({ assignment, onSubmitted }: { assignment: Assignm
                   <FileIcon className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm text-foreground flex-1">{f.name}</span>
                   <span className="text-xs text-muted-foreground">{f.size}</span>
-                  <button onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))} className="text-xs text-destructive hover:underline">Remove</button>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}>Remove</Button>
                 </div>
               ))}
             </div>
