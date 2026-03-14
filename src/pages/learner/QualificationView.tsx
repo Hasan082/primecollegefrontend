@@ -93,12 +93,15 @@ const QualificationView = () => {
                     )}
                   </div>
                 </div>
-                <Link
-                  to={`/learner/qualification/${id}/unit/${unit.id}`}
-                  className="bg-primary text-primary-foreground text-sm font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition-opacity flex-shrink-0"
+                <Button
+                  asChild
+                  size="sm"
+                  className="flex-shrink-0"
                 >
-                  View Unit
-                </Link>
+                  <Link to={`/learner/qualification/${id}/unit/${unit.id}`}>
+                    View Unit
+                  </Link>
+                </Button>
               </div>
             </div>
           );
