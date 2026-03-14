@@ -150,6 +150,7 @@ export const learnerQualifications: QualificationData[] = [
     enrolledDate: "15/09/2024",
     status: "in_progress",
     awardingBody: "Level 3 Diploma in Adult Care (VTCT)",
+    paymentConfirmed: true,
     units: [
       {
         id: "u1", code: "VTCT301", title: "Duty of Care in Adult Care",
