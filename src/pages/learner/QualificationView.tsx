@@ -69,7 +69,7 @@ const QualificationView = () => {
             <div key={unit.id} className="bg-card border border-border rounded-xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${unit.status === "competent" ? "text-green-600" : unit.status === "awaiting_assessment" ? "text-amber-500" : unit.status === "resubmission" ? "text-orange-500" : "text-muted-foreground"}`} />
+                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${unit.status === "competent" ? "text-green-600" : unit.status === "awaiting_assessment" ? "text-amber-500" : unit.status === "awaiting_iqa" ? "text-blue-600" : unit.status === "resubmission" ? "text-orange-500" : "text-muted-foreground"}`} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-semibold text-foreground">
