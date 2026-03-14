@@ -61,7 +61,7 @@ export interface UnitData {
   id: string;
   code: string;
   title: string;
-  status: "competent" | "awaiting_assessment" | "resubmission" | "not_started";
+  status: "competent" | "awaiting_assessment" | "resubmission" | "not_started" | "awaiting_iqa";
   submittedDate?: string;
   assessedDate?: string;
   feedback?: string;
