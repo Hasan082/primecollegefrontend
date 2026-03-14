@@ -349,6 +349,7 @@ export const learnerQualifications: QualificationData[] = [
     enrolledDate: "10/01/2025",
     status: "in_progress",
     awardingBody: "Level 4 Diploma in Management and Leadership (CMI)",
+    paymentConfirmed: true,
     units: [
       {
         id: "m1", code: "CMI401", title: "Principles of Management and Leadership",
