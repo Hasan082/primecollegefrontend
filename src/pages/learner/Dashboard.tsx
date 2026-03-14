@@ -63,6 +63,7 @@ const Dashboard = () => {
   const enrolled = learnerQualifications.length;
   const awaiting = allUnits.filter((u) => u.status === "awaiting_assessment").length;
   const competent = allUnits.filter((u) => u.status === "competent").length;
+  const awaitingIqa = allUnits.filter((u) => u.status === "awaiting_iqa").length;
   const resubmission = allUnits.filter((u) => u.status === "resubmission").length;
   const recentActivity = buildRecentActivity();
 
