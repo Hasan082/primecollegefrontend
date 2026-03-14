@@ -432,8 +432,22 @@ const UnitDetail = () => {
             </div>
           )}
 
+          {/* Access Expired Block */}
+          {isExpired && (
+            <div className="bg-card border-2 border-destructive/40 rounded-xl p-6 text-center">
+              <Lock className="w-8 h-8 text-destructive mx-auto mb-3" />
+              <h4 className="text-base font-bold text-foreground mb-1">Access Expired</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Your qualification access has expired. Please extend your access to continue uploading evidence.
+              </p>
+              <Button variant="destructive" asChild>
+                <Link to="/learner/qualifications">Extend Access</Link>
+              </Button>
+            </div>
+          )}
+
           {/* Evidence Upload Form — with description + criteria linking */}
-          {detail && qualification.paymentConfirmed && (
+          {detail && qualification.paymentConfirmed && !isExpired && (
             <EvidenceUploadForm
               requirements={detail.requirements}
               isLocked={!qualification.paymentConfirmed}
