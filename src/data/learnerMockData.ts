@@ -253,7 +253,18 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u3"),
             writtenAssignment("u3", "Risk Assessment Report", "Complete a risk assessment for a care setting scenario. Identify hazards, assess risks, and propose control measures following the HSE 5-step approach.", 2500),
-            
+          ],
+          submissionHistory: [
+            {
+              id: "sub-u3-v1",
+              version: 1,
+              evidenceRef: "EV-2025-005",
+              files: [{ name: "Health_Safety_Portfolio.pdf", size: "3.1 MB" }],
+              description: "Health and safety portfolio including risk assessments, COSHH records, and fire safety procedures documentation.",
+              linkedCriteria: ["AC 1.1", "AC 2.1", "AC 3.1", "AC 4.1"],
+              submittedDate: "05/01/2025",
+              status: "under_review",
+            },
           ],
         }
       },
