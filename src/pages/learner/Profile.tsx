@@ -51,8 +51,9 @@ const Profile = () => {
             <Label htmlFor="email">Email Address</Label>
             <div className="relative mt-1.5">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="pl-10" />
+              <Input id="email" type="email" value={form.email} readOnly disabled className="pl-10 opacity-60 cursor-not-allowed" />
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Contact support to change your email address</p>
           </div>
           <div>
             <Label htmlFor="phone">Phone Number</Label>

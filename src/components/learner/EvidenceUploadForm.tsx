@@ -184,18 +184,39 @@ const EvidenceUploadForm = ({ requirements, onSubmit, isLocked }: EvidenceUpload
           </div>
         </div>
 
+        {/* Learner Declaration */}
+        <div className="border border-primary/20 bg-primary/5 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground mb-2">Learner Declaration</p>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={declarationChecked}
+                  onCheckedChange={(checked) => setDeclarationChecked(checked === true)}
+                  className="mt-0.5"
+                  aria-label="I confirm this is my own work"
+                />
+                <p className="text-sm text-muted-foreground">
+                  I confirm that the evidence submitted is entirely my own work, produced without unauthorised assistance. I understand that submitting work that is not my own may result in disciplinary action.
+                </p>
+              </label>
+            </div>
+          </div>
+        </div>
+
         {/* Submit */}
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
             {linkedCriteria.length > 0 && (
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-wrap">
                 {linkedCriteria.map((c) => (
                   <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>
                 ))}
               </div>
             )}
           </div>
-          <Button onClick={handleSubmit} className="gap-2">
+          <Button onClick={handleSubmit} disabled={!declarationChecked} className="gap-2">
             <Upload className="w-4 h-4" /> Submit Evidence
           </Button>
         </div>

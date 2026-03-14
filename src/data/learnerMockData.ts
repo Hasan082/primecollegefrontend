@@ -203,7 +203,7 @@ export const learnerQualifications: QualificationData[] = [
       },
       {
         id: "u2", code: "VTCT302", title: "Equality, Diversity and Inclusion in Adult Care",
-        status: "competent", submittedDate: "18/12/2024", assessedDate: "22/12/2024",
+        status: "awaiting_iqa", submittedDate: "18/12/2024", assessedDate: "22/12/2024",
         feedback: "Excellent evidence provided with clear real-world examples.",
         detail: {
           overview: "This unit covers the importance of equality, diversity and inclusion in adult care settings. You will explore legislation, organisational practices, and how to promote inclusive working.",
