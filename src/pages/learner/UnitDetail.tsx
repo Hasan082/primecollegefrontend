@@ -263,8 +263,18 @@ const UnitDetail = () => {
   const detail = unit.detail;
   const cfg = statusConfig[unit.status];
 
+  const isExpired = (() => {
+    // Check qualification expiry from mock data
+    const expiryMap: Record<string, string> = { "adult-care-l4": "01/02/2026", "business-admin-l3": "15/09/2026" };
+    const expiry = expiryMap[qualificationId || ""];
+    if (!expiry) return false;
+    const [d, m, y] = expiry.split("/").map(Number);
+    return new Date(y, m - 1, d) < new Date();
+  })();
+
   const evidenceUploaded = (detail?.uploadedFiles.length || 0) + extraUploads.length > 0;
-  const readyForAssessment = unit.status === "not_started" && evidenceUploaded;
+  const alreadySubmitted = unit.status === "awaiting_assessment" || unit.status === "competent" || unit.status === "awaiting_iqa" || unitSubmitted;
+  const readyForAssessment = !alreadySubmitted && evidenceUploaded;
 
   const handleExtraUpload = (fileList: FileList | null) => {
     if (!fileList) return;
