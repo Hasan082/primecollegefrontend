@@ -379,12 +379,12 @@ const UnitDetail = () => {
                         <div className="p-5 pt-0 border-t border-border">
                           <p className="text-sm text-muted-foreground mb-5 pt-4">{a.description}</p>
                           {a.type === "quiz" && !isSubmitted && (
-                            <button
+                            <Button
                               onClick={() => setShowStrictQuiz(true)}
-                              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+                              className="gap-2"
                             >
                               <ClipboardList className="w-4 h-4" /> Launch Quiz (Strict Mode)
-                            </button>
+                            </Button>
                           )}
                           {a.type === "quiz" && isSubmitted && (
                             <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
