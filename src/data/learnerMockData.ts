@@ -29,6 +29,22 @@ export interface AssignmentData {
   status: "not_started" | "in_progress" | "submitted" | "assessed";
 }
 
+export interface SubmissionVersionData {
+  id: string;
+  version: number;
+  evidenceRef: string;
+  files: { name: string; size: string }[];
+  description: string;
+  linkedCriteria: string[];
+  submittedDate: string;
+  status: "submitted" | "under_review" | "competent" | "resubmission_required" | "not_yet_competent";
+  feedback?: string;
+  assessedDate?: string;
+  assessorName?: string;
+  iqaVerified?: boolean;
+  iqaDate?: string;
+}
+
 export interface UnitDetail {
   overview: string;
   requirements: string[];
@@ -38,6 +54,7 @@ export interface UnitDetail {
   resources: ResourceFile[];
   uploadedFiles: UploadedFile[];
   assignments: AssignmentData[];
+  submissionHistory?: SubmissionVersionData[];
 }
 
 export interface UnitData {
@@ -60,6 +77,7 @@ export interface QualificationData {
   enrolledDate: string;
   status: "in_progress" | "completed";
   awardingBody: string;
+  paymentConfirmed: boolean;
   units: UnitData[];
 }
 
@@ -132,6 +150,7 @@ export const learnerQualifications: QualificationData[] = [
     enrolledDate: "15/09/2024",
     status: "in_progress",
     awardingBody: "Level 3 Diploma in Adult Care (VTCT)",
+    paymentConfirmed: true,
     units: [
       {
         id: "u1", code: "VTCT301", title: "Duty of Care in Adult Care",
@@ -161,7 +180,23 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u1"),
             writtenAssignment("u1", "Reflective Account", "Write a reflective account describing a situation where you had to balance duty of care with individual rights. Discuss the dilemma, how you handled it, and what you learned.", 1500),
-            
+          ],
+          submissionHistory: [
+            {
+              id: "sub-u1-v1",
+              version: 1,
+              evidenceRef: "EV-2024-001",
+              files: [{ name: "Duty_of_Care_Portfolio.pdf", size: "2.1 MB" }],
+              description: "Complete portfolio covering duty of care principles, dilemmas between duty of care and individual rights, and risk management procedures.",
+              linkedCriteria: ["AC 1.1", "AC 2.1", "AC 3.1"],
+              submittedDate: "15/12/2024",
+              status: "competent",
+              feedback: "All criteria met successfully. Excellent understanding of duty of care principles.",
+              assessedDate: "20/12/2024",
+              assessorName: "Sarah Thompson",
+              iqaVerified: true,
+              iqaDate: "22/12/2024",
+            },
           ],
         }
       },
@@ -218,7 +253,18 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u3"),
             writtenAssignment("u3", "Risk Assessment Report", "Complete a risk assessment for a care setting scenario. Identify hazards, assess risks, and propose control measures following the HSE 5-step approach.", 2500),
-            
+          ],
+          submissionHistory: [
+            {
+              id: "sub-u3-v1",
+              version: 1,
+              evidenceRef: "EV-2025-005",
+              files: [{ name: "Health_Safety_Portfolio.pdf", size: "3.1 MB" }],
+              description: "Health and safety portfolio including risk assessments, COSHH records, and fire safety procedures documentation.",
+              linkedCriteria: ["AC 1.1", "AC 2.1", "AC 3.1", "AC 4.1"],
+              submittedDate: "05/01/2025",
+              status: "under_review",
+            },
           ],
         }
       },
@@ -247,7 +293,31 @@ export const learnerQualifications: QualificationData[] = [
           assignments: [
             careQuizAssignment("u4"),
             writtenAssignment("u4", "Safeguarding Scenario Response", "Describe how you would respond to a safeguarding concern in your workplace. Include the steps you would take and who you would report to.", 1500),
-            
+          ],
+          submissionHistory: [
+            {
+              id: "sub-u4-v2",
+              version: 2,
+              evidenceRef: "EV-2025-014",
+              files: [{ name: "Safeguarding_Portfolio_v2.pdf", size: "2.8 MB" }],
+              description: "Updated portfolio with additional workplace examples for criteria 2.3 and 3.1 as requested by assessor.",
+              linkedCriteria: ["AC 1.1", "AC 2.3", "AC 3.1"],
+              submittedDate: "20/01/2025",
+              status: "submitted",
+            },
+            {
+              id: "sub-u4-v1",
+              version: 1,
+              evidenceRef: "EV-2025-008",
+              files: [{ name: "Safeguarding_Portfolio_v1.pdf", size: "2.4 MB" }],
+              description: "Initial safeguarding portfolio covering all assessment criteria with workplace observations and professional discussion notes.",
+              linkedCriteria: ["AC 1.1", "AC 2.1", "AC 2.3", "AC 3.1"],
+              submittedDate: "10/01/2025",
+              status: "resubmission_required",
+              feedback: "Good attempt but criteria 2.3 and 3.1 need more detailed evidence. Please provide specific workplace examples.",
+              assessedDate: "15/01/2025",
+              assessorName: "Sarah Thompson",
+            },
           ],
         }
       },
@@ -330,6 +400,7 @@ export const learnerQualifications: QualificationData[] = [
     enrolledDate: "10/01/2025",
     status: "in_progress",
     awardingBody: "Level 4 Diploma in Management and Leadership (CMI)",
+    paymentConfirmed: true,
     units: [
       {
         id: "m1", code: "CMI401", title: "Principles of Management and Leadership",
