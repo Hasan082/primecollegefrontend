@@ -82,12 +82,27 @@ const BlockEditorForm = ({ block, onChange, onBlockMetaChange, onClose }: BlockE
       {typeof local.subtitle === "string" && (
         <Field label="Subtitle" value={local.subtitle as string} onChange={(v) => update("subtitle", v)} />
       )}
-      {typeof local.content === "string" && (
+      {typeof local.content === "string" && block.type !== "image-text" && (
         <div>
           <Label>Content</Label>
           <RichTextEditor value={local.content as string} onChange={(v) => update("content", v)} />
         </div>
       )}
+
+      {/* Image+Text block: description field */}
+      {block.type === "image-text" && (
+        <div>
+          <Label>Description</Label>
+          <RichTextEditor
+            value={(local.description as string) || (Array.isArray(local.paragraphs) ? (local.paragraphs as string[]).join("") : "")}
+            onChange={(v) => {
+              update("description", v);
+              update("paragraphs", [v]);
+            }}
+          />
+        </div>
+      )}
+
       {typeof local.image === "string" && (
         <ImageField
           value={local.image as string}
@@ -96,6 +111,26 @@ const BlockEditorForm = ({ block, onChange, onBlockMetaChange, onClose }: BlockE
           onPositionChange={local.imagePosition !== undefined ? (v) => update("imagePosition", v) : undefined}
         />
       )}
+
+      {/* Paragraphs for non-image-text blocks */}
+      {Array.isArray(local.paragraphs) && block.type !== "image-text" && (
+        <div>
+          <Label>Paragraphs</Label>
+          {(local.paragraphs as string[]).map((p, i) => (
+            <div key={i} className="mt-2">
+              <RichTextEditor
+                value={p}
+                onChange={(val) => {
+                  const next = [...(local.paragraphs as string[])];
+                  next[i] = val;
+                  update("paragraphs", next);
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
       {(typeof local.ctaLabel === "string" || block.type === "hero") && (
         <div className="space-y-1">
           <div className="grid grid-cols-2 gap-3">
@@ -120,24 +155,6 @@ const BlockEditorForm = ({ block, onChange, onBlockMetaChange, onClose }: BlockE
           items={local.items as Record<string, string | undefined>[]}
           onChange={(items) => update("items", items)}
         />
-      )}
-
-      {Array.isArray(local.paragraphs) && (
-        <div>
-          <Label>Paragraphs</Label>
-          {(local.paragraphs as string[]).map((p, i) => (
-            <div key={i} className="mt-2">
-              <RichTextEditor
-                value={p}
-                onChange={(val) => {
-                  const next = [...(local.paragraphs as string[])];
-                  next[i] = val;
-                  update("paragraphs", next);
-                }}
-              />
-            </div>
-          ))}
-        </div>
       )}
 
       {block.type === "cta" && <CTABackgroundEditor local={local} update={update} />}

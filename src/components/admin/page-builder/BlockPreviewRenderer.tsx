@@ -114,19 +114,25 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
             );
           }
 
-          case "image-text":
+          case "image-text": {
+            const hasImg = d.image && typeof d.image === "string" && (d.image as string).length > 0;
+            const imgIsData = hasImg && ((d.image as string).startsWith("data:") || (d.image as string).startsWith("http"));
             return (
               <StyledWrapper key={block.id} block={block} defaultClass="bg-primary text-primary-foreground py-6 px-5">
                 <div className={`flex gap-4 ${d.imagePosition === "left" ? "flex-row" : "flex-row-reverse"}`}>
+                  {hasImg && (
+                    <div className="flex-1 rounded overflow-hidden">
+                      {imgIsData ? (
+                        <img src={d.image as string} alt="" className="w-full h-20 object-cover rounded" />
+                      ) : (
+                        <div className="w-full h-20 bg-primary-foreground/10 rounded flex items-center justify-center text-[8px] opacity-60">
+                          📷 {d.image as string}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="flex-1">
-                    <h3 className="text-[11px] font-bold leading-snug mb-2">{d.headline as string}</h3>
-                    {d.ctaLabel && (
-                      <span className="inline-block mt-1 px-2 py-0.5 bg-secondary text-secondary-foreground rounded text-[8px] font-semibold">
-                        {d.ctaLabel as string}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-1">
+                    <h3 className="text-[11px] font-bold leading-snug mb-1">{d.headline as string}</h3>
                     {Array.isArray(d.paragraphs) && (d.paragraphs as string[]).map((p, i) => (
                       typeof p === "string" && p.startsWith("<") ? (
                         <div key={i} className="text-[9px] opacity-80 leading-relaxed" dangerouslySetInnerHTML={{ __html: p }} />
@@ -134,10 +140,16 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                         <p key={i} className="text-[9px] opacity-80 leading-relaxed">{p}</p>
                       )
                     ))}
+                    {d.ctaLabel && (
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-secondary text-secondary-foreground rounded text-[8px] font-semibold">
+                        {d.ctaLabel as string}
+                      </span>
+                    )}
                   </div>
                 </div>
               </StyledWrapper>
             );
+          }
 
           case "why-us":
             return (
