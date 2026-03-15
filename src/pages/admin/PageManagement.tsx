@@ -134,7 +134,7 @@ const PageManagement = () => {
             </div>
             <div>
               <Label>Page Type</Label>
-              <Select value={newPage.type} onValueChange={(v) => setNewPage((p) => ({ ...p, type: v as "static" | "qualification" }))}>
+              <Select value={newPage.type} onValueChange={(v) => setNewPage((p) => ({ ...p, type: v as "static" | "qualification" | "blog-post" }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
