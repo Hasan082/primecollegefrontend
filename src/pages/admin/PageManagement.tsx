@@ -141,6 +141,7 @@ const PageManagement = () => {
                 <SelectContent>
                   <SelectItem value="static">Static Page</SelectItem>
                   <SelectItem value="qualification">Qualification Detail</SelectItem>
+                  <SelectItem value="blog-post">Blog Post</SelectItem>
                 </SelectContent>
               </Select>
             </div>
