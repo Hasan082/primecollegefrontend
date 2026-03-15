@@ -3,6 +3,7 @@
 export type BlockType =
   | "hero"
   | "text"
+  | "image"
   | "image-text"
   | "modules"
   | "faq"
