@@ -204,6 +204,7 @@ export const generateBlockId = (): string => `block_${Date.now()}_${++_counter}`
 export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   hero: "Hero Banner",
   text: "Text Section",
+  image: "Image",
   "image-text": "Image + Text",
   modules: "Module List",
   faq: "FAQ Accordion",
