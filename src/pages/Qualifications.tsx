@@ -73,7 +73,7 @@ const Qualifications = () => {
         <div className="absolute inset-0 bg-primary/75" />
         <div className="absolute inset-0 flex items-end pb-10">
           <div className="container mx-auto px-4">
-            <Breadcrumb items={activeCategory !== "All" ? [{ label: "Qualifications", href: "/qualifications" }, { label: activeCategory }] : [{ label: "Qualifications" }]} />
+            <Breadcrumb variant="overlay" items={activeCategory !== "All" ? [{ label: "Qualifications", href: "/qualifications" }, { label: activeCategory }] : [{ label: "Qualifications" }]} />
             <h1 className="text-4xl font-bold text-primary-foreground mb-4 text-center mt-4">{pageTitle}</h1>
             <p className="text-primary-foreground/80 max-w-2xl mx-auto text-center">{pageIntro}</p>
           </div>
