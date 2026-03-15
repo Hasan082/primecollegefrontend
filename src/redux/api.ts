@@ -22,10 +22,13 @@ const baseQueryWithRefreshToken: BaseQueryFn<
   const result = await baseQuery(args, api, extraOptions);
 
   if (result?.error?.status === 401) {
-    const res = await fetch(appConfig.API_BASE_URL + "/auth/refresh-token", {
-      method: "GET",
-      credentials: "include",
-    });
+    const res = await fetch(
+      appConfig.API_BASE_URL + "/api/auth/token/refresh/cookie",
+      {
+        method: "POST",
+        credentials: "include",
+      },
+    );
 
     await res.json();
   }

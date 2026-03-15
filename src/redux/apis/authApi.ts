@@ -11,7 +11,7 @@ const authApi = api.injectEndpoints({
     }),
     getMe: builder.query({
       query: (payload) => ({
-        url: "api/auth/me",
+        url: "/api/auth/me",
         method: "GET",
         body: payload,
       }),
