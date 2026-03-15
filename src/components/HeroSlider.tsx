@@ -89,9 +89,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
             {slide.title}
           </h1>
           {slide.level && (
-            <span className="inline-block bg-primary/20 border border-primary text-background text-lg font-semibold px-5 py-1.5 rounded mb-6">
-              {slide.level}
-            </span>
+            <p className="text-2xl font-semibold text-secondary mb-6">{slide.level}</p>
           )}
           <a
             href={slide.slug ? `/qualifications/${slide.slug}` : "/qualifications"}
