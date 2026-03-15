@@ -20,6 +20,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Checkout from "./pages/Checkout";
 import EnrollmentConfirmation from "./pages/EnrollmentConfirmation";
 import NotFound from "./pages/NotFound";
+import BlogDetail from "./pages/BlogDetail";
 import ScrollToTop from "./components/ScrollToTop";
 import LoadingSpinner from "./components/LoadingSpinner";
 import LearnerLayout from "./components/learner/LearnerLayout";

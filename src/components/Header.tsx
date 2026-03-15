@@ -90,6 +90,7 @@ interface SimpleNavItem {
 }
 
 const simpleNavItems: SimpleNavItem[] = [
+  { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
 
