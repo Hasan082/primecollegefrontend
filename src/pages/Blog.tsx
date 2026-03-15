@@ -57,7 +57,7 @@ const Blog = () => {
         <div className="absolute inset-0 bg-primary/70" />
         <div className="absolute inset-0 flex items-end pb-10">
           <div className="container mx-auto px-4">
-            <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Blog" }]} />
+            <Breadcrumb variant="overlay" items={[{ label: "Home", href: "/" }, { label: "Blog" }]} />
             <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground mt-2">Blog & News</h1>
           </div>
         </div>

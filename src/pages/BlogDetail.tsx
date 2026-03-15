@@ -77,6 +77,7 @@ const BlogDetail = () => {
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-4">
             <Breadcrumb
+              variant="overlay"
               items={[
                 { label: "Home", href: "/" },
                 { label: "Blog", href: "/" },
