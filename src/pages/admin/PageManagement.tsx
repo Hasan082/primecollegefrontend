@@ -15,7 +15,7 @@ import { defaultPages } from "@/data/defaultPages";
 const PageManagement = () => {
   const [pages, setPages] = useState<PageConfig[]>(defaultPages);
   const [addOpen, setAddOpen] = useState(false);
-  const [newPage, setNewPage] = useState({ title: "", slug: "", type: "static" as "static" | "qualification" });
+  const [newPage, setNewPage] = useState({ title: "", slug: "", type: "static" as "static" | "qualification" | "blog-post" });
   const { toast } = useToast();
 
   const handleAddPage = () => {
