@@ -35,9 +35,9 @@ const AdminLayout = () => {
           <div className="px-4 sm:px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-primary-foreground hover:bg-primary-foreground/10 rounded-md p-1.5" />
-              <div className="w-8 h-8 rounded-full border border-primary-foreground/30 p-0.5">
+              <a href="/" className="w-8 h-8 rounded-full border border-primary-foreground/30 p-0.5 block">
                 <img src={logo} alt="Prime College" className="w-full h-full object-contain" />
-              </div>
+              </a>
               <span className="text-lg font-bold hidden sm:inline">Administration Portal</span>
             </div>
 
