@@ -79,7 +79,7 @@ const PageEditor = () => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, data: { ...(b.data as Record<string, unknown>), ...data } } as ContentBlock : b)));
   }, []);
 
-  const updateBlockMeta = useCallback((id: string, meta: { alignment?: TextAlignment; style?: BlockStyle }) => {
+  const updateBlockMeta = useCallback((id: string, meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string }) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, ...meta } as ContentBlock : b)));
   }, []);
 
