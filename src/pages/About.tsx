@@ -57,11 +57,13 @@ const About = () => {
       <div className="relative h-[400px] overflow-hidden">
         <img src={aboutHero} alt="About Prime College" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-foreground/70" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-background">{data.title}</h1>
+        <div className="absolute inset-0 flex items-end pb-10">
+          <div className="container mx-auto px-4">
+            <Breadcrumb variant="overlay" items={[{ label: "About Us" }]} />
+            <h1 className="text-4xl md:text-5xl font-bold text-background mt-4 text-center">{data.title}</h1>
+          </div>
         </div>
       </div>
-      <Breadcrumb items={[{ label: "About Us" }]} />
 
       {/* About Section - two column */}
       <section className="py-16 px-4">

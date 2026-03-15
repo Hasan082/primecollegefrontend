@@ -37,14 +37,14 @@ const Contact = () => {
       <div className="relative h-[400px] overflow-hidden">
         <img src={contactBanner} alt="Contact Prime College" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-primary/75" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center px-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">{data.title}</h1>
-            <p className="text-primary-foreground/90 max-w-2xl mx-auto text-lg">{data.intro}</p>
+        <div className="absolute inset-0 flex items-end pb-10">
+          <div className="container mx-auto px-4">
+            <Breadcrumb variant="overlay" items={[{ label: "Contact Us" }]} />
+            <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4 text-center mt-4">{data.title}</h1>
+            <p className="text-primary-foreground/90 max-w-2xl mx-auto text-lg text-center">{data.intro}</p>
           </div>
         </div>
       </div>
-      <Breadcrumb items={[{ label: "Contact Us" }]} />
 
       <Section title="">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">

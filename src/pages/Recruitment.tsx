@@ -85,7 +85,7 @@ const Recruitment = () => {
 
   return (
     <div>
-      <Breadcrumb items={[{ label: "Recruitment" }]} />
+      <Breadcrumb variant="overlay" items={[{ label: "Recruitment" }]} />
       {/* Hero Section - Split Layout */}
       <section className="bg-accent/30">
         <div className="container mx-auto px-4 py-12 md:py-16">

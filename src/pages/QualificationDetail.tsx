@@ -343,7 +343,8 @@ const QualificationDetail = () => {
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 leading-tight">
+              <Breadcrumb variant="overlay" items={[{ label: "Qualifications", href: "/qualifications" }, { label: qual.title }]} />
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 leading-tight mt-4">
                 {qual.title}
               </h1>
               <p className="text-primary-foreground/85 leading-relaxed text-base md:text-lg mb-6 max-w-2xl">
@@ -383,7 +384,6 @@ const QualificationDetail = () => {
           </div>
         </div>
       </section>
-      <Breadcrumb items={[{ label: "Qualifications", href: "/qualifications" }, { label: qual.title }]} />
 
 
       {/* Two-column: Why This Qualification + Image */}
