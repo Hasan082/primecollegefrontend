@@ -282,8 +282,6 @@ const CTABackgroundEditor = ({ local, update }: { local: Record<string, unknown>
 };
 
 // ─── Image Field ───
-const PRESET_IMAGES = ["classroom", "business", "leadership", "executive", "care"];
-
 const ImageField = ({
   value,
   onChange,
@@ -318,23 +316,11 @@ const ImageField = ({
           <img src={value} alt="Preview" className="max-h-40 object-contain" />
         </div>
       )}
-      {!isDataUrl && !isUrl && value && (
-        <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground flex items-center gap-2">
-          <ImageIcon className="h-4 w-4 shrink-0" />
-          Preset: <span className="font-medium text-foreground">{value}</span>
-        </div>
-      )}
-      <div className="flex gap-2">
+      <div>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-        <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => fileRef.current?.click()}>
-          <Upload className="h-3.5 w-3.5 mr-1.5" /> Upload Image
+        <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => fileRef.current?.click()}>
+          <Upload className="h-3.5 w-3.5 mr-1.5" /> {value ? "Change Image" : "Upload Image"}
         </Button>
-        <Select value={isDataUrl || isUrl ? "" : value} onValueChange={onChange}>
-          <SelectTrigger className="flex-1 h-9"><SelectValue placeholder="Or choose preset" /></SelectTrigger>
-          <SelectContent>
-            {PRESET_IMAGES.map((img) => (<SelectItem key={img} value={img}>{img}</SelectItem>))}
-          </SelectContent>
-        </Select>
       </div>
       {onPositionChange && (
         <div>
