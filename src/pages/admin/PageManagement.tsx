@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FileText, Plus, Pencil, Globe, GraduationCap, ArrowLeft } from "lucide-react";
+import { FileText, Plus, Pencil, Globe, GraduationCap, ArrowLeft, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import { defaultPages } from "@/data/defaultPages";
 const PageManagement = () => {
   const [pages, setPages] = useState<PageConfig[]>(defaultPages);
   const [addOpen, setAddOpen] = useState(false);
-  const [newPage, setNewPage] = useState({ title: "", slug: "", type: "static" as "static" | "qualification" });
+  const [newPage, setNewPage] = useState({ title: "", slug: "", type: "static" as "static" | "qualification" | "blog-post" });
   const { toast } = useToast();
 
   const handleAddPage = () => {
@@ -34,12 +34,14 @@ const PageManagement = () => {
     };
     setPages((prev) => [...prev, page]);
     setNewPage({ title: "", slug: "", type: "static" });
+    
     setAddOpen(false);
     toast({ title: "Page created — add blocks in the editor" });
   };
 
   const staticPages = pages.filter((p) => p.type === "static");
   const qualPages = pages.filter((p) => p.type === "qualification");
+  const blogPages = pages.filter((p) => p.type === "blog-post");
 
   return (
     <div className="space-y-6">
@@ -89,6 +91,27 @@ const PageManagement = () => {
         )}
       </div>
 
+      {/* Blog Posts */}
+      <div>
+        <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-primary" /> Blog Posts
+        </h2>
+        {blogPages.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">
+              <FileText className="h-10 w-10 mx-auto mb-3 opacity-40" />
+              <p>No blog posts yet. Click "New Page" and select "Blog Post" to create one.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {blogPages.map((page) => (
+              <PageCard key={page.id} page={page} />
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Add Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
@@ -111,13 +134,14 @@ const PageManagement = () => {
             </div>
             <div>
               <Label>Page Type</Label>
-              <Select value={newPage.type} onValueChange={(v) => setNewPage((p) => ({ ...p, type: v as "static" | "qualification" }))}>
+              <Select value={newPage.type} onValueChange={(v) => setNewPage((p) => ({ ...p, type: v as "static" | "qualification" | "blog-post" }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="static">Static Page</SelectItem>
                   <SelectItem value="qualification">Qualification Detail</SelectItem>
+                  <SelectItem value="blog-post">Blog Post</SelectItem>
                 </SelectContent>
               </Select>
             </div>

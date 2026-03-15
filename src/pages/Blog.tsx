@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchContent } from "@/lib/api";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import Breadcrumb from "@/components/Breadcrumb";
+import { defaultPages } from "@/data/defaultPages";
 
 import heroClassroom from "@/assets/hero-classroom.jpg";
 import heroBusiness from "@/assets/hero-business.jpg";
@@ -19,105 +20,130 @@ const heroImageMap: Record<string, string> = {
   care: heroCare,
 };
 
-interface BlogPost {
-  id: string;
-  title: string;
-  excerpt: string;
-  category: string;
-  author: string;
-  date: string;
-  image: string;
-  readTime: string;
-}
-
-interface BlogData {
-  posts: BlogPost[];
-  categories: string[];
-}
-
 const Blog = () => {
-  const [data, setData] = useState<BlogData | null>(null);
+  const allBlogPosts = defaultPages.filter((p) => p.type === "blog-post");
+  const categories = [...new Set(allBlogPosts.map((p) => p.blogMeta?.category).filter(Boolean))] as string[];
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    fetchContent<BlogData>("blog").then(setData);
-  }, []);
-
-  if (!data) return <LoadingSpinner />;
-
-  const filtered = activeCategory === "All"
-    ? data.posts
-    : data.posts.filter((p) => p.category === activeCategory);
+  const filtered = allBlogPosts.filter((p) => {
+    const catMatch = activeCategory === "All" || p.blogMeta?.category === activeCategory;
+    const searchMatch = !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return catMatch && searchMatch;
+  });
 
   return (
     <div>
       {/* Banner */}
-      <section className="relative h-[260px] overflow-hidden">
+      <div className="relative h-[300px] md:h-[400px] overflow-hidden">
         <img src={contactBanner} alt="Blog" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-primary/70" />
+        <div className="absolute inset-0 bg-primary/75" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Blog & News</h1>
-        </div>
-      </section>
-      <Breadcrumb items={[{ label: "Blog" }]} />
-
-      {/* Category Filter */}
-      <section className="bg-muted border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex flex-wrap gap-2">
-          {["All", ...data.categories].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
-                activeCategory === cat
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground border border-border hover:bg-accent"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Posts Grid */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((post) => (
-              <Link
-                key={post.id}
-                to={`/blog/${post.id}`}
-                className="bg-card border border-border rounded-xl overflow-hidden group block"
-              >
-                <div className="aspect-[16/9] overflow-hidden">
-                  <img
-                    src={heroImageMap[post.image] || heroClassroom}
-                    alt={post.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
-                      {post.category}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{post.date}</span>
-                    <span className="text-xs text-muted-foreground">{post.readTime}</span>
-                  </div>
-                  <h3 className="text-base font-semibold text-foreground leading-snug mb-2 group-hover:text-primary transition-colors">
-                    {post.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                    {post.excerpt}
-                  </p>
-                  <span className="text-sm font-semibold text-primary">Read More →</span>
-                </div>
-              </Link>
-            ))}
+          <div className="text-center px-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">Blog & News</h1>
+            <p className="text-primary-foreground/80 max-w-2xl mx-auto">Latest news, insights and career advice from The Prime College.</p>
           </div>
         </div>
-      </section>
+      </div>
+      <Breadcrumb items={[{ label: "Blog" }]} />
+
+      <div className="bg-muted/30 py-10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* Posts Grid */}
+            <div className="lg:col-span-2">
+              {/* Category Filter */}
+              <div className="flex flex-wrap gap-2 mb-8">
+                {["All", ...categories].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                      activeCategory === cat
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground border border-border hover:bg-accent"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filtered.map((post) => (
+                  <Link
+                    key={post.id}
+                    to={post.slug}
+                    className="bg-card border border-border rounded-xl overflow-hidden group block"
+                  >
+                    <div className="aspect-[16/9] overflow-hidden">
+                      <img
+                        src={heroImageMap[post.blogMeta?.image || "classroom"] || heroClassroom}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
+                          {post.blogMeta?.category}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{post.blogMeta?.date}</span>
+                      </div>
+                      <h3 className="text-base font-semibold text-foreground leading-snug mb-2 group-hover:text-primary transition-colors">
+                        {post.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                        {post.blogMeta?.excerpt}
+                      </p>
+                      <span className="text-sm font-semibold text-primary">Read More →</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <aside className="space-y-8">
+              {/* Search */}
+              <div className="bg-card rounded-xl p-6 border border-border">
+                <h3 className="text-base font-bold text-foreground mb-1">Search</h3>
+                <div className="w-8 h-0.5 bg-primary mb-4" />
+                <div className="relative">
+                  <Input
+                    placeholder="Search..."
+                    className="pr-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <Search className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2" />
+                </div>
+              </div>
+
+              {/* Categories */}
+              <div className="bg-card rounded-xl p-6 border border-border">
+                <h3 className="text-base font-bold text-foreground mb-1">Categories</h3>
+                <div className="w-8 h-0.5 bg-primary mb-4" />
+                <div className="space-y-0">
+                  {categories.map((cat) => {
+                    const count = allBlogPosts.filter((p) => p.blogMeta?.category === cat).length;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className="flex items-center justify-between w-full py-2.5 border-b border-border last:border-0 hover:text-primary transition-colors"
+                      >
+                        <span className="text-sm text-muted-foreground">{cat}</span>
+                        <span className="text-sm text-muted-foreground">({count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

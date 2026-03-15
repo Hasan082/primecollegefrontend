@@ -126,4 +126,197 @@ export const defaultPages: PageConfig[] = [
     ],
     meta: { title: "Recruitment – The Prime College", description: "Explore recruitment opportunities." },
   },
+  // Blog Posts
+  {
+    id: "blog-how-to-choose-the-right-qualification",
+    title: "How to Choose the Right Qualification for Your Career",
+    slug: "/blog/how-to-choose-the-right-qualification",
+    type: "blog-post",
+    blogMeta: {
+      author: "The Prime College",
+      date: "12 Feb 2026",
+      category: "Career Advice",
+      image: "business",
+      readTime: "5 min read",
+      excerpt: "Navigating the world of professional qualifications can be overwhelming. Here's our guide to finding the perfect course that aligns with your career aspirations and professional goals.",
+    },
+    blocks: [
+      {
+        id: "blog1_img",
+        type: "hero",
+        label: "Featured Image",
+        data: { title: "", subtitle: "", image: "business" },
+      },
+      {
+        id: "blog1_intro",
+        type: "text",
+        label: "Introduction",
+        alignment: "left",
+        data: {
+          title: "Introduction",
+          content: "<p>Choosing the right qualification is one of the most impactful decisions you can make for your career. With a wide range of options available — from Level 3 diplomas to Level 7 strategic management programmes — understanding which path aligns with your goals is essential.</p>",
+        },
+      },
+      {
+        id: "blog1_goals",
+        type: "text",
+        label: "Career Goals",
+        alignment: "left",
+        data: {
+          title: "Assess Your Career Goals",
+          content: "<p>Before selecting a qualification, take time to reflect on where you want to be in 2–5 years. Are you looking to move into a management role? Do you want to specialise in health and social care? Or are you aiming for a senior leadership position?</p><p>Each qualification level serves a different purpose. Level 3 and 4 qualifications are ideal for those early in their careers, while Level 6 and 7 programmes are designed for experienced professionals seeking strategic and leadership expertise.</p>",
+        },
+      },
+      {
+        id: "blog1_accreditation",
+        type: "text",
+        label: "Accreditation",
+        alignment: "left",
+        data: {
+          title: "Consider Accreditation",
+          content: "<p>Always ensure your chosen qualification is accredited by a recognised awarding body such as OTHM, QUALIFI, or CMI. Accredited qualifications carry greater weight with employers and demonstrate that the programme meets rigorous quality standards.</p>",
+        },
+      },
+      {
+        id: "blog1_flexibility",
+        type: "text",
+        label: "Flexibility",
+        alignment: "left",
+        data: {
+          title: "Think About Flexibility",
+          content: "<p>Modern learners need flexibility. Look for programmes that allow you to study at your own pace, submit evidence online, and access resources digitally. The Prime College offers exactly this — a structured yet flexible learning experience that fits around your professional commitments.</p>",
+        },
+      },
+      {
+        id: "blog1_cta",
+        type: "cta",
+        label: "Call to Action",
+        data: {
+          title: "Need Help Choosing?",
+          content: "Speak to our team and we'll help you find the right qualification for your goals.",
+          ctaLabel: "Contact Us",
+          ctaHref: "/contact",
+          bgMode: "color",
+          bgColor: "#0c2d6b",
+        },
+      },
+    ],
+    meta: { title: "How to Choose the Right Qualification – The Prime College", description: "Guide to finding the perfect professional qualification for your career." },
+  },
+  {
+    id: "blog-importance-of-accredited-qualifications",
+    title: "The Importance of Accredited Qualifications in the UK Job Market",
+    slug: "/blog/importance-of-accredited-qualifications",
+    type: "blog-post",
+    blogMeta: {
+      author: "The Prime College",
+      date: "5 Feb 2026",
+      category: "Industry Insights",
+      image: "executive",
+      readTime: "4 min read",
+      excerpt: "Employers increasingly value Ofqual-regulated qualifications. Learn why accredited diplomas from OTHM and QUALIFI can give you a competitive edge in today's market.",
+    },
+    blocks: [
+      {
+        id: "blog2_img",
+        type: "hero",
+        label: "Featured Image",
+        data: { title: "", subtitle: "", image: "executive" },
+      },
+      {
+        id: "blog2_why",
+        type: "text",
+        label: "Why It Matters",
+        alignment: "left",
+        data: {
+          title: "Why Accreditation Matters",
+          content: "<p>In an increasingly competitive job market, having an accredited qualification can set you apart from other candidates. Employers trust qualifications that are regulated by Ofqual and awarded by recognised bodies because they guarantee a standard of learning and assessment.</p>",
+        },
+      },
+      {
+        id: "blog2_ofqual",
+        type: "text",
+        label: "Ofqual",
+        alignment: "left",
+        data: {
+          title: "What Is Ofqual Regulation?",
+          content: "<p>Ofqual (the Office of Qualifications and Examinations Regulation) is the government body responsible for maintaining standards in qualifications in England. When a qualification is Ofqual-regulated, it means the content, assessment methods, and awarding processes have been rigorously reviewed.</p>",
+        },
+      },
+      {
+        id: "blog2_bodies",
+        type: "text",
+        label: "Awarding Bodies",
+        alignment: "left",
+        data: {
+          title: "Recognised Awarding Bodies",
+          content: "<p>The Prime College works with leading awarding organisations including OTHM, QUALIFI, VTCT, and CMI. Each of these bodies is recognised for delivering high-quality, industry-relevant qualifications that employers respect.</p>",
+        },
+      },
+      {
+        id: "blog2_impact",
+        type: "text",
+        label: "Career Impact",
+        alignment: "left",
+        data: {
+          title: "Career Impact",
+          content: "<p>Accredited qualifications can lead to higher salaries, faster promotions, and greater job security. Many employers require specific qualification levels for management and leadership roles, making investment in accredited education a strategic career move.</p>",
+        },
+      },
+    ],
+    meta: { title: "Importance of Accredited Qualifications – The Prime College", description: "Why accredited qualifications matter in the UK job market." },
+  },
+  {
+    id: "blog-prime-college-100-percent-completion-rate",
+    title: "The Prime College Achieves 100% Learner Completion Rate",
+    slug: "/blog/prime-college-100-percent-completion-rate",
+    type: "blog-post",
+    blogMeta: {
+      author: "The Prime College",
+      date: "28 Jan 2026",
+      category: "College News",
+      image: "classroom",
+      readTime: "3 min read",
+      excerpt: "We're proud to announce that The Prime College has maintained a 100% completion rate across all programmes, reflecting our commitment to learner success and support.",
+    },
+    blocks: [
+      {
+        id: "blog3_img",
+        type: "hero",
+        label: "Featured Image",
+        data: { title: "", subtitle: "", image: "classroom" },
+      },
+      {
+        id: "blog3_milestone",
+        type: "text",
+        label: "Milestone",
+        alignment: "left",
+        data: {
+          title: "A Milestone Achievement",
+          content: "<p>The Prime College is proud to announce that we have achieved and maintained a 100% learner completion rate across all of our qualification programmes. This milestone reflects our unwavering commitment to learner success and the effectiveness of our support systems.</p>",
+        },
+      },
+      {
+        id: "blog3_how",
+        type: "text",
+        label: "How We Achieve This",
+        alignment: "left",
+        data: {
+          title: "How We Achieve This",
+          content: "<p>Our success is built on several key pillars:</p><ul><li><strong>Dedicated Tutor Support:</strong> Every learner is assigned a personal tutor who provides ongoing guidance, feedback, and encouragement.</li><li><strong>Flexible Learning:</strong> Our platform allows learners to study at their own pace.</li><li><strong>Quality Resources:</strong> Comprehensive learning materials help learners understand exactly what is expected.</li><li><strong>Timely Feedback:</strong> Our trainers provide prompt, constructive assessment feedback.</li></ul>",
+        },
+      },
+      {
+        id: "blog3_meaning",
+        type: "text",
+        label: "What This Means",
+        alignment: "left",
+        data: {
+          title: "What This Means for You",
+          content: "<p>When you enrol with The Prime College, you're choosing a provider with a proven track record of helping every single learner achieve their qualification. We don't just enrol learners — we see them through to completion.</p>",
+        },
+      },
+    ],
+    meta: { title: "100% Completion Rate – The Prime College", description: "The Prime College maintains a 100% learner completion rate." },
+  },
 ];
