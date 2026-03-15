@@ -59,6 +59,15 @@ export interface TextBlock extends BlockBase {
   };
 }
 
+export interface ImageBlock extends BlockBase {
+  type: "image";
+  data: {
+    image: string;
+    alt?: string;
+    caption?: string;
+  };
+}
+
 export interface ImageTextBlock extends BlockBase {
   type: "image-text";
   data: {
