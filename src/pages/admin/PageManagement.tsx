@@ -156,7 +156,7 @@ const PageManagement = () => {
   );
 };
 
-const PageCard = ({ page }: { page: PageConfig }) => (
+const PageCard = ({ page, onDelete }: { page: PageConfig; onDelete?: (id: string) => void }) => (
   <Card className="hover:shadow-md transition-shadow h-full flex flex-col">
     <CardContent className="p-5 flex flex-col flex-1">
       <div className="flex items-start justify-between mb-3">
@@ -176,12 +176,17 @@ const PageCard = ({ page }: { page: PageConfig }) => (
         ))}
         {page.blocks.length > 3 && <span>+{page.blocks.length - 3} more</span>}
       </div>
-      <div className="mt-auto">
-        <Link to={`/admin/pages/${page.id}`}>
+      <div className="mt-auto flex gap-2">
+        <Link to={`/admin/pages/${page.id}`} className="flex-1">
           <Button size="sm" className="w-full">
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Page
           </Button>
         </Link>
+        {onDelete && (
+          <Button size="sm" variant="destructive" onClick={() => onDelete(page.id)}>
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        )}
       </div>
     </CardContent>
   </Card>
