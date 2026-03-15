@@ -18,6 +18,7 @@ const imageMap: Record<string, string> = {
 interface Slide {
   category: string;
   title: string;
+  level?: string;
   price: string;
   cta: string;
   image: string;
