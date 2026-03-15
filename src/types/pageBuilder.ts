@@ -67,6 +67,7 @@ export interface ImageTextBlock extends BlockBase {
     imagePosition?: "left" | "right";
     ctaLabel?: string;
     ctaHref?: string;
+    description?: string;
   };
 }
 
