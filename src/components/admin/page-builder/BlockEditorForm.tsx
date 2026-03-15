@@ -39,6 +39,20 @@ const BlockEditorForm = ({ block, onChange, onBlockMetaChange, onClose }: BlockE
 
   return (
     <div className="space-y-4 py-2">
+      {/* Editable Block Label */}
+      <div>
+        <Label className="text-xs text-muted-foreground">Block Label</Label>
+        <Input value={blockLabel} onChange={(e) => setBlockLabel(e.target.value)} placeholder="e.g. Featured Image, Introduction..." className="h-8 text-sm" />
+      </div>
+
+      {/* Image-only block */}
+      {block.type === "image" && (
+        <div className="space-y-3">
+          <ImageField value={(local.image as string) || ""} onChange={(v) => update("image", v)} />
+          <Field label="Alt Text" value={(local.alt as string) || ""} onChange={(v) => update("alt", v)} />
+          <Field label="Caption" value={(local.caption as string) || ""} onChange={(v) => update("caption", v)} />
+        </div>
+      )}
       {/* Title + Alignment row */}
       {typeof local.title === "string" && (
         <div>

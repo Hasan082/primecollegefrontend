@@ -95,6 +95,23 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
               </StyledWrapper>
             );
 
+          case "image": {
+            const imgSrc = d.image as string;
+            const hasImage = imgSrc && (imgSrc.startsWith("data:") || imgSrc.startsWith("http"));
+            return (
+              <StyledWrapper key={block.id} block={block} defaultClass="bg-muted">
+                {hasImage ? (
+                  <img src={imgSrc} alt={(d.alt as string) || ""} className="w-full max-h-48 object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-24 text-muted-foreground text-[10px]">
+                    No image uploaded
+                  </div>
+                )}
+                {d.caption && <p className="text-[8px] text-muted-foreground text-center py-1">{d.caption as string}</p>}
+              </StyledWrapper>
+            );
+          }
+
           case "text": {
             // Text block uses its own data.alignment for backward compat
             const textAlign = (d.alignment as string) || block.alignment || "center";
