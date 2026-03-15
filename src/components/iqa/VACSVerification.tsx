@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, XCircle } from "lucide-react";
 
 export interface VACSState {
   valid: boolean | null;
@@ -26,9 +24,8 @@ const VACS_ITEMS: { key: keyof VACSState; label: string; description: string }[]
 ];
 
 const VACSVerification = ({ value, onChange, readOnly = false }: VACSVerificationProps) => {
-  const allChecked = Object.values(value).every(v => v === true);
-  const anyFailed = Object.values(value).some(v => v === false);
   const checkedCount = Object.values(value).filter(v => v === true).length;
+  const allChecked = checkedCount === 4;
 
   return (
     <Card className="p-5">
@@ -38,58 +35,38 @@ const VACSVerification = ({ value, onChange, readOnly = false }: VACSVerificatio
           className={`text-xs font-bold ${
             allChecked
               ? "bg-green-600 text-white"
-              : anyFailed
-                ? "bg-destructive text-destructive-foreground"
+              : checkedCount > 0
+                ? "bg-amber-500 text-white"
                 : "bg-muted text-muted-foreground"
           }`}
         >
-          {allChecked ? "All Standards Met" : anyFailed ? "Issues Found" : `${checkedCount}/4 Checked`}
+          {allChecked ? "All Standards Met" : `${checkedCount}/4 Checked`}
         </Badge>
       </div>
 
       <div className="space-y-3">
         {VACS_ITEMS.map((item) => {
-          const val = value[item.key];
+          const isChecked = value[item.key] === true;
           return (
             <div
               key={item.key}
               className={`rounded-xl border-2 p-4 transition-all ${
-                val === true
+                isChecked
                   ? "border-green-300 bg-green-50 dark:bg-green-950/20 dark:border-green-800"
-                  : val === false
-                    ? "border-destructive/30 bg-destructive/5"
-                    : "border-border bg-card"
+                  : "border-border bg-card"
               }`}
             >
-              <div className="flex items-start gap-3">
-                <div className="flex flex-col gap-2 mt-1">
-                  <button
-                    type="button"
-                    disabled={readOnly}
-                    onClick={() => onChange({ ...value, [item.key]: true })}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                      val === true
-                        ? "bg-green-600 text-white"
-                        : "bg-muted text-muted-foreground hover:bg-green-100 hover:text-green-700"
-                    } ${readOnly ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
-                  >
-                    <CheckCircle2 className="w-3 h-3" /> Yes
-                  </button>
-                  <button
-                    type="button"
-                    disabled={readOnly}
-                    onClick={() => onChange({ ...value, [item.key]: false })}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                      val === false
-                        ? "bg-destructive text-destructive-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-red-100 hover:text-red-700"
-                    } ${readOnly ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
-                  >
-                    <XCircle className="w-3 h-3" /> No
-                  </button>
-                </div>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={isChecked}
+                  disabled={readOnly}
+                  onCheckedChange={(checked) =>
+                    onChange({ ...value, [item.key]: checked === true ? true : false })
+                  }
+                  className="h-5 w-5"
+                />
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-foreground">{item.label}</p>
+                  <Label className="text-sm font-bold text-foreground cursor-pointer">{item.label}</Label>
                   <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                 </div>
               </div>
