@@ -156,7 +156,7 @@ const App = () => {
                         <Route path="/qualifications" element={<Qualifications />} />
                         <Route path="/qualifications/:slug" element={<QualificationDetail />} />
                         <Route path="/recruitment" element={<Recruitment />} />
-                        <Route path="/blog" element={<BlogDetail />} />
+                        <Route path="/blog" element={<Blog />} />
                         <Route path="/blog/:id" element={<BlogDetail />} />
                         <Route path="/contact" element={<Contact />} />
                         <Route path="*" element={<NotFound />} />
