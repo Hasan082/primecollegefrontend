@@ -50,104 +50,60 @@ const Blog = () => {
 
       <div className="bg-muted/30 py-10">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Posts Grid */}
-            <div className="lg:col-span-2">
-              {/* Search + Filter Row */}
-              <div className="flex items-center justify-between gap-4 mb-8">
-                <div className="relative flex-1 max-w-sm">
-                  <Input
-                    placeholder="Search posts..."
-                    className="pr-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <Search className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2" />
-                </div>
-                <Select value={activeCategory} onValueChange={setActiveCategory}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["All", ...categories].map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filtered.map((post) => (
-                  <Link
-                    key={post.id}
-                    to={post.slug}
-                    className="bg-card border border-border rounded-xl overflow-hidden group block"
-                  >
-                    <div className="aspect-[16/9] overflow-hidden">
-                      <img
-                        src={heroImageMap[post.blogMeta?.image || "classroom"] || heroClassroom}
-                        alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-5">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
-                          {post.blogMeta?.category}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{post.blogMeta?.date}</span>
-                      </div>
-                      <h3 className="text-base font-semibold text-foreground leading-snug mb-2 group-hover:text-primary transition-colors">
-                        {post.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                        {post.blogMeta?.excerpt}
-                      </p>
-                      <span className="text-sm font-semibold text-primary">Read More →</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+          {/* Search + Filter Row */}
+          <div className="flex items-center justify-between gap-4 mb-8">
+            <div className="relative flex-1 max-w-sm">
+              <Input
+                placeholder="Search posts..."
+                className="pr-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Search className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2" />
             </div>
+            <Select value={activeCategory} onValueChange={setActiveCategory}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                {["All", ...categories].map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            {/* Sidebar */}
-            <aside className="space-y-8">
-              {/* Search */}
-              <div className="bg-card rounded-xl p-6 border border-border">
-                <h3 className="text-base font-bold text-foreground mb-1">Search</h3>
-                <div className="w-8 h-0.5 bg-primary mb-4" />
-                <div className="relative">
-                  <Input
-                    placeholder="Search..."
-                    className="pr-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((post) => (
+              <Link
+                key={post.id}
+                to={post.slug}
+                className="bg-card border border-border rounded-xl overflow-hidden group block"
+              >
+                <div className="aspect-[16/9] overflow-hidden">
+                  <img
+                    src={heroImageMap[post.blogMeta?.image || "classroom"] || heroClassroom}
+                    alt={post.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <Search className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2" />
                 </div>
-              </div>
-
-              {/* Categories */}
-              <div className="bg-card rounded-xl p-6 border border-border">
-                <h3 className="text-base font-bold text-foreground mb-1">Categories</h3>
-                <div className="w-8 h-0.5 bg-primary mb-4" />
-                <div className="space-y-0">
-                  {categories.map((cat) => {
-                    const count = allBlogPosts.filter((p) => p.blogMeta?.category === cat).length;
-                    return (
-                      <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
-                        className="flex items-center justify-between w-full py-2.5 border-b border-border last:border-0 hover:text-primary transition-colors"
-                      >
-                        <span className="text-sm text-muted-foreground">{cat}</span>
-                        <span className="text-sm text-muted-foreground">({count})</span>
-                      </button>
-                    );
-                  })}
+                <div className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
+                      {post.blogMeta?.category}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{post.blogMeta?.date}</span>
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground leading-snug mb-2 group-hover:text-primary transition-colors">
+                    {post.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                    {post.blogMeta?.excerpt}
+                  </p>
+                  <span className="text-sm font-semibold text-primary">Read More →</span>
                 </div>
-              </div>
-            </aside>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
