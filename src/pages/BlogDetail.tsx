@@ -76,15 +76,7 @@ const BlogDetail = () => {
         <div className="absolute inset-0 bg-primary/70" />
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-4">
-            <Breadcrumb
-              variant="overlay"
-              items={[
-                { label: "Home", href: "/" },
-                { label: "Blog", href: "/" },
-                { label: post.title },
-              ]}
-            />
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mt-4 max-w-3xl leading-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground max-w-3xl leading-tight">
               {post.title}
             </h1>
             <div className="flex flex-wrap items-center gap-4 mt-6">
@@ -104,6 +96,7 @@ const BlogDetail = () => {
           </div>
         </div>
       </section>
+      <Breadcrumb items={[{ label: "Blog", href: "/blog" }, { label: post.title }]} />
 
       {/* Content */}
       <section className="py-12 md:py-16">
