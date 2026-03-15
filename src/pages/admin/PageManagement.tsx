@@ -91,6 +91,27 @@ const PageManagement = () => {
         )}
       </div>
 
+      {/* Blog Posts */}
+      <div>
+        <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-primary" /> Blog Posts
+        </h2>
+        {blogPages.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">
+              <FileText className="h-10 w-10 mx-auto mb-3 opacity-40" />
+              <p>No blog posts yet. Click "New Page" and select "Blog Post" to create one.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {blogPages.map((page) => (
+              <PageCard key={page.id} page={page} />
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Add Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
