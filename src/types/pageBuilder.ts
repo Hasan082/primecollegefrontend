@@ -169,10 +169,20 @@ export interface PageConfig {
   id: string;
   title: string;
   slug: string;
-  type: "static" | "qualification";
+  type: "static" | "qualification" | "blog-post";
   blocks: ContentBlock[];
   meta?: { title?: string; description?: string };
   updatedAt?: string;
+  // Blog post specific fields
+  blogMeta?: {
+    author?: string;
+    date?: string;
+    category?: string;
+    image?: string;
+    readTime?: string;
+    excerpt?: string;
+    featured?: boolean;
+  };
 }
 
 // Helper
