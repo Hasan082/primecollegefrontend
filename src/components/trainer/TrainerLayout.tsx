@@ -12,19 +12,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useGetMeQuery } from "@/redux/apis/authApi";
 
 const TrainerLayout = () => {
-  const { user, logout } = useAuth();
+  const { data: userData } = useGetMeQuery(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user || user.role !== "trainer") navigate("/staff-login", { replace: true });
-  }, [user, navigate]);
+  // useEffect(() => {
+  //   if (!user || user.role !== "trainer")
+  //     navigate("/staff-login", { replace: true });
+  // }, [user, navigate]);
 
-  if (!user || user.role !== "trainer") return null;
+  // if (!user || user.role !== "trainer") return null;
 
   const handleLogout = () => {
-    logout();
+    // logout();
     navigate("/staff-login", { replace: true });
   };
 
@@ -47,18 +49,26 @@ const TrainerLayout = () => {
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
                     <User className="w-4 h-4 text-secondary-foreground" />
                   </div>
-                  <span className="hidden sm:inline text-sm font-medium">{user.name}</span>
+                  <span className="hidden sm:inline text-sm font-medium">
+                    {/* {user.name} */}
+                  </span>
                   <ChevronDown className="w-4 h-4 opacity-70" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to="/trainer/profile" className="flex items-center gap-2 cursor-pointer">
+                    <Link
+                      to="/trainer/profile"
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
                       <UserCircle className="h-4 w-4" />
                       My Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-destructive cursor-pointer"
+                  >
                     <LogOut className="h-4 w-4" />
                     Logout
                   </DropdownMenuItem>
