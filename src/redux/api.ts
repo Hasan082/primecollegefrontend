@@ -23,9 +23,8 @@ const baseQuery = fetchBaseQuery({
 
     // 2. Fallback to cookie (for same-domain/production)
     const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(";").shift();
+      const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]+)'));
+      return match ? match[2] : undefined;
     };
 
     const csrfToken = getCookie("csrftoken");
