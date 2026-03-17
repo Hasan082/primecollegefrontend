@@ -16,10 +16,6 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleDemoLogin = () => {
-    login("learner");
-    navigate("/learner/dashboard");
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
