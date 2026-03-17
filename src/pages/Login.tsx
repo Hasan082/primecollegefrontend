@@ -171,17 +171,6 @@ const Login = () => {
               </button>
             </form>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-              <div className="relative flex justify-center"><span className="bg-card px-3 text-xs text-muted-foreground">OR</span></div>
-            </div>
-
-            <button
-              onClick={handleDemoLogin}
-              className="w-full h-11 rounded-lg font-semibold text-sm border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              🚀 Demo Login (One Click)
-            </button>
 
             <div className="flex items-center justify-center gap-1.5 mt-5 text-xs text-muted-foreground">
               <Lock className="w-3 h-3" />
