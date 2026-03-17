@@ -1,47 +1,54 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useEffect } from "react";
+import { useGetMeQuery, useLogoutMutation } from "@/redux/apis/authApi";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { api } from "@/redux/api";
 
 export type UserRole = "learner" | "trainer" | "admin" | "iqa";
 
-interface DemoUser {
-  name: string;
+interface User {
+  id: string;
   email: string;
   role: UserRole;
+  full_name?: string;
 }
 
 interface AuthContextType {
-  user: DemoUser | null;
-  login: (role?: UserRole) => void;
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const DEMO_USERS: Record<UserRole, DemoUser> = {
-  learner: { name: "John Smith", email: "john.smith@example.com", role: "learner" },
-  trainer: { name: "Sarah Jones", email: "trainer@primecollege.edu", role: "trainer" },
-  admin: { name: "Admin User", email: "admin@primecollege.edu", role: "admin" },
-  iqa: { name: "Claire Morgan", email: "iqa@primecollege.edu", role: "iqa" },
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<DemoUser | null>(() => {
-    const saved = sessionStorage.getItem("demo_user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const { data: userData, isLoading, refetch } = useGetMeQuery(undefined);
+  const [logoutMutation] = useLogoutMutation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const login = (role: UserRole = "learner") => {
-    const u = DEMO_USERS[role];
-    sessionStorage.setItem("demo_user", JSON.stringify(u));
-    setUser(u);
-  };
+  const user = userData?.data?.user || null;
+  const isAuthenticated = !!user;
 
-  const logout = () => {
-    sessionStorage.removeItem("demo_user");
-    setUser(null);
+  const logout = async () => {
+    try {
+      await logoutMutation(undefined).unwrap();
+    } catch (error) {
+
+    } finally {
+      dispatch(api.util.resetApiState());
+      navigate("/");
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
+      isLoading,
+      logout
+    }}>
       {children}
     </AuthContext.Provider>
   );

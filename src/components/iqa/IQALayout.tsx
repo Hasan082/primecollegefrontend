@@ -12,21 +12,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useGetMeQuery, useLogoutMutation } from "@/redux/apis/authApi";
+import LoadingSpinner from "../LoadingSpinner";
 
 const IQALayout = () => {
-  const { user, logout } = useAuth();
+  const { data: userData, isLoading } = useGetMeQuery(null);
+  const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || user.role !== "iqa") navigate("/staff-login", { replace: true });
-  }, [user, navigate]);
-
-  if (!user || user.role !== "iqa") return null;
+    if (
+      !isLoading &&
+      (!userData?.data?.user || userData?.data?.user.role !== "iqa")
+    ) {
+      navigate("/staff-login", { replace: true });
+    }
+  }, [userData, isLoading, navigate]);
 
   const handleLogout = () => {
-    logout();
+    logout(null);
+
     navigate("/staff-login", { replace: true });
   };
+
+  if (isLoading || isLogoutLoading) return <LoadingSpinner />;
+
+  if (!userData?.data?.user || userData?.data?.user.role !== "iqa") {
+    return <LoadingSpinner />;
+  }
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -35,10 +48,19 @@ const IQALayout = () => {
           <div className="px-4 sm:px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-primary-foreground hover:bg-primary-foreground/10 rounded-md p-1.5" />
-              <a href="/" className="w-8 h-8 rounded-full border border-primary-foreground/30 p-0.5 block">
-                <img src={logo} alt="Prime College" className="w-full h-full object-contain" />
+              <a
+                href="/"
+                className="w-8 h-8 rounded-full border border-primary-foreground/30 p-0.5 block"
+              >
+                <img
+                  src={logo}
+                  alt="Prime College"
+                  className="w-full h-full object-contain"
+                />
               </a>
-              <span className="text-lg font-bold hidden sm:inline">IQA Portal</span>
+              <span className="text-lg font-bold hidden sm:inline">
+                IQA Portal
+              </span>
             </div>
             <div className="flex items-center gap-3">
               <DropdownMenu>
@@ -46,18 +68,28 @@ const IQALayout = () => {
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
                     <User className="w-4 h-4 text-secondary-foreground" />
                   </div>
-                  <span className="hidden sm:inline text-sm font-medium">{user.name}</span>
+                  <span className="hidden sm:inline text-sm font-medium">
+                    {userData?.data?.user?.first_name +
+                      " " +
+                      userData?.data?.user?.last_name}
+                  </span>
                   <ChevronDown className="w-4 h-4 opacity-70" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to="/iqa/dashboard" className="flex items-center gap-2 cursor-pointer">
+                    <Link
+                      to="/iqa/dashboard"
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
                       <UserCircle className="h-4 w-4" />
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-destructive cursor-pointer"
+                  >
                     <LogOut className="h-4 w-4" />
                     Logout
                   </DropdownMenuItem>

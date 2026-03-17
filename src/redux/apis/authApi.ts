@@ -9,14 +9,30 @@ const authApi = api.injectEndpoints({
         body: payload,
       }),
     }),
+    logout: builder.mutation({
+      query: () => ({
+        url: "/api/auth/logout/",
+        method: "POST",
+      }),
+    }),
     getMe: builder.query({
-      query: (payload) => ({
-        url: "/api/auth/me",
+      query: () => ({
+        url: "/api/auth/me/",
         method: "GET",
-        body: payload,
+      }),
+    }),
+    getCsrfToken: builder.query({
+      query: () => ({
+        url: "/api/auth/csrf/",
+        method: "GET",
       }),
     }),
   }),
 });
 
-export const { useLoginMutation, useGetMeQuery } = authApi;
+export const {
+  useLoginMutation,
+  useLogoutMutation,
+  useGetMeQuery,
+  useGetCsrfTokenQuery,
+} = authApi;

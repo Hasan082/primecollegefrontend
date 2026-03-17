@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import logo from "@/assets/prime-logo-white-notext.png";
 
 const LoadingSpinner = () => {
@@ -32,7 +33,13 @@ const LoadingSpinner = () => {
         {/* Center circle with logo */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-[52px] h-[52px] rounded-full border border-secondary/40 bg-primary flex items-center justify-center p-1">
-            <img src={logo} alt="Prime College UK" className="w-full h-full object-contain" loading="eager" fetchPriority="high" />
+            <img
+              src={logo}
+              alt="Prime College UK"
+              className="w-full h-full object-contain"
+              loading="eager"
+              {...({ fetchpriority: "high" } as any)}
+            />
           </div>
         </div>
       </div>

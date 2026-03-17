@@ -1,9 +1,4 @@
-import { Outlet, useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { User, UserCircle, KeyRound, LogOut, ChevronDown } from "lucide-react";
 import logo from "@/assets/prime-logo-white-notext.png";
-import { useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import TrainerSidebar from "@/components/trainer/TrainerSidebar";
 import {
   DropdownMenu,
@@ -12,24 +7,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useGetMeQuery } from "@/redux/apis/authApi";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useGetMeQuery, useLogoutMutation } from "@/redux/apis/authApi";
+import { ChevronDown, LogOut, User, UserCircle } from "lucide-react";
+import { useEffect } from "react";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import LoadingSpinner from "../LoadingSpinner";
 
 const TrainerLayout = () => {
-  const { data: userData } = useGetMeQuery(null);
+  const { data: userData, isLoading } = useGetMeQuery(null);
+  const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   if (!user || user.role !== "trainer")
-  //     navigate("/staff-login", { replace: true });
-  // }, [user, navigate]);
-
-  // if (!user || user.role !== "trainer") return null;
+  useEffect(() => {
+    if (
+      !isLoading &&
+      (!userData?.data?.user || userData?.data?.user.role !== "trainer")
+    ) {
+      navigate("/staff-login", { replace: true });
+    }
+  }, [userData, isLoading, navigate]);
 
   const handleLogout = () => {
-    // logout();
+    logout(null);
+
     navigate("/staff-login", { replace: true });
   };
 
+  if (isLoading || isLogoutLoading) return <LoadingSpinner />;
+
+  if (!userData?.data?.user || userData?.data?.user.role !== "trainer") {
+    return <LoadingSpinner />;
+  }
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex flex-col w-full">
@@ -37,10 +46,19 @@ const TrainerLayout = () => {
           <div className="px-4 sm:px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-primary-foreground hover:bg-primary-foreground/10 rounded-md p-1.5" />
-              <a href="/" className="w-8 h-8 rounded-full border border-primary-foreground/30 p-0.5 block">
-                <img src={logo} alt="Prime College" className="w-full h-full object-contain" />
+              <a
+                href="/"
+                className="w-8 h-8 rounded-full border border-primary-foreground/30 p-0.5 block"
+              >
+                <img
+                  src={logo}
+                  alt="Prime College"
+                  className="w-full h-full object-contain"
+                />
               </a>
-              <span className="text-lg font-bold hidden sm:inline">Trainer / Assessor Portal</span>
+              <span className="text-lg font-bold hidden sm:inline">
+                Trainer / Assessor Portal
+              </span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -50,7 +68,9 @@ const TrainerLayout = () => {
                     <User className="w-4 h-4 text-secondary-foreground" />
                   </div>
                   <span className="hidden sm:inline text-sm font-medium">
-                    {/* {user.name} */}
+                    {userData?.data?.user?.first_name +
+                      " " +
+                      userData?.data?.user?.last_name}
                   </span>
                   <ChevronDown className="w-4 h-4 opacity-70" />
                 </DropdownMenuTrigger>
