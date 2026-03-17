@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/prime-logo-white-notext.png";
-import { useLoginMutation } from "@/redux/apis/authApi";
+import { useLoginMutation, useGetCsrfTokenQuery } from "@/redux/apis/authApi";
 import { TryCatch } from "@/utils/apiTryCatch";
 import { appConfig } from "@/app.config";
 
@@ -51,7 +51,7 @@ const ROLE_CONFIG = {
     ],
     cardTitle: "Administration Portal",
     signInLabel: "Sign In to Admin Portal",
-    demoRedirect: "/admin/dashboard",
+    redirect: appConfig.ADMIN_REDIRECT, // Replaced hardcoded path
     placeholder: "admin@primecollege.edu",
   },
   iqa: {
@@ -80,20 +80,16 @@ const StaffLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<StaffRole>("trainer");
 
-  const [login, { isLoading }] = useLoginMutation();
+  const [login, { isLoading: loading }] = useLoginMutation();
+  const { data: csrfData } = useGetCsrfTokenQuery(undefined);
   const { toast } = useToast();
 
   const navigate = useNavigate();
 
   const config = ROLE_CONFIG[selectedRole];
 
-  const handleDemoLogin = () => {
-    login(selectedRole);
-    navigate(config.demoRedirect);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,17 +112,19 @@ const StaffLogin = () => {
         description: error,
         variant: "destructive",
       });
-      return; // stop here if error
+      return;
     }
-
-    if (result?.message) {
+    if (result?.message || result?.data?.user) {
       toast({
         title: "Success",
-        description: result.message,
-        variant: "default",
+        description: result.message || "Logged in successfully",
       });
 
-      navigate(redirects[result?.data?.user?.role]);
+      const role = result?.data?.user?.role;
+      if (role === "admin") navigate(appConfig.ADMIN_REDIRECT);
+      else if (role === "trainer") navigate(appConfig.TRAINER_REDIRECT);
+      else if (role === "iqa") navigate(appConfig.IQA_REDIRECT);
+      else navigate(appConfig.LERNER_REDIRECT);
     }
   };
 
@@ -263,11 +261,10 @@ const StaffLogin = () => {
                   <button
                     key={role}
                     onClick={() => setSelectedRole(role)}
-                    className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-lg text-xs font-medium transition-all ${
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-lg text-xs font-medium transition-all ${isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     {ROLE_CONFIG[role].label}
@@ -329,23 +326,6 @@ const StaffLogin = () => {
               </button>
             </form>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-card px-3 text-xs text-muted-foreground">
-                  OR
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleDemoLogin}
-              className="w-full h-11 rounded-lg font-semibold text-sm border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              🚀 Demo {ROLE_CONFIG[selectedRole].label} Login
-            </button>
 
             <div className="flex items-center justify-center gap-1.5 mt-5 text-xs text-muted-foreground">
               <Lock className="w-3 h-3" />

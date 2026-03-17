@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
+import { Menu, X, ChevronDown, ArrowRight, User, LogOut, LayoutDashboard } from "lucide-react";
 import logo from "@/assets/prime-logo-white-notext.png";
+import { useAuth } from "@/contexts/AuthContext";
+import { appConfig } from "@/app.config";
 
 interface Qualification {
   label: string;
@@ -107,9 +109,11 @@ const getCategorySlug = (label: string) => encodeURIComponent(label);
 
 const Header = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, logout, user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
   const [openAbout, setOpenAbout] = useState(false);
+  const [openProfile, setOpenProfile] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
 
@@ -195,12 +199,63 @@ const Header = () => {
               </Link>
             ))}
 
-            <Link
-              to="/login"
-              className="ml-1 bg-secondary text-secondary-foreground px-4 py-1.5 text-xs font-semibold rounded hover:opacity-90"
-            >
-              Login
-            </Link>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3 ml-4">
+                <Link
+                  to={user?.role === 'admin' ? appConfig.ADMIN_REDIRECT : 
+                      user?.role === 'trainer' ? appConfig.TRAINER_REDIRECT :
+                      user?.role === 'iqa' ? appConfig.IQA_REDIRECT : appConfig.LERNER_REDIRECT}
+                  className="bg-secondary text-secondary-foreground px-4 py-1.5 text-xs font-semibold rounded hover:opacity-90 flex items-center gap-2"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  Dashboard
+                </Link>
+                
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setOpenProfile(true)}
+                  onMouseLeave={() => setOpenProfile(false)}
+                >
+                  <button className="w-8 h-8 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground hover:bg-primary-foreground/20 transition-colors">
+                    <User className="w-4 h-4" />
+                  </button>
+                  
+                  {openProfile && (
+                    <div className="absolute top-full right-0 mt-0 pt-2 w-48 z-50">
+                      <div className="bg-popover border border-border rounded-lg shadow-lg py-2 overflow-hidden">
+                        <div className="px-4 py-2 border-b border-border mb-1">
+                          <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Account</p>
+                          <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
+                        </div>
+                        {user?.role === 'learner' && (
+                          <Link
+                            to="/learner/profile"
+                            className="w-full flex items-center gap-2 px-4 py-2 text-xs text-foreground hover:bg-muted transition-colors"
+                          >
+                            <User className="w-3.5 h-3.5" />
+                            My Profile
+                          </Link>
+                        )}
+                        <button
+                          onClick={logout}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-xs text-destructive hover:bg-muted transition-colors"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="ml-4 bg-secondary text-secondary-foreground px-4 py-1.5 text-xs font-semibold rounded hover:opacity-90"
+              >
+                Login
+              </Link>
+            )}
           </nav>
 
           {/* Mobile Cart + Toggle */}

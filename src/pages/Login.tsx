@@ -1,37 +1,57 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, Mail, CheckCircle2, Shield, FileCheck, Award, ArrowLeft, Lock, GraduationCap } from "lucide-react";
+import { useLoginMutation, useGetCsrfTokenQuery } from "@/redux/apis/authApi";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/prime-logo-white-notext.png";
+import { appConfig } from "@/app.config";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { login } = useAuth();
+  const [loginMutation, { isLoading: loading }] = useLoginMutation();
+  const { data: csrfData } = useGetCsrfTokenQuery(undefined);
   const navigate = useNavigate();
 
-  const handleDemoLogin = () => {
-    login("learner");
-    navigate("/learner/dashboard");
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       toast({ title: "Please fill in all fields", variant: "destructive" });
       return;
     }
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast({ title: "Login functionality coming soon", description: "Backend authentication is not yet configured." });
-    }, 1000);
+
+    try {
+      const result = await loginMutation({
+        email,
+        password,
+        role: "learner",
+      }).unwrap();
+
+      if (result.data?.user) {
+        toast({
+          title: "Success",
+          description: result.message || "Logged in successfully",
+        });
+        
+        // Smart redirect based on role
+        const role = result.data.user.role;
+        if (role === "admin") navigate(appConfig.ADMIN_REDIRECT);
+        else if (role === "trainer") navigate(appConfig.TRAINER_REDIRECT);
+        else if (role === "iqa") navigate(appConfig.IQA_REDIRECT);
+        else navigate(appConfig.LERNER_REDIRECT);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error?.data?.message || "Invalid credentials",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -171,17 +191,6 @@ const Login = () => {
               </button>
             </form>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-              <div className="relative flex justify-center"><span className="bg-card px-3 text-xs text-muted-foreground">OR</span></div>
-            </div>
-
-            <button
-              onClick={handleDemoLogin}
-              className="w-full h-11 rounded-lg font-semibold text-sm border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              🚀 Demo Login (One Click)
-            </button>
 
             <div className="flex items-center justify-center gap-1.5 mt-5 text-xs text-muted-foreground">
               <Lock className="w-3 h-3" />

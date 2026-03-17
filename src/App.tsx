@@ -124,11 +124,11 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <CartProvider>
-            <AuthProvider>
-              {showLoading && <LoadingSpinner />}
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+            <BrowserRouter>
+              <AuthProvider>
+                {showLoading && <LoadingSpinner />}
+                <Toaster />
+                <Sonner />
                 <ScrollToTop />
                 <Suspense fallback={<LoadingSpinner />}>
                   <Routes>
@@ -268,8 +268,8 @@ const App = () => {
                     />
                   </Routes>
                 </Suspense>
-              </BrowserRouter>
-            </AuthProvider>
+              </AuthProvider>
+            </BrowserRouter>
           </CartProvider>
         </TooltipProvider>
       </QueryClientProvider>
