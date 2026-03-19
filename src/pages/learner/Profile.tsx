@@ -5,20 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useUpdateMeMutation } from "@/redux/apis/authApi";
 
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const [updateMe, { isLoading }] = useUpdateMeMutation();
+
   const [form, setForm] = useState({
-    name: user?.name ?? "",
+    full_name: user?.full_name ?? "",
     email: user?.email ?? "",
-    phone: "07700 900123",
-    address: "123 Learning Lane, London, SE1 2AB",
+    phone: "07700 900123", // Static for now unless backend provides it
+    address: "123 Learning Lane, London, SE1 2AB", // Static for now
   });
 
-  const handleSave = () => {
-    toast({ title: "Profile Updated", description: "Your profile has been saved successfully." });
+  const handleSave = async () => {
+    try {
+      await updateMe({ full_name: form.full_name }).unwrap();
+      toast({ title: "Profile Updated", description: "Your profile has been saved successfully." });
+    } catch (error) {
+      toast({ title: "Update Failed", description: "Failed to update profile.", variant: "destructive" });
+    }
   };
 
   return (
@@ -33,7 +41,7 @@ const Profile = () => {
             <UserCircle className="w-10 h-10 text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-foreground text-lg">{form.name}</p>
+            <p className="font-semibold text-foreground text-lg">{form.full_name || 'User'}</p>
             <p className="text-sm text-muted-foreground">Learner</p>
           </div>
         </div>
@@ -44,7 +52,7 @@ const Profile = () => {
             <Label htmlFor="name">Full Name</Label>
             <div className="relative mt-1.5">
               <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="pl-10" />
+              <Input id="name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} className="pl-10" />
             </div>
           </div>
           <div>
@@ -71,8 +79,8 @@ const Profile = () => {
           </div>
         </div>
 
-        <Button onClick={handleSave} className="gap-2">
-          <Save className="w-4 h-4" /> Save Changes
+        <Button onClick={handleSave} disabled={isLoading} className="gap-2">
+          <Save className="w-4 h-4" /> {isLoading ? "Saving..." : "Save Changes"}
         </Button>
       </div>
     </div>
