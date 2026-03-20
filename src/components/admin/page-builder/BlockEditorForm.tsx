@@ -13,12 +13,11 @@ import ItemListEditor from "./ItemListEditor";
 
 interface BlockEditorFormProps {
   block: ContentBlock;
-  onChange: (data: Record<string, unknown>) => void;
-  onBlockMetaChange?: (meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string }) => void;
+  onSave: (data: Record<string, unknown>, meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string }) => void;
   onClose: () => void;
 }
 
-const BlockEditorForm = ({ block, onChange, onBlockMetaChange, onClose }: BlockEditorFormProps) => {
+const BlockEditorForm = ({ block, onSave, onClose }: BlockEditorFormProps) => {
   const [local, setLocal] = useState<Record<string, unknown>>(block.data as Record<string, unknown>);
   const [alignment, setAlignment] = useState<TextAlignment>(block.alignment || "center");
   const [blockStyle, setBlockStyle] = useState<BlockStyle>(block.style || {});
@@ -29,8 +28,7 @@ const BlockEditorForm = ({ block, onChange, onBlockMetaChange, onClose }: BlockE
   };
 
   const handleSave = () => {
-    onChange(local);
-    onBlockMetaChange?.({ alignment, style: blockStyle, label: blockLabel });
+    onSave(local, { alignment, style: blockStyle, label: blockLabel });
     onClose();
   };
 

@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import type {
   ContentBlock,
   BlockType,
@@ -89,18 +91,37 @@ const PageEditor = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [editBlock, setEditBlock] = useState<ContentBlock | null>(null);
   const [showPreview, setShowPreview] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
   const [updatePage] = useUpdatePageMutation();
 
   useEffect(() => {
-    if (!cmsPage) return;
+    if (!cmsPage || hasLoaded) return;
     setPageTitle(cmsPage.title || "Untitled");
-    setBlocks(cmsPage.blocks || []);
+
+    // Handle blocks if they come as a string or array
+    const rawBlocks = cmsPage.blocks;
+    try {
+      const parsedBlocks =
+        typeof rawBlocks === "string" ? JSON.parse(rawBlocks) : rawBlocks;
+      setBlocks(parsedBlocks || []);
+    } catch (e) {
+      console.error("Failed to parse blocks:", e);
+      setBlocks([]);
+    }
+
     setSlug((cmsPage.slug || pageId || "").replace(/^\//, ""));
+    setIsPublished(cmsPage.is_published || false);
     setMeta({
       title: cmsPage.seo_title || "",
       description: cmsPage.seo_description || "",
     });
-  }, [cmsPage, pageId]);
+    setHasLoaded(true);
+  }, [cmsPage, pageId, hasLoaded]);
+
+  useEffect(() => {
+    setHasLoaded(false);
+  }, [pageId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -126,8 +147,14 @@ const PageEditor = () => {
 
     const [data, error] = await TryCatch(
       updatePage({
-        slug,
-        payload: { blocks: updatedBlocks },
+        slug: pageId as string,
+        payload: {
+          blocks: JSON.stringify(updatedBlocks),
+          title: pageTitle,
+          seo_title: meta.title,
+          seo_description: meta.description,
+          is_published: isPublished,
+        },
       }).unwrap(),
     );
 
@@ -152,8 +179,14 @@ const PageEditor = () => {
 
     const [data, error] = await TryCatch(
       updatePage({
-        slug,
-        payload: { blocks: updatedBlocks },
+        slug: pageId as string,
+        payload: {
+          blocks: JSON.stringify(updatedBlocks),
+          title: pageTitle,
+          seo_title: meta.title,
+          seo_description: meta.description,
+          is_published: isPublished,
+        },
       }).unwrap(),
     );
     if (!error || data?.success) {
@@ -174,11 +207,16 @@ const PageEditor = () => {
     });
   };
 
-  const updateBlockData = async (id: string, data: Record<string, unknown>) => {
+  const updateBlock = async (
+    id: string,
+    data: Record<string, unknown>,
+    meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string },
+  ) => {
     const updatedBlocks = blocks.map((b) =>
       b.id === id
         ? {
             ...b,
+            ...meta,
             data: { ...(b.data as Record<string, unknown>), ...data },
           }
         : b,
@@ -186,41 +224,19 @@ const PageEditor = () => {
 
     const [res, error] = await TryCatch(
       updatePage({
-        slug,
-        payload: { blocks: updatedBlocks },
+        slug: pageId as string,
+        payload: {
+          blocks: JSON.stringify(updatedBlocks),
+          title: pageTitle,
+          seo_title: meta.title,
+          seo_description: meta.description,
+          is_published: isPublished,
+        },
       }).unwrap(),
     );
-    if (!error || data?.success) setBlocks(updatedBlocks as any);
+    if (!error || res?.success) setBlocks(updatedBlocks as any);
     const result = handleResponse({
       data: res,
-      error,
-      successMessage: "Block updated",
-    });
-
-    toast({
-      title: result.type === "success" ? "Success" : "Error",
-      description: result.message,
-      variant: result.type === "error" ? "destructive" : "default",
-    });
-  };
-
-  const updateBlockMeta = async (
-    id: string,
-    meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string },
-  ) => {
-    const updatedBlocks = blocks.map((b) =>
-      b.id === id ? { ...b, ...meta } : b,
-    );
-
-    const [data, error] = await TryCatch(
-      updatePage({
-        slug,
-        payload: { blocks: updatedBlocks },
-      }).unwrap(),
-    );
-    if (!error || data?.success) setBlocks(updatedBlocks as any);
-    const result = handleResponse({
-      data,
       error,
       successMessage: "Block updated",
     });
@@ -234,8 +250,15 @@ const PageEditor = () => {
   const handleSave = async () => {
     const [data, error] = await TryCatch(
       updatePage({
-        slug,
-        payload: { blocks },
+        slug: pageId as string,
+        payload: {
+          blocks: JSON.stringify(blocks),
+          title: pageTitle,
+          slug,
+          seo_title: meta.title,
+          seo_description: meta.description,
+          is_published: isPublished,
+        },
       }).unwrap(),
     );
 
@@ -243,6 +266,11 @@ const PageEditor = () => {
       data,
       error,
       successMessage: "Page saved successfully",
+      onSuccess: () => {
+        if (slug !== pageId) {
+          navigate(`/admin/pages/${slug}`, { replace: true });
+        }
+      },
     });
 
     toast({
@@ -272,6 +300,18 @@ const PageEditor = () => {
             {getPreviewPath(slug)}
           </p>
         </div>
+
+        <div className="flex items-center gap-2 mr-2">
+          <Label htmlFor="published-mode" className="text-xs font-medium">
+            Published
+          </Label>
+          <Switch
+            id="published-mode"
+            checked={isPublished}
+            onCheckedChange={setIsPublished}
+          />
+        </div>
+
         <Button
           variant="outline"
           size="sm"
@@ -405,8 +445,7 @@ const PageEditor = () => {
           {editBlock && (
             <BlockEditorForm
               block={editBlock}
-              onChange={(data) => updateBlockData(editBlock.id, data)}
-              onBlockMetaChange={(meta) => updateBlockMeta(editBlock.id, meta)}
+              onSave={(data, meta) => updateBlock(editBlock.id, data, meta)}
               onClose={() => setEditBlock(null)}
             />
           )}
