@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Eye, EyeOff } from "lucide-react";
@@ -42,6 +43,8 @@ import {
   useGetPageQuery,
   useUpdatePageMutation,
 } from "@/redux/apis/pageBuilderApi";
+import { handleResponse } from "@/utils/handleResponse";
+import { TryCatch } from "@/utils/apiTryCatch";
 
 const getPreviewPath = (slug: string) => {
   if (slug.startsWith("blog-")) return `/blog/${slug.replace(/^blog-/, "")}`;
@@ -73,7 +76,8 @@ const PageEditor = () => {
 
   const initialPage = defaultPages.find((p) => p.id === pageId);
   const { data: pageData } = useGetPageQuery(pageId, { skip: !pageId });
-  const cmsPage = pageData?.data?.data;
+  const cmsPage = pageData?.data;
+
   const [pageTitle, setPageTitle] = useState(initialPage?.title || "Untitled");
   const [blocks, setBlocks] = useState<ContentBlock[]>(
     initialPage?.blocks || [],
@@ -116,97 +120,137 @@ const PageEditor = () => {
     }
   }, []);
 
-  const removeBlock = useCallback(
-    (id: string) => {
-      setBlocks((prev) => {
-        const updatedBlocks = prev.filter((b) => b.id !== id);
-        updatePage({ slug, payload: { blocks: updatedBlocks } });
-        toast({ title: "Block removed" });
-        return updatedBlocks;
-      });
-    },
-    [toast],
-  );
+  const removeBlock = async (id: string) => {
+    const updatedBlocks = blocks.filter((b) => b.id !== id);
+    setBlocks(updatedBlocks);
 
-  const addBlock = useCallback(
-    (type: BlockType) => {
-      const block = getDefaultBlockData(type);
+    const [data, error] = await TryCatch(
+      updatePage({
+        slug,
+        payload: { blocks: updatedBlocks },
+      }).unwrap(),
+    );
 
-      setBlocks((prev) => {
-        const updatedBlocks = [...prev, block] as ContentBlock[];
-        updatePage({
-          slug,
-          payload: { blocks: updatedBlocks },
-        });
-        toast({ title: `${BLOCK_TYPE_LABELS[type]} added` });
-        return updatedBlocks;
-      });
-      setAddOpen(false);
-      setEditBlock(block);
-    },
-    [toast],
-  );
+    if (!error || data?.success) setBlocks(updatedBlocks);
 
-  const updateBlockData = useCallback(
-    (id: string, data: Record<string, unknown>) => {
-      setBlocks((prev) => {
-        const updatedBlocks = prev.map((b) =>
-          b.id === id
-            ? ({
-                ...b,
-                data: { ...(b.data as Record<string, unknown>), ...data },
-              } as ContentBlock)
-            : b,
-        );
+    const result = handleResponse({
+      data,
+      error,
+      successMessage: "Block removed",
+    });
 
-        updatePage({
-          slug,
-          payload: { blocks: updatedBlocks },
-        });
-
-        toast({ title: "Block updated" });
-
-        return updatedBlocks;
-      });
-    },
-    [],
-  );
-
-  const updateBlockMeta = useCallback(
-    (
-      id: string,
-      meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string },
-    ) => {
-      // setBlocks((prev) =>
-      //   prev.map((b) =>
-      //     b.id === id ? ({ ...b, ...meta } as ContentBlock) : b,
-      //   ),
-      // );
-      setBlocks((prev) => {
-        const updatedBlocks = prev.map((b) =>
-          b.id === id ? ({ ...b, ...meta } as ContentBlock) : b,
-        );
-
-        updatePage({
-          slug,
-          payload: { blocks: updatedBlocks },
-        });
-
-        toast({ title: "Block updated" });
-
-        return updatedBlocks;
-      });
-    },
-    [],
-  );
-
-  const handleSave = () => {
     toast({
-      title: "Page saved successfully",
-      description: "Changes will persist when connected to a backend.",
+      title: result.type === "success" ? "Success" : "Error",
+      description: result.message,
+      variant: result.type === "error" ? "destructive" : "default",
     });
   };
 
+  const addBlock = async (type: BlockType) => {
+    const block = getDefaultBlockData(type);
+    const updatedBlocks = [...blocks, block] as ContentBlock[];
+
+    const [data, error] = await TryCatch(
+      updatePage({
+        slug,
+        payload: { blocks: updatedBlocks },
+      }).unwrap(),
+    );
+    if (!error || data?.success) {
+      setBlocks(updatedBlocks);
+      setAddOpen(false);
+      setEditBlock(block);
+    }
+    const result = handleResponse({
+      data,
+      error,
+      successMessage: `${BLOCK_TYPE_LABELS[type]} added`,
+    });
+
+    toast({
+      title: result.type === "success" ? "Success" : "Error",
+      description: result.message,
+      variant: result.type === "error" ? "destructive" : "default",
+    });
+  };
+
+  const updateBlockData = async (id: string, data: Record<string, unknown>) => {
+    const updatedBlocks = blocks.map((b) =>
+      b.id === id
+        ? {
+            ...b,
+            data: { ...(b.data as Record<string, unknown>), ...data },
+          }
+        : b,
+    );
+
+    const [res, error] = await TryCatch(
+      updatePage({
+        slug,
+        payload: { blocks: updatedBlocks },
+      }).unwrap(),
+    );
+    if (!error || data?.success) setBlocks(updatedBlocks as any);
+    const result = handleResponse({
+      data: res,
+      error,
+      successMessage: "Block updated",
+    });
+
+    toast({
+      title: result.type === "success" ? "Success" : "Error",
+      description: result.message,
+      variant: result.type === "error" ? "destructive" : "default",
+    });
+  };
+
+  const updateBlockMeta = async (
+    id: string,
+    meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string },
+  ) => {
+    const updatedBlocks = blocks.map((b) =>
+      b.id === id ? { ...b, ...meta } : b,
+    );
+
+    const [data, error] = await TryCatch(
+      updatePage({
+        slug,
+        payload: { blocks: updatedBlocks },
+      }).unwrap(),
+    );
+    if (!error || data?.success) setBlocks(updatedBlocks as any);
+    const result = handleResponse({
+      data,
+      error,
+      successMessage: "Block updated",
+    });
+
+    toast({
+      title: result.type === "success" ? "Success" : "Error",
+      description: result.message,
+      variant: result.type === "error" ? "destructive" : "default",
+    });
+  };
+  const handleSave = async () => {
+    const [data, error] = await TryCatch(
+      updatePage({
+        slug,
+        payload: { blocks },
+      }).unwrap(),
+    );
+
+    const result = handleResponse({
+      data,
+      error,
+      successMessage: "Page saved successfully",
+    });
+
+    toast({
+      title: result.type === "success" ? "Success" : "Error",
+      description: result.message,
+      variant: result.type === "error" ? "destructive" : "default",
+    });
+  };
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-4">
       {/* Header */}

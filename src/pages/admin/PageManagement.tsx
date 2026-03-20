@@ -12,6 +12,8 @@ import {
   Trash2,
   Loader2,
 } from "lucide-react";
+import Swal from "sweetalert2";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -129,23 +131,35 @@ const PageManagement = () => {
     });
   };
 
-  const handleDeletePage = async (id: string) => {
-    setDeletingId(id);
-    const [data, error] = await TryCatch(deletePage(id).unwrap());
+  const handleDeletePage = (id: string) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Once deleted, this item cannot be recovered.",
+      confirmButtonText: "Delete",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    }).then(async (res) => {
+      if (!res.isConfirmed) return;
+      setDeletingId(id);
+      const [data, error] = await TryCatch(deletePage(id).unwrap());
+      console.log({ data, error });
 
-    const result = handleResponse({
-      data,
-      error,
-      successMessage: "Page deleted ",
-      onSuccess: () => refetch(),
-    });
+      const result = handleResponse({
+        data,
+        error,
+        successMessage: "Page deleted success",
+        onSuccess: () => refetch(),
+      });
 
-    toast({
-      title: result.type === "success" ? "Success" : "Error",
-      description: result.message,
-      variant: result.type === "error" ? "destructive" : "default",
+      toast({
+        title: result.type === "success" ? "Success" : "Error",
+        description: result.message,
+        variant: result.type === "error" ? "destructive" : "default",
+      });
+      setDeletingId("");
     });
-    setDeletingId("");
   };
 
   const staticPages =
