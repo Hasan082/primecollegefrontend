@@ -93,6 +93,7 @@ const PageEditor = () => {
   const [showPreview, setShowPreview] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [updatePage] = useUpdatePageMutation();
 
   useEffect(() => {
@@ -437,8 +438,16 @@ const PageEditor = () => {
       </Dialog>
 
       {/* Edit Block Dialog */}
-      <Dialog open={!!editBlock} onOpenChange={() => setEditBlock(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <Dialog open={!!editBlock} onOpenChange={(open) => {
+        if (!open && isUploading) return;
+        if (!open) setEditBlock(null);
+      }}>
+        <DialogContent 
+          className="max-w-2xl max-h-[80vh] overflow-y-auto"
+          onInteractOutside={(e) => {
+            if (isUploading) e.preventDefault();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Edit: {editBlock?.label}</DialogTitle>
           </DialogHeader>
@@ -447,6 +456,7 @@ const PageEditor = () => {
               block={editBlock}
               onSave={(data, meta) => updateBlock(editBlock.id, data, meta)}
               onClose={() => setEditBlock(null)}
+              onUploadingChange={setIsUploading}
             />
           )}
         </DialogContent>

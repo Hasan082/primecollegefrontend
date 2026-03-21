@@ -1,6 +1,7 @@
 import { useState, useRef, lazy, Suspense } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, GripVertical, Upload, ImageIcon, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Image } from "@/components/Image";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import type { BlockType } from "@/types/pageBuilder";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 
-type AnyItem = Record<string, string | undefined>;
+type AnyItem = Record<string, any>;
 
 interface ItemField {
   key: string;
@@ -123,9 +124,13 @@ const getItemLabel = (item: AnyItem): string =>
 const MediaPicker = ({
   item,
   onUpdate,
+  onImageUpload,
+  isUploading,
 }: {
   item: AnyItem;
-  onUpdate: (key: string, value: string) => void;
+  onUpdate: (key: string, value: any) => void;
+  onImageUpload: (file: File, key: string) => void;
+  isUploading: boolean;
 }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const mediaType = item.mediaType || "icon";
@@ -136,14 +141,8 @@ const MediaPicker = ({
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        onUpdate("image", reader.result);
-        onUpdate("mediaType", "image");
-      }
-    };
-    reader.readAsDataURL(file);
+    onImageUpload(file, "image");
+    onUpdate("mediaType", "image");
   };
 
   return (
@@ -227,9 +226,17 @@ const MediaPicker = ({
           {imageSrc && (
             <div className="rounded-md border border-border overflow-hidden bg-muted/30 flex items-center justify-center p-2">
               {imageSize === "icon" ? (
-                <img src={imageSrc} alt="Item" className="h-10 w-10 rounded-full object-cover border border-border" />
+                typeof imageSrc === "string" ? (
+                  <img src={imageSrc} alt="Item" className="h-10 w-10 rounded-full object-cover border border-border" />
+                ) : (
+                  <Image image={imageSrc} className="h-10 w-10 rounded-full object-cover border border-border" />
+                )
               ) : (
-                <img src={imageSrc} alt="Item" className="w-full h-20 object-cover rounded" />
+                typeof imageSrc === "string" ? (
+                  <img src={imageSrc} alt="Item" className="w-full h-20 object-cover rounded" />
+                ) : (
+                  <Image image={imageSrc} className="w-full h-20 object-cover rounded" />
+                )
               )}
             </div>
           )}
@@ -241,8 +248,10 @@ const MediaPicker = ({
             size="sm"
             className="w-full h-8 text-xs"
             onClick={() => fileRef.current?.click()}
+            disabled={isUploading}
           >
-            <Upload className="h-3 w-3 mr-1.5" /> {imageSrc ? "Change Image" : "Upload Image"}
+            <Upload className="h-3 w-3 mr-1.5" /> 
+            {isUploading ? "Uploading..." : imageSrc ? "Change Image" : "Upload Image"}
           </Button>
         </div>
       )}
@@ -255,9 +264,11 @@ interface ItemListEditorProps {
   blockType: BlockType;
   items: AnyItem[];
   onChange: (items: AnyItem[]) => void;
+  onImageUpload: (file: File, key: string) => void;
+  isUploading: boolean;
 }
 
-const ItemListEditor = ({ blockType, items, onChange }: ItemListEditorProps) => {
+const ItemListEditor = ({ blockType, items, onChange, onImageUpload, isUploading }: ItemListEditorProps) => {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const fields = ITEM_FIELDS[blockType];
   const hasMedia = MEDIA_ENABLED_BLOCKS.includes(blockType);
@@ -329,7 +340,11 @@ const ItemListEditor = ({ blockType, items, onChange }: ItemListEditorProps) => 
                   <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                   {/* Thumbnail preview */}
                   {hasMedia && item.image && mediaType === "image" ? (
-                    <img src={item.image} alt="" className="h-5 w-5 rounded object-cover shrink-0 border border-border" />
+                    typeof item.image === "string" ? (
+                      <img src={item.image} alt="" className="h-5 w-5 rounded object-cover shrink-0 border border-border" />
+                    ) : (
+                      <Image image={item.image} className="h-5 w-5 rounded object-cover shrink-0 border border-border" />
+                    )
                   ) : (
                     <Badge variant="outline" className="shrink-0 text-[10px] h-5 w-5 p-0 flex items-center justify-center">
                       {i + 1}
@@ -358,6 +373,10 @@ const ItemListEditor = ({ blockType, items, onChange }: ItemListEditorProps) => 
                       <MediaPicker
                         item={item}
                         onUpdate={(key, value) => updateItem(i, key, value)}
+                        onImageUpload={(file, key) => {
+                          onImageUpload(file, `items.${i}.${key}`);
+                        }}
+                        isUploading={isUploading}
                       />
                     )}
 

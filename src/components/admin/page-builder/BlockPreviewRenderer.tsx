@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import type { ContentBlock, BlockStyle, TextAlignment } from "@/types/pageBuilder";
 import React from "react";
+import { Image } from "@/components/Image";
 
 interface BlockPreviewRendererProps {
   blocks: ContentBlock[];
@@ -17,6 +18,13 @@ const iconMap: Record<string, React.ElementType> = {
   Layers, Briefcase, Smile, GraduationCap, Building, Rocket, Megaphone,
 };
 
+/** Helper to extract a URL from either a string or ApiImage object */
+const getImageUrl = (image: any): string => {
+  if (!image) return "";
+  if (typeof image === "string") return image;
+  return image.original || image.large || image.medium || image.small || "";
+};
+
 /** Build inline style from BlockStyle */
 const buildBlockStyle = (style?: BlockStyle): React.CSSProperties => {
   if (!style) return {};
@@ -24,7 +32,8 @@ const buildBlockStyle = (style?: BlockStyle): React.CSSProperties => {
   if (style.textColor) s.color = style.textColor;
   if (style.bgColor) s.backgroundColor = style.bgColor;
   if (style.bgImage) {
-    s.backgroundImage = `url(${style.bgImage})`;
+    const url = getImageUrl(style.bgImage);
+    s.backgroundImage = `url(${url})`;
     s.backgroundSize = "cover";
     s.backgroundPosition = "center";
   }
@@ -80,8 +89,12 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
           case "hero":
             return (
               <StyledWrapper key={block.id} block={block} defaultClass="bg-primary text-primary-foreground p-8 min-h-[100px] flex items-center justify-center overflow-hidden">
-                {d.image && typeof d.image === "string" && d.image.startsWith("data:") && (
-                  <img src={d.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                {d.image && (
+                  typeof d.image === "string" ? (
+                    <img src={d.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                  ) : (
+                    <Image image={d.image as any} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                  )
                 )}
                 <div className="relative z-10">
                   <h2 className="text-base font-bold leading-tight">{d.title as string}</h2>
@@ -96,12 +109,15 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
             );
 
           case "image": {
-            const imgSrc = d.image as string;
-            const hasImage = imgSrc && (imgSrc.startsWith("data:") || imgSrc.startsWith("http"));
+            const hasImage = !!d.image;
             return (
               <StyledWrapper key={block.id} block={block} defaultClass="bg-muted">
                 {hasImage ? (
-                  <img src={imgSrc} alt={(d.alt as string) || ""} className="w-full max-h-48 object-cover" />
+                  typeof d.image === "string" ? (
+                    <img src={d.image} alt={(d.alt as string) || ""} className="w-full max-h-48 object-cover" />
+                  ) : (
+                    <Image image={d.image as any} alt={(d.alt as string) || ""} className="w-full max-h-48 object-cover" />
+                  )
                 ) : (
                   <div className="flex items-center justify-center h-24 text-muted-foreground text-[10px]">
                     No image uploaded
@@ -137,14 +153,12 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
             return (
               <StyledWrapper key={block.id} block={block} defaultClass="bg-primary text-primary-foreground py-6 px-5">
                 <div className={`flex gap-4 ${d.imagePosition === "left" ? "flex-row" : "flex-row-reverse"}`}>
-                  {hasImg && (
+                  {d.image && (
                     <div className="flex-1 rounded overflow-hidden">
-                      {imgIsData ? (
-                        <img src={d.image as string} alt="" className="w-full h-20 object-cover rounded" />
+                      {typeof d.image === "string" ? (
+                        <img src={d.image} alt="" className="w-full h-20 object-cover rounded" />
                       ) : (
-                        <div className="w-full h-20 bg-primary-foreground/10 rounded flex items-center justify-center text-[8px] opacity-60">
-                          📷 {d.image as string}
-                        </div>
+                        <Image image={d.image as any} className="w-full h-20 object-cover rounded" />
                       )}
                     </div>
                   )}
@@ -183,11 +197,19 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                       <div key={i} className="flex-1 text-center">
                         {useImage && item.imageSize === "full" ? (
                           <div className="w-full h-12 overflow-hidden mx-auto mb-1 rounded border border-border">
-                            <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                            {typeof item.image === "string" ? (
+                              <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <Image image={item.image as any} alt={item.title} className="w-full h-full object-cover" />
+                            )}
                           </div>
                         ) : useImage ? (
                           <div className="w-10 h-10 rounded-full overflow-hidden mx-auto mb-1 border border-border">
-                            <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                            {typeof item.image === "string" ? (
+                              <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <Image image={item.image as any} alt={item.title} className="w-full h-full object-cover" />
+                            )}
                           </div>
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mx-auto mb-1">
@@ -218,11 +240,19 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                       <div key={i} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                         {useImage && !isIconSize ? (
                           <div className="relative">
-                            <img src={item.image} alt={item.title} className="w-full h-16 object-cover" />
+                            {typeof item.image === "string" ? (
+                              <img src={item.image} alt={item.title} className="w-full h-16 object-cover" />
+                            ) : (
+                              <Image image={item.image as any} alt={item.title} className="w-full h-16 object-cover" />
+                            )}
                           </div>
                         ) : useImage && isIconSize ? (
                           <div className="h-10 bg-muted flex items-center justify-center">
-                            <img src={item.image} alt={item.title} className="h-7 w-7 rounded-full object-cover border border-border" />
+                            {typeof item.image === "string" ? (
+                              <img src={item.image} alt={item.title} className="h-7 w-7 rounded-full object-cover border border-border" />
+                            ) : (
+                              <Image image={item.image as any} alt={item.title} className="h-7 w-7 rounded-full object-cover border border-border" />
+                            )}
                           </div>
                         ) : Icon ? (
                           <div className="h-10 bg-muted flex items-center justify-center">
@@ -279,7 +309,11 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                   {Array.isArray(d.items) && (d.items as { title: string; image?: string; mediaType?: string }[]).map((item, i) => (
                     <div key={i} className="bg-muted rounded-md px-2 py-1.5 text-[8px] font-medium text-muted-foreground border border-border flex items-center gap-1.5">
                       {item.mediaType === "image" && item.image ? (
-                        <img src={item.image} alt={item.title} className="h-5 w-auto object-contain" />
+                        typeof item.image === "string" ? (
+                          <img src={item.image} alt={item.title} className="h-5 w-auto object-contain" />
+                        ) : (
+                          <Image image={item.image as any} alt={item.title} className="h-5 w-auto object-contain" />
+                        )
                       ) : (
                         <span>{item.title}</span>
                       )}
@@ -289,14 +323,16 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
               </StyledWrapper>
             );
 
-          case "cta": {
+                  case "cta": {
             const bgMode = d.bgMode as string;
-            const ctaStyle: React.CSSProperties = bgMode === "image" && d.bgImage
-              ? { backgroundImage: `url(${d.bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }
+            const bgUrl = getImageUrl(d.bgImage);
+            const ctaStyle: React.CSSProperties = bgMode === "image" && bgUrl
+              ? { backgroundImage: `url(${bgUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
               : {};
-            const usesImage = bgMode === "image" && d.bgImage;
+            const usesImage = bgMode === "image" && bgUrl;
             // Merge block-level style
-            const mergedStyle = { ...ctaStyle, ...buildBlockStyle(block.style) };
+            const styleWithBg = buildBlockStyle(block.style);
+            const mergedStyle = { ...ctaStyle, ...styleWithBg };
             return (
               <div key={block.id} className={`relative py-8 px-5 ${usesImage ? '' : 'bg-primary text-primary-foreground'} ${alignClass(block.alignment)}`} style={mergedStyle}>
                 {usesImage && (
@@ -354,7 +390,11 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                       <div key={i} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                         {hasFullImage ? (
                           <div className="relative">
-                            <img src={item.image} alt={item.title} className="w-full h-12 object-cover" />
+                            {typeof item.image === "string" ? (
+                              <img src={item.image} alt={item.title} className="w-full h-12 object-cover" />
+                            ) : (
+                              <Image image={item.image as any} alt={item.title} className="w-full h-12 object-cover" />
+                            )}
                             {item.category && (
                               <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[5px] font-bold px-1 py-0.5 rounded">
                                 {item.category}
@@ -363,7 +403,11 @@ const BlockPreviewRenderer = ({ blocks, pageTitle }: BlockPreviewRendererProps) 
                           </div>
                         ) : hasIconImage ? (
                           <div className="h-8 bg-muted flex items-center justify-center">
-                            <img src={item.image} alt={item.title} className="h-5 w-5 rounded-full object-cover border border-border" />
+                            {typeof item.image === "string" ? (
+                              <img src={item.image} alt={item.title} className="h-5 w-5 rounded-full object-cover border border-border" />
+                            ) : (
+                              <Image image={item.image as any} alt={item.title} className="h-5 w-5 rounded-full object-cover border border-border" />
+                            )}
                           </div>
                         ) : (
                           <div className="h-8 bg-muted" />

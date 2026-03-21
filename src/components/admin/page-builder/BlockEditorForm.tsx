@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
-import { Upload, ImageIcon, AlignLeft, AlignRight, Palette } from "lucide-react";
+import { Upload, ImageIcon, AlignLeft, AlignRight, Palette, Loader2 } from "lucide-react";
+import { useUploadCMSImageMutation } from "@/redux/apis/pageBuilderApi";
+import { Image } from "@/components/Image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,21 +17,62 @@ interface BlockEditorFormProps {
   block: ContentBlock;
   onSave: (data: Record<string, unknown>, meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string }) => void;
   onClose: () => void;
+  onUploadingChange?: (isUploading: boolean) => void;
 }
 
-const BlockEditorForm = ({ block, onSave, onClose }: BlockEditorFormProps) => {
+const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEditorFormProps) => {
   const [local, setLocal] = useState<Record<string, unknown>>(block.data as Record<string, unknown>);
   const [alignment, setAlignment] = useState<TextAlignment>(block.alignment || "center");
   const [blockStyle, setBlockStyle] = useState<BlockStyle>(block.style || {});
   const [blockLabel, setBlockLabel] = useState(block.label);
+  const [isUploading, _setIsUploading] = useState(false);
+  const [uploadCMSImage] = useUploadCMSImageMutation();
+
+  const setIsUploading = (v: boolean) => {
+    _setIsUploading(v);
+    onUploadingChange?.(v);
+  };
 
   const update = (key: string, value: unknown) => {
     setLocal((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = () => {
+    if (isUploading) return;
     onSave(local, { alignment, style: blockStyle, label: blockLabel });
     onClose();
+  };
+
+  const handleClose = () => {
+    if (isUploading) return;
+    onClose();
+  };
+
+  const onImageUpload = async (file: File, path: string) => {
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("image", file);
+    try {
+      const res = await uploadCMSImage(formData).unwrap();
+      if (res.success && res.data?.image) {
+        if (path.includes(".")) {
+          const parts = path.split(".");
+          if (parts[0] === "items" && parts.length === 3) {
+            const idx = parseInt(parts[1]);
+            const key = parts[2];
+            const nextItems = [...(local.items as any[])];
+            nextItems[idx] = { ...nextItems[idx], [key]: res.data.image };
+            update("items", nextItems);
+          }
+        } else {
+          update(path, res.data.image);
+        }
+      }
+    } catch (error) {
+      console.error("Image upload failed:", error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Text block uses its own data.alignment for backward compat
@@ -46,7 +89,7 @@ const BlockEditorForm = ({ block, onSave, onClose }: BlockEditorFormProps) => {
       {/* Image-only block */}
       {block.type === "image" && (
         <div className="space-y-3">
-          <ImageField value={(local.image as string) || ""} onChange={(v) => update("image", v)} />
+          <ImageField value={local.image } onChange={(file) => onImageUpload(file, "image")} isUploading={isUploading} />
           <Field label="Alt Text" value={(local.alt as string) || ""} onChange={(v) => update("alt", v)} />
           <Field label="Caption" value={(local.caption as string) || ""} onChange={(v) => update("caption", v)} />
         </div>
@@ -116,10 +159,11 @@ const BlockEditorForm = ({ block, onSave, onClose }: BlockEditorFormProps) => {
         </div>
       )}
 
-      {typeof local.image === "string" && (
+      {typeof local.image !== "undefined" && (
         <ImageField
-          value={local.image as string}
-          onChange={(v) => update("image", v)}
+          value={local.image}
+          onChange={(file) => onImageUpload(file, "image")}
+          isUploading={isUploading}
           imagePosition={local.imagePosition as string | undefined}
           onPositionChange={local.imagePosition !== undefined ? (v) => update("imagePosition", v) : undefined}
         />
@@ -165,19 +209,23 @@ const BlockEditorForm = ({ block, onSave, onClose }: BlockEditorFormProps) => {
       {Array.isArray(local.items) && (
         <ItemListEditor
           blockType={block.type}
-          items={local.items as Record<string, string | undefined>[]}
+          items={local.items as any[]}
           onChange={(items) => update("items", items)}
+          onImageUpload={onImageUpload}
+          isUploading={isUploading}
         />
       )}
 
-      {block.type === "cta" && <CTABackgroundEditor local={local} update={update} />}
+      {block.type === "cta" && <CTABackgroundEditor local={local} update={update} onImageUpload={onImageUpload} isUploading={isUploading} />}
 
       {/* Block Style Panel — available for ALL blocks */}
       <BlockStylePanel style={blockStyle} onChange={setBlockStyle} />
 
       <div className="flex justify-end gap-2 pt-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave}>Save Changes</Button>
+        <Button variant="outline" onClick={handleClose} disabled={isUploading}>Cancel</Button>
+        <Button onClick={handleSave} disabled={isUploading}>
+          {isUploading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</> : "Save Changes"}
+        </Button>
       </div>
     </div>
   );
@@ -213,21 +261,17 @@ const Field = ({ label, value, onChange }: { label: string; value: string; onCha
 );
 
 // ─── CTA Background Editor ───
-const CTABackgroundEditor = ({ local, update }: { local: Record<string, unknown>; update: (key: string, value: unknown) => void }) => {
+const CTABackgroundEditor = ({ local, update, onImageUpload, isUploading }: { local: Record<string, unknown>; update: (key: string, value: unknown) => void; onImageUpload: (file: File, key: string) => void; isUploading: boolean }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const bgMode = (local.bgMode as string) || "color";
   const bgColor = (local.bgColor as string) || "#0c2d6b";
-  const bgImage = (local.bgImage as string) || "";
+  const bgImage = local.bgImage;
   const overlayColor = (local.overlayColor as string) || "rgba(0,0,0,0.5)";
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") update("bgImage", reader.result);
-    };
-    reader.readAsDataURL(file);
+    onImageUpload(file, "bgImage");
   };
 
   return (
@@ -258,15 +302,20 @@ const CTABackgroundEditor = ({ local, update }: { local: Record<string, unknown>
         <div className="space-y-3">
           {bgImage && (
             <div className="rounded-lg border border-border overflow-hidden bg-muted/30 max-h-32 flex items-center justify-center relative">
-              <img src={bgImage} alt="BG Preview" className="max-h-32 w-full object-cover" />
+              {typeof bgImage === "string" ? (
+                <img src={bgImage} alt="BG Preview" className="max-h-32 w-full object-cover" />
+              ) : (
+                <Image image={bgImage} className="max-h-32 w-full object-cover" />
+              )}
               <div className="absolute inset-0" style={{ backgroundColor: overlayColor }} />
               <span className="absolute text-white text-xs font-medium z-10">Preview with overlay</span>
             </div>
           )}
           <div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-            <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => fileRef.current?.click()}>
-              <Upload className="h-3.5 w-3.5 mr-1.5" /> {bgImage ? "Change Image" : "Upload Background Image"}
+            <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => fileRef.current?.click()} disabled={isUploading}>
+              <Upload className="h-3.5 w-3.5 mr-1.5" /> 
+              {isUploading ? "Uploading..." : bgImage ? "Change Image" : "Upload Background Image"}
             </Button>
           </div>
           <div>
@@ -298,11 +347,13 @@ const CTABackgroundEditor = ({ local, update }: { local: Record<string, unknown>
 const ImageField = ({
   value,
   onChange,
+  isUploading,
   imagePosition,
   onPositionChange,
 }: {
-  value: string;
-  onChange: (v: string) => void;
+  value: any;
+  onChange: (file: File) => void;
+  isUploading: boolean;
   imagePosition?: string;
   onPositionChange?: (v: string) => void;
 }) => {
@@ -311,28 +362,30 @@ const ImageField = ({
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") onChange(reader.result);
-    };
-    reader.readAsDataURL(file);
+    onChange(file);
   };
 
-  const isDataUrl = value.startsWith("data:");
-  const isUrl = value.startsWith("http");
+  const isString = typeof value === "string";
+  const isObject = typeof value === "object" && value !== null;
+  const hasValue = (isString && value.length > 0) || (isObject && (value.small || value.original));
 
   return (
     <div className="space-y-3">
       <Label className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Image</Label>
-      {(isDataUrl || isUrl) && (
+      {hasValue && (
         <div className="rounded-lg border border-border overflow-hidden bg-muted/30 max-h-40 flex items-center justify-center">
-          <img src={value} alt="Preview" className="max-h-40 object-contain" />
+          {isString ? (
+            <img src={value} alt="Preview" className="max-h-40 object-contain" />
+          ) : (
+            <Image image={value} className="max-h-40 object-contain" />
+          )}
         </div>
       )}
       <div>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-        <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => fileRef.current?.click()}>
-          <Upload className="h-3.5 w-3.5 mr-1.5" /> {value ? "Change Image" : "Upload Image"}
+        <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => fileRef.current?.click()} disabled={isUploading}>
+          <Upload className="h-3.5 w-3.5 mr-1.5" /> 
+          {isUploading ? "Uploading..." : value ? "Change Image" : "Upload Image"}
         </Button>
       </div>
       {onPositionChange && (

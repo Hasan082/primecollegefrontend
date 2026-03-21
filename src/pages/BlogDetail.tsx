@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import Breadcrumb from "@/components/Breadcrumb";
 import type { PageConfig, ContentBlock } from "@/types/pageBuilder";
 import { defaultPages } from "@/data/defaultPages";
+import { safeParseBlocks } from "@/utils/pageBuilder";
 
 import heroClassroom from "@/assets/hero-classroom.jpg";
 import heroBusiness from "@/assets/hero-business.jpg";
@@ -95,7 +96,7 @@ const BlogDetail = () => {
 
               {/* Page Builder Blocks */}
               <div className="space-y-6">
-                {post.blocks
+                {safeParseBlocks(post.blocks)
                   .filter((b) => b.type !== "hero") // Skip hero blocks (used as featured image above)
                   .map((block) => (
                     <BlogBlockRenderer key={block.id} block={block} />

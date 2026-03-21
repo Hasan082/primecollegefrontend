@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 export interface CartItem {
+  id: string;
   slug: string;
   title: string;
   level: string;
@@ -41,12 +42,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const totalPrice = items.reduce(
     (sum, item) => sum + parseFloat(item.price.replace(/[^0-9.]/g, "")),
-    0
+    0,
   );
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, clearCart, isInCart, totalPrice, itemCount: items.length }}
+      value={{
+        items,
+        addItem,
+        removeItem,
+        clearCart,
+        isInCart,
+        totalPrice,
+        itemCount: items.length,
+      }}
     >
       {children}
     </CartContext.Provider>

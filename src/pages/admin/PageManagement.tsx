@@ -43,6 +43,7 @@ import {
 } from "@/redux/apis/pageBuilderApi";
 import { TryCatch } from "@/utils/apiTryCatch";
 import { handleResponse } from "@/utils/handleResponse";
+import { safeParseBlocks } from "@/utils/pageBuilder";
 
 const inferPageType = (
   slug: string,
@@ -397,18 +398,18 @@ const PageCard = ({
               {page.isPublished ? "Published" : "Draft"}
             </Badge>
             <Badge variant="outline">
-              {page.blocks.length} block{page.blocks.length !== 1 ? "s" : ""}
+              {safeParseBlocks(page.blocks).length} block{safeParseBlocks(page.blocks).length !== 1 ? "s" : ""}
             </Badge>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 flex-wrap">
-          {page.blocks.slice(0, 3).map((b) => (
+          {safeParseBlocks(page.blocks).slice(0, 3).map((b) => (
             <Badge key={b.id} variant="secondary" className="text-[10px]">
               {b.label}
             </Badge>
           ))}
-          {page.blocks.length > 3 && (
-            <span>+{page.blocks.length - 3} more</span>
+          {safeParseBlocks(page.blocks).length > 3 && (
+            <span>+{safeParseBlocks(page.blocks).length - 3} more</span>
           )}
         </div>
         <div className="mt-auto flex gap-2">

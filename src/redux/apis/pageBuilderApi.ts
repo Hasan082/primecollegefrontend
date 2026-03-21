@@ -11,7 +11,10 @@ const pageBuilderApi = api.injectEndpoints({
       }),
     }),
     updatePage: builder.mutation({
-      invalidatesTags: (_result, _error, arg) => [{ type: "Pages", id: arg.slug }, "Pages"],
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "Pages", id: arg.slug },
+        "Pages",
+      ],
       query: ({ slug, payload }) => ({
         url: `/api/cms/pages/${slug}/`,
         method: "PATCH",
@@ -21,12 +24,15 @@ const pageBuilderApi = api.injectEndpoints({
     uploadCMSImage: builder.mutation({
       query: (payload) => ({
         url: `/api/cms/upload-image/`,
-        method: "PATCH",
+        method: "POST",
         body: payload,
       }),
     }),
     deletePage: builder.mutation({
-      invalidatesTags: (_result, _error, slug) => [{ type: "Pages", id: slug }, "Pages"],
+      invalidatesTags: (_result, _error, slug) => [
+        { type: "Pages", id: slug },
+        "Pages",
+      ],
       query: (slug) => ({
         url: `/api/cms/pages/${slug}/`,
         method: "DELETE",

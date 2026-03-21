@@ -13,8 +13,7 @@ interface Props extends React.ImgHTMLAttributes<HTMLImageElement> {
 }
 
 export const Image = ({ image, alt = "", ...props }: Props) => {
-  if (!image) return null;
-
+  if (!image || Object.keys(image).length === 0) return null;
   const srcSet = [
     image.small && `${image.small} 100w`,
     image.medium && `${image.medium} 200w`,
