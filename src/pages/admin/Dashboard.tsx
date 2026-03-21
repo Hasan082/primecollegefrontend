@@ -14,6 +14,7 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accen
 
 const AdminDashboard = () => {
   const recentEnrolments = adminLearners
+    .slice()
     .sort((a, b) => b.enrolledDate.localeCompare(a.enrolledDate))
     .slice(0, 5);
 

@@ -70,7 +70,8 @@ const Footer = () => {
             </ul>
             <div className="flex items-center gap-3 mt-4">
               {footer?.social_links
-                ?.sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0))
+                ?.slice()
+                .sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0))
                 .map((link) => (
                   <a
                     href={link?.url}

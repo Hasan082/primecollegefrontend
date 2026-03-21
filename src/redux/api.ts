@@ -57,7 +57,7 @@ const baseQueryWithRefreshToken: BaseQueryFn<
       }
 
       const res = await fetch(
-        appConfig.API_BASE_URL + "/api/auth/token/refresh/cookie",
+        appConfig.API_BASE_URL + "/api/auth/token/refresh/cookie/",
         {
           method: "POST",
           credentials: "include",
