@@ -33,7 +33,7 @@ const Footer = () => {
                       ?.slice()
                       .sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0))
                       .map((link) => (
-                        <li>
+                        <li key={link?.id ?? `${group?.id}-${link?.label}-${link?.url}`}>
                           <Link
                             to={link?.url}
                             className="hover:text-primary-foreground"
@@ -74,6 +74,7 @@ const Footer = () => {
                 .sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0))
                 .map((link) => (
                   <a
+                    key={link?.id ?? `${link?.platform}-${link?.url}`}
                     href={link?.url}
                     target="_blank"
                     rel="noopener noreferrer"

@@ -14,7 +14,7 @@ const formatMoney = (value: number, currency = "GBP") =>
     maximumFractionDigits: 2,
   }).format(value);
 
-const extractErrorMessage = (detail: unknown): string => {
+const extractErrorMessage = (detail: any): string => {
   if (typeof detail === "string") {
     return detail;
   }
@@ -25,6 +25,11 @@ const extractErrorMessage = (detail: unknown): string => {
   }
 
   if (detail && typeof detail === "object") {
+    // Prioritize specific error keys if they exist
+    if (detail.message && typeof detail.message === "string") return detail.message;
+    if (detail.detail && typeof detail.detail === "string") return detail.detail;
+    if (detail.error && typeof detail.error === "string") return detail.error;
+
     const values = Object.values(detail as Record<string, unknown>)
       .map(extractErrorMessage)
       .filter(Boolean);
@@ -50,6 +55,18 @@ interface PaymentSetupState {
   publishableKey: string;
   orderNumber: string;
 }
+
+const isCheckoutFormComplete = (form: CustomerFormState) =>
+  [
+    form.firstName,
+    form.lastName,
+    form.email,
+    form.phone,
+    form.address,
+    form.city,
+    form.postcode,
+    form.country,
+  ].every((value) => value.trim().length > 0);
 
 const PaymentElementSection = ({
   clientSecret,
@@ -200,6 +217,8 @@ const Checkout = () => {
 
   const paymentStepRef = React.useRef<HTMLDivElement>(null);
   const sidebarSubmitRef = React.useRef<HTMLButtonElement>(null);
+  const autoPrepareTimeoutRef = React.useRef<number | null>(null);
+  const lastPreparedSignatureRef = React.useRef<string | null>(null);
 
   useEffect(() => {
     sessionStorage.setItem("primecollege_checkout_form", JSON.stringify(form));
@@ -230,14 +249,22 @@ const Checkout = () => {
   const estimatedTotal = subtotal - discountTotal;
   const currency = items[0]?.currency || "GBP";
   const inputsLocked = Boolean(paymentSetup);
+  const isFormComplete = isCheckoutFormComplete(form);
+  const checkoutSignature = JSON.stringify({
+    form,
+    items: items.map((item) => ({
+      qualificationId: item.qualificationId,
+      qualificationSessionId: item.qualificationSessionId || null,
+      isUpsell: Boolean(item.isUpsell),
+      pricingNote: item.pricingNote || "",
+    })),
+  });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
   };
 
-  const handlePreparePayment = async (event: React.FormEvent) => {
-    event.preventDefault();
-
+  const preparePayment = async () => {
     try {
       const response = await checkoutOnline({
         first_name: form.firstName,
@@ -278,6 +305,7 @@ const Checkout = () => {
         publishableKey: response.data.stripe_publishable_key,
         orderNumber: response.data.order.order_number,
       });
+      lastPreparedSignatureRef.current = checkoutSignature;
 
       toast({
         title: "Payment ready",
@@ -298,6 +326,38 @@ const Checkout = () => {
       });
     }
   };
+
+  const handlePreparePayment = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await preparePayment();
+  };
+
+  useEffect(() => {
+    if (paymentSetup || isPreparingPayment || !isFormComplete) {
+      return;
+    }
+
+    if (lastPreparedSignatureRef.current === checkoutSignature) {
+      return;
+    }
+
+    // Set it immediately to prevent multiple triggers
+    lastPreparedSignatureRef.current = checkoutSignature;
+
+    autoPrepareTimeoutRef.current = window.setTimeout(() => {
+      // Double check before calling
+      if (!isPreparingPayment && !paymentSetup) {
+        void preparePayment();
+      }
+    }, 350);
+
+    return () => {
+      if (autoPrepareTimeoutRef.current) {
+        window.clearTimeout(autoPrepareTimeoutRef.current);
+        autoPrepareTimeoutRef.current = null;
+      }
+    };
+  }, [checkoutSignature, paymentSetup, isPreparingPayment, isFormComplete]);
 
   const inputClass =
     "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-70";
@@ -382,9 +442,17 @@ const Checkout = () => {
                 <ShieldCheck className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-bold text-foreground">Payment step</h2>
               </div>
-              {!paymentSetup ? (
+              {!isFormComplete ? (
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Confirm your basket and details first. Stripe’s secure Payment Element will then appear here on the same page.
+                  Complete the learner and billing details above. Stripe’s secure card form will appear here automatically.
+                </p>
+              ) : isPreparingPayment && !paymentSetup ? (
+                <p className="mt-3 text-sm leading-6 text-primary">
+                  Preparing your secure payment form...
+                </p>
+              ) : !paymentSetup ? (
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  Secure payment is being prepared. If it does not appear, review your details and try again.
                 </p>
               ) : (
                 <>
@@ -411,7 +479,10 @@ const Checkout = () => {
 
               <div className="mb-4 mt-5 space-y-3 border-b border-border pb-4">
                 {items.map((item) => (
-                  <div key={item.slug} className="flex items-start justify-between gap-3">
+                  <div
+                    key={`${item.qualificationId}-${item.qualificationSessionId || "no-session"}-${item.isUpsell ? "upsell" : "base"}`}
+                    className="flex items-start justify-between gap-3"
+                  >
                     <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-semibold leading-tight text-foreground">{item.title}</h3>
                       <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -456,7 +527,9 @@ const Checkout = () => {
               <div className="rounded-xl bg-muted/50 p-4 text-xs leading-5 text-muted-foreground">
                 {paymentSetup
                   ? "Payment has been prepared for this basket. To change items or learner details, go back to qualifications and start a fresh checkout."
-                  : "Your card details will be handled securely by Stripe within this checkout page."}
+                  : isFormComplete
+                    ? "We are preparing Stripe's secure payment form for this basket."
+                    : "Your card details will be handled securely by Stripe within this checkout page."}
               </div>
 
               <div className="mt-3 flex items-center justify-center gap-3 text-xs text-muted-foreground">
@@ -471,24 +544,11 @@ const Checkout = () => {
               </div>
 
               {!paymentSetup ? (
-                <button
-                  type="submit"
-                  form="checkout-form"
-                  disabled={isPreparingPayment}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-sm font-bold text-secondary-foreground transition hover:opacity-90 disabled:opacity-60"
-                >
-                  {isPreparingPayment ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-secondary-foreground/30 border-t-secondary-foreground" />
-                      Preparing payment...
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="h-4 w-4" />
-                      Continue to payment
-                    </>
-                  )}
-                </button>
+                <div className="mt-6 rounded-xl border border-dashed border-border px-4 py-4 text-center text-sm text-muted-foreground">
+                  {isFormComplete
+                    ? "Preparing secure payment..."
+                    : "Fill in your details above to load the secure card form."}
+                </div>
               ) : (
                 <button
                   ref={sidebarSubmitRef}

@@ -18,7 +18,7 @@ export const setCsrfToken = (token: string | null) => {
   csrfTokenMemory = token;
 };
 
-const getCsrfToken = () => csrfTokenMemory;
+const getCsrfToken = () => csrfTokenMemory || getCookie("csrftoken");
 const getRefreshToken = () => getCookie("refresh");
 
 const baseQuery = fetchBaseQuery({
