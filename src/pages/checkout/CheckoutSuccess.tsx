@@ -37,6 +37,8 @@ const CheckoutSuccess = () => {
     clearCart();
     sessionStorage.removeItem("primecollege_payment_setup");
     sessionStorage.removeItem("primecollege_checkout_form");
+    // We keep primecollege_pending_checkout for this mount to show the summary,
+    // but the cart itself is now empty in localStorage.
   }, [clearCart]);
 
   const currency = checkoutSummary?.currency || "GBP";

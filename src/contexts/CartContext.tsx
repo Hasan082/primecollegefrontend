@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 
 export interface CartItem {
   id: string;
@@ -53,7 +53,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [items]);
 
-  const addItem = (item: CartItem) => {
+  const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
       const existingIndex = prev.findIndex((i) => i.slug === item.slug);
       if (existingIndex === -1) {
@@ -64,15 +64,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       next[existingIndex] = item;
       return next;
     });
-  };
+  }, []);
 
-  const removeItem = (slug: string) => {
+  const removeItem = useCallback((slug: string) => {
     setItems((prev) => prev.filter((i) => i.slug !== slug));
-  };
+  }, []);
 
-  const clearCart = () => setItems([]);
+  const clearCart = useCallback(() => {
+    setItems([]);
+  }, []);
 
-  const isInCart = (slug: string) => items.some((i) => i.slug === slug);
+  const isInCart = useCallback((slug: string) => {
+    return items.some((i) => i.slug === slug);
+  }, [items]);
 
   const totalPrice = items.reduce((sum, item) => sum + item.priceValue, 0);
 

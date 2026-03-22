@@ -25,7 +25,6 @@ const extractErrorMessage = (detail: any): string => {
   }
 
   if (detail && typeof detail === "object") {
-    // Prioritize specific error keys if they exist
     if (detail.message && typeof detail.message === "string") return detail.message;
     if (detail.detail && typeof detail.detail === "string") return detail.detail;
     if (detail.error && typeof detail.error === "string") return detail.error;
@@ -183,7 +182,6 @@ const PaymentElementForm = ({
   return (
     <div className="mt-4 space-y-4">
       <PaymentElement options={paymentElementOptions} />
-      {/* The actual pay button is now in the sidebar, but we provide a fallback for small screens or accessibility if needed, or hide it */}
       <div className="hidden">
         <button id="stripe-confirm-btn" onClick={handleConfirmPayment}>
           Confirm
@@ -197,22 +195,32 @@ const Checkout = () => {
   const { items, removeItem } = useCart();
   const { toast } = useToast();
   const [checkoutOnline, { isLoading: isPreparingPayment }] = useCheckoutOnlineMutation();
-  const [paymentSetup, setPaymentSetup] = useState<PaymentSetupState | null>(null);
+  const [paymentSetup, setPaymentSetup] = useState<PaymentSetupState | null>(() => {
+    const saved = sessionStorage.getItem("primecollege_payment_setup");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
 
   const [form, setForm] = useState<CustomerFormState>(() => {
     const saved = sessionStorage.getItem("primecollege_checkout_form");
     return saved
       ? JSON.parse(saved)
       : {
-          firstName: "",
-          lastName: "",
-          email: "",
-          phone: "",
-          address: "",
-          city: "",
-          postcode: "",
-          country: "United Kingdom",
-        };
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        postcode: "",
+        country: "United Kingdom",
+      };
   });
 
   const paymentStepRef = React.useRef<HTMLDivElement>(null);
@@ -225,8 +233,105 @@ const Checkout = () => {
   }, [form]);
 
   useEffect(() => {
-    sessionStorage.removeItem("primecollege_payment_setup");
-  }, []);
+    if (paymentSetup) {
+      sessionStorage.setItem("primecollege_payment_setup", JSON.stringify(paymentSetup));
+    } else {
+      sessionStorage.removeItem("primecollege_payment_setup");
+    }
+  }, [paymentSetup]);
+
+  const isFormComplete = useMemo(() => isCheckoutFormComplete(form), [form]);
+
+  const checkoutSignature = useMemo(() => JSON.stringify({
+    form,
+    items: items.map((item) => ({
+      qualificationId: item.qualificationId,
+      qualificationSessionId: item.qualificationSessionId || null,
+      isUpsell: Boolean(item.isUpsell),
+      pricingNote: item.pricingNote || "",
+    })),
+  }), [form, items]);
+
+  const preparePayment = async () => {
+    if (items.length === 0) return;
+    try {
+      const response = await checkoutOnline({
+        first_name: form.firstName,
+        last_name: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        billing_address: form.address,
+        city: form.city,
+        postcode: form.postcode,
+        country: form.country,
+        items: items.map((item) => ({
+          qualification_id: item.qualificationId,
+          qualification_session_id: item.qualificationSessionId || undefined,
+          is_upsell: item.isUpsell || false,
+          pricing_note: item.pricingNote || "",
+        })),
+      }).unwrap();
+
+      setPaymentSetup({
+        clientSecret: response.data.payment_intent_client_secret,
+        publishableKey: response.data.stripe_publishable_key,
+        orderNumber: response.data.order.order_number,
+      });
+      lastPreparedSignatureRef.current = checkoutSignature;
+
+      toast({
+        title: "Payment ready",
+        description: "Enter your card details below to complete the payment on this page.",
+      });
+
+      setTimeout(() => {
+        paymentStepRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    } catch (error: any) {
+      const description =
+        extractErrorMessage(error?.data?.detail || error?.data?.data || error?.data || error?.message) ||
+        "Unable to prepare secure payment. Please review your details and try again.";
+      toast({
+        title: "Checkout failed",
+        description,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePreparePayment = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await preparePayment();
+  };
+
+  useEffect(() => {
+    if (items.length === 0 || paymentSetup || isPreparingPayment || !isFormComplete) {
+      return;
+    }
+
+    if (lastPreparedSignatureRef.current === checkoutSignature) {
+      return;
+    }
+
+    lastPreparedSignatureRef.current = checkoutSignature;
+
+    autoPrepareTimeoutRef.current = window.setTimeout(() => {
+      if (!isPreparingPayment && !paymentSetup && items.length > 0) {
+        void preparePayment();
+      }
+    }, 350);
+
+    return () => {
+      if (autoPrepareTimeoutRef.current) {
+        window.clearTimeout(autoPrepareTimeoutRef.current);
+        autoPrepareTimeoutRef.current = null;
+      }
+    };
+  }, [checkoutSignature, paymentSetup, isPreparingPayment, isFormComplete, items.length]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   if (items.length === 0) {
     return (
@@ -249,115 +354,6 @@ const Checkout = () => {
   const estimatedTotal = subtotal - discountTotal;
   const currency = items[0]?.currency || "GBP";
   const inputsLocked = Boolean(paymentSetup);
-  const isFormComplete = isCheckoutFormComplete(form);
-  const checkoutSignature = JSON.stringify({
-    form,
-    items: items.map((item) => ({
-      qualificationId: item.qualificationId,
-      qualificationSessionId: item.qualificationSessionId || null,
-      isUpsell: Boolean(item.isUpsell),
-      pricingNote: item.pricingNote || "",
-    })),
-  });
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
-  };
-
-  const preparePayment = async () => {
-    try {
-      const response = await checkoutOnline({
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email,
-        phone: form.phone,
-        billing_address: form.address,
-        city: form.city,
-        postcode: form.postcode,
-        country: form.country,
-        items: items.map((item) => ({
-          qualification_id: item.qualificationId,
-          qualification_session_id: item.qualificationSessionId || undefined,
-          is_upsell: item.isUpsell || false,
-          pricing_note: item.pricingNote || "",
-        })),
-      }).unwrap();
-
-      sessionStorage.setItem(
-        "primecollege_pending_checkout",
-        JSON.stringify({
-          orderNumber: response.data.order.order_number,
-          subtotal: response.data.order.subtotal,
-          discountTotal: response.data.order.discount_total,
-          grandTotal: response.data.order.grand_total,
-          currency: response.data.order.currency,
-          items,
-          customer: {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            email: form.email,
-          },
-        }),
-      );
-
-      setPaymentSetup({
-        clientSecret: response.data.payment_intent_client_secret,
-        publishableKey: response.data.stripe_publishable_key,
-        orderNumber: response.data.order.order_number,
-      });
-      lastPreparedSignatureRef.current = checkoutSignature;
-
-      toast({
-        title: "Payment ready",
-        description: "Enter your card details below to complete the payment on this page.",
-      });
-
-      // Scroll to payment step
-      setTimeout(() => {
-        paymentStepRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
-    } catch (error: any) {
-      const description = extractErrorMessage(error?.data?.detail || error?.data?.data || error?.data)
-        || "Unable to prepare secure payment. Please review your details and try again.";
-      toast({
-        title: "Checkout failed",
-        description,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handlePreparePayment = async (event: React.FormEvent) => {
-    event.preventDefault();
-    await preparePayment();
-  };
-
-  useEffect(() => {
-    if (paymentSetup || isPreparingPayment || !isFormComplete) {
-      return;
-    }
-
-    if (lastPreparedSignatureRef.current === checkoutSignature) {
-      return;
-    }
-
-    // Set it immediately to prevent multiple triggers
-    lastPreparedSignatureRef.current = checkoutSignature;
-
-    autoPrepareTimeoutRef.current = window.setTimeout(() => {
-      // Double check before calling
-      if (!isPreparingPayment && !paymentSetup) {
-        void preparePayment();
-      }
-    }, 350);
-
-    return () => {
-      if (autoPrepareTimeoutRef.current) {
-        window.clearTimeout(autoPrepareTimeoutRef.current);
-        autoPrepareTimeoutRef.current = null;
-      }
-    };
-  }, [checkoutSignature, paymentSetup, isPreparingPayment, isFormComplete]);
 
   const inputClass =
     "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-70";
@@ -442,18 +438,22 @@ const Checkout = () => {
                 <ShieldCheck className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-bold text-foreground">Payment step</h2>
               </div>
-              {!isFormComplete ? (
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Complete the learner and billing details above. Stripe’s secure card form will appear here automatically.
-                </p>
-              ) : isPreparingPayment && !paymentSetup ? (
-                <p className="mt-3 text-sm leading-6 text-primary">
-                  Preparing your secure payment form...
-                </p>
-              ) : !paymentSetup ? (
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Secure payment is being prepared. If it does not appear, review your details and try again.
-                </p>
+              {!paymentSetup ? (
+                <div className="mt-4 space-y-4">
+                  {/* Skeleton for card form */}
+                  <div className="animate-pulse space-y-3">
+                    <div className="h-10 rounded-xl bg-muted/50" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="h-10 rounded-xl bg-muted/50" />
+                      <div className="h-10 rounded-xl bg-muted/50" />
+                    </div>
+                  </div>
+                  <p className="text-center text-xs text-muted-foreground">
+                    {!isFormComplete
+                      ? "Complete the learner and billing details above to reveal secure payment fields."
+                      : isPreparingPayment ? "Preparing secure payment form..." : "Connecting to Stripe..."}
+                  </p>
+                </div>
               ) : (
                 <>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground text-primary font-medium">
@@ -544,11 +544,13 @@ const Checkout = () => {
               </div>
 
               {!paymentSetup ? (
-                <div className="mt-6 rounded-xl border border-dashed border-border px-4 py-4 text-center text-sm text-muted-foreground">
-                  {isFormComplete
-                    ? "Preparing secure payment..."
-                    : "Fill in your details above to load the secure card form."}
-                </div>
+                <button
+                  disabled
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-muted py-4 text-sm font-bold text-muted-foreground cursor-not-allowed border border-border"
+                >
+                  <Lock className="h-4 w-4" />
+                  {isFormComplete ? "Preparing Payment..." : "Complete Details to Pay"}
+                </button>
               ) : (
                 <button
                   ref={sidebarSubmitRef}
