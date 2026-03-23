@@ -145,7 +145,6 @@ const PageManagement = () => {
       if (!res.isConfirmed) return;
       setDeletingId(id);
       const [data, error] = await TryCatch(deletePage(id).unwrap());
-      console.log({ data, error });
 
       const result = handleResponse({
         data,
@@ -398,16 +397,19 @@ const PageCard = ({
               {page.isPublished ? "Published" : "Draft"}
             </Badge>
             <Badge variant="outline">
-              {safeParseBlocks(page.blocks).length} block{safeParseBlocks(page.blocks).length !== 1 ? "s" : ""}
+              {safeParseBlocks(page.blocks).length} block
+              {safeParseBlocks(page.blocks).length !== 1 ? "s" : ""}
             </Badge>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 flex-wrap">
-          {safeParseBlocks(page.blocks).slice(0, 3).map((b) => (
-            <Badge key={b.id} variant="secondary" className="text-[10px]">
-              {b.label}
-            </Badge>
-          ))}
+          {safeParseBlocks(page.blocks)
+            .slice(0, 3)
+            .map((b) => (
+              <Badge key={b.id} variant="secondary" className="text-[10px]">
+                {b.label}
+              </Badge>
+            ))}
           {safeParseBlocks(page.blocks).length > 3 && (
             <span>+{safeParseBlocks(page.blocks).length - 3} more</span>
           )}

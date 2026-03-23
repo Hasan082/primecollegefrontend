@@ -72,6 +72,10 @@ const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const QualificationManagement = lazy(
   () => import("./pages/admin/QualificationManagement"),
 );
+const QualificationCreateOrEdit = lazy(
+  () => import("./pages/admin/QualificationCreateOrEdit"),
+);
+
 const LearnerManagement = lazy(() => import("./pages/admin/LearnerManagement"));
 const TrainerManagement = lazy(() => import("./pages/admin/TrainerManagement"));
 const ProgressMonitoring = lazy(
@@ -147,7 +151,10 @@ const App = () => {
                   <Route path="/staff-login" element={<StaffLogin />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/checkout/success" element={<CheckoutSuccess />} />
+                  <Route
+                    path="/checkout/success"
+                    element={<CheckoutSuccess />}
+                  />
                   <Route path="/checkout/cancel" element={<CheckoutCancel />} />
                   <Route path="/set-password" element={<SetPassword />} />
                   <Route path="/learner" element={<LearnerLayout />}>
@@ -176,10 +183,22 @@ const App = () => {
                       path="qualifications"
                       element={<QualificationManagement />}
                     />
+
+                    <Route
+                      path="qualifications/create"
+                      element={<QualificationCreateOrEdit />}
+                    />
+
+                    <Route
+                      path="qualifications/:qualificationId/edit"
+                      element={<QualificationCreateOrEdit />}
+                    />
+
                     <Route
                       path="qualifications/:qualificationId"
                       element={<AdminQualificationDetail />}
                     />
+
                     <Route path="learners" element={<LearnerManagement />} />
                     <Route path="trainers" element={<TrainerManagement />} />
                     <Route path="progress" element={<ProgressMonitoring />} />
