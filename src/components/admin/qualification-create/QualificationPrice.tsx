@@ -216,59 +216,51 @@ const QualificationPrice = () => {
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit = async (values: QualificationPriceFormValues) => {
-    try {
-      const payload = {
-        ...values,
-        effective_from: values.effective_from.toISOString(),
-        effective_to: values.effective_to.toISOString(),
-      };
+    const payload = {
+      ...values,
+      effective_from: values.effective_from.toISOString(),
+      effective_to: values.effective_to.toISOString(),
+    };
 
-      if (isEditMode) {
-        const [data, error] = await TryCatch(
-          updateQualificationPrice({
-            id: qualificationId,
-            payload,
-          }).unwrap(),
-        );
+    if (isEditMode) {
+      const [data, error] = await TryCatch(
+        updateQualificationPrice({
+          id: qualificationId,
+          payload,
+        }).unwrap(),
+      );
 
-        const result = handleResponse({
-          data,
-          error,
-          successMessage: "Price updated successfully",
-        });
-
-        toast({
-          title: result.type === "success" ? "Success" : "Error",
-          description: result.message,
-          variant: result.type === "error" ? "destructive" : "default",
-        });
-        toast({ title: "Qualification Price updated successfully" });
-      } else {
-        const [data, error] = await TryCatch(
-          createQualificationPrice({ id: qualificationId, payload }).unwrap(),
-        );
-
-        const result = handleResponse({
-          data,
-          error,
-          successMessage: "Qualification main create Successfully",
-        });
-
-        toast({
-          title: result.type === "success" ? "Success" : "Error",
-          description: result.message,
-          variant: result.type === "error" ? "destructive" : "default",
-        });
-
-        if (result.type === "success")
-          navigate(`/admin/qualifications/${qualificationId}/edit?step=4`);
-      }
-    } catch {
-      toast({
-        title: "Something went wrong",
-        description: "Please try again.",
-        variant: "destructive",
+      const result = handleResponse({
+        data,
+        error,
+        successMessage: "Price updated successfully",
       });
+
+      toast({
+        title: result.type === "success" ? "Success" : "Error",
+        description: result.message,
+        variant: result.type === "error" ? "destructive" : "default",
+      });
+      toast({ title: "Qualification Price updated successfully" });
+    } else {
+      const [data, error] = await TryCatch(
+        createQualificationPrice({ id: qualificationId, payload }).unwrap(),
+      );
+
+      const result = handleResponse({
+        data,
+        error,
+        successMessage: "Qualification main create Successfully",
+      });
+
+      toast({
+        title: result.type === "success" ? "Success" : "Error",
+        description: result.message,
+        variant: result.type === "error" ? "destructive" : "default",
+      });
+
+      if (result.type === "success")
+        navigate(`/admin/qualifications/${qualificationId}/edit?step=4`);
     }
   };
 
