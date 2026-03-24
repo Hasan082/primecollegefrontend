@@ -283,7 +283,7 @@ const QualificationMain = () => {
   const { data: types } = useGetTypesQuery(null);
   const navigate = useNavigate();
 
-  const { data, isLoading } = useGetQualificationMainQuery(qualificationId, {
+  const { data } = useGetQualificationMainQuery(qualificationId, {
     skip: !qualificationId,
   });
 

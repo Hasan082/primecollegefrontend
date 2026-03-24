@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { format, setHours, setMinutes } from "date-fns";
 import { CalendarIcon, Clock, Loader2 } from "lucide-react";
@@ -35,6 +35,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useCreateQualificationPriceMutation,
+  useGetQualificationPriceQuery,
+  useUpdateQualificationPriceMutation,
+} from "@/redux/apis/qualification/qualificationPriceApi";
+import { handleResponse } from "@/utils/handleResponse";
+import { TryCatch } from "@/utils/apiTryCatch";
 
 // ─── Currency options ─────────────────────────────────────────────────────────
 
@@ -173,11 +180,14 @@ const QualificationPrice = () => {
   const dispatch = useDispatch();
   const { qualificationId } = useParams();
   const { toast } = useToast();
-  const isEditMode = Boolean(qualificationId);
-
-  // TODO: Replace with your actual Redux selector
-  // const existingData = useSelector(selectQualificationPrice);
-  const existingData = null; // placeholder
+  const { data } = useGetQualificationPriceQuery(qualificationId, {
+    skip: !qualificationId,
+  });
+  // const isEditMode = Boolean(data?.data);
+  const isEditMode = false;
+  const [createQualificationPrice] = useCreateQualificationPriceMutation();
+  const [updateQualificationPrice] = useUpdateQualificationPriceMutation();
+  const navigate = useNavigate();
 
   const form = useForm<QualificationPriceFormValues>({
     resolver: zodResolver(qualificationPriceSchema),
@@ -191,18 +201,18 @@ const QualificationPrice = () => {
 
   // ── Populate form in edit mode ────────────────────────────────────────────
   useEffect(() => {
-    if (isEditMode && existingData) {
+    if (isEditMode && data?.data) {
       form.reset({
-        ...existingData,
-        effective_from: existingData.effective_from
-          ? new Date(existingData.effective_from)
+        ...data?.data,
+        effective_from: data?.data.effective_from
+          ? new Date(data?.data.effective_from)
           : undefined,
-        effective_to: existingData.effective_to
-          ? new Date(existingData.effective_to)
+        effective_to: data?.data.effective_to
+          ? new Date(data?.data.effective_to)
           : undefined,
       });
     }
-  }, [isEditMode, existingData, form]);
+  }, [isEditMode, data?.data, form]);
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit = async (values: QualificationPriceFormValues) => {
@@ -214,13 +224,44 @@ const QualificationPrice = () => {
       };
 
       if (isEditMode) {
-        // TODO: dispatch(updateQualificationPrice({ id: qualificationId, ...payload }));
-        console.log("UPDATE payload:", payload);
-        toast({ title: "Price updated successfully" });
+        const [data, error] = await TryCatch(
+          updateQualificationPrice({
+            id: qualificationId,
+            payload,
+          }).unwrap(),
+        );
+
+        const result = handleResponse({
+          data,
+          error,
+          successMessage: "Price updated successfully",
+        });
+
+        toast({
+          title: result.type === "success" ? "Success" : "Error",
+          description: result.message,
+          variant: result.type === "error" ? "destructive" : "default",
+        });
+        toast({ title: "Qualification Price updated successfully" });
       } else {
-        // TODO: dispatch(createQualificationPrice(payload));
-        console.log("CREATE payload:", payload);
-        toast({ title: "Price saved successfully" });
+        const [data, error] = await TryCatch(
+          createQualificationPrice({ id: qualificationId, payload }).unwrap(),
+        );
+
+        const result = handleResponse({
+          data,
+          error,
+          successMessage: "Qualification main create Successfully",
+        });
+
+        toast({
+          title: result.type === "success" ? "Success" : "Error",
+          description: result.message,
+          variant: result.type === "error" ? "destructive" : "default",
+        });
+
+        if (result.type === "success")
+          navigate(`/admin/qualifications/${qualificationId}/edit?step=4`);
       }
     } catch {
       toast({
