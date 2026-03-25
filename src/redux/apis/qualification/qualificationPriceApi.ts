@@ -8,19 +8,29 @@ const qualificationPriceApi = api.injectEndpoints({
         method: "POST",
         body: payload,
       }),
+      invalidatesTags: ["QualificationPrices"],
     }),
     updateQualificationPrice: builder.mutation({
       query: ({ id, payload }) => ({
-        url: `/api/qualification/admin/${id}/prices/`,
+        url: `/api/qualification/admin/prices/${id}/`,
         method: "PATCH",
         body: payload,
       }),
+      invalidatesTags: ["QualificationPrices"],
     }),
-    getQualificationPrice: builder.query({
+    deleteQualificationPrice: builder.mutation({
+      query: (id) => ({
+        url: `/api/qualification/admin/prices/${id}/`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["QualificationPrices"],
+    }),
+    getQualificationPrices: builder.query({
       query: (id) => ({
         url: `/api/qualification/admin/${id}/prices/`,
         method: "GET",
       }),
+      providesTags: ["QualificationPrices"],
     }),
   }),
 });
@@ -28,5 +38,6 @@ const qualificationPriceApi = api.injectEndpoints({
 export const {
   useCreateQualificationPriceMutation,
   useUpdateQualificationPriceMutation,
-  useGetQualificationPriceQuery,
+  useDeleteQualificationPriceMutation,
+  useGetQualificationPricesQuery,
 } = qualificationPriceApi;

@@ -1,11 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { format, setHours, setMinutes } from "date-fns";
-import { CalendarIcon, Clock, Loader2 } from "lucide-react";
+import {
+  CalendarIcon,
+  Clock,
+  Loader2,
+  Trash2,
+  Edit,
+  Plus,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,13 +40,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
   useCreateQualificationPriceMutation,
-  useGetQualificationPriceQuery,
+  useGetQualificationPricesQuery,
   useUpdateQualificationPriceMutation,
+  useDeleteQualificationPriceMutation,
 } from "@/redux/apis/qualification/qualificationPriceApi";
 import { handleResponse } from "@/utils/handleResponse";
 import { TryCatch } from "@/utils/apiTryCatch";
@@ -176,18 +211,26 @@ const DateTimePicker = ({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+interface QualificationPriceData extends QualificationPriceFormValues {
+  id: string;
+}
+
 const QualificationPrice = () => {
-  const dispatch = useDispatch();
   const { qualificationId } = useParams();
   const { toast } = useToast();
-  const { data } = useGetQualificationPriceQuery(qualificationId, {
-    skip: !qualificationId,
-  });
-  // const isEditMode = Boolean(data?.data);
-  const isEditMode = false;
+  const navigate = useNavigate();
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+
+  const { data: pricesData, isLoading: isLoadingPrices } =
+    useGetQualificationPricesQuery(qualificationId, {
+      skip: !qualificationId,
+    });
+
   const [createQualificationPrice] = useCreateQualificationPriceMutation();
   const [updateQualificationPrice] = useUpdateQualificationPriceMutation();
-  const navigate = useNavigate();
+  const [deleteQualificationPrice] = useDeleteQualificationPriceMutation();
 
   const form = useForm<QualificationPriceFormValues>({
     resolver: zodResolver(qualificationPriceSchema),
@@ -196,25 +239,46 @@ const QualificationPrice = () => {
 
   const {
     handleSubmit,
+    reset,
     formState: { isSubmitting },
   } = form;
 
-  // ── Populate form in edit mode ────────────────────────────────────────────
-  useEffect(() => {
-    if (isEditMode && data?.data) {
-      form.reset({
-        ...data?.data,
-        effective_from: data?.data.effective_from
-          ? new Date(data?.data.effective_from)
-          : undefined,
-        effective_to: data?.data.effective_to
-          ? new Date(data?.data.effective_to)
-          : undefined,
-      });
-    }
-  }, [isEditMode, data?.data, form]);
+  // ── Handlers ─────────────────────────────────────────────────────────────
 
-  // ── Submit ────────────────────────────────────────────────────────────────
+  const handleEdit = (price: QualificationPriceData) => {
+    setEditingPriceId(price.id);
+    reset({
+      amount: String(price.amount),
+      currency: price.currency,
+      effective_from: new Date(price.effective_from),
+      effective_to: new Date(price.effective_to),
+      is_active: price.is_active,
+    });
+    setIsFormOpen(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleAddNew = () => {
+    setEditingPriceId(null);
+    reset(defaultValues);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    const [data, error] = await TryCatch(deleteQualificationPrice(id).unwrap());
+    const result = handleResponse({
+      data,
+      error,
+      successMessage: "Price deleted successfully",
+    });
+
+    toast({
+      title: result.type === "success" ? "Success" : "Error",
+      description: result.message,
+      variant: result.type === "error" ? "destructive" : "default",
+    });
+  };
+
   const onSubmit = async (values: QualificationPriceFormValues) => {
     const payload = {
       ...values,
@@ -222,10 +286,10 @@ const QualificationPrice = () => {
       effective_to: values.effective_to.toISOString(),
     };
 
-    if (isEditMode) {
+    if (editingPriceId) {
       const [data, error] = await TryCatch(
         updateQualificationPrice({
-          id: qualificationId,
+          id: editingPriceId,
           payload,
         }).unwrap(),
       );
@@ -241,7 +305,12 @@ const QualificationPrice = () => {
         description: result.message,
         variant: result.type === "error" ? "destructive" : "default",
       });
-      toast({ title: "Qualification Price updated successfully" });
+
+      if (result.type === "success") {
+        setIsFormOpen(false);
+        setEditingPriceId(null);
+        reset(defaultValues);
+      }
     } else {
       const [data, error] = await TryCatch(
         createQualificationPrice({ id: qualificationId, payload }).unwrap(),
@@ -250,7 +319,7 @@ const QualificationPrice = () => {
       const result = handleResponse({
         data,
         error,
-        successMessage: "Qualification main create Successfully",
+        successMessage: "Price created successfully",
       });
 
       toast({
@@ -259,159 +328,323 @@ const QualificationPrice = () => {
         variant: result.type === "error" ? "destructive" : "default",
       });
 
-      if (result.type === "success")
-        navigate(`/admin/qualifications/${qualificationId}/edit?step=4`);
+      if (result.type === "success") {
+        setIsFormOpen(false);
+        reset(defaultValues);
+      }
     }
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              Pricing Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Amount */}
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm select-none">
-                        $
-                      </span>
-                      <Input placeholder="0.00" className="pl-7" {...field} />
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Enter the price (e.g. 49.99)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Qualification Prices</h2>
+        {!isFormOpen && (
+          <Button onClick={handleAddNew} className="gap-2">
+            <Plus className="h-4 w-4" /> Add New Price
+          </Button>
+        )}
+      </div>
 
-            {/* Currency */}
-            <FormField
-              control={form.control}
-              name="currency"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Currency</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {CURRENCIES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
-                          {c.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Effective From */}
-            <FormField
-              control={form.control}
-              name="effective_from"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Effective From</FormLabel>
-                  <FormControl>
-                    <DateTimePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Pick start date & time"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Date &amp; time this price becomes active
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Effective To */}
-            <FormField
-              control={form.control}
-              name="effective_to"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Effective To</FormLabel>
-                  <FormControl>
-                    <DateTimePicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Pick end date & time"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Date &amp; time this price expires
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Is Active */}
-            <div className="md:col-span-2">
-              <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="cursor-pointer">
-                        Active Price
-                      </FormLabel>
-                      <FormDescription>
-                        Only active prices will be shown to learners during
-                        enrollment
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
+      {isFormOpen && (
+        <Card className="border-primary/20 shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-base font-semibold">
+                {editingPriceId ? "Edit Price" : "Add New Price"}
+              </CardTitle>
+              <CardDescription>
+                {editingPriceId
+                  ? "Update the existing pricing details"
+                  : "Configure a new price point for this qualification"}
+              </CardDescription>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsFormOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-6 pt-4"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Amount */}
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm select-none">
+                              $
+                            </span>
+                            <Input
+                              placeholder="0.00"
+                              className="pl-7"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Currency */}
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Currency</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {CURRENCIES.map((c) => (
+                              <SelectItem key={c.value} value={c.value}>
+                                {c.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Effective From */}
+                  <FormField
+                    control={form.control}
+                    name="effective_from"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Effective From</FormLabel>
+                        <FormControl>
+                          <DateTimePicker
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Pick start date & time"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Effective To */}
+                  <FormField
+                    control={form.control}
+                    name="effective_to"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Effective To</FormLabel>
+                        <FormControl>
+                          <DateTimePicker
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Pick end date & time"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Is Active */}
+                  <div className="md:col-span-2">
+                    <FormField
+                      control={form.control}
+                      name="is_active"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="cursor-pointer">
+                              Active Price
+                            </FormLabel>
+                            <FormDescription>
+                              Only active prices will be shown to learners
+                              during enrollment
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsFormOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="min-w-36"
+                  >
+                    {isSubmitting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {isSubmitting
+                      ? editingPriceId
+                        ? "Updating…"
+                        : "Creating…"
+                      : editingPriceId
+                        ? "Update Price"
+                        : "Create Price"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </CardContent>
         </Card>
+      )}
 
-        {/* ── Submit ── */}
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting} className="min-w-36">
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting
-              ? isEditMode
-                ? "Updating…"
-                : "Saving…"
-              : isEditMode
-                ? "Update Price"
-                : "Save & Continue"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Prices</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoadingPrices ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : pricesData?.data?.results?.length > 0 ? (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Currency</TableHead>
+                    <TableHead>Effective From</TableHead>
+                    <TableHead>Effective To</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pricesData.data?.results?.map(
+                    (price: QualificationPriceData) => (
+                      <TableRow key={price.id}>
+                        <TableCell className="font-medium">
+                          {price.amount}
+                        </TableCell>
+                        <TableCell>{price.currency}</TableCell>
+                        <TableCell>
+                          {format(new Date(price.effective_from), "PPP, HH:mm")}
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(price.effective_to), "PPP, HH:mm")}
+                        </TableCell>
+                        <TableCell>
+                          {price.is_active ? (
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">
+                              Active
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">Inactive</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(price)}
+                              title="Edit Price"
+                            >
+                              <Edit className="h-4 w-4 text-blue-600" />
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="Delete Price"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will
+                                    permanently delete the price
+                                    {price.amount} {price.currency} from the
+                                    records.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(price.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ),
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-muted/20 rounded-lg border-2 border-dashed">
+              <p className="text-muted-foreground">No prices configured yet.</p>
+              <Button variant="link" onClick={handleAddNew}>
+                Click here to add your first price
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end pt-4">
+        <Button
+          variant="outline"
+          onClick={() =>
+            navigate(`/admin/qualifications/${qualificationId}/edit?step=4`)
+          }
+          className="min-w-36"
+        >
+          Continue to Next Step
+        </Button>
+      </div>
+    </div>
   );
 };
 
