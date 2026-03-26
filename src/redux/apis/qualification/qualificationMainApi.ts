@@ -25,6 +25,13 @@ const qualificationMainApi = api.injectEndpoints({
       }),
       providesTags: ["Qualifications"],
     }),
+    getQualificationQuickView: builder.query({
+      query: (id) => ({
+        url: `/api/qualification/admin/${id}/quick-view/`,
+        method: "GET",
+      }),
+      providesTags: ["Qualifications"],
+    }),
   }),
 });
 
@@ -32,4 +39,5 @@ export const {
   useCreateQualificationMainMutation,
   useUpdateQualificationMainMutation,
   useGetQualificationMainQuery,
+  useGetQualificationQuickViewQuery,
 } = qualificationMainApi;

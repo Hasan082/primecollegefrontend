@@ -7,6 +7,7 @@ const qualificationApi = api.injectEndpoints({
         url: "/api/qualification/admin/",
         method: "GET",
       }),
+      providesTags: ["Qualifications"],
     }),
   }),
 });

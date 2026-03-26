@@ -172,46 +172,13 @@ const DateTimePicker = ({
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
-const sessionDateSchema = z
-  .object({
-    title: z.string().min(1, "Title is required"),
-    venue_address: z.string().min(1, "Venue address is required"),
-    start_at: z.date({ required_error: "Start date & time is required" }),
-    end_at: z.date({ required_error: "End date & time is required" }),
-    capacity: z
-      .number({ invalid_type_error: "Must be a number" })
-      .int()
-      .min(1, "Capacity must be at least 1")
-      .max(32767),
-    available_seats: z
-      .number({ invalid_type_error: "Must be a number" })
-      .int()
-      .min(0, "Cannot be negative")
-      .max(32767),
-    price_override: z
-      .string()
-      .regex(/^-?\d+(\.\d{1,2})?$/, "Must be a valid price (e.g. 49.99)")
-      .optional()
-      .or(z.literal("")),
-    booking_deadline: z.date({
-      required_error: "Booking deadline is required",
-    }),
-    is_featured: z.boolean().default(false),
-    sort_order: z.number().int().min(0).max(32767).default(0),
-    is_active: z.boolean().default(true),
-  })
-  .refine((d) => d.end_at > d.start_at, {
-    message: "End must be after start",
-    path: ["end_at"],
-  })
-  .refine((d) => d.booking_deadline <= d.start_at, {
-    message: "Booking deadline must be on or before the start date",
-    path: ["booking_deadline"],
-  })
-  .refine((d) => d.available_seats <= d.capacity, {
-    message: "Available seats cannot exceed capacity",
-    path: ["available_seats"],
-  });
+const sessionDateSchema = z.object({
+  start_at: z.date({ required_error: "Date is required" }),
+  title: z.string().optional().or(z.literal("")),
+  sort_order: z.number().int().min(0).max(32767).default(0),
+  is_active: z.boolean().default(true),
+  date: z.string().optional(),
+});
 
 const locationSchema = z.object({
   name: z.string().min(1, "Location name is required").max(255),
@@ -227,17 +194,14 @@ type LocationFormValues = z.infer<typeof locationSchema>;
 
 interface SavedSessionDate extends SessionDateValues {
   id: string;
+  date?: string;
 }
 
 // ─── Default factory ──────────────────────────────────────────────────────────
 
 const emptyDate = (): Partial<SessionDateValues> => ({
+  start_at: undefined,
   title: "",
-  venue_address: "",
-  capacity: 30,
-  available_seats: 30,
-  price_override: "",
-  is_featured: false,
   sort_order: 0,
   is_active: true,
 });
@@ -279,7 +243,7 @@ const SessionDateForm = ({
                 <FormLabel>Session Title</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g. Morning Cohort – London"
+                    placeholder="e.g. April 2026 Cohort"
                     {...field}
                   />
                 </FormControl>
@@ -289,148 +253,18 @@ const SessionDateForm = ({
           />
         </div>
 
-        {/* Venue Address */}
-        <div className="md:col-span-2">
-          <FormField
-            control={form.control}
-            name="venue_address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Venue Address</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="e.g. 123 Conference St, London, EC1A 1BB"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Start At */}
+        {/* Start At (Date Only) */}
         <FormField
           control={form.control}
           name="start_at"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Start Date &amp; Time</FormLabel>
+              <FormLabel>Session Date</FormLabel>
               <FormControl>
                 <DateTimePicker
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="Pick start"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* End At */}
-        <FormField
-          control={form.control}
-          name="end_at"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>End Date &amp; Time</FormLabel>
-              <FormControl>
-                <DateTimePicker
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Pick end"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Booking Deadline */}
-        <FormField
-          control={form.control}
-          name="booking_deadline"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Booking Deadline</FormLabel>
-              <FormControl>
-                <DateTimePicker
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Pick deadline"
-                />
-              </FormControl>
-              <FormDescription>Must be on or before start</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Price Override */}
-        <FormField
-          control={form.control}
-          name="price_override"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price Override</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm select-none">
-                    $
-                  </span>
-                  <Input
-                    placeholder="Leave blank to use default"
-                    className="pl-7"
-                    {...field}
-                  />
-                </div>
-              </FormControl>
-              <FormDescription>
-                Overrides the qualification price
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Capacity */}
-        <FormField
-          control={form.control}
-          name="capacity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Capacity</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={1}
-                  max={32767}
-                  placeholder="e.g. 30"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Available Seats */}
-        <FormField
-          control={form.control}
-          name="available_seats"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Available Seats</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={0}
-                  max={32767}
-                  placeholder="e.g. 30"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  placeholder="Pick date"
                 />
               </FormControl>
               <FormMessage />
@@ -460,28 +294,8 @@ const SessionDateForm = ({
           )}
         />
 
-        {/* Booleans */}
-        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="is_featured"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-3">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-0.5 leading-none">
-                  <FormLabel className="cursor-pointer">Featured</FormLabel>
-                  <FormDescription className="text-xs">
-                    Highlight this date in listings
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
+        {/* Active Toggle */}
+        <div className="md:col-span-2">
           <FormField
             control={form.control}
             name="is_active"
@@ -495,9 +309,6 @@ const SessionDateForm = ({
                 </FormControl>
                 <div className="space-y-0.5 leading-none">
                   <FormLabel className="cursor-pointer">Active</FormLabel>
-                  <FormDescription className="text-xs">
-                    Inactive dates are hidden from learners
-                  </FormDescription>
                 </div>
               </FormItem>
             )}
@@ -543,51 +354,33 @@ const SavedDateRow = ({ item, index, onEdit, onDelete }: SavedDateRowProps) => {
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div
-        className={cn(
-          "rounded-xl border bg-card transition-colors",
-          !item.is_active && "opacity-60",
-        )}
-      >
+      <div className="rounded-xl border bg-card transition-colors">
         {/* Row header */}
         <div className="flex items-center gap-2 px-4 py-3">
           <CollapsibleTrigger asChild>
             <button
               type="button"
-              className="flex-1 flex items-center gap-3 text-left min-w-0"
+              className={cn(
+                "flex-1 flex items-center gap-3 text-left min-w-0",
+                !item.is_active && "opacity-60",
+              )}
             >
               <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
                 {index + 1}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">
-                  {item.title || `Session Date ${index + 1}`}
+                  {item.title || (item.date ? format(new Date(item.date), "PPP") : `Session Date ${index + 1}`)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {item.start_at
-                    ? format(new Date(item.start_at), "PPP, HH:mm")
-                    : "—"}
-                  {" → "}
-                  {item.end_at ? format(new Date(item.end_at), "HH:mm") : "—"}
+                    ? format(new Date(item.start_at), "PPP")
+                    : item.date
+                      ? format(new Date(item.date), "PPP")
+                      : "—"}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {item.is_featured && (
-                  <Badge variant="secondary" className="text-xs">
-                    Featured
-                  </Badge>
-                )}
-                {!item.is_active && (
-                  <Badge
-                    variant="outline"
-                    className="text-xs text-muted-foreground"
-                  >
-                    Inactive
-                  </Badge>
-                )}
-                <span className="text-xs text-muted-foreground tabular-nums hidden sm:inline">
-                  {item.capacity} seats
-                </span>
                 {open ? (
                   <ChevronUp className="h-4 w-4 text-muted-foreground" />
                 ) : (
@@ -624,8 +417,7 @@ const SavedDateRow = ({ item, index, onEdit, onDelete }: SavedDateRowProps) => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Session Date?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete{" "}
-                  <strong>{item.title || `Session Date ${index + 1}`}</strong>.
+                  This will permanently delete this session date.
                   This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -643,42 +435,33 @@ const SavedDateRow = ({ item, index, onEdit, onDelete }: SavedDateRowProps) => {
         </div>
 
         {/* Collapsed detail */}
+        {/* Collapsed detail - simplified */}
         <CollapsibleContent>
           <Separator />
-          <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
             <div>
-              <p className="text-xs text-muted-foreground mb-0.5">Venue</p>
-              <p className="truncate">{item.venue_address || "—"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">
-                Booking Deadline
-              </p>
+              <p className="text-xs text-muted-foreground mb-0.5">Date</p>
               <p>
-                {item.booking_deadline
-                  ? format(new Date(item.booking_deadline), "PPP, HH:mm")
-                  : "—"}
+                {item.date
+                  ? format(new Date(item.date), "PPPP")
+                  : item.start_at
+                    ? format(new Date(item.start_at), "PPPP")
+                    : "—"}
               </p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">
-                Available Seats
-              </p>
-              <p>{item.available_seats}</p>
-            </div>
-            {item.price_override && (
+            {item.title && (
               <div>
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Price Override
-                </p>
-                <p>${item.price_override}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Title</p>
+                <p>{item.title}</p>
               </div>
             )}
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Sort Order</p>
               <p>{item.sort_order}</p>
             </div>
-          </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">Status</p>
+              <p>{item.is_active ? "Active" : "Inactive"}</p>
+            </div>
         </CollapsibleContent>
       </div>
     </Collapsible>
@@ -745,8 +528,9 @@ const QualificationSessions = () => {
   });
 
   useEffect(() => {
-    if (locationId && locationsData?.data?.results) {
-      const currentLoc = locationsData.data.results.find((l: any) => l.id === locationId);
+    const locations = locationsData?.data?.results || locationsData?.data || [];
+    if (locationId && Array.isArray(locations)) {
+      const currentLoc = locations.find((l: any) => l.id === locationId);
       if (currentLoc) {
         locationForm.reset({
           name: currentLoc.name,
@@ -805,10 +589,18 @@ const QualificationSessions = () => {
         variant: result.type === "error" ? "destructive" : "default",
       });
 
-      if (result.type === "success")
+      if (result.type === "success") {
         navigate(
           `/admin/qualifications/${qualificationId}/edit?step=4&location=${data?.data?.id}`,
         );
+        // Scroll the form into view
+        window.requestAnimationFrame(() => {
+          const formElement = document.getElementById("qualification-sessions-form");
+          if (formElement) {
+            formElement.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      }
     }
   };
 
@@ -817,18 +609,14 @@ const QualificationSessions = () => {
     if (!locationId) return;
 
     const payload = {
-      ...values,
-      location: locationId,
-      start_at: values.start_at.toISOString(),
-      end_at: values.end_at.toISOString(),
-      booking_deadline: values.booking_deadline.toISOString(),
+      date: format(values.start_at, "yyyy-MM-dd"),
+      title: values.title || "",
+      sort_order: values.sort_order || 0,
+      is_active: values.is_active !== undefined ? values.is_active : true,
     };
 
     const [data, error] = await TryCatch(
-      createQualificationSessionLocationDate({
-        locationId,
-        payload,
-      }).unwrap(),
+      createQualificationSessionLocationDate({ locationId, payload }).unwrap(),
     );
 
     const result = handleResponse({
@@ -853,11 +641,10 @@ const QualificationSessions = () => {
     if (!locationId) return;
 
     const payload = {
-      ...values,
-      location: locationId,
-      start_at: values.start_at.toISOString(),
-      end_at: values.end_at.toISOString(),
-      booking_deadline: values.booking_deadline.toISOString(),
+      date: format(values.start_at, "yyyy-MM-dd"),
+      title: values.title || "",
+      sort_order: values.sort_order || 0,
+      is_active: values.is_active !== undefined ? values.is_active : true,
     };
 
     const [data, error] = await TryCatch(
@@ -970,8 +757,8 @@ const QualificationSessions = () => {
             )}
           </div>
 
-          {/* ── Location Card ── */}
-          <Card>
+          {/* ── Location & Sessions Consolidated Card ── */}
+          <Card id="qualification-sessions-form" className="scroll-mt-24">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -1107,164 +894,147 @@ const QualificationSessions = () => {
                   </div>
                 </form>
               </Form>
-            </CardContent>
-          </Card>
 
-          {/* ── Session Dates Card ── */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-base font-semibold">
-                    Session Dates
-                  </CardTitle>
-                  {sessionDateData?.data?.results?.length > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      {sessionDateData?.data?.results?.length}{" "}
-                      {sessionDateData?.data?.results?.length === 1
-                        ? "date"
-                        : "dates"}
-                    </Badge>
+              {/* ── Session Dates Section (Merged) ── */}
+              {locationId && (
+                <div className="mt-8 pt-8 border-t space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-semibold">Session Dates</h3>
+                      {((sessionDateData?.data?.results || sessionDateData?.data) as any[])?.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {(sessionDateData?.data?.results || sessionDateData?.data).length}{" "}
+                          {(sessionDateData?.data?.results || sessionDateData?.data).length === 1
+                            ? "date"
+                            : "dates"}
+                        </Badge>
+                      )}
+                    </div>
+                    {!showAddForm && !editingId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAddForm(true)}
+                        className="gap-1.5"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Date
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Empty state */}
+                  {((sessionDateData?.data?.results || sessionDateData?.data) as any[])?.length === 0 && !showAddForm && (
+                    <div className="flex flex-col items-center justify-center py-10 text-muted-foreground border-2 border-dashed rounded-xl gap-2">
+                      <CalendarDays className="h-8 w-8 opacity-40" />
+                      <p className="text-sm">No session dates added yet</p>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setShowAddForm(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add First Date
+                      </Button>
+                    </div>
                   )}
-                </div>
-                {!showAddForm && !editingId && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={!locationId}
-                    onClick={() => setShowAddForm(true)}
-                    className="gap-1.5"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Date
-                  </Button>
-                )}
-              </div>
-              {!locationId && (
-                <p className="text-xs text-muted-foreground mt-1 text-center py-2 bg-muted/50 rounded-md">
-                  Save the location above before adding session dates.
-                </p>
-              )}
-            </CardHeader>
 
-            <CardContent className="space-y-3">
-              {/* Empty state */}
-              {sessionDateData?.data?.results?.length === 0 && !showAddForm && (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border-2 border-dashed rounded-xl gap-2">
-                  <CalendarDays className="h-8 w-8 opacity-40" />
-                  <p className="text-sm">No session dates added yet</p>
-                  {locationId && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setShowAddForm(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add First Date
-                    </Button>
-                  )}
-                </div>
-              )}
+                  {/* Saved dates */}
+                  <div className="space-y-3">
+                    {(sessionDateData?.data?.results || (Array.isArray(sessionDateData?.data) ? sessionDateData.data : []))?.map((item: any, index: number) =>
+                      editingId === item.id ? (
+                        <div key={item.id} className="rounded-xl border bg-muted/30">
+                          <div className="px-4 py-3 flex items-center gap-3 border-b">
+                            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                              {index + 1}
+                            </div>
+                            <p className="text-sm font-medium flex-1">
+                              Editing:{" "}
+                              <span className="text-muted-foreground">
+                                {item.title || `Session Date ${index + 1}`}
+                              </span>
+                            </p>
+                            <Badge variant="outline" className="text-xs">
+                              Editing
+                            </Badge>
+                          </div>
+                          <SessionDateForm
+                            locationId={locationId!}
+                            initial={{
+                              ...item,
+                              start_at: item.date
+                                ? new Date(item.date)
+                                : item.start_at
+                                  ? new Date(item.start_at)
+                                  : undefined,
+                            }}
+                            onSave={(values) => handleUpdateDate(item.id, values)}
+                            onCancel={() => setEditingId(null)}
+                            isSaving={isCreatingDate || isUpdatingDate}
+                          />
+                        </div>
+                      ) : (
+                        <SavedDateRow
+                          key={item.id}
+                          item={item}
+                          index={index}
+                          onEdit={() => {
+                            setShowAddForm(false);
+                            setEditingId(item.id);
+                          }}
+                          onDelete={() => handleDeleteDate(item.id)}
+                        />
+                      ),
+                    )}
+                  </div>
 
-              {/* Saved dates */}
-              <div className="space-y-3">
-                {sessionDateData?.data?.results?.map((item: any, index: number) =>
-                  editingId === item.id ? (
-                    // Inline edit form
-                    <div key={item.id} className="rounded-xl border bg-muted/30">
+                  {/* Add new form */}
+                  {showAddForm && (
+                    <div className="rounded-xl border bg-muted/30">
                       <div className="px-4 py-3 flex items-center gap-3 border-b">
                         <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
-                          {index + 1}
+                          {(sessionDateData?.data?.results ||
+                            sessionDateData?.data ||
+                            []).length + 1}
                         </div>
-                        <p className="text-sm font-medium flex-1">
-                          Editing:{" "}
-                          <span className="text-muted-foreground">
-                            {item.title || `Session Date ${index + 1}`}
-                          </span>
+                        <p className="text-sm text-muted-foreground flex-1">
+                          New Session Date
                         </p>
                         <Badge variant="outline" className="text-xs">
-                          Editing
+                          New
                         </Badge>
                       </div>
                       <SessionDateForm
                         locationId={locationId!}
-                        initial={{
-                          ...item,
-                          start_at:
-                            item.start_at instanceof Date
-                              ? item.start_at
-                              : new Date(item.start_at),
-                          end_at:
-                            item.end_at instanceof Date
-                              ? item.end_at
-                              : new Date(item.end_at),
-                          booking_deadline:
-                            item.booking_deadline instanceof Date
-                              ? item.booking_deadline
-                              : new Date(item.booking_deadline),
-                        }}
-                        onSave={(values) => handleUpdateDate(item.id, values)}
-                        onCancel={() => setEditingId(null)}
-                        isSaving={isCreatingDate || isUpdatingDate}
+                        onSave={handleAddDate}
+                        onCancel={() => setShowAddForm(false)}
+                        isSaving={isCreatingDate}
                       />
                     </div>
-                  ) : (
-                    // Read-only row
-                    <SavedDateRow
-                      key={item.id}
-                      item={item}
-                      index={index}
-                      onEdit={() => {
-                        setShowAddForm(false);
-                        setEditingId(item.id);
-                      }}
-                      onDelete={() => handleDeleteDate(item.id)}
-                    />
-                  ),
-                )}
-              </div>
+                  )}
 
-              {/* Add new form */}
-              {showAddForm && (
-                <div className="rounded-xl border bg-muted/30">
-                  <div className="px-4 py-3 flex items-center gap-3 border-b">
-                    <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
-                      {(sessionDateData?.data?.results?.length || 0) + 1}
-                    </div>
-                    <p className="text-sm text-muted-foreground flex-1">
-                      New Session Date
-                    </p>
-                    <Badge variant="outline" className="text-xs">
-                      New
-                    </Badge>
-                  </div>
-                  <SessionDateForm
-                    locationId={locationId!}
-                    onSave={handleAddDate}
-                    onCancel={() => setShowAddForm(false)}
-                    isSaving={isCreatingDate}
-                  />
+                  {/* Add another bottom button */}
+                  {(sessionDateData?.data?.results ||
+                    (Array.isArray(sessionDateData?.data)
+                      ? sessionDateData.data
+                      : []))?.length > 0 &&
+                    !showAddForm &&
+                    !editingId && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full gap-2 border-dashed border h-12"
+                        onClick={() => setShowAddForm(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Another Date
+                      </Button>
+                    )}
                 </div>
               )}
-
-              {/* Add another bottom button */}
-              {sessionDateData?.data?.results?.length > 0 &&
-                !showAddForm &&
-                !editingId &&
-                locationId && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full gap-2 border-dashed"
-                    onClick={() => setShowAddForm(true)}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Another Date
-                  </Button>
-                )}
             </CardContent>
           </Card>
         </div>
@@ -1297,33 +1067,50 @@ const QualificationSessions = () => {
           )}
         </CardHeader>
         <CardContent>
-          {locationsData?.data?.results?.length > 0 ? (
+          {(locationsData?.data?.results || (Array.isArray(locationsData?.data) ? locationsData.data : []))?.length > 0 ? (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Location Name</TableHead>
-                    <TableHead>Venue Address</TableHead>
+                    <TableHead>Location Details</TableHead>
+                    <TableHead>Session Dates</TableHead>
                     <TableHead>Sort Order</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {locationsData.data.results.map((loc: any) => (
+                  {(locationsData?.data?.results || (Array.isArray(locationsData?.data) ? locationsData.data : [])).map((loc: any) => (
                     <TableRow key={loc.id} className={cn(locationId === loc.id && "bg-muted/50")}>
-                      <TableCell className="font-medium">{loc.name}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {loc.venue_address}
+                      <TableCell className="min-w-[150px]">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-bold text-sm">{loc.name}</span>
+                          <span className="text-xs text-muted-foreground line-clamp-1">
+                            {loc.venue_address}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1 max-w-[250px]">
+                          {loc.dates && loc.dates.length > 0 ? (
+                            loc.dates.map((d: any, i: number) => (
+                              <Badge key={i} variant="outline" className="text-[10px] py-0 px-1.5 h-5 bg-primary/5 border-primary/20">
+                                {typeof d === 'string' ? d : d.date}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">No dates</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{loc.sort_order}</TableCell>
                       <TableCell>
                         {loc.is_active ? (
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">
+                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 text-[10px] h-5 px-2">
                             Active
                           </Badge>
                         ) : (
-                          <Badge variant="secondary">Inactive</Badge>
+                          <Badge variant="secondary" className="text-[10px] h-5 px-2">Inactive</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -1336,7 +1123,13 @@ const QualificationSessions = () => {
                                 `/admin/qualifications/${qualificationId}/edit?step=4&location=${loc.id}`,
                               );
                               setIsFormView(true);
-                              window.scrollTo({ top: 0, behavior: "smooth" });
+                               // Scroll the form into view
+                              window.requestAnimationFrame(() => {
+                                const formElement = document.getElementById("qualification-sessions-form");
+                                if (formElement) {
+                                  formElement.scrollIntoView({ behavior: "smooth", block: "start" });
+                                }
+                              });
                             }}
                             title="Edit Location"
                           >

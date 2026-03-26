@@ -4,13 +4,7 @@ import { api } from "../../api";
 const qualificationSessionLocationDate = api.injectEndpoints({
   endpoints: (builder) => ({
     createQualificationSessionLocationDate: builder.mutation({
-      query: ({
-        locationId,
-        payload,
-      }: {
-        locationId: string;
-        payload: any;
-      }) => ({
+      query: ({ locationId, payload }) => ({
         url: `/api/qualification/admin/session-locations/${locationId}/dates/`,
         method: "POST",
         body: payload,

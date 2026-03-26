@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  adminQualifications as initialData,
-  AdminQualification,
-} from "@/data/adminMockData";
-import {
   Search,
   Plus,
   Edit,
@@ -26,15 +22,8 @@ import {
   Settings2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import QualificationQuickView from "@/components/admin/QualificationQuickView";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -47,71 +36,108 @@ import TablePagination from "@/components/admin/TablePagination";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useGetQualificationsAdminQuery } from "@/redux/apis/qualification/qualificationApi";
+import { useUpdateQualificationMainMutation } from "@/redux/apis/qualification/qualificationMainApi";
 
-const emptyForm = {
-  title: "",
-  code: "",
-  level: "",
-  category: "",
-  price: "",
-  awardingBody: "",
-  accessDuration: "",
+type AdminQualificationRow = {
+  id: string;
+  title: string;
+  qualification_code: string;
+  level: string;
+  category: string;
+  current_price: string | null;
+  currency: string;
+  awarding_body: string;
+  access_duration: string;
+  total_units: number;
+  active_enrolments_count: number;
+  status: "active" | "draft" | "archived" | "inactive";
+  created_at?: string;
 };
 
-const QualificationManagement = () => {
-  const [qualifications, setQualifications] = useState<AdminQualification[]>([
-    ...initialData,
-  ]);
 
+const QualificationManagement = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const [viewOpen, setViewOpen] = useState(false);
-
-  const [selectedQ, setSelectedQ] = useState<AdminQualification | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: qualificationsData } = useGetQualificationsAdminQuery(null);
+  const [updateQualification] = useUpdateQualificationMainMutation();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const { toast } = useToast();
 
+  const qualifications = useMemo<AdminQualificationRow[]>(
+    () =>
+      qualificationsData?.data?.results?.map((q) => ({
+        id: q.id,
+        title: q.title,
+        qualification_code: q.qualification_code,
+        level: q.level_detail?.name || "",
+        category: q.category_detail?.name || "",
+        current_price: q.current_price,
+        currency: q.currency || "GBP",
+        awarding_body: q.awarding_body_detail?.name || "Not set",
+        access_duration: q.course_duration_text || "Not set",
+        total_units: q.total_units || 0,
+        active_enrolments_count: q.active_enrolments_count || 0,
+        status: q.status,
+        created_at: q.created_at,
+      })) || [],
+    [qualificationsData?.data?.results],
+  );
+
   const filtered = qualifications.filter((q) => {
     const matchesSearch =
       q.title.toLowerCase().includes(search.toLowerCase()) ||
-      q.code.toLowerCase().includes(search.toLowerCase());
+      q.qualification_code.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || q.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const statusBadge = (status: AdminQualification["status"]) => {
-    const map = {
-      active: "default",
-      draft: "secondary",
-      archived: "outline",
-    } as const;
-    return (
-      <Badge variant={map[status]}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
+    // Status color/style map
+    const statusBadge = (status: AdminQualificationRow["status"]) => {
+      const styles = {
+        active: "bg-primary text-primary-foreground border-transparent",
+        draft: "bg-amber-50 text-amber-700 border-amber-200",
+        archived: "bg-slate-100 text-slate-600 border-slate-300",
+        inactive: "bg-muted text-muted-foreground border-transparent",
+      } as const;
 
-  const handleView = (q: AdminQualification) => {
-    setSelectedQ(q);
+      return (
+        <Badge 
+          variant="outline" 
+          className={`capitalize px-2.5 py-0.5 text-[11px] font-bold shadow-sm ${styles[status] || styles.inactive}`}
+        >
+          {status}
+        </Badge>
+      );
+    };
+
+  const handleView = (id: string) => {
+    setSelectedId(id);
     setViewOpen(true);
   };
 
-  const handleArchiveToggle = (q: AdminQualification) => {
-    const newStatus = q.status === "archived" ? "active" : "archived";
-    setQualifications((prev) =>
-      prev.map((item) =>
-        item.id === q.id
-          ? { ...item, status: newStatus as AdminQualification["status"] }
-          : item,
-      ),
-    );
-    toast({
-      title: `${q.title} ${newStatus === "archived" ? "archived" : "restored"}`,
-    });
+  const handleArchiveToggle = async (q: AdminQualificationRow) => {
+    try {
+      const newStatus = q.status === "archived" ? "active" : "archived";
+      await updateQualification({
+        id: q.id,
+        payload: { status: newStatus },
+      }).unwrap();
+
+      toast({
+        title: "Success",
+        description: `Qualification ${newStatus === "archived" ? "archived" : "restored"} successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update qualification status.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -183,21 +209,21 @@ const QualificationManagement = () => {
                     <div>
                       <p className="font-medium text-sm">{q.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {q.awardingBody} • {q.totalUnits} units
+                        {q.awarding_body_detail?.name || "Not set"} • {q.total_units} units
                       </p>
                     </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">
-                    {q.code}
+                    {q.qualification_code}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    <Badge variant="outline">{q.category}</Badge>
+                    <Badge variant="outline">{q.category_detail?.name || "Uncategorised"}</Badge>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">
-                    £{q.price?.toLocaleString()}
+                    {q.current_price ? `${q.currency || "GBP"} ${q.current_price}` : "No active price"}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {q.enrolledLearners}
+                    {q.active_enrolments_count}
                   </TableCell>
                   <TableCell>{statusBadge(q.status)}</TableCell>
                   <TableCell className="text-right">
@@ -206,34 +232,35 @@ const QualificationManagement = () => {
                         variant="ghost"
                         size="icon"
                         title="View"
-                        onClick={() => handleView(q)}
+                        onClick={() => handleView(q.id)}
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Link to={`/admin/qualifications/${q.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Assessment Config"
-                        >
+                      <Button asChild variant="ghost" size="icon" title="Assessment Config">
+                        <Link to={`/admin/qualifications/${q.id}`}>
                           <Settings2 className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                      <Link to={`/admin/qualifications/${q.id}/edit`}>
-                        <Button variant="ghost" size="icon" title="Edit">
+                        </Link>
+                      </Button>
+                      <Button asChild variant="ghost" size="icon" title="Edit">
+                        <Link to={`/admin/qualifications/${q.id}/edit`}>
                           <Edit className="w-4 h-4" />
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         title={q.status === "archived" ? "Restore" : "Archive"}
                         onClick={() => handleArchiveToggle(q)}
+                        className={`h-8 w-8 transition-colors ${
+                          q.status === "archived" 
+                            ? "bg-slate-50 border-slate-200 hover:bg-emerald-50 hover:border-emerald-200" 
+                            : ""
+                        } border`}
                       >
                         {q.status === "archived" ? (
-                          <ArchiveRestore className="w-4 h-4 text-green-600" />
+                          <ArchiveRestore className="w-4 h-4 text-emerald-600" />
                         ) : (
-                          <Archive className="w-4 h-4" />
+                          <Archive className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                         )}
                       </Button>
                     </div>
@@ -251,77 +278,12 @@ const QualificationManagement = () => {
         </CardContent>
       </Card>
 
-      {/* View Dialog */}
-      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Qualification Details</DialogTitle>
-          </DialogHeader>
-          {selectedQ && (
-            <div className="space-y-3 pt-2">
-              <div>
-                <p className="text-xs text-muted-foreground">Title</p>
-                <p className="font-medium">{selectedQ.title}</p>
-              </div>
-              <Separator />
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Code</p>
-                  <p className="text-sm font-medium">{selectedQ.code}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Level</p>
-                  <p className="text-sm font-medium">{selectedQ.level}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Category</p>
-                  <p className="text-sm font-medium">{selectedQ.category}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Awarding Body</p>
-                  <p className="text-sm font-medium">
-                    {selectedQ.awardingBody}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Price</p>
-                  <p className="text-sm font-medium">
-                    £{selectedQ.price.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Access Duration
-                  </p>
-                  <p className="text-sm font-medium">
-                    {selectedQ.accessDuration}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Units</p>
-                  <p className="text-sm font-medium">{selectedQ.totalUnits}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Enrolled Learners
-                  </p>
-                  <p className="text-sm font-medium">
-                    {selectedQ.enrolledLearners}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
-                  {statusBadge(selectedQ.status)}
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Created</p>
-                  <p className="text-sm font-medium">{selectedQ.createdDate}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Quick View Modal */}
+      <QualificationQuickView
+        qualificationId={selectedId}
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+      />
     </div>
   );
 };

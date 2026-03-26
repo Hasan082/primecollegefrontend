@@ -260,7 +260,13 @@ const QualificationPrice = () => {
       is_active: price.is_active,
     });
     setIsFormOpen(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Use requestAnimationFrame to ensure the form is rendered before scrolling
+    window.requestAnimationFrame(() => {
+      const formElement = document.getElementById("qualification-price-form");
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
   };
 
   const handleAddNew = () => {
@@ -356,7 +362,7 @@ const QualificationPrice = () => {
       </div>
 
       {isFormOpen && (
-      <Card className="border-primary/20 shadow-none">
+      <Card id="qualification-price-form" className="border-primary/20 shadow-none scroll-mt-24">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div>
               <CardTitle className="text-base font-semibold">
@@ -645,20 +651,6 @@ const QualificationPrice = () => {
           )}
         </CardContent>
       </Card>
-
-      {isSessionBased ? (
-        <div className="flex justify-end pt-4">
-          <Button
-            variant="outline"
-            onClick={() =>
-              navigate(`/admin/qualifications/${qualificationId}/edit?step=4`)
-            }
-            className="min-w-36"
-          >
-            Continue to Sessions
-          </Button>
-        </div>
-      ) : null}
     </div>
   );
 };
