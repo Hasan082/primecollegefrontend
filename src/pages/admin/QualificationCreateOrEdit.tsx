@@ -145,26 +145,30 @@ const QualificationCreateOrEdit = () => {
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-none">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => navigate("/admin/qualifications")}
-              className="h-9 w-fit rounded-lg px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Qualifications
-            </Button>
-            <Badge className="rounded-full bg-slate-900 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-white hover:bg-slate-900">
-              Qualification Builder
-            </Badge>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-              {qualificationId ? "Edit Qualification" : "Create Qualification"}
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-slate-600">
-              Save the qualification shell first, then configure the additional sections below.
-              CPD details should only be completed for CPD qualifications, and sessions should only
-              be managed for session-based qualifications.
-            </p>
+            <div>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => navigate("/admin/qualifications")}
+                className="h-9 w-fit rounded-lg px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Qualifications
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Badge className="rounded-full bg-slate-900 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-white hover:bg-slate-900">
+                Qualification Builder
+              </Badge>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+                {qualificationId ? "Edit Qualification" : "Create Qualification"}
+              </h1>
+              <p className="max-w-3xl text-sm leading-6 text-slate-600">
+                Save the qualification shell first, then configure the additional sections below.
+                CPD details should only be completed for CPD qualifications, and sessions should only
+                be managed for session-based qualifications.
+              </p>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {steps
@@ -211,7 +215,7 @@ const QualificationCreateOrEdit = () => {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_380px]">
         <div className="space-y-6">
-          <div ref={mainRef}>
+          <div ref={mainRef} className="scroll-mt-20">
             <Card className={`${SECTION_STYLES.main} rounded-2xl border-slate-200 shadow-none`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
@@ -232,7 +236,7 @@ const QualificationCreateOrEdit = () => {
             </Card>
           </div>
 
-          <div ref={detailsRef}>
+          <div ref={detailsRef} className="scroll-mt-20">
             <Card className="rounded-2xl border-slate-200 shadow-none">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl text-slate-950">Details</CardTitle>
@@ -244,7 +248,7 @@ const QualificationCreateOrEdit = () => {
           </div>
 
           {isSessionsVisible ? (
-            <div ref={sessionsRef}>
+            <div ref={sessionsRef} className="scroll-mt-20">
               <Card className="rounded-2xl border-slate-200 shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-xl text-slate-950">Sessions</CardTitle>
@@ -256,7 +260,7 @@ const QualificationCreateOrEdit = () => {
             </div>
           ) : null}
 
-          <div ref={pricingRef}>
+          <div ref={pricingRef} className="scroll-mt-20">
             <Card className="rounded-2xl border-slate-200 shadow-none">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl text-slate-950">Price</CardTitle>
