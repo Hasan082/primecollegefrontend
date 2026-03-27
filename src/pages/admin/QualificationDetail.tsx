@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { 
-  ArrowLeft, GraduationCap, Users, Calendar, Banknote, Plus, Trash2, 
-  GripVertical, FileUp, X, ChevronDown, ChevronUp, Loader2, Settings, 
+import {
+  ArrowLeft, GraduationCap, Users, Calendar, Banknote, Plus, Trash2,
+  GripVertical, FileUp, X, ChevronDown, ChevronUp, Loader2, Settings,
   AlertCircle, FileText, ExternalLink, Download, Clock, Save
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,11 +34,11 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { 
-  useGetUnitConfigSummaryQuery, 
-  useGetUnitsQuery, 
-  useCreateUnitMutation, 
-  useUpdateUnitMutation, 
+import {
+  useGetUnitConfigSummaryQuery,
+  useGetUnitsQuery,
+  useCreateUnitMutation,
+  useUpdateUnitMutation,
   useDeleteUnitMutation,
   useGetUnitResourcesQuery,
   useCreateUnitResourceMutation,
@@ -51,12 +51,12 @@ import {
 } from "@/redux/apis/qualification/qualificationUnitApi";
 
 // ─── Resource Item Component ───────────────────────────────────────────
-const ResourceItem = ({ 
-  resource, 
-  onDelete 
-}: { 
-  resource: UnitResource; 
-  onDelete: (id: string) => void 
+const ResourceItem = ({
+  resource,
+  onDelete
+}: {
+  resource: UnitResource;
+  onDelete: (id: string) => void
 }) => {
   return (
     <div className="flex items-center justify-between text-xs bg-background rounded-xl px-3 py-2 border shadow-sm group">
@@ -91,10 +91,10 @@ const ResourceItem = ({
             </a>
           </Button>
         ) : null}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-7 w-7 text-destructive hover:bg-destructive/10" 
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:bg-destructive/10"
           onClick={() => onDelete(resource.id)}
         >
           <X className="w-3.5 h-3.5" />
@@ -105,18 +105,18 @@ const ResourceItem = ({
 };
 
 // ─── Unit Expansion Section ───────────────────────────────────────────
-const UnitExpandedContent = ({ 
-  unit, 
-  isCpd 
-}: { 
-  unit: UnitRow; 
-  isCpd: boolean 
+const UnitExpandedContent = ({
+  unit,
+  isCpd
+}: {
+  unit: UnitRow;
+  isCpd: boolean
 }) => {
   const { toast } = useToast();
   const { data: resources, isLoading: isLoadingResources } = useGetUnitResourcesQuery(unit.id);
   const [createResource, { isLoading: isUploading }] = useCreateUnitResourceMutation();
   const [deleteResource] = useDeleteUnitResourceMutation();
-  
+
   // CPD state
   const [cpdOpen, setCpdOpen] = useState(false);
 
@@ -157,24 +157,26 @@ const UnitExpandedContent = ({
     <div className="border-t bg-muted/20 px-4 py-4 space-y-5">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Assessment Config */}
-        <div>
-          <UnitAssessmentConfig 
-            unitId={unit.id} 
-            qualificationId={unit.qualification}
-            unitCode={unit.unit_code} 
-            unitName={unit.title}
-            quizCount={unit.quiz_count || 0}
-            assignmentCount={unit.assignment_count || 0}
-            initialConfig={{
-              has_quiz: unit.has_quiz,
-              has_written_assignment: unit.has_written_assignment,
-              requires_evidence: unit.requires_evidence
-            }}
-          />
-        </div>
+        {!isCpd && (
+          <div>
+            <UnitAssessmentConfig
+              unitId={unit.id}
+              qualificationId={unit.qualification}
+              unitCode={unit.unit_code}
+              unitName={unit.title}
+              quizCount={unit.quiz_count || 0}
+              assignmentCount={unit.assignment_count || 0}
+              initialConfig={{
+                has_quiz: unit.has_quiz,
+                has_written_assignment: unit.has_written_assignment,
+                requires_evidence: unit.requires_evidence
+              }}
+            />
+          </div>
+        )}
 
         {/* Resources & CPD */}
-        <div className="space-y-4 text-sm">
+        <div className={cn("space-y-4 text-sm", isCpd && "lg:col-span-2")}>
           {/* Resources */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -198,7 +200,7 @@ const UnitExpandedContent = ({
                 </Button>
               </label>
             </div>
-            
+
             {isLoadingResources ? (
               <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
             ) : resources && resources.length > 0 ? (
@@ -220,9 +222,9 @@ const UnitExpandedContent = ({
           {/* CPD Trigger */}
           {isCpd && (
             <div className="pt-2 border-t border-border/50">
-              <Button 
-                variant="outline" 
-                className="w-full justify-between h-10 group hover:border-primary/50" 
+              <Button
+                variant="outline"
+                className="w-full justify-between h-10 group hover:border-primary/50"
                 onClick={() => setCpdOpen(true)}
               >
                 <div className="flex items-center gap-2">
@@ -239,11 +241,11 @@ const UnitExpandedContent = ({
       </div>
 
       {isCpd && (
-        <CPDConfigDrawer 
-          unitId={unit.id} 
-          unitCode={unit.unit_code} 
-          isOpen={cpdOpen} 
-          onClose={() => setCpdOpen(false)} 
+        <CPDConfigDrawer
+          unitId={unit.id}
+          unitCode={unit.unit_code}
+          isOpen={cpdOpen}
+          onClose={() => setCpdOpen(false)}
         />
       )}
     </div>
@@ -251,22 +253,22 @@ const UnitExpandedContent = ({
 };
 
 // ─── CPD Config Drawer Component ───────────────────────────────────────────
-const CPDConfigDrawer = ({ 
-  unitId, 
-  unitCode, 
-  isOpen, 
-  onClose 
-}: { 
-  unitId: string; 
-  unitCode: string; 
-  isOpen: boolean; 
-  onClose: () => void 
+const CPDConfigDrawer = ({
+  unitId,
+  unitCode,
+  isOpen,
+  onClose
+}: {
+  unitId: string;
+  unitCode: string;
+  isOpen: boolean;
+  onClose: () => void
 }) => {
   const { toast } = useToast();
   const { data: config, error, isLoading } = useGetUnitCpdConfigQuery(unitId, { skip: !isOpen });
   const [createConfig] = useCreateUnitCpdConfigMutation();
   const [updateConfig] = useUpdateUnitCpdConfigMutation();
-  
+
   const [form, setForm] = useState({
     learning_objectives: "",
     learning_outcomes: "",
@@ -317,17 +319,17 @@ const CPDConfigDrawer = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Estimated Duration (min)</Label>
-                <Input 
-                  type="number" 
-                  value={form.estimated_minutes} 
-                  onChange={e => setForm(f => ({ ...f, estimated_minutes: parseInt(e.target.value) || 0 }))} 
+                <Input
+                  type="number"
+                  value={form.estimated_minutes}
+                  onChange={e => setForm(f => ({ ...f, estimated_minutes: parseInt(e.target.value) || 0 }))}
                 />
               </div>
             </div>
             <div className="space-y-1.5">
               <Label>Learning Objectives</Label>
-              <Textarea 
-                value={form.learning_objectives} 
+              <Textarea
+                value={form.learning_objectives}
                 onChange={e => setForm(f => ({ ...f, learning_objectives: e.target.value }))}
                 placeholder="What will learners achieve?"
                 className="min-h-[80px]"
@@ -335,8 +337,8 @@ const CPDConfigDrawer = ({
             </div>
             <div className="space-y-1.5">
               <Label>Learning Outcomes</Label>
-              <Textarea 
-                value={form.learning_outcomes} 
+              <Textarea
+                value={form.learning_outcomes}
                 onChange={e => setForm(f => ({ ...f, learning_outcomes: e.target.value }))}
                 placeholder="Measurable results of this unit"
                 className="min-h-[80px]"
@@ -344,8 +346,8 @@ const CPDConfigDrawer = ({
             </div>
             <div className="space-y-1.5">
               <Label>Module Summary</Label>
-              <Textarea 
-                value={form.module_summary} 
+              <Textarea
+                value={form.module_summary}
                 onChange={e => setForm(f => ({ ...f, module_summary: e.target.value }))}
                 placeholder="A brief overview for the learner"
                 className="min-h-[100px]"
@@ -353,8 +355,8 @@ const CPDConfigDrawer = ({
             </div>
             <div className="space-y-1.5">
               <Label>Accessibility Notes</Label>
-              <Input 
-                value={form.accessibility_notes} 
+              <Input
+                value={form.accessibility_notes}
                 onChange={e => setForm(f => ({ ...f, accessibility_notes: e.target.value }))}
                 placeholder="WCAG compliance, transcripts, etc."
               />
@@ -403,21 +405,25 @@ const SortableUnitRow = ({
           </button>
           <Badge variant="outline" className="font-mono text-xs shrink-0 px-2 py-0.5 bg-muted/50">{unit.unit_code}</Badge>
           <span className="text-sm font-semibold flex-1 text-foreground truncate">{unit.title}</span>
-          
+
           <div className="flex items-center gap-2 mr-2">
-            {unit.has_quiz && <Badge className="text-[9px] bg-blue-600 text-white border-none uppercase font-bold tracking-tight px-1.5 py-0">Quiz</Badge>}
-            {unit.has_written_assignment && <Badge className="text-[9px] bg-amber-500 text-white border-none uppercase font-bold tracking-tight px-1.5 py-0">Written</Badge>}
-            {unit.requires_evidence && <Badge className="text-[9px] bg-emerald-600 text-white border-none uppercase font-bold tracking-tight px-1.5 py-0">Evidence</Badge>}
+            {!isCpd && (
+              <>
+                {unit.has_quiz && <Badge className="text-[9px] bg-blue-600 text-white border-none uppercase font-bold tracking-tight px-1.5 py-0">Quiz</Badge>}
+                {unit.has_written_assignment && <Badge className="text-[9px] bg-amber-500 text-white border-none uppercase font-bold tracking-tight px-1.5 py-0">Written</Badge>}
+                {unit.requires_evidence && <Badge className="text-[9px] bg-emerald-600 text-white border-none uppercase font-bold tracking-tight px-1.5 py-0">Evidence</Badge>}
+              </>
+            )}
             <Badge variant="outline" className="text-[9px] font-bold text-muted-foreground px-1.5 py-0 bg-muted/30 border-muted-foreground/20">{unit.resource_count} resources</Badge>
           </div>
 
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => onToggleExpand(unit.id)}>
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10" 
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
             onClick={() => onDelete(unit.id, unit.unit_code)}
           >
             <Trash2 className="w-4 h-4" />
@@ -434,13 +440,13 @@ const SortableUnitRow = ({
 const QualificationDetail = () => {
   const { qualificationId } = useParams();
   const { toast } = useToast();
-  
+
   const { data: summaryData, isLoading: isLoadingSummary } = useGetUnitConfigSummaryQuery(qualificationId!, { skip: !qualificationId || qualificationId === "0" });
   const { data: unitsData, isLoading: isLoadingUnits } = useGetUnitsQuery(qualificationId!, { skip: !qualificationId || qualificationId === "0" });
-  
+
   const summary = summaryData;
   const units = Array.isArray(unitsData) ? unitsData : [];
-  
+
   const [createUnit] = useCreateUnitMutation();
   const [deleteUnit] = useDeleteUnitMutation();
   const [updateUnit] = useUpdateUnitMutation();
@@ -462,7 +468,7 @@ const QualificationDetail = () => {
     if (over && active.id !== over.id) {
       const oldIdx = units.findIndex((u) => u.id === active.id);
       const newIdx = units.findIndex((u) => u.id === over.id);
-      
+
       const movedItem = units[oldIdx];
       // Note: Reordering logic in guide suggests updating 'order'. 
       // Simple implementation: move visually and let cache update.
@@ -567,7 +573,7 @@ const QualificationDetail = () => {
                 </div>
                 <h2 className="text-2xl font-extrabold tracking-tight leading-tight max-w-2xl">{summary.title}</h2>
               </div>
-              
+
               <div className="flex flex-wrap items-center gap-6 pt-2">
                 <div className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
@@ -608,9 +614,8 @@ const QualificationDetail = () => {
               </div>
             </div>
             <div className="flex flex-col items-end gap-3">
-              <Badge variant="secondary" className={`px-4 py-1.5 font-bold tracking-wide border-none uppercase text-[10px] ${
-                summary.status === "active" ? "bg-white text-primary" : "bg-emerald-500 text-white"
-              }`}>
+              <Badge variant="secondary" className={`px-4 py-1.5 font-bold tracking-wide border-none uppercase text-[10px] ${summary.status === "active" ? "bg-white text-primary" : "bg-emerald-500 text-white"
+                }`}>
                 {summary.status}
               </Badge>
               {summary.is_cpd && (
@@ -638,7 +643,7 @@ const QualificationDetail = () => {
         <p className="text-sm text-muted-foreground mb-6">
           Systematically configure assessment requirements and study resources for every unit.
         </p>
-        
+
         <Separator className="mb-6" />
 
         {units.length === 0 ? (
@@ -681,19 +686,19 @@ const QualificationDetail = () => {
           <div className="space-y-5 py-6">
             <div className="space-y-2">
               <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Unit Code *</Label>
-              <Input 
-                value={newCode} 
-                onChange={(e) => setNewCode(e.target.value)} 
-                placeholder="e.g. BUS301" 
+              <Input
+                value={newCode}
+                onChange={(e) => setNewCode(e.target.value)}
+                placeholder="e.g. BUS301"
                 className="h-11 font-mono"
               />
             </div>
             <div className="space-y-2">
               <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Unit Name *</Label>
-              <Input 
-                value={newName} 
-                onChange={(e) => setNewName(e.target.value)} 
-                placeholder="e.g. Principles of Business" 
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="e.g. Principles of Business"
                 className="h-11 font-semibold"
               />
             </div>
