@@ -167,8 +167,8 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
             <TabsTrigger value="payment" className="text-xs">Payment</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[400px] mt-3 pr-3">
-            <TabsContent value="info" className="mt-0 space-y-4">
+          <ScrollArea className="h-[400px] mt-3">
+            <TabsContent value="info" className="mt-0 space-y-4 pr-3">
               {/* Edit / Save / Cancel buttons */}
               <div className="flex justify-end gap-2">
                 {isEditing ? (
@@ -285,7 +285,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
               )}
             </TabsContent>
 
-            <TabsContent value="progress" className="mt-0 space-y-2">
+            <TabsContent value="progress" className="mt-0 space-y-2 pr-3">
               {units.map((unit, i) => {
                 const isExpanded = expandedUnits.has(i);
                 const hasTimeline = unit.timeline.length > 0;
@@ -395,7 +395,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
               })}
             </TabsContent>
 
-            <TabsContent value="extensions" className="mt-0 space-y-3">
+            <TabsContent value="extensions" className="mt-0 space-y-3 pr-3">
               {/* Admin Manual Extension */}
               <Card className="border-dashed">
                 <CardContent className="p-4 space-y-3">
@@ -488,7 +488,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                 ));
               })()}
             </TabsContent>
-            <TabsContent value="payment" className="mt-0 space-y-4">
+            <TabsContent value="payment" className="mt-0 space-y-4 pr-3">
               <Card>
                 <CardContent className="p-4 space-y-3">
                   <div className="grid grid-cols-2 gap-4">

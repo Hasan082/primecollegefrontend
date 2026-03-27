@@ -16,7 +16,7 @@ import CriteriaChecklist, { type Criterion } from "@/components/trainer/Criteria
 import FeedbackFileUpload from "@/components/trainer/FeedbackFileUpload";
 import ResubmissionHistory, { type SubmissionVersion } from "@/components/trainer/ResubmissionHistory";
 import UnitSignOff from "@/components/trainer/UnitSignOff";
-import UnitAssessmentConfig, { loadUnitConfig, type UnitAssessmentRequirements } from "@/components/trainer/UnitAssessmentConfig";
+import UnitAssessmentConfig, { type UnitAssessmentRequirements } from "@/components/trainer/UnitAssessmentConfig";
 import { addToIQAQueue, createIQAEntryFromSignOff } from "@/lib/iqaQueue";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -148,7 +148,11 @@ const UnitManagement = () => {
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
   const [criteriaState, setCriteriaState] = useState<Record<string, Criterion[]>>({});
   const [isSignedOff, setIsSignedOff] = useState(false);
-  const [assessmentConfig, setAssessmentConfig] = useState<UnitAssessmentRequirements>(() => loadUnitConfig(unitCode || ""));
+  const [assessmentConfig, setAssessmentConfig] = useState<UnitAssessmentRequirements>({
+    has_quiz: true,
+    has_written_assignment: true,
+    requires_evidence: true,
+  });
 
   // Load persisted decisions on mount
   useEffect(() => {
@@ -186,9 +190,9 @@ const UnitManagement = () => {
   const cfg = statusConfig[unit.status] || statusConfig["Not Started"];
   const allSubmissions = getMockSubmissions(learnerId!, unitCode!);
   const submissions = allSubmissions.filter((sub) => {
-    if (sub.type === "quiz" && !assessmentConfig.quizRequired) return false;
-    if (sub.type === "written" && !assessmentConfig.writtenRequired) return false;
-    if (sub.type === "evidence" && !assessmentConfig.evidenceRequired) return false;
+    if (sub.type === "quiz" && !assessmentConfig.has_quiz) return false;
+    if (sub.type === "written" && !assessmentConfig.has_written_assignment) return false;
+    if (sub.type === "evidence" && !assessmentConfig.requires_evidence) return false;
     return true;
   });
 
@@ -284,8 +288,13 @@ const UnitManagement = () => {
       {/* Assessment Requirements Config */}
       <div className="mb-6">
         <UnitAssessmentConfig
+          unitId={unit.code} // Using code as ID for mock consistency
+          qualificationId={learner.id} // Mock ID
           unitCode={unit.code}
           unitName={unit.name}
+          quizCount={10} // Dummy count for mock
+          assignmentCount={2} // Dummy count for mock
+          initialConfig={assessmentConfig}
           onChange={(config) => setAssessmentConfig(config)}
         />
       </div>

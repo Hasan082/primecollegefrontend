@@ -92,8 +92,8 @@ const TrainerDetailModal = ({ trainer, open, onOpenChange, onUpdate }: Props) =>
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="h-[420px] pr-3 mt-2">
-          <div className="space-y-4">
+        <ScrollArea className="h-[420px] mt-2">
+          <div className="space-y-4 pr-3">
             {/* Edit / Save / Cancel */}
             <div className="flex justify-end gap-2">
               {isEditing ? (

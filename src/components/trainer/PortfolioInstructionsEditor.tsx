@@ -131,8 +131,8 @@ const PortfolioInstructionsEditor = ({ unitCode, unitName, onClose }: Props) => 
 
   return (
     <div className="flex flex-col">
-      <ScrollArea className="max-h-[70vh] px-6">
-        <div className="space-y-6 py-6 pr-1">
+      <ScrollArea className="max-h-[70vh]">
+        <div className="space-y-6 py-6 px-6">
           {/* Instructions text */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -142,7 +142,7 @@ const PortfolioInstructionsEditor = ({ unitCode, unitName, onClose }: Props) => 
               value={config.instructions}
               onChange={(e) => update({ instructions: e.target.value })}
               placeholder="Explain what evidence learners should upload for this unit. E.g. 'Upload a reflective account demonstrating your understanding of duty of care, supported by witness testimony from your supervisor...'"
-              className="min-h-[120px] text-sm"
+              className="min-h-[120px] text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
             />
             <p className="text-[11px] text-muted-foreground flex items-center gap-1">
               <Info className="w-3 h-3" />
@@ -176,7 +176,7 @@ const PortfolioInstructionsEditor = ({ unitCode, unitName, onClose }: Props) => 
                 value={newExample}
                 onChange={(e) => setNewExample(e.target.value)}
                 placeholder="e.g. Witness testimony from supervisor"
-                className="text-sm"
+                className="text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addExample())}
               />
               <Button size="sm" variant="outline" onClick={addExample} className="shrink-0">
@@ -210,7 +210,7 @@ const PortfolioInstructionsEditor = ({ unitCode, unitName, onClose }: Props) => 
                 value={newCriteria}
                 onChange={(e) => setNewCriteria(e.target.value)}
                 placeholder="e.g. AC 1.1"
-                className="text-sm w-32"
+                className="text-sm w-32 focus-visible:ring-1 focus-visible:ring-primary/30"
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCriteria())}
               />
               <Button size="sm" variant="outline" onClick={addCriteria} className="shrink-0">
@@ -233,7 +233,7 @@ const PortfolioInstructionsEditor = ({ unitCode, unitName, onClose }: Props) => 
                 max={20}
                 value={config.maxFilesPerSubmission}
                 onChange={(e) => update({ maxFilesPerSubmission: parseInt(e.target.value) || 5 })}
-                className="text-sm"
+                className="text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
               />
             </div>
             <div className="space-y-1.5">
@@ -246,7 +246,7 @@ const PortfolioInstructionsEditor = ({ unitCode, unitName, onClose }: Props) => 
                 max={100}
                 value={config.maxFileSizeMB}
                 onChange={(e) => update({ maxFileSizeMB: parseInt(e.target.value) || 20 })}
-                className="text-sm"
+                className="text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
               />
             </div>
           </div>
