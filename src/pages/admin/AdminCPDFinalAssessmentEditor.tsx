@@ -538,6 +538,24 @@ const AdminCPDFinalAssessmentEditor = () => {
                         </div>
                         <Switch checked={localSettings.is_active} onCheckedChange={(value) => setLocalSettings({ ...localSettings, is_active: value })} />
                       </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" /> Show results immediately
+                          </Label>
+                          <p className="text-[11px] text-muted-foreground">Show results immediately after the assessment.</p>
+                        </div>
+                        <Switch checked={localSettings.show_results_immediately} onCheckedChange={(value) => setLocalSettings({ ...localSettings, show_results_immediately: value })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" /> Show correct answers after
+                          </Label>
+                          <p className="text-[11px] text-muted-foreground">Show correct answers after the assessment.</p>
+                        </div>
+                        <Switch checked={localSettings.show_correct_answers_after} onCheckedChange={(value) => setLocalSettings({ ...localSettings, show_correct_answers_after: value })} />
+                      </div>
                     </div>
 
                     <div className="flex justify-end pt-4">
