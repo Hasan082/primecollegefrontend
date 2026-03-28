@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, XCircle, AlertTriangle, ChevronDown, ChevronUp, Shield, Clock, Target, BarChart3, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, ChevronDown, ChevronUp, Shield, Clock, Target, BarChart3, Loader2, MessageSquare } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -211,7 +211,5 @@ const QuizResultsPanel = ({ attemptId, unitCode }: QuizResultsPanelProps) => {
     </div>
   );
 };
-
-export default QuizResultsPanel;
 
 export default QuizResultsPanel;
