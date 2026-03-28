@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateUnitMutation } from "@/redux/apis/qualification/qualificationUnitApi";
+import { useUpdateQuizConfigMutation, useUpdateWrittenAssignmentConfigMutation } from "@/redux/apis/quiz/quizApi";
 import { Link } from "react-router-dom";
 import {
   Dialog,
@@ -62,7 +63,11 @@ const UnitAssessmentConfig = ({ unitId, qualificationId, unitCode, unitName, qui
   const [config, setConfig] = useState<UnitAssessmentRequirements>(initialConfig);
   const [isOpen, setIsOpen] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
-  const [updateUnit, { isLoading: isUpdating }] = useUpdateUnitMutation();
+  
+  const [updateUnit, { isLoading: isUpdatingUnit }] = useUpdateUnitMutation();
+  const [updateQuizConfig, { isLoading: isUpdatingQuiz }] = useUpdateQuizConfigMutation();
+  const [updateAssignmentConfig, { isLoading: isUpdatingAssignment }] = useUpdateWrittenAssignmentConfigMutation();
+  
   const [localUpdatingKey, setLocalUpdatingKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,17 +93,28 @@ const UnitAssessmentConfig = ({ unitId, qualificationId, unitCode, unitName, qui
     setLocalUpdatingKey(key);
 
     try {
-      await updateUnit({
-        unitId,
-        payload: {
-          [key]: isTurningOn
-        },
-      }).unwrap();
+      if (key === "has_quiz") {
+        await updateQuizConfig({
+          unitId: unitId,
+          data: { quiz_enabled: isTurningOn }
+        }).unwrap();
+      } else if (key === "has_written_assignment") {
+        await updateAssignmentConfig({
+          unitId: unitId,
+          data: { is_active: isTurningOn }
+        }).unwrap();
+      } else {
+        await updateUnit({
+          unitId,
+          payload: { [key]: isTurningOn },
+        }).unwrap();
+      }
 
       setConfig(updated);
       onChange?.(updated);
       toast({ title: isTurningOn ? "Assessment enabled" : "Assessment disabled", description: `${unitCode} updated successfully.` });
     } catch (error) {
+      console.error("Update failed:", error);
       toast({
         title: "Failed to update requirements",
         description: "An error occurred while communicating with the server.",
@@ -108,6 +124,8 @@ const UnitAssessmentConfig = ({ unitId, qualificationId, unitCode, unitName, qui
       setLocalUpdatingKey(null);
     }
   };
+
+  const isUpdating = isUpdatingUnit || isUpdatingQuiz || isUpdatingAssignment;
 
   const enabledCount = [config.has_quiz, config.has_written_assignment, config.requires_evidence].filter(Boolean).length;
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, FileText, CheckCircle2, Clock,
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { trainerLearners, pendingSubmissions } from "@/data/trainerMockData";
 import QuizResultsPanel from "@/components/trainer/QuizResultsPanel";
+import WrittenAssignmentReviewPanel from "@/components/trainer/WrittenAssignmentReviewPanel";
 import UnitCriteriaTracker from "@/components/trainer/UnitCriteriaTracker";
 import CriteriaChecklist, { type Criterion } from "@/components/trainer/CriteriaChecklist";
 import FeedbackFileUpload from "@/components/trainer/FeedbackFileUpload";
@@ -18,6 +19,7 @@ import ResubmissionHistory, { type SubmissionVersion } from "@/components/traine
 import UnitSignOff from "@/components/trainer/UnitSignOff";
 import UnitAssessmentConfig, { type UnitAssessmentRequirements } from "@/components/trainer/UnitAssessmentConfig";
 import { addToIQAQueue, createIQAEntryFromSignOff } from "@/lib/iqaQueue";
+import { useGetUnitAttemptsQuery, useGetAssignmentSubmissionQuery } from "@/redux/apis/quiz/quizApi";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   Competent: { label: "Competent", className: "bg-green-600 text-white" },
@@ -33,12 +35,15 @@ interface UnitSubmission {
   type: "quiz" | "written" | "evidence";
   title: string;
   submittedDate: string;
-  status: "awaiting_review" | "reviewed";
+  status: "awaiting_review" | "reviewed" | "graded";
   wordCount?: number;
   files?: string[];
   writtenContent?: string;
   versions: SubmissionVersion[];
   criteria: Criterion[];
+  attemptId?: string;
+  score?: number;
+  passed?: boolean;
 }
 
 function getDefaultCriteria(unitCode: string): Criterion[] {
@@ -67,20 +72,6 @@ function getMockSubmissions(learnerId: string, unitCode: string): UnitSubmission
   const isResubmission = unit.status === "Resubmission Required";
 
   return [
-    {
-      id: `${learnerId}-${unitCode}-quiz`,
-      type: "quiz",
-      title: "Knowledge Assessment Quiz",
-      submittedDate: "05/02/2025",
-      status: "awaiting_review",
-      criteria,
-      versions: isResubmission
-        ? [
-            { version: 2, submittedDate: "05/02/2025", outcome: "Awaiting Review" },
-            { version: 1, submittedDate: "20/01/2025", outcome: "Resubmission Required", assessedDate: "22/01/2025", assessorName: "Sarah Jones", feedback: "Score below pass mark. Please review sections on safeguarding legislation and revise." },
-          ]
-        : [{ version: 1, submittedDate: "05/02/2025", outcome: "Awaiting Review" }],
-    },
     {
       id: `${learnerId}-${unitCode}-written`,
       type: "written",
@@ -138,6 +129,16 @@ const UnitManagement = () => {
   const { learnerId, unitCode } = useParams();
   const { toast } = useToast();
 
+  const { data: quizAttemptsData, isLoading: isLoadingQuiz } = useGetUnitAttemptsQuery(
+    { unitId: unitCode!, learnerId },
+    { skip: !learnerId || !unitCode }
+  );
+
+  const { data: assignmentData, isLoading: isLoadingAssignment, refetch: refetchAssignment } = useGetAssignmentSubmissionQuery(
+    { unitId: unitCode!, learnerId: learnerId! },
+    { skip: !learnerId || !unitCode }
+  );
+
   const learner = trainerLearners.find((l) => l.id === learnerId);
   const unit = learner?.units.find((u) => u.code === unitCode);
 
@@ -187,14 +188,90 @@ const UnitManagement = () => {
     );
   }
 
+  if (learner.isCpd) {
+    return (
+      <div className="max-w-md mx-auto py-24 text-center space-y-6">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <Clock className="w-8 h-8 text-primary" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold text-foreground">CPD Qualification</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Unit-level assessments are disabled for CPD qualifications. 
+            There are no submissions to review for this unit.
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link to="/trainer/dashboard" className="gap-2">
+            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
   const cfg = statusConfig[unit.status] || statusConfig["Not Started"];
-  const allSubmissions = getMockSubmissions(learnerId!, unitCode!);
-  const submissions = allSubmissions.filter((sub) => {
-    if (sub.type === "quiz" && !assessmentConfig.has_quiz) return false;
-    if (sub.type === "written" && !assessmentConfig.has_written_assignment) return false;
-    if (sub.type === "evidence" && !assessmentConfig.requires_evidence) return false;
-    return true;
-  });
+  
+  // Combine real and mock submissions into a unified list
+  const submissions = useMemo(() => {
+    if (!unitCode || !learnerId) return [];
+    
+    const results: UnitSubmission[] = [];
+
+    // 1. Real Quiz Attempts
+    if (quizAttemptsData?.data) {
+      quizAttemptsData.data.forEach((attempt, index) => {
+        results.push({
+          id: attempt.id,
+          attemptId: attempt.id,
+          type: "quiz",
+          title: `Knowledge Quiz - Attempt ${index + 1}`,
+          submittedDate: attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleDateString() : "N/A",
+          status: attempt.status === "submitted" ? "awaiting_review" : (attempt.passed ? "graded" : "awaiting_review"),
+          score: attempt.score_percent || 0,
+          passed: attempt.passed || false,
+          versions: [],
+          criteria: getDefaultCriteria(unitCode),
+        });
+      });
+    }
+
+    // 2. Real Written Assignment
+    if (assignmentData?.data) {
+      const sub = assignmentData.data;
+      results.push({
+        id: sub.id,
+        type: "written",
+        title: sub.title || `Written Assignment — ${unitCode}`,
+        submittedDate: new Date(sub.submitted_at).toLocaleDateString(),
+        status: sub.status === "graded" ? "graded" : "awaiting_review",
+        wordCount: sub.content?.split(/\s+/).length || 0,
+        writtenContent: sub.content,
+        criteria: getDefaultCriteria(unitCode),
+        versions: sub.previous_versions ? sub.previous_versions.map((v: any, i: number) => ({
+          version: sub.previous_versions.length - i,
+          submittedDate: new Date(v.submitted_at).toLocaleDateString(),
+          outcome: v.grade === "pass" ? "Competent" : "Refer",
+          assessedDate: v.graded_at ? new Date(v.graded_at).toLocaleDateString() : "N/A",
+          assessorName: "Trainer",
+          feedback: v.feedback
+        })) : [{ version: 1, submittedDate: new Date(sub.submitted_at).toLocaleDateString(), outcome: "Awaiting Review" }],
+      });
+    }
+
+    // 3. Fallback/Mock for Evidence (if not yet integrated)
+    const mockSubs = getMockSubmissions(learnerId, unitCode);
+    const evidenceMock = mockSubs.find(s => s.type === "evidence");
+    if (evidenceMock) results.push(evidenceMock);
+
+    // Filter by active assessment requirements
+    return results.filter((sub) => {
+      if (sub.type === "quiz" && !assessmentConfig.has_quiz) return false;
+      if (sub.type === "written" && !assessmentConfig.has_written_assignment) return false;
+      if (sub.type === "evidence" && !assessmentConfig.requires_evidence) return false;
+      return true;
+    }).sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
+  }, [quizAttemptsData, assignmentData, unitCode, learnerId, assessmentConfig]);
 
   const handleSubmitReview = (subId: string) => {
     if (!outcome) {
@@ -417,21 +494,15 @@ const UnitManagement = () => {
                       <h4 className="font-bold text-foreground text-sm mb-3">📋 Submission Details</h4>
 
                       {sub.type === "quiz" && (
-                        <QuizResultsPanel unitCode={unitCode!} />
+                        <QuizResultsPanel attemptId={sub.attemptId} unitCode={unitCode!} />
                       )}
 
                       {sub.type === "written" && (
-                        <div className="bg-card border border-border rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-muted-foreground">{sub.wordCount} words</span>
-                            <Button size="sm" variant="outline" className="gap-1 text-xs">
-                              <Download className="w-3 h-3" /> Download Full Text
-                            </Button>
-                          </div>
-                          <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground italic leading-relaxed max-h-40 overflow-y-auto">
-                            {sub.writtenContent}
-                          </div>
-                        </div>
+                        <WrittenAssignmentReviewPanel
+                          unitId={unitCode!}
+                          learnerId={learnerId!}
+                          onGraded={() => refetchAssignment()}
+                        />
                       )}
 
                       {sub.type === "evidence" && sub.files && (

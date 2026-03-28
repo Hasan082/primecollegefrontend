@@ -1,54 +1,47 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { CheckCircle2, AlertTriangle, Shield, Maximize, Eye, X, Clock, Trophy, XCircle, RotateCcw } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Shield, Maximize, Eye, X, Clock, Trophy, XCircle, RotateCcw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
-  generateQuiz,
-  scoreQuiz,
-  recordAttempt,
-  getAttempts,
-  canAttempt,
-  type QuizInstance,
-  type QuizResult,
-} from "@/lib/quizEngine";
+  useStartQuizMutation,
+  useSubmitQuizMutation,
+  useGetUnitAttemptsQuery,
+  type QuizAttempt,
+} from "@/redux/apis/quiz/quizApi";
 import { Progress } from "@/components/ui/progress";
 
 interface StrictQuizModalProps {
   qualificationId: string;
-  unitCode: string;
+  unitCode?: string;
   unitName: string;
   onClose: () => void;
-  onSubmitted: (result: QuizResult) => void;
+  onSubmitted: (result: QuizAttempt) => void;
+  isFinal?: boolean;
 }
 
 const MAX_WARNINGS = 3;
 
 const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmitted }: StrictQuizModalProps) => {
   const [phase, setPhase] = useState<"intro" | "active" | "results">("intro");
-  const [quiz, setQuiz] = useState<QuizInstance | null>(null);
+  const [quiz, setQuiz] = useState<QuizAttempt | null>(null);
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
   const [warnings, setWarnings] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [tabSwitchLog, setTabSwitchLog] = useState<string[]>([]);
-  const [result, setResult] = useState<QuizResult | null>(null);
+  const [result, setResult] = useState<QuizAttempt | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const previousAttempts = getAttempts(qualificationId, unitCode);
-  const canTake = canAttempt(qualificationId, unitCode);
+  const { data: attemptsData, isLoading: isLoadingAttempts } = useGetUnitAttemptsQuery(unitCode);
+  const [startQuizMutation, { isLoading: isStarting }] = useStartQuizMutation();
+  const [submitQuizMutation, { isLoading: isSubmitting }] = useSubmitQuizMutation();
 
-  // Generate quiz on mount
-  useEffect(() => {
-    const q = generateQuiz(qualificationId, unitCode);
-    if (q) {
-      setQuiz(q);
-      if (q.config.timeLimit > 0) {
-        setTimeLeft(q.config.timeLimit * 60);
-      }
-    }
-  }, [qualificationId, unitCode]);
+  const previousAttempts = attemptsData?.data || [];
+  // For mock/development, we'll assume canAttempt is true if we don't have a config yet
+  // Ideally we should check the unit's quiz config
+  const canTake = true; 
 
   // Timer countdown
   useEffect(() => {
@@ -61,14 +54,26 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
     return () => clearInterval(interval);
   }, [phase, timeLeft]);
 
-  const handleAutoSubmit = useCallback(() => {
+  const handleAutoSubmit = useCallback(async () => {
     if (!quiz) return;
-    const r = scoreQuiz(quiz, answers, warnings);
-    recordAttempt(qualificationId, unitCode, r);
-    setResult(r);
-    setPhase("results");
-    exitFullscreen();
-  }, [quiz, answers, warnings, qualificationId, unitCode]);
+    try {
+      const res = await submitQuizMutation({
+        attemptId: quiz.id,
+        data: {
+          answers,
+          violations_count: warnings,
+        },
+      }).unwrap();
+
+      if (res.success) {
+        setResult(res.data);
+        setPhase("results");
+        exitFullscreen();
+      }
+    } catch (error) {
+      toast({ title: "Error submitting quiz", variant: "destructive" });
+    }
+  }, [quiz, answers, warnings, submitQuizMutation, toast]);
 
   // Fullscreen helpers
   const enterFullscreen = useCallback(async () => {
@@ -111,7 +116,7 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
 
   // Anti-cheat monitoring
   useEffect(() => {
-    if (phase !== "active" || !quiz?.config.strictMode) return;
+    if (phase !== "active") return;
 
     const handleVisibility = () => { if (document.hidden) triggerWarning("Tab switch detected"); };
     const handleBlur = () => triggerWarning("Window lost focus");
@@ -145,19 +150,26 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
       document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [phase, result, triggerWarning, quiz]);
+  }, [phase, result, triggerWarning]);
 
   useEffect(() => {
     return () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); };
   }, []);
 
   const startQuiz = async () => {
-    if (!canTake) {
-      toast({ title: "No attempts remaining", description: "You have used all available attempts.", variant: "destructive" });
-      return;
+    try {
+      const res = await startQuizMutation(unitCode).unwrap();
+      if (res.success) {
+        setQuiz(res.data);
+        // Assuming strict mode for now, or we can check a field in res.data if available
+        await enterFullscreen();
+        setPhase("active");
+        // Set time limit if available (e.g., from a config object returned by backend)
+        // For now, let's assume no hardcoded limit unless provided
+      }
+    } catch (error) {
+      toast({ title: "Failed to start quiz", variant: "destructive" });
     }
-    if (quiz?.config.strictMode) await enterFullscreen();
-    setPhase("active");
   };
 
   const handleSingle = (qId: string, idx: number) => {
@@ -173,18 +185,31 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!quiz) return;
     const unanswered = quiz.questions.filter((q) => !answers[q.id]?.length);
     if (unanswered.length) {
       toast({ title: `${unanswered.length} question(s) unanswered`, description: "Please answer all questions before submitting.", variant: "destructive" });
       return;
     }
-    const r = scoreQuiz(quiz, answers, warnings);
-    recordAttempt(qualificationId, unitCode, r);
-    setResult(r);
-    setPhase("results");
-    exitFullscreen();
+    
+    try {
+      const res = await submitQuizMutation({
+        attemptId: quiz.id,
+        data: {
+          answers,
+          violations_count: warnings,
+        },
+      }).unwrap();
+
+      if (res.success) {
+        setResult(res.data);
+        setPhase("results");
+        exitFullscreen();
+      }
+    } catch (error) {
+      toast({ title: "Error submitting quiz", variant: "destructive" });
+    }
   };
 
   const handleClose = () => {
@@ -202,12 +227,12 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
   const totalQuestions = quiz?.questions.length || 0;
   const answeredCount = Object.keys(answers).filter((k) => answers[k]?.length > 0).length;
 
-  if (!quiz) {
+  if (isLoadingAttempts || isStarting) {
     return (
       <div className="fixed inset-0 z-[9999] bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">No questions available for this unit yet.</p>
-          <button onClick={onClose} className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold text-sm">Close</button>
+          <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground font-medium">Preparing your assessment...</p>
         </div>
       </div>
     );
@@ -270,21 +295,13 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
               <h3 className="font-bold text-foreground mb-4">📊 Quiz Details</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Questions</p>
-                  <p className="font-semibold text-foreground">{totalQuestions} (randomised)</p>
+                  <p className="text-muted-foreground">Status</p>
+                  <p className="font-semibold text-foreground">Strict Mode Enabled</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Time Limit</p>
-                  <p className="font-semibold text-foreground">{quiz.config.timeLimit > 0 ? `${quiz.config.timeLimit} minutes` : "No limit"}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Pass Score</p>
-                  <p className="font-semibold text-foreground">{quiz.config.passScore}%</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Attempts</p>
+                  <p className="text-muted-foreground">Attempts Taken</p>
                   <p className="font-semibold text-foreground">
-                    {previousAttempts.length}/{quiz.config.maxAttempts === 0 ? "∞" : quiz.config.maxAttempts}
+                    {previousAttempts.length}
                   </p>
                 </div>
               </div>
@@ -296,15 +313,15 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
                 <h3 className="font-bold text-foreground mb-3">📝 Previous Attempts</h3>
                 <div className="space-y-2">
                   {previousAttempts.map((a, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div key={a.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">Attempt {i + 1}</span>
-                        {a.violations > 0 && (
-                          <span className="text-xs text-amber-600">({a.violations} violation{a.violations !== 1 ? "s" : ""})</span>
+                        {a.violations_count > 0 && (
+                          <span className="text-xs text-amber-600">({a.violations_count} violation{a.violations_count !== 1 ? "s" : ""})</span>
                         )}
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold">{a.scorePercent}%</span>
+                        <span className="text-sm font-semibold">{a.score_percent}%</span>
                         {a.passed ? (
                           <span className="text-xs font-bold px-2 py-0.5 rounded bg-green-600 text-white">PASS</span>
                         ) : (
@@ -318,45 +335,47 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
             )}
 
             {/* Rules */}
-            {quiz.config.strictMode && (
-              <div className="bg-card border border-border rounded-xl p-6 text-left mb-8">
-                <h3 className="font-bold text-foreground mb-4">📋 Assessment Rules</h3>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-3">
-                    <Maximize className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                    <span>Quiz opens in <strong className="text-foreground">fullscreen mode</strong>. Do not exit.</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Eye className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                    <span><strong className="text-foreground">Tab switching</strong> is monitored and logged.</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <AlertTriangle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                    <span>After <strong className="text-foreground">{MAX_WARNINGS} violations</strong>, quiz auto-submits.</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                    <span><strong className="text-foreground">Copy, paste, right-click, dev tools</strong> are disabled.</span>
-                  </li>
-                </ul>
-              </div>
-            )}
+            <div className="bg-card border border-border rounded-xl p-6 text-left mb-8">
+              <h3 className="font-bold text-foreground mb-4">📋 Assessment Rules</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <Maximize className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                  <span>Quiz opens in <strong className="text-foreground">fullscreen mode</strong>. Do not exit.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Eye className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-foreground">Tab switching</strong> is monitored and logged.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <AlertTriangle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                  <span>After <strong className="text-foreground">{MAX_WARNINGS} violations</strong>, quiz auto-submits.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Shield className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-foreground">Copy, paste, right-click, dev tools</strong> are disabled.</span>
+                </li>
+              </ul>
+            </div>
 
             {canTake ? (
-              <button onClick={startQuiz} className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
-                I Understand — Start Quiz
+              <button 
+                onClick={startQuiz} 
+                disabled={isStarting}
+                className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {isStarting ? "Initializing..." : "I Understand — Start Quiz"}
               </button>
             ) : (
               <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
                 <p className="text-sm font-semibold text-destructive">No attempts remaining</p>
-                <p className="text-xs text-muted-foreground mt-1">You have used all {quiz.config.maxAttempts} attempts for this quiz.</p>
+                <p className="text-xs text-muted-foreground mt-1">You have used all available attempts for this quiz.</p>
               </div>
             )}
           </div>
         )}
 
         {/* Active Quiz */}
-        {phase === "active" && (
+        {phase === "active" && quiz && (
           <div className="max-w-3xl mx-auto py-8 px-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-foreground">{unitCode}: {unitName}</h2>
@@ -379,16 +398,16 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
             <div className="space-y-6">
               {quiz.questions.map((q, qi) => (
                 <div key={q.id} className="bg-card border border-border rounded-xl p-5">
-                  <p className="font-semibold text-foreground mb-3">{qi + 1}. {q.question}</p>
+                  <p className="font-semibold text-foreground mb-3">{qi + 1}. {q.question_text}</p>
                   <p className="text-xs text-muted-foreground mb-3">
-                    {q.type === "single" ? "Select one answer" : "Select all that apply"}
+                    {q.question_type === "single" ? "Select one answer" : "Select all that apply"}
                   </p>
                   <div className="space-y-2">
                     {q.options.map((opt, oi) => {
                       const selected = answers[q.id]?.includes(oi);
                       return (
                         <label key={oi} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors select-none ${selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
-                          {q.type === "single" ? (
+                          {q.question_type === "single" ? (
                             <input type="radio" name={q.id} checked={selected || false} onChange={() => handleSingle(q.id, oi)} className="accent-primary w-4 h-4" />
                           ) : (
                             <input type="checkbox" checked={selected || false} onChange={() => handleMultiple(q.id, oi)} className="accent-primary w-4 h-4 rounded" />
@@ -404,8 +423,12 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
 
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
               <p className="text-sm text-muted-foreground">{answeredCount} of {totalQuestions} answered</p>
-              <button onClick={handleSubmit} className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
-                Submit Quiz
+              <button 
+                onClick={handleSubmit} 
+                disabled={isSubmitting}
+                className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Quiz"}
               </button>
             </div>
           </div>
@@ -424,14 +447,14 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
             <p className="text-muted-foreground mb-8">
               {result.passed
                 ? "Congratulations! You've demonstrated sufficient knowledge."
-                : `You need ${result.passScore}% to pass. You can review and try again.`}
+                : "You did not reach the required pass mark. You can review and try again if attempts remain."}
             </p>
 
             {/* Score Circle */}
             <div className="mb-8">
               <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full border-4 ${result.passed ? "border-green-500" : "border-destructive"}`}>
                 <div>
-                  <p className={`text-3xl font-bold ${result.passed ? "text-green-600" : "text-destructive"}`}>{result.scorePercent}%</p>
+                  <p className={`text-3xl font-bold ${result.passed ? "text-green-600" : "text-destructive"}`}>{result.score_percent}%</p>
                   <p className="text-xs text-muted-foreground">Score</p>
                 </div>
               </div>
@@ -441,20 +464,12 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
             <div className="bg-card border border-border rounded-xl p-5 mb-6 text-left">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Correct answers</span>
-                  <span className="font-semibold text-foreground">{result.correctCount}/{result.totalQuestions}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Pass mark</span>
-                  <span className="font-semibold text-foreground">{result.passScore}%</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Time taken</span>
-                  <span className="font-semibold text-foreground">{formatTime(result.timeTakenSeconds)}</span>
+                  <span className="text-muted-foreground">Total Questions</span>
+                  <span className="font-semibold text-foreground">{result.questions.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Violations</span>
-                  <span className={`font-semibold ${result.violations > 0 ? "text-amber-600" : "text-green-600"}`}>{result.violations}</span>
+                  <span className={`font-semibold ${result.violations_count > 0 ? "text-amber-600" : "text-green-600"}`}>{result.violations_count}</span>
                 </div>
               </div>
             </div>
@@ -469,20 +484,6 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
                   ))}
                 </ul>
                 <p className="text-xs text-amber-600 mt-2">Logged and visible to your assessor.</p>
-              </div>
-            )}
-
-            {/* Remaining attempts */}
-            {!result.passed && (
-              <div className="mb-6">
-                {canAttempt(qualificationId, unitCode) ? (
-                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-                    <RotateCcw className="w-4 h-4" />
-                    You can retake this quiz. Close and relaunch to try again.
-                  </p>
-                ) : (
-                  <p className="text-sm text-destructive">No attempts remaining. Contact your assessor.</p>
-                )}
               </div>
             )}
 

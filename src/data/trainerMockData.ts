@@ -18,6 +18,7 @@ export interface TrainerLearner {
   unitsCompleted: number;
   totalUnits: number;
   pendingSubmissions: number;
+  isCpd: boolean;
   units: LearnerUnit[];
 }
 
@@ -53,7 +54,7 @@ export const trainerLearners: TrainerLearner[] = [
   {
     id: "l1", name: "John Smith", email: "john.smith@example.com", phone: "+44 7700 900123",
     learnerId: "LRN-2024-001", qualification: "Level 3 Diploma in Business Administration", qualificationCategory: "Business",
-    enrolledDate: "10/01/2024", progress: 65, unitsCompleted: 8, totalUnits: 12, pendingSubmissions: 1,
+    enrolledDate: "10/01/2024", progress: 65, unitsCompleted: 8, totalUnits: 12, pendingSubmissions: 1, isCpd: false,
     units: [
       { code: "BUS301", name: "Principles of Business", status: "Competent", completedDate: "15/02/2024" },
       { code: "BUS302", name: "Communication in Business", status: "Competent", completedDate: "10/03/2024" },
@@ -72,7 +73,7 @@ export const trainerLearners: TrainerLearner[] = [
   {
     id: "l2", name: "Emma Johnson", email: "emma.j@example.com", phone: "+44 7700 900456",
     learnerId: "LRN-2024-002", qualification: "Level 2 Certificate in Mental Health Awareness", qualificationCategory: "Care",
-    enrolledDate: "01/10/2024", progress: 83, unitsCompleted: 5, totalUnits: 6, pendingSubmissions: 1,
+    enrolledDate: "01/10/2024", progress: 83, unitsCompleted: 5, totalUnits: 6, pendingSubmissions: 1, isCpd: false,
     units: [
       { code: "MH201", name: "Understanding Mental Health", status: "Pending Assessment" },
       { code: "MH202", name: "Mental Health First Aid", status: "Competent", completedDate: "15/11/2024" },
@@ -85,7 +86,7 @@ export const trainerLearners: TrainerLearner[] = [
   {
     id: "l3", name: "Michael Brown", email: "m.brown@example.com", phone: "+44 7700 900789",
     learnerId: "LRN-2024-003", qualification: "Level 4 Diploma in Adult Care", qualificationCategory: "Care",
-    enrolledDate: "20/08/2024", progress: 50, unitsCompleted: 6, totalUnits: 10, pendingSubmissions: 1,
+    enrolledDate: "20/08/2024", progress: 50, unitsCompleted: 6, totalUnits: 10, pendingSubmissions: 1, isCpd: false,
     units: [
       { code: "VTCT301", name: "Duty of Care", status: "Competent", completedDate: "15/09/2024" },
       { code: "VTCT302", name: "Equality and Diversity", status: "Competent", completedDate: "10/10/2024" },
@@ -102,7 +103,7 @@ export const trainerLearners: TrainerLearner[] = [
   {
     id: "l4", name: "Sarah Wilson", email: "s.wilson@example.com", phone: "+44 7700 900321",
     learnerId: "LRN-2024-004", qualification: "Level 4 Diploma in Management and Leadership", qualificationCategory: "Management",
-    enrolledDate: "05/11/2024", progress: 92, unitsCompleted: 11, totalUnits: 12, pendingSubmissions: 0,
+    enrolledDate: "05/11/2024", progress: 92, unitsCompleted: 11, totalUnits: 12, pendingSubmissions: 0, isCpd: true,
     units: [
       { code: "ML401", name: "Leadership Principles", status: "Competent", completedDate: "01/12/2024" },
       { code: "ML402", name: "Strategic Management", status: "Competent", completedDate: "15/12/2024" },

@@ -140,15 +140,16 @@ const qualificationUnitApi = api.injectEndpoints({
           : [{ type: "UnitResources", id: `LIST-${unitId}` }],
     }),
 
-    createUnitResource: builder.mutation<UnitResource | UnitResource[], { unitId: string; payload: FormData | Partial<UnitResource> }>({
+    createUnitResource: builder.mutation<UnitResource | UnitResource[], { unitId: string; qualificationId: string; payload: FormData | Partial<UnitResource> }>({
       query: ({ unitId, payload }) => ({
         url: `/api/qualification/admin/units/${unitId}/resources/`,
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: (_result, _error, { unitId }) => [
+      invalidatesTags: (_result, _error, { unitId, qualificationId }) => [
         { type: "UnitResources", id: `LIST-${unitId}` },
-        { type: "QualificationUnits", id: unitId }
+        { type: "QualificationUnits", id: unitId },
+        { type: "QualificationUnits", id: `LIST-${qualificationId}` }
       ],
     }),
 
@@ -164,14 +165,15 @@ const qualificationUnitApi = api.injectEndpoints({
       ],
     }),
 
-    deleteUnitResource: builder.mutation<void, { resourceId: string; unitId: string }>({
+    deleteUnitResource: builder.mutation<void, { resourceId: string; unitId: string; qualificationId: string }>({
       query: ({ resourceId }) => ({
         url: `/api/qualification/admin/resources/${resourceId}/`,
         method: "DELETE",
       }),
-      invalidatesTags: (_result, _error, { unitId }) => [
+      invalidatesTags: (_result, _error, { unitId, qualificationId }) => [
         { type: "UnitResources", id: `LIST-${unitId}` },
-        { type: "QualificationUnits", id: unitId }
+        { type: "QualificationUnits", id: unitId },
+        { type: "QualificationUnits", id: `LIST-${qualificationId}` }
       ],
     }),
 

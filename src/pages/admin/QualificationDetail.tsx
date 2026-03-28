@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, GraduationCap, Users, Calendar, Banknote, Plus, Trash2,
   GripVertical, FileUp, X, ChevronDown, ChevronUp, Loader2, Settings,
-  AlertCircle, FileText, ExternalLink, Download, Clock, Save
+  AlertCircle, FileText, ExternalLink, Download, Clock, Save, Shield
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -107,10 +107,12 @@ const ResourceItem = ({
 // ─── Unit Expansion Section ───────────────────────────────────────────
 const UnitExpandedContent = ({
   unit,
-  isCpd
+  isCpd,
+  qualificationId
 }: {
   unit: UnitRow;
-  isCpd: boolean
+  isCpd: boolean;
+  qualificationId: string;
 }) => {
   const { toast } = useToast();
   const { data: resources, isLoading: isLoadingResources } = useGetUnitResourcesQuery(unit.id);
@@ -136,7 +138,11 @@ const UnitExpandedContent = ({
     }
 
     try {
-      await createResource({ unitId: unit.id, payload: formData }).unwrap();
+      await createResource({ 
+        unitId: unit.id, 
+        qualificationId, 
+        payload: formData 
+      }).unwrap();
       toast({ title: "Resource uploaded successfully" });
     } catch (err) {
       toast({ title: "Upload failed", variant: "destructive" });
@@ -146,7 +152,11 @@ const UnitExpandedContent = ({
 
   const handleDeleteResource = async (resourceId: string) => {
     try {
-      await deleteResource({ resourceId, unitId: unit.id }).unwrap();
+      await deleteResource({ 
+        resourceId, 
+        unitId: unit.id, 
+        qualificationId 
+      }).unwrap();
       toast({ title: "Resource removed" });
     } catch (err) {
       toast({ title: "Failed to remove resource", variant: "destructive" });
@@ -380,13 +390,15 @@ const SortableUnitRow = ({
   onDelete,
   onToggleExpand,
   isExpanded,
-  isCpd
+  isCpd,
+  qualificationId
 }: {
   unit: UnitRow;
   onDelete: (id: string, code: string) => void;
   onToggleExpand: (id: string) => void;
   isExpanded: boolean;
   isCpd: boolean;
+  qualificationId: string;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: unit.id });
 
@@ -430,7 +442,7 @@ const SortableUnitRow = ({
           </Button>
         </div>
 
-        {isExpanded && <UnitExpandedContent unit={unit} isCpd={isCpd} />}
+        {isExpanded && <UnitExpandedContent unit={unit} isCpd={isCpd} qualificationId={qualificationId} />}
       </Card>
     </div>
   );
@@ -629,6 +641,34 @@ const QualificationDetail = () => {
         </CardContent>
       </Card>
 
+      {/* CPD Final Assessment Card */}
+      {summary.is_cpd && (
+        <Card className="border-2 border-primary/20 shadow-lg overflow-hidden group">
+          <div className="flex flex-col md:flex-row md:items-center justify-between p-6 gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                <Shield className="w-7 h-7 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-foreground">Final Assessment</h3>
+                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase font-bold tracking-widest px-2 py-0">Qualification Level</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground max-w-xl">
+                  Configure the mandatory final exam that learners must pass to achieve this CPD qualification.
+                  Manage the question pool, pass marks, and anti-cheat settings.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="shrink-0 gap-2 font-bold shadow-md h-12 px-6">
+              <Link to={`/admin/qualifications/${qualificationId}/final-assessment`}>
+                <Settings className="w-4 h-4" /> Manage Assessment
+              </Link>
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* Units Section */}
       <div className="pt-4">
         <div className="flex items-center justify-between mb-2">
@@ -666,6 +706,7 @@ const QualificationDetail = () => {
                     onToggleExpand={toggleExpand}
                     isExpanded={expandedUnits.has(unit.id)}
                     isCpd={summary.is_cpd}
+                    qualificationId={qualificationId || ""}
                   />
                 ))}
               </div>

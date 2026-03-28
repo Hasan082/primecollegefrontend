@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck } from "lucide-react";
-import { learnerQualifications } from "@/data/learnerMockData";
+import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import CPDFinalAssessmentModal from "@/components/learner/CPDFinalAssessmentModal";
+import { useGetEnrolmentContentQuery } from "@/redux/apis/enrolmentApi";
 import type { UnitData } from "@/data/learnerMockData";
 
 const statusConfig: Record<UnitData["status"], { label: string; color: string; icon: typeof CheckCircle2 }> = {
@@ -14,10 +17,24 @@ const statusConfig: Record<UnitData["status"], { label: string; color: string; i
 };
 
 const QualificationView = () => {
-  const { id } = useParams();
-  const qualification = learnerQualifications.find((q) => q.id === id);
+  const { id } = useParams<{ id: string }>();
+  const [showAssessment, setShowAssessment] = useState(false);
+  
+  const { data: enrolmentResponse, isLoading, error } = useGetEnrolmentContentQuery(id || "");
+  const enrolment = enrolmentResponse?.data;
+  const qualification = enrolment?.qualification;
+  const units = enrolment?.units || [];
 
-  if (!qualification) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <p className="text-sm">Loading course content...</p>
+      </div>
+    );
+  }
+
+  if (error || !enrolment || !qualification) {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">Qualification not found.</p>
@@ -28,9 +45,11 @@ const QualificationView = () => {
     );
   }
 
-  const completed = qualification.units.filter((u) => u.status === "competent").length;
-  const total = qualification.units.length;
-  const pct = Math.round((completed / total) * 100);
+  const completed = units.filter((u) => u.progress?.status === "completed" || u.progress?.status === "competent").length;
+  const total = units.length;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const allUnitsDone = total > 0 && completed === total;
+  const isCpd = qualification.is_cpd;
 
   return (
     <div>
@@ -39,12 +58,14 @@ const QualificationView = () => {
       </Link>
 
       {/* Qualification header */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-8">
+      <div className="bg-card border border-border rounded-xl p-6 mb-8 shadow-sm">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h1 className="text-2xl font-bold text-foreground">{qualification.title}</h1>
-          <span className={`${qualification.categoryColor} text-white text-xs font-bold px-2.5 py-0.5 rounded`}>
-            {qualification.category}
-          </span>
+          {isCpd && (
+            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold uppercase tracking-wider">
+              CPD Enabled
+            </Badge>
+          )}
         </div>
         <p className="text-sm text-muted-foreground mb-4">Qualification Code: {qualification.code}</p>
 
@@ -59,37 +80,78 @@ const QualificationView = () => {
 
       {/* Units */}
       <h2 className="text-xl font-bold text-primary mb-1">Qualification Units</h2>
-      <p className="text-sm text-muted-foreground mb-6">Select a unit to access resources and submit evidence</p>
+      <p className="text-sm text-muted-foreground mb-6">Select a unit to access learning resources {!qualification.is_cpd && "and submit assessment evidence"}</p>
+
+      {/* CPD Final Assessment Section */}
+      {qualification.is_cpd && (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <ShieldCheck className="w-6 h-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-bold text-primary mb-1">Final Assessment</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                This CPD qualification requires a single final assessment after completing all unit learning resources.
+              </p>
+              <Button 
+                size="sm" 
+                className="gap-2" 
+                disabled={!allUnitsDone}
+                onClick={() => setShowAssessment(true)}
+              >
+                <ShieldCheck className="w-4 h-4" /> 
+                {allUnitsDone ? "Start Final Assessment" : "Complete All Units to Unlock"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAssessment && (
+        <CPDFinalAssessmentModal
+          qualificationId={qualification.id}
+          qualificationTitle={qualification.title}
+          onClose={() => setShowAssessment(false)}
+          onSubmitted={(result) => {
+            console.log("Assessment submitted", result);
+            // In a real app, we'd refetch data here
+          }}
+        />
+      )}
 
       <div className="space-y-4">
-        {qualification.units.map((unit) => {
-          const cfg = statusConfig[unit.status];
+        {units.map((unit) => {
+          const status = unit.progress?.status || "not_started";
+          const cfg = statusConfig[status as UnitData["status"]] || statusConfig.not_started;
           const Icon = cfg.icon;
 
           return (
             <div key={unit.id} className="bg-card border border-border rounded-xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${unit.status === "competent" ? "text-green-600" : unit.status === "awaiting_assessment" ? "text-amber-500" : unit.status === "awaiting_iqa" ? "text-blue-600" : unit.status === "resubmission" ? "text-orange-500" : "text-muted-foreground"}`} />
+                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${status === "competent" ? "text-green-600" : status === "awaiting_assessment" ? "text-amber-500" : status === "awaiting_iqa" ? "text-blue-600" : status === "resubmission" ? "text-orange-500" : "text-muted-foreground"}`} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-semibold text-foreground">
-                        {unit.code}: {unit.title}
+                        {unit.unit_code}: {unit.title}
                       </span>
-                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded ${cfg.color}`}>
-                        {cfg.label}
-                      </span>
+                      {!qualification.is_cpd && (
+                        <span className={`text-xs font-bold px-2.5 py-0.5 rounded ${cfg.color}`}>
+                          {cfg.label}
+                        </span>
+                      )}
                     </div>
-                    {unit.submittedDate && (
-                      <p className="text-xs text-muted-foreground">Submitted: {unit.submittedDate}</p>
+                    {unit.progress?.submitted_at && (
+                      <p className="text-xs text-muted-foreground">Submitted: {new Date(unit.progress.submitted_at).toLocaleDateString()}</p>
                     )}
-                    {unit.assessedDate && (
-                      <p className="text-xs text-muted-foreground">Assessed: {unit.assessedDate}</p>
+                    {unit.progress?.completed_at && (
+                      <p className="text-xs text-muted-foreground">Assessed: {new Date(unit.progress.completed_at).toLocaleDateString()}</p>
                     )}
-                    {unit.feedback && (
+                    {!qualification.is_cpd && unit.progress?.feedback && (
                       <div className="mt-3 bg-muted/50 rounded-lg p-4">
                         <p className="text-sm font-semibold text-foreground mb-1">Assessor Feedback:</p>
-                        <p className="text-sm text-muted-foreground">{unit.feedback}</p>
+                        <p className="text-sm text-muted-foreground">{unit.progress.feedback}</p>
                       </div>
                     )}
                   </div>

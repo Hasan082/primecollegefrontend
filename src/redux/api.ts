@@ -93,6 +93,8 @@ export const api = createApi({
     "QualificationUnits",
     "UnitResources",
     "UnitCpdConfig",
+    "Quizzes",
+    "Enrolments",
   ],
   endpoints: () => ({}),
 });

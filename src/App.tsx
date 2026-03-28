@@ -96,6 +96,10 @@ const AdminQualificationDetail = lazy(
 const IQAManagement = lazy(() => import("./pages/admin/IQAManagement"));
 const ChecklistBuilder = lazy(() => import("./pages/admin/ChecklistBuilder"));
 
+const AdminCPDFinalAssessmentEditor = lazy(
+  () => import("./pages/admin/AdminCPDFinalAssessmentEditor"),
+);
+
 // iqa dashboard
 const IQADashboard = lazy(() => import("./pages/iqa/Dashboard"));
 const SamplingQueue = lazy(() => import("./pages/iqa/SamplingQueue"));
@@ -197,6 +201,11 @@ const App = () => {
                     <Route
                       path="qualifications/:qualificationId"
                       element={<AdminQualificationDetail />}
+                    />
+
+                    <Route
+                      path="qualifications/:qualificationId/final-assessment"
+                      element={<AdminCPDFinalAssessmentEditor />}
                     />
 
                     <Route path="learners" element={<LearnerManagement />} />

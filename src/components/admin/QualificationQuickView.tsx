@@ -138,10 +138,10 @@ const QualificationQuickView = ({ qualificationId, open, onOpenChange }: Props) 
                 <span className="text-xl font-bold text-foreground leading-tight line-clamp-2" title={q?.title}>
                   {q?.title || "Qualification Details"}
                 </span>
-                <p className="text-xs text-muted-foreground font-semibold mt-1 flex items-center gap-2">
+                <div className="text-xs text-muted-foreground font-semibold mt-1 flex items-center gap-2">
                   <span className="font-mono bg-muted px-1.5 py-0.5 rounded">{q?.qualification_code || "---"}</span>
                   {q?.status && statusBadge(q.status)}
-                </p>
+                </div>
               </div>
               <Button variant="outline" size="sm" onClick={handleEdit} className="shrink-0 h-9 gap-2 font-bold text-xs ring-offset-background hover:bg-primary/5">
                 <Edit className="w-3.5 h-3.5" />

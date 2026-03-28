@@ -10,22 +10,21 @@ import { generateEvidenceNumber } from "@/lib/evidenceNumbering";
 
 interface EvidenceUploadFormProps {
   requirements: string[];
-  onSubmit: (data: {
-    files: { name: string; size: string }[];
-    description: string;
-    linkedCriteria: string[];
-    evidenceRef: string;
-  }) => void;
+  enrolmentId: string;
+  unitId: string;
+  onSuccess?: () => void;
   isLocked?: boolean;
 }
 
-const EvidenceUploadForm = ({ requirements, onSubmit, isLocked }: EvidenceUploadFormProps) => {
-  const [files, setFiles] = useState<{ name: string; size: string }[]>([]);
+const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLocked }: EvidenceUploadFormProps) => {
+  const [files, setFiles] = useState<File[]>([]);
   const [description, setDescription] = useState("");
   const [linkedCriteria, setLinkedCriteria] = useState<string[]>([]);
   const [declarationChecked, setDeclarationChecked] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const [submitEvidence, { isLoading: isSubmitting }] = useSubmitEvidenceMutation();
 
   if (isLocked) {
     return (
@@ -45,11 +44,7 @@ const EvidenceUploadForm = ({ requirements, onSubmit, isLocked }: EvidenceUpload
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList) return;
-    const newFiles = Array.from(fileList).map((f) => ({
-      name: f.name,
-      size: f.size < 1024 * 1024 ? `${(f.size / 1024).toFixed(0)} KB` : `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
-    }));
-    setFiles((prev) => [...prev, ...newFiles]);
+    setFiles((prev) => [...prev, ...Array.from(fileList)]);
   };
 
   const toggleCriteria = (criterion: string) => {
@@ -58,7 +53,7 @@ const EvidenceUploadForm = ({ requirements, onSubmit, isLocked }: EvidenceUpload
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!files.length) {
       toast({ title: "Please upload at least one file", variant: "destructive" });
       return;
@@ -76,18 +71,33 @@ const EvidenceUploadForm = ({ requirements, onSubmit, isLocked }: EvidenceUpload
       return;
     }
 
-    const evidenceRef = generateEvidenceNumber();
-    onSubmit({ files, description, linkedCriteria, evidenceRef });
+    try {
+      const formData = new FormData();
+      formData.append("description", description);
+      linkedCriteria.forEach(c => formData.append("linked_criteria", c));
+      files.forEach(f => formData.append("files", f));
 
-    // Reset form
-    setFiles([]);
-    setDescription("");
-    setLinkedCriteria([]);
-    setDeclarationChecked(false);
-    toast({
-      title: "Evidence Submitted",
-      description: `Reference: ${evidenceRef} — Your evidence has been submitted for assessment.`,
-    });
+      await submitEvidence({ enrolmentId, unitId, body: formData }).unwrap();
+
+      // Reset form
+      setFiles([]);
+      setDescription("");
+      setLinkedCriteria([]);
+      setDeclarationChecked(false);
+      
+      toast({
+        title: "Evidence Submitted",
+        description: "Your evidence has been uploaded and submitted for assessment.",
+      });
+
+      if (onSuccess) onSuccess();
+    } catch (err: any) {
+      toast({
+        title: "Submission failed",
+        description: err.data?.message || "Failed to upload evidence",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -127,7 +137,7 @@ const EvidenceUploadForm = ({ requirements, onSubmit, isLocked }: EvidenceUpload
                 <div key={i} className="flex items-center gap-3 p-2.5 bg-muted/30 rounded-lg">
                   <FileText className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm text-foreground flex-1 truncate">{f.name}</span>
-                  <span className="text-xs text-muted-foreground">{f.size}</span>
+                  <span className="text-xs text-muted-foreground">{f.size < 1024 * 1024 ? `${(f.size / 1024).toFixed(0)} KB` : `${(f.size / (1024 * 1024)).toFixed(1)} MB`}</span>
                   <button onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -216,8 +226,9 @@ const EvidenceUploadForm = ({ requirements, onSubmit, isLocked }: EvidenceUpload
               </div>
             )}
           </div>
-          <Button onClick={handleSubmit} disabled={!declarationChecked} className="gap-2">
-            <Upload className="w-4 h-4" /> Submit Evidence
+          <Button onClick={handleSubmit} disabled={!declarationChecked || isSubmitting} className="gap-2">
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {isSubmitting ? "Submitting..." : "Submit Evidence"}
           </Button>
         </div>
       </div>

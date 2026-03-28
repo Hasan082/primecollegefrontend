@@ -134,7 +134,12 @@ const TrainerDashboard = () => {
               <TableBody>
                 {trainerLearners.slice((learnersPage - 1) * ITEMS_PER_PAGE, learnersPage * ITEMS_PER_PAGE).map((l) => (
                   <TableRow key={l.id}>
-                    <TableCell className="font-medium text-primary">{l.name}</TableCell>
+                    <TableCell className="font-medium text-primary">
+                      {l.name}
+                      {l.isCpd && (
+                        <Badge variant="outline" className="ml-2 bg-primary/5 text-primary border-primary/20 text-[10px]">CPD</Badge>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="text-sm">{l.qualification}</div>
                       <Badge className="bg-primary text-primary-foreground text-[10px] mt-0.5">{l.qualificationCategory}</Badge>

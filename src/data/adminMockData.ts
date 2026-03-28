@@ -16,6 +16,7 @@ export interface AdminQualification {
   totalUnits: number;
   enrolledLearners: number;
   createdDate: string;
+  is_cpd: boolean;
   units?: QualificationUnit[];
 }
 
@@ -47,34 +48,35 @@ export interface AdminTrainer {
 }
 
 export const adminQualifications: AdminQualification[] = [
-  { id: "q1", title: "Level 3 Diploma in Business Administration", code: "BUS-L3-DIP", level: "Level 3", category: "Business", awardingBody: "VTCT", status: "active", price: 1200, accessDuration: "12 months", totalUnits: 12, enrolledLearners: 24, createdDate: "01/06/2024", units: [
+  { id: "q1", title: "Level 3 Diploma in Business Administration", code: "BUS-L3-DIP", level: "Level 3", category: "Business", awardingBody: "VTCT", status: "active", price: 1200, accessDuration: "12 months", totalUnits: 12, enrolledLearners: 24, createdDate: "01/06/2024", is_cpd: false, units: [
     { code: "BUS301", name: "Principles of Business" }, { code: "BUS302", name: "Communication in Business" }, { code: "BUS303", name: "Managing Business Information" },
     { code: "BUS304", name: "Resource Management" }, { code: "BUS305", name: "Business Project Planning" }, { code: "BUS306", name: "Team Dynamics" },
     { code: "BUS307", name: "Financial Operations" }, { code: "BUS308", name: "Marketing Fundamentals" }, { code: "BUS309", name: "Business Ethics" },
     { code: "BUS310", name: "Strategic Planning" }, { code: "BUS311", name: "Leadership Skills" }, { code: "BUS312", name: "Business Law" },
   ]},
-  { id: "q2", title: "Level 4 Diploma in Adult Care", code: "VTCT-L4-ADULT", level: "Level 4", category: "Care", awardingBody: "VTCT", status: "active", price: 1500, accessDuration: "18 months", totalUnits: 10, enrolledLearners: 18, createdDate: "15/07/2024", units: [
+  { id: "q2", title: "Level 4 Diploma in Adult Care", code: "VTCT-L4-ADULT", level: "Level 4", category: "Care", awardingBody: "VTCT", status: "active", price: 1500, accessDuration: "18 months", totalUnits: 10, enrolledLearners: 18, createdDate: "15/07/2024", is_cpd: false, units: [
     { code: "VTCT301", name: "Safeguarding Adults" }, { code: "VTCT302", name: "Person-Centred Care" }, { code: "VTCT303", name: "Mental Health Awareness" },
     { code: "VTCT304", name: "Communication in Care" }, { code: "VTCT305", name: "Health & Safety" }, { code: "VTCT306", name: "Equality & Diversity" },
     { code: "VTCT307", name: "Duty of Care" }, { code: "VTCT308", name: "Professional Development" }, { code: "VTCT309", name: "Record Keeping" }, { code: "VTCT310", name: "Leadership in Care" },
   ]},
-  { id: "q3", title: "Level 4 Diploma in Management and Leadership", code: "CMI-L4-DIP", level: "Level 4", category: "Management", awardingBody: "CMI", status: "active", price: 1800, accessDuration: "18 months", totalUnits: 12, enrolledLearners: 15, createdDate: "01/08/2024", units: [
+  { id: "q3", title: "Level 4 Diploma in Management and Leadership", code: "CMI-L4-DIP", level: "Level 4", category: "Management", awardingBody: "CMI", status: "active", price: 1800, accessDuration: "18 months", totalUnits: 12, enrolledLearners: 15, createdDate: "01/08/2024", is_cpd: true, units: [
     { code: "CMI401", name: "Principles of Management" }, { code: "CMI402", name: "Strategic Leadership" }, { code: "CMI403", name: "Operational Management" },
     { code: "CMI404", name: "Change Management" }, { code: "CMI405", name: "Financial Management" }, { code: "CMI406", name: "Resource Planning" },
     { code: "CMI407", name: "People Management" }, { code: "CMI408", name: "Communication & Negotiation" }, { code: "CMI409", name: "Project Management" },
     { code: "CMI410", name: "Quality Management" }, { code: "CMI411", name: "Risk Management" }, { code: "CMI412", name: "Innovation & Improvement" },
   ]},
-  { id: "q4", title: "Level 2 Certificate in Mental Health Awareness", code: "MH-L2-CERT", level: "Level 2", category: "Care", awardingBody: "VTCT", status: "active", price: 450, accessDuration: "6 months", totalUnits: 6, enrolledLearners: 32, createdDate: "10/05/2024", units: [
+  { id: "q4", title: "Level 2 Certificate in Mental Health Awareness", code: "MH-L2-CERT", level: "Level 2", category: "Care", awardingBody: "VTCT", status: "active", price: 450, accessDuration: "6 months", totalUnits: 6, enrolledLearners: 32, createdDate: "10/05/2024", is_cpd: false, units: [
     { code: "MH201", name: "Understanding Mental Health" }, { code: "MH202", name: "Mental Health First Aid" }, { code: "MH203", name: "Stress Management" },
     { code: "MH204", name: "Supporting Others" }, { code: "MH205", name: "Wellbeing in the Workplace" }, { code: "MH206", name: "Reflective Practice" },
   ]},
-  { id: "q5", title: "Level 2 Certificate in Customer Service", code: "CS-L2-CERT", level: "Level 2", category: "Business", awardingBody: "VTCT", status: "active", price: 400, accessDuration: "6 months", totalUnits: 5, enrolledLearners: 28, createdDate: "20/04/2024", units: [
+  { id: "q5", title: "Level 2 Certificate in Customer Service", code: "CS-L2-CERT", level: "Level 2", category: "Business", awardingBody: "VTCT", status: "active", price: 400, accessDuration: "6 months", totalUnits: 5, enrolledLearners: 28, createdDate: "20/04/2024", is_cpd: false, units: [
     { code: "CS201", name: "Customer Service Principles" }, { code: "CS202", name: "Communication Skills" }, { code: "CS203", name: "Handling Complaints" },
     { code: "CS204", name: "Service Improvement" }, { code: "CS205", name: "Professional Behaviour" },
   ]},
-  { id: "q6", title: "Level 3 Certificate in First Aid at Work", code: "FA-L3-CERT", level: "Level 3", category: "First Aid", awardingBody: "VTCT", status: "draft", price: 350, accessDuration: "3 months", totalUnits: 4, enrolledLearners: 0, createdDate: "01/02/2025", units: [
+  { id: "q6", title: "Level 3 Certificate in First Aid at Work", code: "FA-L3-CERT", level: "Level 3", category: "First Aid", awardingBody: "VTCT", status: "draft", price: 350, accessDuration: "3 months", totalUnits: 4, enrolledLearners: 0, createdDate: "01/02/2025", is_cpd: false, units: [
     { code: "FA301", name: "Emergency First Aid" }, { code: "FA302", name: "Workplace Hazards" }, { code: "FA303", name: "CPR & AED" }, { code: "FA304", name: "Incident Reporting" },
   ]},
+  { id: "q7", title: "Online Safety & Digital Wellbeing – Protecting Children in the Digital Environment and Managing Screen Safety", code: "OSDW-2024", level: "Level 1", category: "Care", awardingBody: "The Prime College", status: "active", price: 0, accessDuration: "12 months", totalUnits: 5, enrolledLearners: 120, createdDate: "10/01/2025", is_cpd: true },
 ];
 
 export const adminLearners: AdminLearner[] = [

@@ -43,6 +43,7 @@ export interface QualificationListItem {
   current_price: string | null;
   currency: string;
   course_duration: string;
+  is_cpd: boolean;
 }
 
 export interface QualificationPageReference {
@@ -60,6 +61,7 @@ export interface QualificationDetail extends QualificationListItem {
   has_sessions: boolean;
   detail_page: QualificationPageReference | null;
   upcoming_sessions: QualificationSession[];
+  is_cpd: boolean;
 }
 
 export interface QualificationUpsellItem {

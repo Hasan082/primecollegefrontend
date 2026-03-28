@@ -82,12 +82,8 @@ import { TryCatch } from "@/utils/apiTryCatch";
 // ─── Currency options ─────────────────────────────────────────────────────────
 
 const CURRENCIES = [
-  { value: "USD", label: "USD – US Dollar" },
   { value: "GBP", label: "GBP – British Pound" },
   { value: "EUR", label: "EUR – Euro" },
-  { value: "AUD", label: "AUD – Australian Dollar" },
-  { value: "CAD", label: "CAD – Canadian Dollar" },
-  { value: "BDT", label: "BDT – Bangladeshi Taka" },
 ];
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
@@ -403,7 +399,7 @@ const QualificationPrice = () => {
                             </span>
                             <Input
                               placeholder="0.00"
-                              className="pl-7"
+                              className="pl-10 h-10"
                               {...field}
                             />
                           </div>

@@ -78,6 +78,8 @@ export interface QualificationData {
   status: "in_progress" | "completed";
   awardingBody: string;
   paymentConfirmed: boolean;
+  is_cpd: boolean;
+  finalAssessment?: AssignmentData;
   units: UnitData[];
 }
 
@@ -151,6 +153,7 @@ export const learnerQualifications: QualificationData[] = [
     status: "in_progress",
     awardingBody: "Level 3 Diploma in Adult Care (VTCT)",
     paymentConfirmed: true,
+    is_cpd: false,
     units: [
       {
         id: "u1", code: "VTCT301", title: "Duty of Care in Adult Care",
@@ -402,6 +405,26 @@ export const learnerQualifications: QualificationData[] = [
     status: "in_progress",
     awardingBody: "Level 4 Diploma in Management and Leadership (CMI)",
     paymentConfirmed: true,
+    is_cpd: true,
+    finalAssessment: {
+      id: "m-final-quiz",
+      title: "Final Knowledge Assessment",
+      type: "quiz",
+      description: "This final quiz covers key leadership and management principles from all units. You must score 70% or higher to pass.",
+      status: "not_started",
+      questions: [
+        {
+          id: "fq1", question: "What are the four components of the PDCA cycle?",
+          type: "single",
+          options: ["Plan, Do, Check, Act", "Prepare, Deliver, Control, Analyze", "Pre-plan, Document, Change, Assess", "Prioritize, Delegate, Coordinate, Achieve"]
+        },
+        {
+          id: "fq2", question: "Which leadership style focuses on inspiration and vision?",
+          type: "single",
+          options: ["Autocratic", "Transactional", "Transformational", "Laissez-faire"]
+        }
+      ]
+    },
     units: [
       {
         id: "m1", code: "CMI401", title: "Principles of Management and Leadership",

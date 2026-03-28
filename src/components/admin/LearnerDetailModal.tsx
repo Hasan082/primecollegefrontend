@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCircle2, AlertTriangle, FileText, Pencil, Save, X, ChevronDown, ChevronUp, Timer, CalendarPlus, Check, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AdminLearner } from "@/data/adminMockData";
-import { adminTrainers } from "@/data/adminMockData";
+import { adminTrainers, adminQualifications } from "@/data/adminMockData";
 import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, EXTENSION_PLANS, type UnitDeadline, type ExtensionRequest } from "@/lib/deadlines";
 import { mockExtensionRequests } from "@/data/extensionRequestsMockData";
 
@@ -36,7 +36,7 @@ interface UnitData {
   timeline: UnitTimeline[];
 }
 
-const mockUnits = (progress: number): UnitData[] => {
+const mockUnits = (progress: number, isCpd: boolean): UnitData[] => {
   const total = 6;
   const completed = Math.round((progress / 100) * total);
   const unitNames = ["Introduction & Fundamentals", "Core Principles", "Applied Practice", "Professional Skills", "Advanced Concepts", "Final Portfolio"];
@@ -46,12 +46,18 @@ const mockUnits = (progress: number): UnitData[] => {
     let timeline: UnitTimeline[] = [];
 
     if (status === "completed") {
-      timeline = [
+      timeline = isCpd ? [
+        { date: `${20 + i}/01/2025`, event: `All learning resources accessed`, type: "enrolment" },
+        { date: `${15 + i}/01/2025`, event: `Unit study started`, type: "enrolment" },
+      ] : [
         { date: `${20 + i}/01/2025`, event: `Marked as Competent by Sarah Jones`, type: "assessment" },
         { date: `${15 + i}/01/2025`, event: `Evidence submitted for assessment`, type: "submission" },
       ];
     } else if (status === "in-progress") {
-      timeline = [
+      timeline = isCpd ? [
+        { date: `${10 + i}/02/2025`, event: `Learning resources revisited`, type: "enrolment" },
+        { date: `${28}/01/2025`, event: `Unit study started`, type: "enrolment" },
+      ] : [
         { date: `${10 + i}/02/2025`, event: `Resubmission uploaded`, type: "submission" },
         { date: `${5 + i}/02/2025`, event: `Resubmission Required — feedback provided`, type: "feedback" },
         { date: `${28}/01/2025`, event: `Evidence submitted for assessment`, type: "submission" },
@@ -95,7 +101,9 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
 
   if (!learner) return null;
 
-  const units = mockUnits(learner.progress);
+  const qualification = adminQualifications.find(q => q.id === learner.qualificationId);
+  const isCpd = qualification?.is_cpd || false;
+  const units = mockUnits(learner.progress, isCpd);
 
   const toggleUnit = (i: number) => {
     setExpandedUnits(prev => {
@@ -339,8 +347,8 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
 
                       {isExpanded && (
                         <div className="px-4 pb-3 pt-1 border-t border-border space-y-3">
-                          {/* Deadline Setting */}
-                          {unit.status !== "completed" && (
+                          {/* Deadline Setting — Only show if NOT CPD */}
+                          {unit.status !== "completed" && !isCpd && (
                             <div>
                               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                                 <Timer className="w-3 h-3 inline mr-1" />Deadline
