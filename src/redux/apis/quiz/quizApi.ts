@@ -154,6 +154,7 @@ export interface CPDFinalAssessmentSummary {
   pass_mark: number | null;
   status: "configured" | "not_configured";
   assessment_status: "draft" | "published" | "archived" | null;
+  is_active: boolean;
 }
 
 export interface CPDFinalAssessment {
@@ -412,9 +413,18 @@ const quizApi = api.injectEndpoints({
     }),
 
     // Admin CPD Final Assessment Management
-    getCPDFinalAssessment: builder.query<QuizResponse<CPDFinalAssessmentSummary[]>, string>({
+    getCPDFinalAssessment1: builder.query<QuizResponse<CPDFinalAssessmentSummary[]>, string>({
       query: (qualificationId) => ({
         url: `/api/qualification/admin/cpd-final-assessments/?qualification=${qualificationId}`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, qualificationId) => [
+        { type: "Quizzes", id: `CPD_CONFIG_${qualificationId}` }
+      ],
+    }),
+    getCPDFinalAssessment: builder.query<QuizResponse<CPDFinalAssessmentSummary>, string>({
+      query: (qualificationId) => ({
+        url: `/api/qualification/admin/${qualificationId}/cpd-final-assessment/`,
         method: "GET",
       }),
       providesTags: (_result, _error, qualificationId) => [

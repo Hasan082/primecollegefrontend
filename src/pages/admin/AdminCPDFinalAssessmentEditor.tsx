@@ -28,13 +28,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   useGetCPDFinalAssessmentQuery,
-  useGetCPDFinalAssessmentDetailQuery,
   useCreateCPDFinalAssessmentMutation,
   useUpdateCPDFinalAssessmentMutation,
   useGetCPDFinalAssessmentQuestionsQuery,
   useCreateCPDFinalAssessmentQuestionMutation,
   useDeleteCPDFinalAssessmentQuestionMutation,
-  useGetCPDFinalAssessmentStatsQuery,
 } from "@/redux/apis/quiz/quizApi";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -44,23 +42,16 @@ const AdminCPDFinalAssessmentEditor = () => {
 
   const {
     data: assessmentSummaryResponse,
-    isLoading: isLoadingAssessmentSummary,
+    isLoading: isLoadingAssessmentDetail,
     refetch: refetchAssessmentSummary,
-  } = useGetCPDFinalAssessmentQuery(qualificationId!);
-  const assessmentSummary = Array.isArray(assessmentSummaryResponse?.data)
-    ? assessmentSummaryResponse.data.find((item) => item.qualification_id === qualificationId) ?? null
-    : null;
-
-  const assessmentId = assessmentSummary?.id ?? undefined;
-
-  const { data: assessmentDetailResponse, isLoading: isLoadingAssessmentDetail } = useGetCPDFinalAssessmentDetailQuery(assessmentId!, { skip: !assessmentId });
-  const assessment = assessmentDetailResponse?.data ?? null;
+  } = useGetCPDFinalAssessmentQuery(qualificationId, {
+    skip: !qualificationId,
+  });
+  const assessment = assessmentSummaryResponse?.data ?? null;
+  const assessmentId = assessment?.id ?? undefined;
 
   const { data: questionsResponse, isLoading: isLoadingQuestions } = useGetCPDFinalAssessmentQuestionsQuery(assessmentId!, { skip: !assessmentId });
-  const { data: statsResponse } = useGetCPDFinalAssessmentStatsQuery(assessmentId!, { skip: !assessmentId });
-
   const questions = Array.isArray(questionsResponse?.data) ? questionsResponse.data : [];
-  const stats = statsResponse?.data;
 
   const [updateAssessment] = useUpdateCPDFinalAssessmentMutation();
   const [createAssessment] = useCreateCPDFinalAssessmentMutation();
@@ -74,14 +65,14 @@ const AdminCPDFinalAssessmentEditor = () => {
   const [newQCorrect, setNewQCorrect] = useState<number[]>([]);
   const [localSettings, setLocalSettings] = useState<any>(null);
 
-  const qualificationTitle = assessment?.qualification_title || assessmentSummary?.qualification_title || "CPD Final Assessment";
-  const qualificationCode = assessment?.qualification_code || assessmentSummary?.qualification_code || "CPD";
+  const qualificationTitle = assessment?.qualification_title || "CPD Final Assessment";
+  const qualificationCode = assessment?.qualification_code || "CPD";
   const activeQuestionCount = assessment?.questions_per_assessment || 0;
-  const requiredQuestionCount = localSettings?.questions_per_assessment ?? stats?.questions_per_assessment ?? 25;
-  const timeLimit = localSettings?.time_limit_minutes ?? assessmentSummary?.time_limit_minutes ?? 60;
-  const passMark = localSettings?.pass_mark ?? assessmentSummary?.pass_mark ?? 70;
+  const requiredQuestionCount = localSettings?.questions_per_assessment ?? assessment?.questions_per_assessment ?? 0;
+  const timeLimit = localSettings?.time_limit_minutes ?? 0;
+  const passMark = localSettings?.pass_mark ?? 0;
   const isAssessmentLive = assessment?.is_active ?? localSettings?.is_active ?? false;
-  const isReady = stats?.is_ready ?? (activeQuestionCount >= requiredQuestionCount);
+  const isReady = activeQuestionCount >= requiredQuestionCount;
 
   useEffect(() => {
     if (assessment) {
@@ -89,9 +80,9 @@ const AdminCPDFinalAssessmentEditor = () => {
       return;
     }
 
-    if (!assessmentId && assessmentSummary) {
+    if (!assessmentId) {
       setLocalSettings((current: any) => current ?? {
-        title: `Final Assessment - ${assessmentSummary.qualification_title}`,
+        title: `Final Assessment - ${assessment?.qualification_title}`,
         description: "",
         status: "draft",
         pass_mark: 70,
@@ -107,7 +98,7 @@ const AdminCPDFinalAssessmentEditor = () => {
         is_active: true,
       });
     }
-  }, [assessment, assessmentId, assessmentSummary]);
+  }, [assessment, assessmentId]);
 
   const resetNewQ = () => {
     setNewQ("");
@@ -200,20 +191,9 @@ const AdminCPDFinalAssessmentEditor = () => {
     };
 
     try {
-      let targetAssessmentId = assessmentId;
-
-      if (!targetAssessmentId) {
-        const latestSummaryResponse = await refetchAssessmentSummary();
-        const latestSummary = Array.isArray(latestSummaryResponse.data?.data)
-          ? latestSummaryResponse.data.data.find((item) => item.qualification_id === qualificationId) ?? null
-          : null;
-
-        targetAssessmentId = latestSummary?.id ?? undefined;
-      }
-
-      if (targetAssessmentId) {
+      if (assessmentId) {
         await updateAssessment({
-          id: targetAssessmentId,
+          id: assessmentId,
           qualificationId: qualificationId!,
           data: updatePayload,
         }).unwrap();
@@ -244,7 +224,7 @@ const AdminCPDFinalAssessmentEditor = () => {
     ));
   };
 
-  if (isLoadingAssessmentSummary || (assessmentId && isLoadingAssessmentDetail) || (assessmentId && isLoadingQuestions)) {
+  if ((assessmentId && isLoadingAssessmentDetail) || (assessmentId && isLoadingQuestions)) {
     return (
       <div className="flex flex-col items-center justify-center py-40 gap-4 text-muted-foreground">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -300,13 +280,13 @@ const AdminCPDFinalAssessmentEditor = () => {
             </TabsList>
 
             <TabsContent value="questions" className="space-y-4">
-              {stats && !stats.is_ready && (
+              {assessment && !isReady && (
                 <Alert className="bg-amber-500/5 text-amber-700 border-amber-500/20">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle className="font-bold">Pool Shortfall</AlertTitle>
                   <AlertDescription className="text-xs">
-                    This assessment requires {stats.questions_per_assessment} questions, but the active pool only has {stats.active_questions}.
-                    Please add at least {stats.shortfall} more questions.
+                    This assessment requires {assessment.questions_per_assessment} questions, but the active pool only has {activeQuestionCount}.
+                    Please add at least {requiredQuestionCount - activeQuestionCount} more questions.
                   </AlertDescription>
                 </Alert>
               )}
