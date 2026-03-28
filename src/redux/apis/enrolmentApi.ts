@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api } from "../api";
 
 export interface EvidenceFile {
   id: string;
@@ -17,6 +17,11 @@ export interface EvidenceSubmission {
   status: "submitted" | "under_review" | "competent" | "resubmission_required" | "not_yet_competent";
   submitted_at: string;
   files: EvidenceFile[];
+}
+export interface EvidenceSubmissionResponse {
+  success: boolean;
+  message: string;
+  data: EvidenceSubmission;
 }
 
 export interface EnrolmentListItem {
@@ -58,10 +63,13 @@ export interface EnrolmentContent {
   enrolled_at: string;
   access_expires_at: string | null;
   completed_at: string | null;
+  access_expired: boolean;
   qualification: {
     id: string;
     title: string;
     slug: string;
+    is_cpd: boolean;
+    code: string;
   };
   units: {
     id: string;
@@ -73,6 +81,7 @@ export interface EnrolmentContent {
     has_written_assignment: boolean;
     requires_evidence: boolean;
     resources: any[];
+    feedback: string | null;
     progress: {
       status: string;
       started_at: string | null;
@@ -80,6 +89,8 @@ export interface EnrolmentContent {
       quiz_passed: boolean;
       evidence_met: boolean;
       assignment_met: boolean;
+      submitted_at: string | null;
+      feedback: string | null;
     } | null;
   }[];
 }

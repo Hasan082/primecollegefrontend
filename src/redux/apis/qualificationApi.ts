@@ -123,8 +123,6 @@ const qualificationApi = api.injectEndpoints({
         return [{ type: "Qualifications" as const, id: "LIST" }, ...qualificationTags];
       },
       keepUnusedDataFor: 30,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
     }),
     getQualificationDetail: builder.query<QualificationDetailResponse, string>({
       query: (slug) => ({
@@ -136,8 +134,6 @@ const qualificationApi = api.injectEndpoints({
         ...(result?.data?.id ? [{ type: "Qualifications" as const, id: result.data.id }] : []),
       ],
       keepUnusedDataFor: 30,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
     }),
     getUpSales: builder.query<QualificationUpsellResponse, string>({
       query: (slug) => ({
@@ -145,8 +141,6 @@ const qualificationApi = api.injectEndpoints({
         method: "GET",
       }),
       keepUnusedDataFor: 30,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
     }),
   }),
 });
