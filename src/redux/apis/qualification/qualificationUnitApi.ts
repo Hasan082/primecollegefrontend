@@ -77,20 +77,20 @@ const qualificationUnitApi = api.injectEndpoints({
       transformResponse: (response: { data: QualificationUnitConfigSummary }) => response.data,
       providesTags: (_result, _error, id) => [{ type: "Qualifications", id: `SUMMARY-${id}` }],
     }),
-    
+
     getUnits: builder.query<UnitRow[], string>({
       query: (qualificationId) => ({
         url: `/api/qualification/admin/${qualificationId}/units/`,
         method: "GET",
       }),
-      transformResponse: (response: { data: any }) => 
+      transformResponse: (response: { data: any }) =>
         Array.isArray(response.data) ? response.data : (response?.data?.results || []),
-      providesTags: (result, _error, qualificationId) => 
-        Array.isArray(result) 
+      providesTags: (result, _error, qualificationId) =>
+        Array.isArray(result)
           ? [
-              ...result.map(({ id }) => ({ type: "QualificationUnits" as const, id })),
-              { type: "QualificationUnits", id: `LIST-${qualificationId}` }
-            ]
+            ...result.map(({ id }) => ({ type: "QualificationUnits" as const, id })),
+            { type: "QualificationUnits", id: `LIST-${qualificationId}` }
+          ]
           : [{ type: "QualificationUnits", id: `LIST-${qualificationId}` }],
     }),
 
@@ -129,14 +129,14 @@ const qualificationUnitApi = api.injectEndpoints({
         url: `/api/qualification/admin/units/${unitId}/resources/`,
         method: "GET",
       }),
-      transformResponse: (response: { data: any }) => 
+      transformResponse: (response: { data: any }) =>
         Array.isArray(response.data) ? response.data : (response?.data?.results || []),
-      providesTags: (result, _error, unitId) => 
-        Array.isArray(result) 
+      providesTags: (result, _error, unitId) =>
+        Array.isArray(result)
           ? [
-              ...result.map(({ id }) => ({ type: "UnitResources" as const, id })),
-              { type: "UnitResources", id: `LIST-${unitId}` }
-            ]
+            ...result.map(({ id }) => ({ type: "UnitResources" as const, id })),
+            { type: "UnitResources", id: `LIST-${unitId}` }
+          ]
           : [{ type: "UnitResources", id: `LIST-${unitId}` }],
     }),
 
@@ -214,6 +214,7 @@ export const {
   useCreateUnitResourceMutation,
   useUpdateUnitResourceMutation,
   useDeleteUnitResourceMutation,
+  // unit cpd api's 
   useGetUnitCpdConfigQuery,
   useCreateUnitCpdConfigMutation,
   useUpdateUnitCpdConfigMutation,
