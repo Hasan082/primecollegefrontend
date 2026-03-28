@@ -62,7 +62,7 @@ const QualificationManagement = () => {
 
   const [viewOpen, setViewOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: qualificationsData } = useGetQualificationsAdminQuery(null);
+  const { data: qualificationsData } = useGetQualificationsAdminQuery({});
   const [updateQualification] = useUpdateQualificationMainMutation();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -96,24 +96,24 @@ const QualificationManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
-    // Status color/style map
-    const statusBadge = (status: AdminQualificationRow["status"]) => {
-      const styles = {
-        active: "bg-primary text-primary-foreground border-transparent",
-        draft: "bg-amber-50 text-amber-700 border-amber-200",
-        archived: "bg-slate-100 text-slate-600 border-slate-300",
-        inactive: "bg-muted text-muted-foreground border-transparent",
-      } as const;
+  // Status color/style map
+  const statusBadge = (status: AdminQualificationRow["status"]) => {
+    const styles = {
+      active: "bg-primary text-primary-foreground border-transparent",
+      draft: "bg-amber-50 text-amber-700 border-amber-200",
+      archived: "bg-slate-100 text-slate-600 border-slate-300",
+      inactive: "bg-muted text-muted-foreground border-transparent",
+    } as const;
 
-      return (
-        <Badge 
-          variant="outline" 
-          className={`capitalize px-2.5 py-0.5 text-[11px] font-bold shadow-sm ${styles[status] || styles.inactive}`}
-        >
-          {status}
-        </Badge>
-      );
-    };
+    return (
+      <Badge
+        variant="outline"
+        className={`capitalize px-2.5 py-0.5 text-[11px] font-bold shadow-sm ${styles[status] || styles.inactive}`}
+      >
+        {status}
+      </Badge>
+    );
+  };
 
   const handleView = (id: string) => {
     setSelectedId(id);
@@ -207,69 +207,68 @@ const QualificationManagement = () => {
               {filtered
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                 .map((q) => (
-                <TableRow key={q.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-sm">{q.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {q.awarding_body} • {q.total_units} units
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm">
-                    {q.qualification_code}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Badge variant="outline">{q.category}</Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm">
-                    {formatPrice(q.current_price, q.currency)}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {q.active_enrolments_count}
-                  </TableCell>
-                  <TableCell>{statusBadge(q.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="View"
-                        onClick={() => handleView(q.id)}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button asChild variant="ghost" size="icon" title="Unit Config">
-                        <Link to={`/admin/qualifications/${q.id}`}>
-                          <Settings2 className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                      <Button asChild variant="ghost" size="icon" title="Edit">
-                        <Link to={`/admin/qualifications/${q.id}/edit`}>
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title={q.status === "archived" ? "Restore" : "Archive"}
-                        onClick={() => handleArchiveToggle(q)}
-                        className={`h-8 w-8 transition-colors ${
-                          q.status === "archived" 
-                            ? "bg-slate-50 border-slate-200 hover:bg-emerald-50 hover:border-emerald-200" 
+                  <TableRow key={q.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-sm">{q.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {q.awarding_body} • {q.total_units} units
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">
+                      {q.qualification_code}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <Badge variant="outline">{q.category}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">
+                      {formatPrice(q.current_price, q.currency)}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {q.active_enrolments_count}
+                    </TableCell>
+                    <TableCell>{statusBadge(q.status)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="View"
+                          onClick={() => handleView(q.id)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button asChild variant="ghost" size="icon" title="Unit Config">
+                          <Link to={`/admin/qualifications/${q.id}`}>
+                            <Settings2 className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                        <Button asChild variant="ghost" size="icon" title="Edit">
+                          <Link to={`/admin/qualifications/${q.id}/edit`}>
+                            <Edit className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title={q.status === "archived" ? "Restore" : "Archive"}
+                          onClick={() => handleArchiveToggle(q)}
+                          className={`h-8 w-8 transition-colors ${q.status === "archived"
+                            ? "bg-slate-50 border-slate-200 hover:bg-emerald-50 hover:border-emerald-200"
                             : ""
-                        } border`}
-                      >
-                        {q.status === "archived" ? (
-                          <ArchiveRestore className="w-4 h-4 text-emerald-600" />
-                        ) : (
-                          <Archive className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-                        )}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                            } border`}
+                        >
+                          {q.status === "archived" ? (
+                            <ArchiveRestore className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <Archive className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
           <TablePagination

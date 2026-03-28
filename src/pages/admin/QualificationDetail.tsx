@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, GraduationCap, Users, Calendar, Banknote, Plus, Trash2,
   GripVertical, FileUp, X, ChevronDown, ChevronUp, Loader2, Settings,
-  AlertCircle, FileText, ExternalLink, Download, Clock, Save, Shield
+  AlertCircle, FileText, ExternalLink, Download, Clock, Save, Shield,
+  BookOpen, Target, Timer, CheckCircle2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +44,8 @@ import {
   useCreateUnitResourceMutation,
   useDeleteUnitResourceMutation,
   UnitRow,
-  UnitResource
+  UnitResource,
+  useGetUnitCpdConfigQuery
 } from "@/redux/apis/qualification/qualificationUnitApi";
 import { CPDConfigDrawer } from "@/components/shared/unitCpdConfig/drawers/CPDConfigDrawer";
 
@@ -116,6 +118,10 @@ const UnitExpandedContent = ({
   const [createResource, { isLoading: isUploading }] = useCreateUnitResourceMutation();
   const [deleteResource] = useDeleteUnitResourceMutation();
 
+  // CPD config data (fetched always for CPD units so we can show a preview)
+  const { data: cpdConfig } = useGetUnitCpdConfigQuery(unit.id, { skip: !isCpd });
+  const hasCpdConfig = !!cpdConfig?.id;
+
   // CPD state
   const [cpdOpen, setCpdOpen] = useState(false);
 
@@ -135,10 +141,10 @@ const UnitExpandedContent = ({
     }
 
     try {
-      await createResource({ 
-        unitId: unit.id, 
-        qualificationId, 
-        payload: formData 
+      await createResource({
+        unitId: unit.id,
+        qualificationId,
+        payload: formData
       }).unwrap();
       toast({ title: "Resource uploaded successfully" });
     } catch (err) {
@@ -149,10 +155,10 @@ const UnitExpandedContent = ({
 
   const handleDeleteResource = async (resourceId: string) => {
     try {
-      await deleteResource({ 
-        resourceId, 
-        unitId: unit.id, 
-        qualificationId 
+      await deleteResource({
+        resourceId,
+        unitId: unit.id,
+        qualificationId
       }).unwrap();
       toast({ title: "Resource removed" });
     } catch (err) {
@@ -228,7 +234,39 @@ const UnitExpandedContent = ({
 
           {/* CPD Trigger */}
           {isCpd && (
-            <div className="pt-2 border-t border-border/50">
+            <div className="pt-2 border-t border-border/50 space-y-3">
+              {/* CPD Config Summary — shown when config already exists */}
+              {hasCpdConfig && cpdConfig && (
+                <div className="rounded-xl border border-primary/15 bg-primary/5 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">CPD Config</span>
+                    <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
+                      <CheckCircle2 className="w-3 h-3" /> Configured
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-1.5 text-xs">
+                    {cpdConfig.estimated_minutes > 0 && (
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Timer className="w-3 h-3 text-primary shrink-0" />
+                        <span><span className="font-semibold text-foreground">{cpdConfig.estimated_minutes} min</span> estimated duration</span>
+                      </div>
+                    )}
+                    {cpdConfig.learning_objectives && (
+                      <div className="flex items-start gap-1.5 text-muted-foreground">
+                        <Target className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{cpdConfig.learning_objectives}</span>
+                      </div>
+                    )}
+                    {cpdConfig.module_summary && (
+                      <div className="flex items-start gap-1.5 text-muted-foreground">
+                        <BookOpen className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{cpdConfig.module_summary}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <Button
                 variant="outline"
                 className="w-full justify-between h-10 group hover:border-primary/50"
@@ -238,7 +276,9 @@ const UnitExpandedContent = ({
                   <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center">
                     <Settings className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <span className="text-xs font-semibold">Unit CPD Settings</span>
+                  <span className="text-xs font-semibold">
+                    {hasCpdConfig ? "Edit CPD Settings" : "Configure CPD Settings"}
+                  </span>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
               </Button>
@@ -330,7 +370,6 @@ const QualificationDetail = () => {
 
   const { data: summaryData, isLoading: isLoadingSummary } = useGetUnitConfigSummaryQuery(qualificationId!, { skip: !qualificationId || qualificationId === "0" });
   const { data: unitsData, isLoading: isLoadingUnits } = useGetUnitsQuery(qualificationId!, { skip: !qualificationId || qualificationId === "0" });
-
   const summary = summaryData;
   const units = Array.isArray(unitsData) ? unitsData : [];
 
