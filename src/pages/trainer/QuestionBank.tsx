@@ -10,7 +10,7 @@ import { useGetQuestionBankUnitsQuery } from "@/redux/apis/quiz/quizApi";
 const QualificationBankSection = ({ qualification, search }: { qualification: any; search: string }) => {
   const { data: unitsResponse, isLoading } = useGetQuestionBankUnitsQuery(qualification.id);
 
-  const units = unitsResponse?.data || [];
+  const units = unitsResponse || [];
   
   const filteredUnits = units.filter(
     (u: any) =>
