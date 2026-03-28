@@ -11,15 +11,12 @@ import { useGetQualificationsAdminQuery } from "@/redux/apis/qualification/quali
 
 const FinalAssessments = () => {
   const [search, setSearch] = useState("");
-  const { data: qualificationsResponse, isLoading, error } = useGetQualificationsAdminQuery({});
+  const { data: qualificationsResponse, isLoading, error } = useGetQualificationsAdminQuery({
+    is_cpd: true,
+    search,
+  });
 
-  const qualifications = Array.isArray(qualificationsResponse) 
-    ? qualificationsResponse 
-    : (qualificationsResponse as any)?.data?.results || [];
-
-  const cpdQualifications = qualifications.filter((q: any) => 
-    q.is_cpd && (q.title.toLowerCase().includes(search.toLowerCase()) || q.category.toLowerCase().includes(search.toLowerCase()))
-  );
+  const cpdQualifications = qualificationsResponse?.data?.results || [];
 
   return (
     <div className="space-y-6">
@@ -37,12 +34,12 @@ const FinalAssessments = () => {
       <Card className="p-4 bg-primary/5 border-primary/20 shadow-sm">
         <div className="flex gap-4 items-start">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-             <ClipboardCheck className="w-5 h-5 text-primary" />
+            <ClipboardCheck className="w-5 h-5 text-primary" />
           </div>
           <div>
             <p className="text-sm font-bold text-foreground">CPD Assessment Strategy</p>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              For CPD qualifications, unit-level quizzes are disabled. Learners must instead pass a single comprehensive 
+              For CPD qualifications, unit-level quizzes are disabled. Learners must instead pass a single comprehensive
               <strong> Final Assessment</strong>. Configure question pools and pass criteria per qualification below.
             </p>
           </div>
@@ -51,10 +48,10 @@ const FinalAssessments = () => {
 
       <div className="relative">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input 
-          placeholder="Search CPD qualifications..." 
-          value={search} 
-          onChange={(e) => setSearch(e.target.value)} 
+        <Input
+          placeholder="Search CPD qualifications..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           className="pl-9 h-11 shadow-sm"
         />
       </div>
@@ -74,20 +71,20 @@ const FinalAssessments = () => {
               </div>
             ) : error ? (
               <div className="py-20 text-center text-destructive border-2 border-dashed rounded-xl p-8">
-                 <AlertCircle className="w-10 h-10 mx-auto mb-4 opacity-50" />
-                 <p className="font-bold">Error loading configurations</p>
-                 <p className="text-sm opacity-80">Please ensure the backend server is running and try again.</p>
+                <AlertCircle className="w-10 h-10 mx-auto mb-4 opacity-50" />
+                <p className="font-bold">Error loading configurations</p>
+                <p className="text-sm opacity-80">Please ensure the backend server is running and try again.</p>
               </div>
             ) : cpdQualifications.length === 0 ? (
               <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-xl p-8">
-                 <Shield className="w-10 h-10 mx-auto mb-4 opacity-20" />
-                 <p className="font-bold text-foreground">No CPD qualifications found</p>
-                 <p className="text-sm mt-1">Search matched no results or no CPD qualifications exist yet.</p>
+                <Shield className="w-10 h-10 mx-auto mb-4 opacity-20" />
+                <p className="font-bold text-foreground">No CPD qualifications found</p>
+                <p className="text-sm mt-1">Search matched no results or no CPD qualifications exist yet.</p>
               </div>
             ) : (
               cpdQualifications.map((fa: any) => (
-                <Link 
-                  key={fa.id} 
+                <Link
+                  key={fa.id}
                   to={`/admin/qualifications/${fa.id}/final-assessment`}
                   className="group block"
                 >
@@ -112,12 +109,12 @@ const FinalAssessments = () => {
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
                           <div className="hidden md:flex flex-col items-end gap-1">
-                             <Badge variant={fa.status === "active" ? "default" : "secondary"} className="text-[10px] font-bold h-5">
-                               {fa.status === "active" ? "Live" : "Draft"}
-                             </Badge>
+                            <Badge variant={fa.status === "active" ? "default" : "secondary"} className="text-[10px] font-bold h-5">
+                              {fa.status === "active" ? "Live" : "Draft"}
+                            </Badge>
                           </div>
                           <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all shadow-sm">
-                             <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
+                            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
                           </div>
                         </div>
                       </div>
