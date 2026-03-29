@@ -87,13 +87,11 @@ const QualificationBankSection = ({ qualification, search }: { qualification: an
 
 const AdminQuestionBank = () => {
   const [search, setSearch] = useState("");
-  const { data: qualificationsResponse, isLoading, error } = useGetQualificationsAdminQuery({});
+  const { data: qualificationsResponse, isLoading, error } = useGetQualificationsAdminQuery({
+    is_cpd: false,
+  });
 
-  const qualifications = Array.isArray(qualificationsResponse) 
-    ? qualificationsResponse 
-    : (qualificationsResponse as any)?.data?.results || [];
-
-  const regulatedQualifications = qualifications.filter((q: any) => !q.is_cpd);
+  const regulatedQualifications = qualificationsResponse?.data?.results;
 
   return (
     <div>
@@ -103,7 +101,7 @@ const AdminQuestionBank = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Question Bank Management</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Full control over question pools, quiz configurations, and written assignments across all qualifications
+          Full control over question pools, quiz configurations, and written assignments across all qualifications gffghf
         </p>
       </div>
 
@@ -141,7 +139,7 @@ const AdminQuestionBank = () => {
           <div className="py-20 text-center text-destructive">
             <p>Error loading qualifications. Please try again later.</p>
           </div>
-        ) : qualifications.length === 0 ? (
+        ) : regulatedQualifications.length === 0 ? (
           <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-xl">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                <AlertCircle className="w-6 h-6 text-muted-foreground" />
