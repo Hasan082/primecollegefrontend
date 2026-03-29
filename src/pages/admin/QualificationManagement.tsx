@@ -84,6 +84,7 @@ const QualificationManagement = () => {
         active_enrolments_count: q.active_enrolments_count || 0,
         status: q.status,
         created_at: q.created_at,
+        is_cpd: q.is_cpd,
       })) || [],
     [qualificationsData?.data?.results],
   );
@@ -212,7 +213,11 @@ const QualificationManagement = () => {
                       <div>
                         <p className="font-medium text-sm">{q.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {q.awarding_body} • {q.total_units} units
+                          {q.awarding_body} • {q.total_units} units • {q.is_cpd && (
+                            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold uppercase tracking-wider">
+                              CPD Enabled
+                            </Badge>
+                          )}
                         </p>
                       </div>
                     </TableCell>
