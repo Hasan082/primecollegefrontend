@@ -40,6 +40,7 @@ export interface QuizConfig {
   cooldown_hours: number;
   created_at: string;
   updated_at: string;
+  is_active: boolean;
 }
 
 export interface Question {

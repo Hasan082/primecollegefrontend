@@ -166,6 +166,7 @@ const AdminCPDFinalAssessmentEditor = () => {
       questions_per_assessment: localSettings.questions_per_assessment,
       shuffle_questions: localSettings.shuffle_questions,
       shuffle_options: localSettings.shuffle_options,
+      strict_mode: localSettings.strict_mode,
       show_results_immediately: localSettings.show_results_immediately,
       show_correct_answers_after: localSettings.show_correct_answers_after,
       show_explanations_after: localSettings.show_explanations_after,
@@ -183,6 +184,7 @@ const AdminCPDFinalAssessmentEditor = () => {
       questions_per_assessment: localSettings.questions_per_assessment,
       shuffle_questions: localSettings.shuffle_questions,
       shuffle_options: localSettings.shuffle_options,
+      strict_mode: localSettings.strict_mode,
       show_results_immediately: localSettings.show_results_immediately,
       show_correct_answers_after: localSettings.show_correct_answers_after,
       show_explanations_after: localSettings.show_explanations_after,
@@ -510,7 +512,13 @@ const AdminCPDFinalAssessmentEditor = () => {
                         </div>
                         <Switch checked={localSettings.shuffle_options} onCheckedChange={(value) => setLocalSettings({ ...localSettings, shuffle_options: value })} />
                       </div>
-
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2"><Shield className="w-4 h-4 text-muted-foreground" /> Strict Mode (Anti-Cheat)</Label>
+                          <p className="text-xs text-muted-foreground mt-0.5">Fullscreen, tab-switch detection, copy/paste blocking</p>
+                        </div>
+                        <Switch checked={localSettings.strict_mode} onCheckedChange={(v) => setLocalSettings({ ...localSettings, strict_mode: v })} />
+                      </div>
                       <div className="flex items-center justify-between">
                         <div>
                           <Label className="font-bold flex items-center gap-2">

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, Plus, Trash2, CheckCircle2, X, Save, Settings2,
-  BookOpen, PenLine, Shuffle, Clock, Shield, Hash, RotateCcw, Loader2, AlertCircle
+  BookOpen, PenLine, Shuffle, Clock, Shield, Hash, RotateCcw, Loader2, AlertCircle,
+  Activity
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   useGetQuestionBankQualificationGuardQuery,
@@ -30,8 +32,8 @@ const AdminQuestionBankEditor = () => {
 
   const { data: qualGuard, isLoading: isLoadingGuard } = useGetQuestionBankQualificationGuardQuery(qualificationId!);
   const { data: units, isLoading: isLoadingUnits } = useGetQuestionBankUnitsQuery(qualificationId!, { skip: !qualificationId });
-  
-  const unitId = units?.find(u => 
+
+  const unitId = units?.find(u =>
     u.unit_code.trim().toLowerCase() === unitCode?.trim().toLowerCase()
   )?.id;
 
@@ -67,7 +69,7 @@ const AdminQuestionBankEditor = () => {
     if (!newQ.trim()) { toast({ title: "Enter a question", variant: "destructive" }); return; }
     if (newQOptions.some((o) => !o.trim())) { toast({ title: "Complete all options", variant: "destructive" }); return; }
     if (newQCorrect.length === 0) { toast({ title: "Mark at least one correct answer", variant: "destructive" }); return; }
-    
+
     try {
       await createQuestion({
         unitId: unitId!,
@@ -116,7 +118,7 @@ const AdminQuestionBankEditor = () => {
     }
   };
 
-  const currentUnit = units?.find(u => 
+  const currentUnit = units?.find(u =>
     u.unit_code.trim().toLowerCase() === unitCode?.trim().toLowerCase()
   );
 
@@ -157,7 +159,7 @@ const AdminQuestionBankEditor = () => {
         <div className="space-y-2">
           <h2 className="text-xl font-bold text-foreground">CPD Qualification</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Unit-level assessments (quizzes and written assignments) are disabled for CPD qualifications. 
+            Unit-level assessments (quizzes and written assignments) are disabled for CPD qualifications.
             Only a single final assessment is required at the qualification level.
           </p>
         </div>
@@ -219,190 +221,235 @@ const AdminQuestionBankEditor = () => {
                 </Alert>
               )}
 
-          {questions.map((q, idx) => (
-            <Card key={q.id} className="p-4">
-              <div className="flex items-start gap-3">
-                <span className="text-xs font-bold text-muted-foreground bg-muted w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">{idx + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground">{q.question_text}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="secondary" className="text-xs capitalize">{q.question_type === "single" ? "Single answer" : "Multiple answers"}</Badge>
-                    <span className="text-xs text-muted-foreground">{q.options.length} options</span>
-                    {!q.is_active && <Badge variant="destructive" className="text-[10px] h-4">Inactive</Badge>}
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    {q.options.map((opt, oi) => (
-                      <div key={oi} className={`text-xs px-2 py-1 rounded ${q.correct_answers.includes(oi) ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "text-muted-foreground"}`}>
-                        {q.correct_answers.includes(oi) ? "✓ " : "  "}{opt}
+              {questions.map((q, idx) => (
+                <Card key={q.id} className="p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xs font-bold text-muted-foreground bg-muted w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">{idx + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground">{q.question_text}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-xs capitalize">{q.question_type === "single" ? "Single answer" : "Multiple answers"}</Badge>
+                        <span className="text-xs text-muted-foreground">{q.options.length} options</span>
+                        {!q.is_active && <Badge variant="destructive" className="text-[10px] h-4">Inactive</Badge>}
                       </div>
-                    ))}
-                  </div>
-                </div>
-                <Button size="icon" variant="ghost" className="text-destructive h-8 w-8 flex-shrink-0" onClick={() => handleDeleteQuestion(q.id)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </Card>
-          ))}
-
-          {showAddQ ? (
-            <Card className="p-6 border-2 border-primary/30">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-foreground">Add Question to Pool</h3>
-                <Button variant="ghost" size="icon" onClick={resetNewQ}><X className="w-5 h-5" /></Button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <Label>Question *</Label>
-                  <Input value={newQ} onChange={(e) => setNewQ(e.target.value)} placeholder="Enter your question..." className="mt-1" />
-                </div>
-                <div className="w-48">
-                  <Label>Answer Type</Label>
-                  <select value={newQType} onChange={(e) => { setNewQType(e.target.value as "single" | "multiple"); setNewQCorrect([]); }} className="w-full mt-1 border border-input rounded-md px-3 py-2 text-sm bg-background">
-                    <option value="single">Single Answer</option>
-                    <option value="multiple">Multiple Answers</option>
-                  </select>
-                </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-2 block">Options — click the circle to mark correct answer(s)</Label>
-                  <div className="space-y-2">
-                    {newQOptions.map((opt, oi) => (
-                      <div key={oi} className="flex items-center gap-2">
-                        <button onClick={() => toggleCorrect(oi)} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${newQCorrect.includes(oi) ? "border-green-600 bg-green-600 text-white" : "border-muted-foreground/40 hover:border-primary"}`}>
-                          {newQCorrect.includes(oi) && <CheckCircle2 className="w-4 h-4" />}
-                        </button>
-                        <Input value={opt} onChange={(e) => setNewQOptions((prev) => prev.map((o, j) => (j === oi ? e.target.value : o)))} placeholder={`Option ${oi + 1}`} className="flex-1" />
-                        {newQOptions.length > 2 && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => { setNewQOptions((prev) => prev.filter((_, j) => j !== oi)); setNewQCorrect((prev) => prev.filter((a) => a !== oi).map((a) => (a > oi ? a - 1 : a))); }}>
-                            <X className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
+                      <div className="mt-2 space-y-1">
+                        {q.options.map((opt, oi) => (
+                          <div key={oi} className={`text-xs px-2 py-1 rounded ${q.correct_answers.includes(oi) ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "text-muted-foreground"}`}>
+                            {q.correct_answers.includes(oi) ? "✓ " : "  "}{opt}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  {newQOptions.length < 6 && (
-                    <Button variant="ghost" size="sm" className="mt-2 text-primary" onClick={() => setNewQOptions((prev) => [...prev, ""])}>
-                      <Plus className="w-3.5 h-3.5 mr-1" /> Add Option
+                    </div>
+                    <Button size="icon" variant="ghost" className="text-destructive h-8 w-8 flex-shrink-0" onClick={() => handleDeleteQuestion(q.id)}>
+                      <Trash2 className="w-4 h-4" />
                     </Button>
-                  )}
-                </div>
-                <div className="flex gap-2 justify-end pt-2">
-                  <Button variant="outline" onClick={resetNewQ}>Cancel</Button>
-                  <Button onClick={handleAddQuestion}><Plus className="w-4 h-4 mr-1" /> Add to Pool</Button>
-                </div>
-              </div>
-            </Card>
-          ) : (
-            <Button variant="outline" onClick={() => setShowAddQ(true)} className="w-full border-dashed border-2 h-12">
-              <Plus className="w-4 h-4 mr-2" /> Add Question to Pool
-            </Button>
-          )}
+                  </div>
+                </Card>
+              ))}
 
-          <div className="flex justify-end pt-2">
-            <Button onClick={() => toast({ title: "Question bank published!" })} className="gap-2" disabled={questions.length < (config?.questions_per_quiz || 1)}>
-              <CheckCircle2 className="w-4 h-4" /> Publish Question Bank
-            </Button>
-          </div>
-        </TabsContent>
+              {showAddQ ? (
+                <Card className="p-6 border-2 border-primary/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-foreground">Add Question to Pool</h3>
+                    <Button variant="ghost" size="icon" onClick={resetNewQ}><X className="w-5 h-5" /></Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Question *</Label>
+                      <Input value={newQ} onChange={(e) => setNewQ(e.target.value)} placeholder="Enter your question..." className="mt-1" />
+                    </div>
+                    <div className="w-48">
+                      <Label>Answer Type</Label>
+                      <select value={newQType} onChange={(e) => { setNewQType(e.target.value as "single" | "multiple"); setNewQCorrect([]); }} className="w-full mt-1 border border-input rounded-md px-3 py-2 text-sm bg-background">
+                        <option value="single">Single Answer</option>
+                        <option value="multiple">Multiple Answers</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-2 block">Options — click the circle to mark correct answer(s)</Label>
+                      <div className="space-y-2">
+                        {newQOptions.map((opt, oi) => (
+                          <div key={oi} className="flex items-center gap-2">
+                            <button onClick={() => toggleCorrect(oi)} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${newQCorrect.includes(oi) ? "border-green-600 bg-green-600 text-white" : "border-muted-foreground/40 hover:border-primary"}`}>
+                              {newQCorrect.includes(oi) && <CheckCircle2 className="w-4 h-4" />}
+                            </button>
+                            <Input value={opt} onChange={(e) => setNewQOptions((prev) => prev.map((o, j) => (j === oi ? e.target.value : o)))} placeholder={`Option ${oi + 1}`} className="flex-1" />
+                            {newQOptions.length > 2 && (
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => { setNewQOptions((prev) => prev.filter((_, j) => j !== oi)); setNewQCorrect((prev) => prev.filter((a) => a !== oi).map((a) => (a > oi ? a - 1 : a))); }}>
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {newQOptions.length < 6 && (
+                        <Button variant="ghost" size="sm" className="mt-2 text-primary" onClick={() => setNewQOptions((prev) => [...prev, ""])}>
+                          <Plus className="w-3.5 h-3.5 mr-1" /> Add Option
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex gap-2 justify-end pt-2">
+                      <Button variant="outline" onClick={resetNewQ}>Cancel</Button>
+                      <Button onClick={handleAddQuestion}><Plus className="w-4 h-4 mr-1" /> Add to Pool</Button>
+                    </div>
+                  </div>
+                </Card>
+              ) : (
+                <Button variant="outline" onClick={() => setShowAddQ(true)} className="w-full border-dashed border-2 h-12">
+                  <Plus className="w-4 h-4 mr-2" /> Add Question to Pool
+                </Button>
+              )}
 
-        <TabsContent value="config">
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Settings2 className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-bold text-foreground">Quiz Configuration</h2>
-            </div>
-            
-            {isLoadingConfig ? (
-              <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
-            ) : localConfig ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="flex items-center gap-2"><Hash className="w-4 h-4 text-muted-foreground" /> Questions per Quiz</Label>
-                    <Input type="number" min={1} max={questions.length || 100} value={localConfig.questions_per_quiz} onChange={(e) => setLocalConfig({ ...localConfig, questions_per_quiz: Number(e.target.value) })} className="mt-1" />
-                    <p className="text-xs text-muted-foreground mt-1">Each learner gets this many random questions from the pool of {questions.length}</p>
-                  </div>
-                  <div>
-                    <Label className="flex items-center gap-2"><Clock className="w-4 h-4 text-muted-foreground" /> Time Limit (minutes)</Label>
-                    <Input type="number" min={0} value={localConfig.time_limit_minutes} onChange={(e) => setLocalConfig({ ...localConfig, time_limit_minutes: Number(e.target.value) })} className="mt-1" />
-                    <p className="text-xs text-muted-foreground mt-1">Set to 0 for no time limit</p>
-                  </div>
-                  <div>
-                    <Label className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-muted-foreground" /> Pass Score (%)</Label>
-                    <Input type="number" min={1} max={100} value={localConfig.pass_score} onChange={(e) => setLocalConfig({ ...localConfig, pass_score: Number(e.target.value) })} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label className="flex items-center gap-2"><RotateCcw className="w-4 h-4 text-muted-foreground" /> Maximum Attempts</Label>
-                    <Input type="number" min={0} value={localConfig.max_attempts} onChange={(e) => setLocalConfig({ ...localConfig, max_attempts: Number(e.target.value) })} className="mt-1" />
-                    <p className="text-xs text-muted-foreground mt-1">Set to 0 for unlimited attempts</p>
-                  </div>
-                </div>
-                <div className="border-t border-border mt-6 pt-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="flex items-center gap-2"><Shuffle className="w-4 h-4 text-muted-foreground" /> Shuffle Questions</Label>
-                      <p className="text-xs text-muted-foreground mt-0.5">Randomise the order of questions for each attempt</p>
-                    </div>
-                    <Switch checked={localConfig.shuffle_questions} onCheckedChange={(v) => setLocalConfig({ ...localConfig, shuffle_questions: v })} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="flex items-center gap-2"><Shuffle className="w-4 h-4 text-muted-foreground" /> Shuffle Options</Label>
-                      <p className="text-xs text-muted-foreground mt-0.5">Randomise the order of answer options</p>
-                    </div>
-                    <Switch checked={localConfig.shuffle_options} onCheckedChange={(v) => setLocalConfig({ ...localConfig, shuffle_options: v })} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="flex items-center gap-2"><Shield className="w-4 h-4 text-muted-foreground" /> Strict Mode (Anti-Cheat)</Label>
-                      <p className="text-xs text-muted-foreground mt-0.5">Fullscreen, tab-switch detection, copy/paste blocking</p>
-                    </div>
-                    <Switch checked={localConfig.strict_mode} onCheckedChange={(v) => setLocalConfig({ ...localConfig, strict_mode: v })} />
-                  </div>
-                </div>
-                <div className="flex justify-end mt-6">
-                  <Button onClick={handleSaveConfig}><Save className="w-4 h-4 mr-1" /> Save Settings</Button>
-                </div>
-              </>
-            ) : (
-              <div className="py-20 text-center">
-                <p className="text-muted-foreground">Unable to load quiz configuration. Please try again.</p>
-              </div>
-            )}
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="written" className="space-y-4">
-          {writtenAssignment ? (
-            <Card className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <PenLine className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="font-semibold text-foreground">{writtenAssignment.title}</p>
-                    <Badge className={writtenAssignment.is_active ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}>
-                      {writtenAssignment.is_active ? "Published" : "Draft"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{writtenAssignment.instructions}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Word limit: {writtenAssignment.min_words} — {writtenAssignment.max_words}</p>
-                </div>
-                <Button size="icon" variant="ghost" className="text-primary h-8 w-8 hover:bg-primary/10">
-                  <Settings2 className="w-4 h-4" />
+              <div className="flex justify-end pt-2">
+                <Button onClick={() => toast({ title: "Question bank published!" })} className="gap-2" disabled={questions.length < (config?.questions_per_quiz || 1)}>
+                  <CheckCircle2 className="w-4 h-4" /> Publish Question Bank
                 </Button>
               </div>
-            </Card>
-          ) : (
-            <div className="py-20 text-center border-2 border-dashed rounded-xl border-muted/20">
-              <p className="text-muted-foreground text-sm">No written assignment configured for this unit.</p>
-              <Button variant="outline" className="mt-4 gap-2">
-                <Plus className="w-4 h-4" /> Configure Written Assignment
-              </Button>
-            </div>
-          )}
-        </TabsContent>
+            </TabsContent>
+
+            <TabsContent value="config">
+              <Card className="p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Settings2 className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-bold text-foreground">Quiz Configuration</h2>
+                </div>
+
+                {isLoadingConfig ? (
+                  <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+                ) : localConfig ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label className="font-bold flex items-center gap-2"><Hash className="w-4 h-4 text-muted-foreground" /> Questions per Quiz</Label>
+                        <Input type="number" min={1} max={questions.length || 100} value={localConfig.questions_per_quiz} onChange={(e) => setLocalConfig({ ...localConfig, questions_per_quiz: Number(e.target.value) })} className="mt-1" />
+                        <p className="text-xs text-muted-foreground mt-1">Each learner gets this many random questions from the pool of {questions.length}</p>
+                      </div>
+                      <div>
+                        <Label className="font-bold flex items-center gap-2"><Clock className="w-4 h-4 text-muted-foreground" /> Time Limit (minutes)</Label>
+                        <Input type="number" min={0} value={localConfig.time_limit_minutes} onChange={(e) => setLocalConfig({ ...localConfig, time_limit_minutes: Number(e.target.value) })} className="mt-1" />
+                        <p className="text-xs text-muted-foreground mt-1">Set to 0 for no time limit</p>
+                      </div>
+                      <div>
+                        <Label className="font-bold flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-muted-foreground" /> Pass Score (%)</Label>
+                        <Input type="number" min={1} max={100} value={localConfig.pass_score} onChange={(e) => setLocalConfig({ ...localConfig, pass_score: Number(e.target.value) })} className="mt-1" />
+                      </div>
+                      <div>
+                        <Label className="font-bold flex items-center gap-2"><RotateCcw className="w-4 h-4 text-muted-foreground" /> Maximum Attempts</Label>
+                        <Input type="number" min={0} value={localConfig.max_attempts} onChange={(e) => setLocalConfig({ ...localConfig, max_attempts: Number(e.target.value) })} className="mt-1" />
+                        <p className="text-xs text-muted-foreground mt-1">Set to 0 for unlimited attempts</p>
+                      </div>
+                    </div>
+                    <div className="border-t border-border mt-6 pt-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2"><Shuffle className="w-4 h-4 text-muted-foreground" /> Shuffle Questions</Label>
+                          <p className="text-xs text-muted-foreground mt-0.5">Randomise the order of questions for each attempt</p>
+                        </div>
+                        <Switch checked={localConfig.shuffle_questions} onCheckedChange={(v) => setLocalConfig({ ...localConfig, shuffle_questions: v })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2"><Shuffle className="w-4 h-4 text-muted-foreground" /> Shuffle Options</Label>
+                          <p className="text-xs text-muted-foreground mt-0.5">Randomise the order of answer options</p>
+                        </div>
+                        <Switch checked={localConfig.shuffle_options} onCheckedChange={(v) => setLocalConfig({ ...localConfig, shuffle_options: v })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2"><Shield className="w-4 h-4 text-muted-foreground" /> Strict Mode (Anti-Cheat)</Label>
+                          <p className="text-xs text-muted-foreground mt-0.5">Fullscreen, tab-switch detection, copy/paste blocking</p>
+                        </div>
+                        <Switch checked={localConfig.strict_mode} onCheckedChange={(v) => setLocalConfig({ ...localConfig, strict_mode: v })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" /> Assessment Visibility
+                          </Label>
+                          <p className="text-[11px] text-muted-foreground">Keep this enabled to make the final assessment available to learners.</p>
+                        </div>
+                        <Switch checked={localConfig.is_active} onCheckedChange={(value) => setLocalConfig({ ...localConfig, is_active: value })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" /> Show results immediately
+                          </Label>
+                          <p className="text-[11px] text-muted-foreground">Show results immediately after the assessment.</p>
+                        </div>
+                        <Switch checked={localConfig.show_results} onCheckedChange={(value) => setLocalConfig({ ...localConfig, show_results: value })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" /> Show correct answers after
+                          </Label>
+                          <p className="text-[11px] text-muted-foreground">Show correct answers after the assessment.</p>
+                        </div>
+                        <Switch checked={localConfig.show_correct_answers} onCheckedChange={(value) => setLocalConfig({ ...localConfig, show_correct_answers: value })} />
+                      </div>
+                      <div className="flex flex-col items-start justify-between gap-2">
+                        <div>
+                          <Label className="font-bold flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-primary" />
+                            Status
+                          </Label>
+                        </div>
+                        <Select value={localConfig.status} onValueChange={(value) => setLocalConfig({ ...localConfig, status: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="published">Published</SelectItem>
+                            <SelectItem value="archived">Archived</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end mt-6">
+                      <Button onClick={handleSaveConfig}><Save className="w-4 h-4 mr-1" /> Save Settings</Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-20 text-center">
+                    <p className="text-muted-foreground">Unable to load quiz configuration. Please try again.</p>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="written" className="space-y-4">
+              {writtenAssignment ? (
+                <Card className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <PenLine className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-semibold text-foreground">{writtenAssignment.title}</p>
+                        <Badge className={writtenAssignment.is_active ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}>
+                          {writtenAssignment.is_active ? "Published" : "Draft"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{writtenAssignment.instructions}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Word limit: {writtenAssignment.min_words} — {writtenAssignment.max_words}</p>
+                    </div>
+                    <Button size="icon" variant="ghost" className="text-primary h-8 w-8 hover:bg-primary/10">
+                      <Settings2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <div className="py-20 text-center border-2 border-dashed rounded-xl border-muted/20">
+                  <p className="text-muted-foreground text-sm">No written assignment configured for this unit.</p>
+                  <Button variant="outline" className="mt-4 gap-2">
+                    <Plus className="w-4 h-4" /> Configure Written Assignment
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -428,21 +475,23 @@ const AdminQuestionBankEditor = () => {
             <h3 className="font-bold mb-4">Quick Stats</h3>
             <div className="space-y-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Unit Questions</span>
+                <span className="text-muted-foreground">Total Questions</span>
                 <span className="font-mono font-bold">{questions.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Quiz Requirement</span>
+                <span className="text-muted-foreground">Questions per Assessment</span>
                 <span className="font-mono font-bold text-primary">{config?.questions_per_quiz ?? 0}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Passing Score</span>
-                <span className="font-mono font-bold text-green-600">{config?.pass_score ?? 0}%</span>
-              </div>
-              <div className="border-t pt-4 flex justify-between">
+              <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Status</span>
-                <Badge variant={questions.length >= (config?.questions_per_quiz ?? 1) ? "default" : "destructive"} className="text-[10px] px-1.5 py-0 h-5">
-                  {questions.length >= (config?.questions_per_quiz ?? 1) ? "READY" : "SHORTFALL"}
+                <Badge className={questions.length >= (config?.questions_per_quiz ?? 1) ? "bg-green-600" : "bg-amber-600"}>
+                  {questions.length >= (config?.questions_per_quiz ?? 1) ? "Ready" : "Underpopulated"}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Visibility</span>
+                <Badge variant={config?.is_active ? "default" : "secondary"}>
+                  {config?.is_active ? "Live" : "Inactive"}
                 </Badge>
               </div>
             </div>
