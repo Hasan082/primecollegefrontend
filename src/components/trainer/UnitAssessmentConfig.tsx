@@ -241,6 +241,7 @@ const UnitAssessmentConfig = ({ unitId, qualificationId, unitCode, unitName, qui
           <PortfolioInstructionsEditor 
             unitCode={unitCode} 
             unitName={unitName} 
+            unitId={unitId}
             onClose={() => setIsPortfolioModalOpen(false)} 
           />
         </DialogContent>

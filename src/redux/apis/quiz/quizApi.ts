@@ -258,6 +258,14 @@ const quizApi = api.injectEndpoints({
         { type: "QualificationUnits", id: `LIST` },
       ],
     }),
+    updatePortfolioConfig: builder.mutation<any, { unitId: string; payload: any }>({
+      query: ({ unitId, payload }) => ({
+        url: `/api/quizzes/units/${unitId}/portfolio-config/`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: (_result, _error, { unitId }) => [{ type: "QualificationUnits", id: unitId }],
+    }),
 
     getQuestions: builder.query<Question[], string>({
       query: (unitId) => ({
@@ -519,6 +527,7 @@ export const {
   useGetQuestionBankUnitsQuery,
   useGetQuizConfigQuery,
   useUpdateQuizConfigMutation,
+  useUpdatePortfolioConfigMutation,
   useGetQuestionsQuery,
   useCreateQuestionMutation,
   useDeleteQuestionMutation,
