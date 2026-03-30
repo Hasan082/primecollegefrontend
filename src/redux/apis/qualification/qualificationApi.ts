@@ -52,4 +52,12 @@ const qualificationApi = api.injectEndpoints({
   }),
 });
 
-export const { useGetQualificationsAdminQuery, useGetQualificationOptionsQuery, useGetUnitOptionsByQualificationQuery, useGetChecklistTemplatesQuery, useCreateChecklistTemplateMutation, useUpdateChecklistTemplateMutation } = qualificationApi;
+export const {
+  useGetQualificationsAdminQuery,
+  useGetQualificationOptionsQuery,
+  useGetUnitOptionsByQualificationQuery,
+  useLazyGetUnitOptionsByQualificationQuery,
+  useGetChecklistTemplatesQuery,
+  useCreateChecklistTemplateMutation,
+  useUpdateChecklistTemplateMutation,
+} = qualificationApi;
