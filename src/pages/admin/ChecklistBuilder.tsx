@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { adminQualifications } from "@/data/adminMockData";
+import { useGetQualificationOptionsQuery } from "@/redux/apis/qualification/qualificationApi";
 import {
   type ChecklistTemplate,
   type ChecklistItem,
@@ -22,6 +23,7 @@ import {
 
 const ChecklistBuilder = () => {
   const { toast } = useToast();
+  const { data: qualificationOptionsResponse } = useGetQualificationOptionsQuery(undefined);
   const [templates, setTemplates] = useState<ChecklistTemplate[]>(loadTemplates);
   const [qualFilter, setQualFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -47,12 +49,17 @@ const ChecklistBuilder = () => {
     saveTemplates(updated);
   };
 
+  const qualificationOptions =
+    qualificationOptionsResponse?.data?.length
+      ? qualificationOptionsResponse.data
+      : adminQualifications;
+
   const filtered = templates.filter(
     (t) => qualFilter === "all" || t.qualificationId === qualFilter
   );
 
   const getQualTitle = (id: string) =>
-    adminQualifications.find((q) => q.id === id)?.title || id;
+    qualificationOptions.find((q) => q.id === id)?.title || id;
 
   const getQualUnits = (qualId: string) =>
     adminQualifications.find((q) => q.id === qualId)?.units || [];
@@ -162,7 +169,7 @@ const ChecklistBuilder = () => {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Qualifications</SelectItem>
-          {adminQualifications.map((q) => (
+          {qualificationOptions.map((q) => (
             <SelectItem key={q.id} value={q.id}>{q.title}</SelectItem>
           ))}
         </SelectContent>
@@ -297,7 +304,7 @@ const ChecklistBuilder = () => {
               <Select value={newQualId} onValueChange={(v) => { setNewQualId(v); setNewUnitCode("__qual__"); }}>
                 <SelectTrigger><SelectValue placeholder="Select qualification" /></SelectTrigger>
                 <SelectContent>
-                  {adminQualifications.map((q) => (
+                  {qualificationOptions.map((q) => (
                     <SelectItem key={q.id} value={q.id}>{q.title}</SelectItem>
                   ))}
                 </SelectContent>
