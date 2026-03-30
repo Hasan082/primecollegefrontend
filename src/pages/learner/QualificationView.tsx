@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck, ClipboardList } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import CPDFinalAssessmentModal from "@/components/learner/CPDFinalAssessmentModal";
 import LearnerDeclarationModal from "@/components/learner/LearnerDeclarationModal";
+import CourseEvaluationModal from "@/components/learner/CourseEvaluationModal";
 import { useGetEnrolmentContentQuery } from "@/redux/apis/enrolmentApi";
 import type { UnitData } from "@/data/learnerMockData";
 
@@ -21,6 +22,7 @@ const QualificationView = () => {
   const { id } = useParams<{ id: string }>();
   const [showAssessment, setShowAssessment] = useState(false);
   const [showDeclaration, setShowDeclaration] = useState(false);
+  const [showEvaluation, setShowEvaluation] = useState(false);
   
   const { data: enrolmentResponse, isLoading, error } = useGetEnrolmentContentQuery(id || "");
   const enrolment = enrolmentResponse?.data;
@@ -80,56 +82,81 @@ const QualificationView = () => {
         <Progress value={pct} className="h-3" />
       </div>
 
-      {/* Units */}
       <h2 className="text-xl font-bold text-primary mb-1">Qualification Units</h2>
       <p className="text-sm text-muted-foreground mb-6">Select a unit to access learning resources {!qualification.is_cpd && "and submit assessment evidence"}</p>
 
-      {/* CPD Final Assessment Section */}
-      {qualification.is_cpd && (
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <ShieldCheck className="w-6 h-6 text-primary" />
+      {/* Requirements Section */}
+      {allUnitsDone && (
+        <div className="space-y-4 mb-8">
+          {/* CPD Final Assessment (Only for CPD) */}
+          {qualification.is_cpd && (
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-primary mb-1">Final Assessment</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This CPD qualification requires a single final assessment.
+                  </p>
+                  <Button 
+                    size="sm" 
+                    className="gap-2" 
+                    onClick={() => setShowAssessment(true)}
+                  >
+                    <ShieldCheck className="w-4 h-4" /> 
+                    Start Final Assessment
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-base font-bold text-primary mb-1">Final Assessment</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                This CPD qualification requires a single final assessment after completing all unit learning resources.
-              </p>
-              <Button 
-                size="sm" 
-                className="gap-2" 
-                disabled={!allUnitsDone}
-                onClick={() => setShowAssessment(true)}
-              >
-                <ShieldCheck className="w-4 h-4" /> 
-                {allUnitsDone ? "Start Final Assessment" : "Complete All Units to Unlock"}
-              </Button>
+          )}
+
+          {/* Learner Declaration (For all when units are done, or after CPD assessment) */}
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FileCheck className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-primary mb-1">Learner Declaration</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Please complete the learner declaration to finalize your qualification.
+                </p>
+                <Button 
+                  size="sm" 
+                  className="gap-2" 
+                  onClick={() => setShowDeclaration(true)}
+                >
+                  <FileCheck className="w-4 h-4" /> 
+                  Complete Declaration
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Non-CPD Declaration Section */}
-      {!qualification.is_cpd && allUnitsDone && (
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <FileCheck className="w-6 h-6 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base font-bold text-primary mb-1">Learner Declaration</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Great job! You've completed all units. Please complete the learner declaration to finalize your qualification.
-              </p>
-              <Button 
-                size="sm" 
-                className="gap-2" 
-                onClick={() => setShowDeclaration(true)}
-              >
-                <FileCheck className="w-4 h-4" /> 
-                Complete Declaration
-              </Button>
+          {/* Course Evaluation */}
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <ClipboardList className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-primary mb-1">Course Evaluation</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  We value your feedback! Please complete the course evaluation.
+                </p>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="gap-2" 
+                  onClick={() => setShowEvaluation(true)}
+                >
+                  <ClipboardList className="w-4 h-4" /> 
+                  Complete Evaluation
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -141,7 +168,6 @@ const QualificationView = () => {
           qualificationTitle={qualification.title}
           onClose={() => setShowAssessment(false)}
           onSubmitted={(result) => {
-            console.log("Assessment submitted", result);
             if (result.passed) {
               setShowAssessment(false);
               setShowDeclaration(true);
@@ -157,7 +183,18 @@ const QualificationView = () => {
           onClose={() => setShowDeclaration(false)}
           onSuccess={() => {
             setShowDeclaration(false);
-            // Optionally refetch or redirect
+            setShowEvaluation(true);
+          }}
+        />
+      )}
+
+      {showEvaluation && (
+        <CourseEvaluationModal
+          enrolmentId={id || ""}
+          isOpen={showEvaluation}
+          onClose={() => setShowEvaluation(false)}
+          onSuccess={() => {
+            setShowEvaluation(false);
           }}
         />
       )}

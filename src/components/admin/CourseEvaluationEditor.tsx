@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Eye, Save, ClipboardList } from "lucide-react";
+import { Plus, Trash2, Eye, Save, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,52 +23,13 @@ import {
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-
-interface EvaluationQuestion {
-  key: string;
-  label: string;
-  type: "rating" | "textarea" | "single_choice";
-  required: boolean;
-  options?: string[];
-  placeholder?: string;
-}
-
-interface EvaluationTemplate {
-  id: string;
-  qualification: string;
-  title: string;
-  description: string;
-  questions: EvaluationQuestion[];
-  version: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-const STORAGE_KEY = "admin_evaluation_templates";
-
-const loadTemplate = (qualificationId: string): EvaluationTemplate | null => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const all = JSON.parse(saved);
-      return all[qualificationId] || null;
-    }
-  } catch {}
-  return null;
-};
-
-const saveTemplate = (
-  qualificationId: string,
-  template: EvaluationTemplate,
-) => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    const all = saved ? JSON.parse(saved) : {};
-    all[qualificationId] = template;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  } catch {}
-};
+import {
+  useGetAdminEvaluationTemplateQuery,
+  useCreateAdminEvaluationTemplateMutation,
+  useUpdateAdminEvaluationTemplateMutation,
+  EvaluationTemplate,
+  EvaluationQuestion,
+} from "@/redux/apis/enrolmentDeclarationApi";
 
 interface CourseEvaluationEditorProps {
   qualificationId: string;
@@ -83,25 +44,30 @@ const QUESTION_TYPES = [
 const CourseEvaluationEditor = ({
   qualificationId,
 }: CourseEvaluationEditorProps) => {
+  const {
+    data: apiResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useGetAdminEvaluationTemplateQuery(qualificationId);
+  const [createTemplate] = useCreateAdminEvaluationTemplateMutation();
+  const [updateTemplate] = useUpdateAdminEvaluationTemplateMutation();
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const [template, setTemplate] = useState<EvaluationTemplate>(() => {
-    const saved = loadTemplate(qualificationId);
-    return (
-      saved || {
-        id: crypto.randomUUID(),
-        qualification: qualificationId,
-        title: "Course Evaluation",
-        description: "",
-        questions: [],
-        version: 1,
-        is_active: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-    );
+  const [template, setTemplate] = useState<Partial<EvaluationTemplate>>({
+    title: "Course Evaluation",
+    description: "",
+    questions: [],
+    is_active: false,
   });
+
+  useEffect(() => {
+    if (apiResponse?.data) {
+      setTemplate(apiResponse.data);
+    }
+  }, [apiResponse]);
 
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -120,14 +86,14 @@ const CourseEvaluationEditor = ({
       type: "rating",
       required: true,
     };
-    updateField("questions", [...template.questions, newQ]);
+    updateField("questions", [...(template.questions || []), newQ]);
   };
 
   const updateQuestion = (
     index: number,
     updates: Partial<EvaluationQuestion>,
   ) => {
-    const updated = [...template.questions];
+    const updated = [...(template.questions || [])];
     updated[index] = { ...updated[index], ...updates };
     // Add default options when switching to single_choice
     if (updates.type === "single_choice" && !updated[index].options?.length) {
@@ -143,39 +109,42 @@ const CourseEvaluationEditor = ({
   const removeQuestion = (index: number) => {
     updateField(
       "questions",
-      template.questions.filter((_, i) => i !== index),
+      (template.questions || []).filter((_, i) => i !== index),
     );
   };
 
   const updateOption = (qIndex: number, optIndex: number, value: string) => {
-    const q = template.questions[qIndex];
+    const questions = template.questions || [];
+    const q = questions[qIndex];
     const opts = [...(q.options || [])];
     opts[optIndex] = value;
     updateQuestion(qIndex, { options: opts });
   };
 
   const addOption = (qIndex: number) => {
-    const q = template.questions[qIndex];
+    const questions = template.questions || [];
+    const q = questions[qIndex];
     updateQuestion(qIndex, { options: [...(q.options || []), ""] });
   };
 
   const removeOption = (qIndex: number, optIndex: number) => {
-    const q = template.questions[qIndex];
+    const questions = template.questions || [];
+    const q = questions[qIndex];
     updateQuestion(qIndex, {
       options: (q.options || []).filter((_, i) => i !== optIndex),
     });
   };
 
-  const handleSave = () => {
-    if (!template.title.trim()) {
+  const handleSave = async () => {
+    if (!template.title?.trim()) {
       toast({ title: "Title is required", variant: "destructive" });
       return;
     }
-    if (!template.description.trim()) {
+    if (!template.description?.trim()) {
       toast({ title: "Description is required", variant: "destructive" });
       return;
     }
-    if (template.questions.length === 0) {
+    if (!template.questions || template.questions.length === 0) {
       toast({
         title: "At least one question is required",
         variant: "destructive",
@@ -208,16 +177,71 @@ const CourseEvaluationEditor = ({
       return;
     }
 
-    const updated: EvaluationTemplate = {
-      ...template,
-      version: template.version + (hasChanges ? 1 : 0),
-      updated_at: new Date().toISOString(),
-    };
-    setTemplate(updated);
-    saveTemplate(qualificationId, updated);
-    setHasChanges(false);
-    toast({ title: "Evaluation template saved" });
+    setIsSaving(true);
+    try {
+      if (apiResponse?.data) {
+        // Update existing
+        await updateTemplate({
+          qualificationId,
+          payload: {
+            qualification: qualificationId,
+            title: template.title,
+            description: template.description,
+            questions: template.questions,
+            is_active: template.is_active,
+          },
+        }).unwrap();
+        toast({ title: "Evaluation template updated" });
+      } else {
+        // Create new
+        await createTemplate({
+          qualificationId,
+          payload: {
+            qualification: qualificationId,
+            title: template.title,
+            description: template.description,
+            questions: template.questions,
+            is_active: template.is_active,
+          },
+        }).unwrap();
+        toast({ title: "Evaluation template created" });
+      }
+      setHasChanges(false);
+    } catch (err) {
+      toast({
+        title: "Failed to save template",
+        description: "An error occurred while communicating with the server.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">
+          Loading evaluation configuration...
+        </p>
+      </div>
+    );
+  }
+
+  const isNotFoundError = (error as any)?.status === 404;
+
+  if (error && !isNotFoundError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-destructive">
+        <AlertTriangle className="w-8 h-8" />
+        <p className="text-sm font-medium">Failed to load evaluation configuration.</p>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -235,19 +259,30 @@ const CourseEvaluationEditor = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">
-            v{template.version}
-          </Badge>
+          {template.version && (
+            <Badge variant="outline" className="text-xs">
+              v{template.version}
+            </Badge>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPreviewOpen(true)}
-            disabled={template.questions.length === 0}
+            disabled={!template.questions || template.questions.length === 0}
           >
             <Eye className="w-4 h-4 mr-1" /> Preview
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!hasChanges}>
-            <Save className="w-4 h-4 mr-1" /> Save
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-1" />
+            )}
+            Save
           </Button>
         </div>
       </div>
@@ -312,7 +347,7 @@ const CourseEvaluationEditor = ({
           </Button>
         </div>
 
-        {template.questions.length === 0 ? (
+        {(!template.questions || template.questions.length === 0) ? (
           <p className="text-sm text-muted-foreground italic text-center py-4">
             No questions yet. Click "Add Question" to create one.
           </p>
@@ -473,7 +508,7 @@ const CourseEvaluationEditor = ({
             </p>
             <Separator />
             <div className="space-y-5">
-              {template.questions.map((q) => (
+              {template.questions?.map((q) => (
                 <div key={q.key} className="space-y-2">
                   <p className="text-sm font-medium text-foreground">
                     {q.label}{" "}

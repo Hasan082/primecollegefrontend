@@ -97,6 +97,8 @@ export const api = createApi({
     "Enrolments",
     "DeclarationTemplate",
     "LearnerDeclaration",
+    "CourseEvaluationTemplate",
+    "CourseEvaluationSubmission",
   ],
   endpoints: () => ({}),
 });
