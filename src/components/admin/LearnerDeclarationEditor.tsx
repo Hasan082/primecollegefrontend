@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, Eye, Save, FileCheck } from "lucide-react";
+import { Plus, Trash2, Eye, Save, FileCheck, AlertTriangle } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -16,48 +17,16 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useGetAdminDeclarationTemplateQuery,
+  useCreateAdminDeclarationTemplateMutation,
+  useUpdateAdminDeclarationTemplateMutation,
+  DeclarationTemplate,
+  CheckboxItem,
+} from "@/redux/apis/enrolmentDeclarationApi";
+import { Loader2 } from "lucide-react";
 
-interface CheckboxItem {
-  key: string;
-  label: string;
-}
-
-interface DeclarationTemplate {
-  id: string;
-  qualification: string;
-  title: string;
-  body_text: string;
-  checkbox_items: CheckboxItem[];
-  version: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-const STORAGE_KEY = "admin_declaration_templates";
-
-const loadTemplate = (qualificationId: string): DeclarationTemplate | null => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const all = JSON.parse(saved);
-      return all[qualificationId] || null;
-    }
-  } catch {}
-  return null;
-};
-
-const saveTemplate = (
-  qualificationId: string,
-  template: DeclarationTemplate,
-) => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    const all = saved ? JSON.parse(saved) : {};
-    all[qualificationId] = template;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  } catch {}
-};
+// Removed localStorage helper functions
 
 interface LearnerDeclarationEditorProps {
   qualificationId: string;
@@ -66,25 +35,30 @@ interface LearnerDeclarationEditorProps {
 const LearnerDeclarationEditor = ({
   qualificationId,
 }: LearnerDeclarationEditorProps) => {
+  const {
+    data: apiResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useGetAdminDeclarationTemplateQuery(qualificationId);
+  const [createTemplate] = useCreateAdminDeclarationTemplateMutation();
+  const [updateTemplate] = useUpdateAdminDeclarationTemplateMutation();
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const [template, setTemplate] = useState<DeclarationTemplate>(() => {
-    const saved = loadTemplate(qualificationId);
-    return (
-      saved || {
-        id: crypto.randomUUID(),
-        qualification: qualificationId,
-        title: "Learner Declaration",
-        body_text: "",
-        checkbox_items: [],
-        version: 1,
-        is_active: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-    );
+  const [template, setTemplate] = useState<Partial<DeclarationTemplate>>({
+    title: "Learner Declaration",
+    body_text: "",
+    checkbox_items: [],
+    is_active: false,
   });
+
+  useEffect(() => {
+    if (apiResponse?.data) {
+      setTemplate(apiResponse.data);
+    }
+  }, [apiResponse]);
 
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -101,40 +75,45 @@ const LearnerDeclarationEditor = ({
       key: `item_${Date.now()}`,
       label: "",
     };
-    updateField("checkbox_items", [...template.checkbox_items, newItem]);
+    updateField("checkbox_items", [
+      ...(template.checkbox_items || []),
+      newItem,
+    ]);
   };
 
   const updateCheckboxLabel = (index: number, label: string) => {
-    const updated = [...template.checkbox_items];
+    const updated = [...(template.checkbox_items || [])];
     updated[index] = { ...updated[index], label };
     updateField("checkbox_items", updated);
   };
 
   const updateCheckboxKey = (index: number, key: string) => {
     const sanitized = key.replace(/[^a-z0-9_]/gi, "_").toLowerCase();
-    const updated = [...template.checkbox_items];
+    const updated = [...(template.checkbox_items || [])];
     updated[index] = { ...updated[index], key: sanitized };
     updateField("checkbox_items", updated);
   };
 
   const removeCheckbox = (index: number) => {
-    const updated = template.checkbox_items.filter((_, i) => i !== index);
+    const updated = (template.checkbox_items || []).filter(
+      (_, i) => i !== index,
+    );
     updateField("checkbox_items", updated);
   };
 
-  const handleSave = () => {
-    if (!template.title.trim()) {
+  const handleSave = async () => {
+    if (!template.title?.trim()) {
       toast({ title: "Title is required", variant: "destructive" });
       return;
     }
-    if (!template.body_text.trim()) {
+    if (!template.body_text?.trim()) {
       toast({
         title: "Declaration body text is required",
         variant: "destructive",
       });
       return;
     }
-    if (template.checkbox_items.length === 0) {
+    if (!template.checkbox_items?.length) {
       toast({
         title: "At least one checkbox item is required",
         variant: "destructive",
@@ -157,16 +136,71 @@ const LearnerDeclarationEditor = ({
       return;
     }
 
-    const updated = {
-      ...template,
-      version: template.version + (hasChanges ? 1 : 0),
-      updated_at: new Date().toISOString(),
-    };
-    setTemplate(updated);
-    saveTemplate(qualificationId, updated);
-    setHasChanges(false);
-    toast({ title: "Declaration template saved" });
+    setIsSaving(true);
+    try {
+      if (apiResponse?.data) {
+        // Update existing
+        await updateTemplate({
+          qualificationId,
+          payload: {
+            qualification: qualificationId,
+            title: template.title,
+            body_text: template.body_text,
+            checkbox_items: template.checkbox_items,
+            is_active: template.is_active,
+          },
+        }).unwrap();
+        toast({ title: "Declaration template updated" });
+      } else {
+        // Create new
+        await createTemplate({
+          qualificationId,
+          payload: {
+            qualification: qualificationId,
+            title: template.title,
+            body_text: template.body_text,
+            checkbox_items: template.checkbox_items,
+            is_active: template.is_active,
+          },
+        }).unwrap();
+        toast({ title: "Declaration template created" });
+      }
+      setHasChanges(false);
+    } catch (err) {
+      toast({
+        title: "Failed to save template",
+        description: "An error occurred while communicating with the server.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">
+          Loading declaration configuration...
+        </p>
+      </div>
+    );
+  }
+
+  const isNotFoundError = (error as any)?.status === 404;
+
+  if (error && !isNotFoundError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-destructive">
+        <AlertTriangle className="w-8 h-8" />
+        <p className="text-sm font-medium">Failed to load declaration configuration.</p>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -184,19 +218,30 @@ const LearnerDeclarationEditor = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">
-            v{template.version}
-          </Badge>
+          {template.version && (
+            <Badge variant="outline" className="text-xs">
+              v{template.version}
+            </Badge>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPreviewOpen(true)}
-            disabled={template.checkbox_items.length === 0}
+            disabled={(template.checkbox_items?.length || 0) === 0}
           >
             <Eye className="w-4 h-4 mr-1" /> Preview
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!hasChanges}>
-            <Save className="w-4 h-4 mr-1" /> Save
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving}
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-1" />
+            )}
+            Save
           </Button>
         </div>
       </div>
@@ -263,7 +308,7 @@ const LearnerDeclarationEditor = ({
           </Button>
         </div>
 
-        {template.checkbox_items.length === 0 ? (
+        {!template.checkbox_items || template.checkbox_items.length === 0 ? (
           <p className="text-sm text-muted-foreground italic text-center py-4">
             No checkbox items yet. Click "Add Item" to create one.
           </p>
@@ -330,7 +375,7 @@ const LearnerDeclarationEditor = ({
             </p>
             <Separator />
             <div className="space-y-3">
-              {template.checkbox_items.map((item) => (
+              {template.checkbox_items?.map((item) => (
                 <div key={item.key} className="flex items-start gap-3">
                   <Checkbox id={`preview-${item.key}`} disabled />
                   <label

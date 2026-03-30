@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import CPDFinalAssessmentModal from "@/components/learner/CPDFinalAssessmentModal";
+import LearnerDeclarationModal from "@/components/learner/LearnerDeclarationModal";
 import { useGetEnrolmentContentQuery } from "@/redux/apis/enrolmentApi";
 import type { UnitData } from "@/data/learnerMockData";
 
@@ -19,6 +20,7 @@ const statusConfig: Record<UnitData["status"], { label: string; color: string; i
 const QualificationView = () => {
   const { id } = useParams<{ id: string }>();
   const [showAssessment, setShowAssessment] = useState(false);
+  const [showDeclaration, setShowDeclaration] = useState(false);
   
   const { data: enrolmentResponse, isLoading, error } = useGetEnrolmentContentQuery(id || "");
   const enrolment = enrolmentResponse?.data;
@@ -108,6 +110,31 @@ const QualificationView = () => {
         </div>
       )}
 
+      {/* Non-CPD Declaration Section */}
+      {!qualification.is_cpd && allUnitsDone && (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <FileCheck className="w-6 h-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-bold text-primary mb-1">Learner Declaration</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Great job! You've completed all units. Please complete the learner declaration to finalize your qualification.
+              </p>
+              <Button 
+                size="sm" 
+                className="gap-2" 
+                onClick={() => setShowDeclaration(true)}
+              >
+                <FileCheck className="w-4 h-4" /> 
+                Complete Declaration
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showAssessment && (
         <CPDFinalAssessmentModal
           qualificationId={qualification.id}
@@ -115,7 +142,22 @@ const QualificationView = () => {
           onClose={() => setShowAssessment(false)}
           onSubmitted={(result) => {
             console.log("Assessment submitted", result);
-            // In a real app, we'd refetch data here
+            if (result.passed) {
+              setShowAssessment(false);
+              setShowDeclaration(true);
+            }
+          }}
+        />
+      )}
+
+      {showDeclaration && (
+        <LearnerDeclarationModal
+          enrolmentId={id || ""}
+          isOpen={showDeclaration}
+          onClose={() => setShowDeclaration(false)}
+          onSuccess={() => {
+            setShowDeclaration(false);
+            // Optionally refetch or redirect
           }}
         />
       )}
