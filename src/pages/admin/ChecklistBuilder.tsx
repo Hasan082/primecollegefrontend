@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  ClipboardList,
-  Pencil,
-} from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ClipboardList, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +80,20 @@ type ChecklistRow = ChecklistTemplate & {
   isActive: boolean;
 };
 
+type CreateFormErrors = {
+  qualification?: string;
+  unit?: string;
+  title?: string;
+  items?: string;
+};
+
+type EditFormErrors = {
+  qualification?: string;
+  unit?: string;
+  title?: string;
+  items?: string;
+};
+
 const ChecklistBuilder = () => {
   const { toast } = useToast();
   const [templates, setTemplates] = useState<ChecklistRow[]>(
@@ -106,6 +114,7 @@ const ChecklistBuilder = () => {
   const [newItems, setNewItems] = useState<ChecklistItem[]>([]);
   const [newItemLabel, setNewItemLabel] = useState("");
   const [newItemType, setNewItemType] = useState<CheckResponseType>("yes-no");
+  const [createErrors, setCreateErrors] = useState<CreateFormErrors>({});
 
   // Edit mode
   const [editOpen, setEditOpen] = useState(false);
@@ -117,6 +126,7 @@ const ChecklistBuilder = () => {
   const [editItems, setEditItems] = useState<ChecklistItem[]>([]);
   const [editItemLabel, setEditItemLabel] = useState("");
   const [editItemType, setEditItemType] = useState<CheckResponseType>("yes-no");
+  const [editErrors, setEditErrors] = useState<EditFormErrors>({});
   const [createChecklistTemplate, { isLoading: isCreatingChecklist }] =
     useCreateChecklistTemplateMutation();
   const [updateChecklistTemplate, { isLoading: isUpdatingChecklist }] =
@@ -132,12 +142,10 @@ const ChecklistBuilder = () => {
       skip: !newQualId,
     },
   );
-  const { data: editUnitOptionsResponse } = useGetUnitOptionsByQualificationQuery(
-    editQualId,
-    {
+  const { data: editUnitOptionsResponse } =
+    useGetUnitOptionsByQualificationQuery(editQualId, {
       skip: !editQualId,
-    },
-  );
+    });
 
   const qualificationOptions = qualificationOptionsResponse?.data?.length
     ? qualificationOptionsResponse.data
@@ -197,6 +205,52 @@ const ChecklistBuilder = () => {
   const getQualTitle = (id: string) =>
     qualificationOptions.find((q) => q.id === id)?.title || id;
 
+  const validateCreateForm = () => {
+    const errors: CreateFormErrors = {};
+
+    if (!newQualId) {
+      errors.qualification = "Qualification is required";
+    }
+
+    if (!newUnitId || newUnitId === "__qual__") {
+      errors.unit = "Unit is required";
+    }
+
+    if (!newTitle.trim()) {
+      errors.title = "Title is required";
+    }
+
+    if (newItems.length === 0) {
+      errors.items = "At least one item is required";
+    }
+
+    setCreateErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateEditForm = () => {
+    const errors: EditFormErrors = {};
+
+    if (!editQualId) {
+      errors.qualification = "Qualification is required";
+    }
+
+    if (!editUnitId || editUnitId === "__qual__") {
+      errors.unit = "Unit is required";
+    }
+
+    if (!editTitle.trim()) {
+      errors.title = "Title is required";
+    }
+
+    if (editItems.length === 0) {
+      errors.items = "At least one item is required";
+    }
+
+    setEditErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // ── Create ──
   const addItemToNew = () => {
     if (!newItemLabel.trim()) return;
@@ -209,17 +263,14 @@ const ChecklistBuilder = () => {
       },
     ]);
     setNewItemLabel("");
+    setCreateErrors((prev) => ({ ...prev, items: undefined }));
   };
 
   const removeNewItem = (id: string) =>
     setNewItems((prev) => prev.filter((i) => i.id !== id));
 
   const handleCreate = async () => {
-    if (!newTitle.trim() || !newQualId || newItems.length === 0) {
-      toast({
-        title: "Title, qualification and at least one check item required",
-        variant: "destructive",
-      });
+    if (!validateCreateForm()) {
       return;
     }
 
@@ -242,6 +293,7 @@ const ChecklistBuilder = () => {
       setNewUnitId("__qual__");
       setNewStatus("active");
       setNewItems([]);
+      setCreateErrors({});
       toast({ title: "Checklist created" });
     } catch {
       toast({
@@ -260,6 +312,7 @@ const ChecklistBuilder = () => {
     setEditStatus(tpl.isActive ? "active" : "inactive");
     setEditTitle(tpl.title);
     setEditItems([...tpl.items]);
+    setEditErrors({});
   };
 
   const addItemToEdit = () => {
@@ -273,17 +326,14 @@ const ChecklistBuilder = () => {
       },
     ]);
     setEditItemLabel("");
+    setEditErrors((prev) => ({ ...prev, items: undefined }));
   };
 
   const removeEditItem = (id: string) =>
     setEditItems((prev) => prev.filter((i) => i.id !== id));
 
   const saveEdit = async () => {
-    if (!editingId || !editTitle.trim() || editItems.length === 0) {
-      toast({
-        title: "Title and at least one item required",
-        variant: "destructive",
-      });
+    if (!editingId || !validateEditForm()) {
       return;
     }
 
@@ -303,6 +353,7 @@ const ChecklistBuilder = () => {
 
       setEditOpen(false);
       setEditingId(null);
+      setEditErrors({});
       toast({ title: "Checklist updated" });
     } catch {
       toast({
@@ -434,9 +485,18 @@ const ChecklistBuilder = () => {
                 onValueChange={(v) => {
                   setNewQualId(v);
                   setNewUnitId("__qual__");
+                  setCreateErrors((prev) => ({
+                    ...prev,
+                    qualification: undefined,
+                    unit: undefined,
+                  }));
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  className={
+                    createErrors.qualification ? "border-destructive" : ""
+                  }
+                >
                   <SelectValue placeholder="Select qualification" />
                 </SelectTrigger>
                 <SelectContent>
@@ -447,12 +507,25 @@ const ChecklistBuilder = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {createErrors.qualification && (
+                <p className="text-xs text-destructive">
+                  {createErrors.qualification}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Unit</Label>
-              <Select value={newUnitId} onValueChange={setNewUnitId}>
-                <SelectTrigger>
+              <Label className="text-xs">Unit *</Label>
+              <Select
+                value={newUnitId}
+                onValueChange={(value) => {
+                  setNewUnitId(value);
+                  setCreateErrors((prev) => ({ ...prev, unit: undefined }));
+                }}
+              >
+                <SelectTrigger
+                  className={createErrors.unit ? "border-destructive" : ""}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -470,6 +543,9 @@ const ChecklistBuilder = () => {
                     ))}
                 </SelectContent>
               </Select>
+              {createErrors.unit && (
+                <p className="text-xs text-destructive">{createErrors.unit}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -489,9 +565,16 @@ const ChecklistBuilder = () => {
               <Label className="text-xs">Checklist Title *</Label>
               <Input
                 value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
+                onChange={(e) => {
+                  setNewTitle(e.target.value);
+                  setCreateErrors((prev) => ({ ...prev, title: undefined }));
+                }}
                 placeholder="e.g. Internal Verification — Quality Check"
+                className={createErrors.title ? "border-destructive" : ""}
               />
+              {createErrors.title && (
+                <p className="text-xs text-destructive">{createErrors.title}</p>
+              )}
             </div>
 
             <Separator />
@@ -525,6 +608,11 @@ const ChecklistBuilder = () => {
                     </div>
                   ))}
                 </div>
+              )}
+              {createErrors.items && (
+                <p className="mb-3 text-xs text-destructive">
+                  {createErrors.items}
+                </p>
               )}
               <div className="flex gap-2">
                 <Input
@@ -579,9 +667,18 @@ const ChecklistBuilder = () => {
                 onValueChange={(v) => {
                   setEditQualId(v);
                   setEditUnitId("__qual__");
+                  setEditErrors((prev) => ({
+                    ...prev,
+                    qualification: undefined,
+                    unit: undefined,
+                  }));
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  className={
+                    editErrors.qualification ? "border-destructive" : ""
+                  }
+                >
                   <SelectValue placeholder="Select qualification" />
                 </SelectTrigger>
                 <SelectContent>
@@ -592,12 +689,25 @@ const ChecklistBuilder = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {editErrors.qualification && (
+                <p className="text-xs text-destructive">
+                  {editErrors.qualification}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Unit</Label>
-              <Select value={editUnitId} onValueChange={setEditUnitId}>
-                <SelectTrigger>
+              <Label className="text-xs">Unit *</Label>
+              <Select
+                value={editUnitId}
+                onValueChange={(value) => {
+                  setEditUnitId(value);
+                  setEditErrors((prev) => ({ ...prev, unit: undefined }));
+                }}
+              >
+                <SelectTrigger
+                  className={editErrors.unit ? "border-destructive" : ""}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -615,6 +725,9 @@ const ChecklistBuilder = () => {
                     ))}
                 </SelectContent>
               </Select>
+              {editErrors.unit && (
+                <p className="text-xs text-destructive">{editErrors.unit}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -634,9 +747,16 @@ const ChecklistBuilder = () => {
               <Label className="text-xs">Checklist Title *</Label>
               <Input
                 value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
+                onChange={(e) => {
+                  setEditTitle(e.target.value);
+                  setEditErrors((prev) => ({ ...prev, title: undefined }));
+                }}
                 placeholder="e.g. Internal Verification — Quality Check"
+                className={editErrors.title ? "border-destructive" : ""}
               />
+              {editErrors.title && (
+                <p className="text-xs text-destructive">{editErrors.title}</p>
+              )}
             </div>
 
             <Separator />
@@ -671,6 +791,11 @@ const ChecklistBuilder = () => {
                   ))}
                 </div>
               )}
+              {editErrors.items && (
+                <p className="mb-3 text-xs text-destructive">
+                  {editErrors.items}
+                </p>
+              )}
               <div className="flex gap-2">
                 <Input
                   placeholder="New check item text..."
@@ -681,9 +806,7 @@ const ChecklistBuilder = () => {
                 />
                 <Select
                   value={editItemType}
-                  onValueChange={(v) =>
-                    setEditItemType(v as CheckResponseType)
-                  }
+                  onValueChange={(v) => setEditItemType(v as CheckResponseType)}
                 >
                   <SelectTrigger className="w-[160px]">
                     <SelectValue />
