@@ -1,24 +1,43 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, ChevronRight, CheckCircle2, AlertCircle, Search, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  BookOpen,
+  ChevronRight,
+  CheckCircle2,
+  AlertCircle,
+  Search,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useGetQualificationsAdminQuery } from "@/redux/apis/qualification/qualificationApi";
 import { useGetQuestionBankUnitsQuery } from "@/redux/apis/quiz/quizApi";
 
-const QualificationBankSection = ({ qualification, search }: { qualification: any; search: string }) => {
-  const { data: unitsResponse, isLoading } = useGetQuestionBankUnitsQuery(qualification.id);
+const QualificationBankSection = ({
+  qualification,
+  search,
+}: {
+  qualification: any;
+  search: string;
+}) => {
+  const { data: unitsResponse, isLoading } = useGetQuestionBankUnitsQuery(
+    qualification.id,
+  );
 
   const units = unitsResponse || [];
-  
+
   const filteredUnits = units.filter(
     (u: any) =>
       u.unit_code.toLowerCase().includes(search.toLowerCase()) ||
-      u.title.toLowerCase().includes(search.toLowerCase())
+      u.title.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const showQual = qualification.title.toLowerCase().includes(search.toLowerCase()) || filteredUnits.length > 0;
+  const showQual =
+    qualification.title.toLowerCase().includes(search.toLowerCase()) ||
+    filteredUnits.length > 0;
 
   if (!showQual) return null;
 
@@ -28,9 +47,13 @@ const QualificationBankSection = ({ qualification, search }: { qualification: an
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-bold text-foreground">{qualification.title}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{qualification.total_units} units total</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {qualification.total_units} units total
+            </p>
           </div>
-          <Badge variant="secondary" className="text-xs">{qualification.category}</Badge>
+          <Badge variant="secondary" className="text-xs">
+            {qualification.category}
+          </Badge>
         </div>
       </div>
       <div className="divide-y divide-border">
@@ -54,26 +77,30 @@ const QualificationBankSection = ({ qualification, search }: { qualification: an
                 <BookOpen className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-foreground">{unit.unit_code}: {unit.title}</p>
+                <p className="font-semibold text-sm text-foreground">
+                  {unit.unit_code}: {unit.title}
+                </p>
                 <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-xs text-muted-foreground">{unit.question_count} questions</span>
+                  <span className="text-xs text-muted-foreground">
+                    {unit.question_count} questions
+                  </span>
                   <span className="text-xs text-muted-foreground">•</span>
                   <span className="text-xs text-muted-foreground">
-                    {unit.assignment_enabled ? "Written assignment enabled" : "No written assignment"}
+                    {unit.assignment_enabled
+                      ? "Written assignment enabled"
+                      : "No written assignment"}
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {unit.quiz_enabled ? (
-                  <Badge className="bg-green-600 text-white text-xs gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Published
+                {unit.is_active ? (
+                  <Badge className="bg-primary text-white text-xs gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Live
                   </Badge>
-                ) : unit.question_count > 0 ? (
+                ) : (
                   <Badge className="bg-amber-500 text-white text-xs gap-1">
                     <AlertCircle className="w-3 h-3" /> Draft
                   </Badge>
-                ) : (
-                  <Badge variant="secondary" className="text-xs">Empty</Badge>
                 )}
                 <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
@@ -87,7 +114,11 @@ const QualificationBankSection = ({ qualification, search }: { qualification: an
 
 const AdminQuestionBank = () => {
   const [search, setSearch] = useState("");
-  const { data: qualificationsResponse, isLoading, error } = useGetQualificationsAdminQuery({
+  const {
+    data: qualificationsResponse,
+    isLoading,
+    error,
+  } = useGetQualificationsAdminQuery({
     is_cpd: false,
   });
 
@@ -95,13 +126,19 @@ const AdminQuestionBank = () => {
 
   return (
     <div>
-      <Link to="/admin/dashboard" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6">
+      <Link
+        to="/admin/dashboard"
+        className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6"
+      >
         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
       </Link>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Question Bank Management</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Question Bank Management
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Full control over question pools, quiz configurations, and written assignments across all qualifications gffghf
+          Full control over question pools, quiz configurations, and written
+          assignments across all qualifications gffghf
         </p>
       </div>
 
@@ -109,11 +146,15 @@ const AdminQuestionBank = () => {
         <div className="flex gap-3 items-start">
           <BookOpen className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-foreground">How the Question Bank works</p>
+            <p className="text-sm font-semibold text-foreground">
+              How the Question Bank works
+            </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Create a large pool of questions per unit (e.g. 50+). When a learner takes a quiz, the system randomly selects
-              a configured number of questions (e.g. 20–25) with shuffled order. This ensures each learner receives a unique
-              quiz, reducing the risk of answer sharing and ensuring fair assessment.
+              Create a large pool of questions per unit (e.g. 50+). When a
+              learner takes a quiz, the system randomly selects a configured
+              number of questions (e.g. 20–25) with shuffled order. This ensures
+              each learner receives a unique quiz, reducing the risk of answer
+              sharing and ensuring fair assessment.
             </p>
           </div>
         </div>
@@ -142,26 +183,35 @@ const AdminQuestionBank = () => {
         ) : regulatedQualifications.length === 0 ? (
           <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-xl">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-               <AlertCircle className="w-6 h-6 text-muted-foreground" />
+              <AlertCircle className="w-6 h-6 text-muted-foreground" />
             </div>
-            <p className="font-medium text-foreground">No qualifications found in the system.</p>
+            <p className="font-medium text-foreground">
+              No qualifications found in the system.
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
               Please create a qualification first to manage its question bank.
             </p>
           </div>
         ) : regulatedQualifications.length === 0 ? (
           <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-xl">
-             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                <BookOpen className="w-6 h-6 text-muted-foreground" />
-             </div>
-            <p className="font-medium text-foreground">No regulated qualifications to manage here.</p>
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+              <BookOpen className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <p className="font-medium text-foreground">
+              No regulated qualifications to manage here.
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
-              All active qualifications are CPD-enabled. Manage them via the <strong>Final Assessment</strong> editor.
+              All active qualifications are CPD-enabled. Manage them via the{" "}
+              <strong>Final Assessment</strong> editor.
             </p>
           </div>
         ) : (
           regulatedQualifications.map((qual: any) => (
-            <QualificationBankSection key={qual.id} qualification={qual} search={search} />
+            <QualificationBankSection
+              key={qual.id}
+              qualification={qual}
+              search={search}
+            />
           ))
         )}
       </div>
