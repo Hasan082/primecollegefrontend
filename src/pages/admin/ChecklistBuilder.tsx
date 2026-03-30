@@ -35,6 +35,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { adminQualifications } from "@/data/adminMockData";
 import {
+  useCreateChecklistTemplateMutation,
   useGetChecklistTemplatesQuery,
   useGetQualificationOptionsQuery,
   useGetUnitOptionsByQualificationQuery,
@@ -64,6 +65,19 @@ const normalizeResponseType = (responseType: string): CheckResponseType => {
 const formatChecklistDate = (date: string) =>
   new Date(date).toLocaleDateString("en-GB");
 
+const serializeResponseType = (responseType: CheckResponseType) => {
+  switch (responseType) {
+    case "yes-no":
+      return "yes_no";
+    case "yes-no-na":
+      return "yes_no_na";
+    case "met-notmet-na":
+      return "met_notmet_na";
+    default:
+      return "yes_no";
+  }
+};
+
 const ChecklistBuilder = () => {
   const { toast } = useToast();
   const [templates, setTemplates] =
@@ -75,7 +89,8 @@ const ChecklistBuilder = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newQualId, setNewQualId] = useState("");
-  const [newUnitCode, setNewUnitCode] = useState("__qual__"); // __qual__ = qualification-level
+  const [newUnitId, setNewUnitId] = useState("__qual__");
+  const [newStatus, setNewStatus] = useState("active");
   const [newItems, setNewItems] = useState<ChecklistItem[]>([]);
   const [newItemLabel, setNewItemLabel] = useState("");
   const [newItemType, setNewItemType] = useState<CheckResponseType>("yes-no");
@@ -86,6 +101,8 @@ const ChecklistBuilder = () => {
   const [editItems, setEditItems] = useState<ChecklistItem[]>([]);
   const [editItemLabel, setEditItemLabel] = useState("");
   const [editItemType, setEditItemType] = useState<CheckResponseType>("yes-no");
+  const [createChecklistTemplate, { isLoading: isCreatingChecklist }] =
+    useCreateChecklistTemplateMutation();
 
   const { data: qualificationOptionsResponse } =
     useGetQualificationOptionsQuery(undefined);
@@ -172,7 +189,7 @@ const ChecklistBuilder = () => {
   const removeNewItem = (id: string) =>
     setNewItems((prev) => prev.filter((i) => i.id !== id));
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newTitle.trim() || !newQualId || newItems.length === 0) {
       toast({
         title: "Title, qualification and at least one check item required",
@@ -180,23 +197,33 @@ const ChecklistBuilder = () => {
       });
       return;
     }
-    const now = new Date().toLocaleDateString("en-GB");
-    const template: ChecklistTemplate = {
-      id: `tpl-${Date.now()}`,
-      qualificationId: newQualId,
-      unitCode: newUnitCode === "__qual__" ? null : newUnitCode,
-      title: newTitle.trim(),
-      items: newItems,
-      createdDate: now,
-      updatedDate: now,
-    };
-    persist([...templates, template]);
-    setCreateOpen(false);
-    setNewTitle("");
-    setNewQualId("");
-    setNewUnitCode("__qual__");
-    setNewItems([]);
-    toast({ title: "Checklist created" });
+
+    try {
+      await createChecklistTemplate({
+        qualification_id: newQualId,
+        unit_id: newUnitId === "__qual__" ? null : newUnitId,
+        title: newTitle.trim(),
+        is_active: newStatus === "active",
+        items: newItems.map((item, index) => ({
+          label: item.label,
+          response_type: serializeResponseType(item.responseType),
+          order: index + 1,
+        })),
+      }).unwrap();
+
+      setCreateOpen(false);
+      setNewTitle("");
+      setNewQualId("");
+      setNewUnitId("__qual__");
+      setNewStatus("active");
+      setNewItems([]);
+      toast({ title: "Checklist created" });
+    } catch {
+      toast({
+        title: "Failed to create checklist",
+        variant: "destructive",
+      });
+    }
   };
 
   // ── Edit ──
@@ -502,7 +529,7 @@ const ChecklistBuilder = () => {
                 value={newQualId}
                 onValueChange={(v) => {
                   setNewQualId(v);
-                  setNewUnitCode("__qual__");
+                  setNewUnitId("__qual__");
                 }}
               >
                 <SelectTrigger>
@@ -520,7 +547,7 @@ const ChecklistBuilder = () => {
 
             <div className="space-y-1.5">
               <Label className="text-xs">Unit</Label>
-              <Select value={newUnitCode} onValueChange={setNewUnitCode}>
+              <Select value={newUnitId} onValueChange={setNewUnitId}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -530,13 +557,26 @@ const ChecklistBuilder = () => {
                     createUnitOptions.map((u) => (
                       <SelectItem
                         key={"unit_code" in u ? u.id : u.code}
-                        value={"unit_code" in u ? u.unit_code : u.code}
+                        value={"unit_code" in u ? u.id : u.code}
                       >
                         {"unit_code" in u
                           ? `${u.unit_code} — ${u.title}`
                           : `${u.code} — ${u.name}`}
                       </SelectItem>
                     ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Status</Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -615,7 +655,9 @@ const ChecklistBuilder = () => {
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate}>Create Checklist</Button>
+            <Button onClick={handleCreate} disabled={isCreatingChecklist}>
+              {isCreatingChecklist ? "Creating..." : "Create Checklist"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
