@@ -15,7 +15,10 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import UnitAssessmentConfig from "@/components/trainer/UnitAssessmentConfig";
+import LearnerDeclarationEditor from "@/components/admin/LearnerDeclarationEditor";
+import CourseEvaluationEditor from "@/components/admin/CourseEvaluationEditor";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, formatPrice } from "@/lib/utils";
 import {
   DndContext,
@@ -261,51 +264,70 @@ const QualificationDetail = () => {
         </Card>
       )}
 
-      {/* Units Section */}
-      <div className="pt-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-baseline gap-2">
-            <h2 className="text-xl font-extrabold text-foreground">Units</h2>
-            <span className="text-muted-foreground font-semibold text-sm">({units.length})</span>
-          </div>
-          <Button onClick={() => setAddOpen(true)} className="gap-2 shadow-sm font-bold">
-            <Plus className="w-4 h-4" /> Add Unit
-          </Button>
-        </div>
-        <p className="text-sm text-muted-foreground mb-6">
-          Systematically configure assessment requirements and study resources for every unit.
-        </p>
+      {/* Tabs: Units, Declaration, Evaluation */}
+      <Tabs defaultValue="units" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="units">Units ({units.length})</TabsTrigger>
+          <TabsTrigger value="declaration">Learner Declaration</TabsTrigger>
+          <TabsTrigger value="evaluation">Course Evaluation</TabsTrigger>
+        </TabsList>
 
-        <Separator className="mb-6" />
-
-        {units.length === 0 ? (
-          <div className="p-16 text-center bg-muted/10 rounded-3xl border-2 border-dashed flex flex-col items-center gap-3">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-2">
-              <FileText className="w-8 h-8 text-muted-foreground/50" />
-            </div>
-            <h3 className="font-bold text-lg">No units defined yet</h3>
-            <p className="text-muted-foreground text-sm max-w-xs">Click the button above to add the first unit to this qualification.</p>
-          </div>
-        ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={units.map((u) => u.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-3">
-                {units.map((unit) => (
-                  <SortableUnitRow
-                    key={unit.id}
-                    unit={unit}
-                    onDelete={handleDeleteUnit}
-                    onToggleExpand={toggleExpand}
-                    isExpanded={expandedUnits.has(unit.id)}
-                    isCpd={summary.is_cpd}
-                    qualificationId={qualificationId || ""}
-                  />
-                ))}
+        <TabsContent value="units">
+          {/* Units Section */}
+          <div className="pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-xl font-extrabold text-foreground">Units</h2>
+                <span className="text-muted-foreground font-semibold text-sm">({units.length})</span>
               </div>
-            </SortableContext>
-          </DndContext>
-        )}
-      </div>
+              <Button onClick={() => setAddOpen(true)} className="gap-2 shadow-sm font-bold">
+                <Plus className="w-4 h-4" /> Add Unit
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Systematically configure assessment requirements and study resources for every unit.
+            </p>
+
+            <Separator className="mb-6" />
+
+            {units.length === 0 ? (
+              <div className="p-16 text-center bg-muted/10 rounded-3xl border-2 border-dashed flex flex-col items-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-2">
+                  <FileText className="w-8 h-8 text-muted-foreground/50" />
+                </div>
+                <h3 className="font-bold text-lg">No units defined yet</h3>
+                <p className="text-muted-foreground text-sm max-w-xs">Click the button above to add the first unit to this qualification.</p>
+              </div>
+            ) : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={units.map((u) => u.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3">
+                    {units.map((unit) => (
+                      <SortableUnitRow
+                        key={unit.id}
+                        unit={unit}
+                        onDelete={handleDeleteUnit}
+                        onToggleExpand={toggleExpand}
+                        isExpanded={expandedUnits.has(unit.id)}
+                        isCpd={summary.is_cpd}
+                        qualificationId={qualificationId || ""}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="declaration">
+          <LearnerDeclarationEditor qualificationId={qualificationId || ""} />
+        </TabsContent>
+
+        <TabsContent value="evaluation">
+          <CourseEvaluationEditor qualificationId={qualificationId || ""} />
+        </TabsContent>
+      </Tabs>
 
       {/* Add Unit Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
