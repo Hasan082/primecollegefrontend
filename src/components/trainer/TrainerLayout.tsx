@@ -39,7 +39,7 @@ const TrainerLayout = () => {
     return <LoadingSpinner />;
   }
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex flex-col w-full">
         <header className="bg-primary text-primary-foreground sticky top-0 z-30">
           <div className="px-4 sm:px-6 h-14 flex items-center justify-between">
