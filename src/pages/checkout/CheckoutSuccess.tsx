@@ -39,7 +39,6 @@ const CheckoutSuccess = () => {
     }
   }, []);
 
- 
   useEffect(() => {
     clearCart();
     sessionStorage.removeItem("primecollege_payment_setup");
