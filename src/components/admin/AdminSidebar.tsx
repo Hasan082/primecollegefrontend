@@ -15,6 +15,7 @@ import {
 
 const mainNavItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
+  { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Qualifications", url: "/admin/qualifications", icon: GraduationCap },
   { title: "Learners", url: "/admin/learners", icon: Users },
   { title: "Trainers", url: "/admin/trainers", icon: UserCheck },

@@ -14,7 +14,50 @@ const qualificationApi = api.injectEndpoints({
       },
       providesTags: ["Qualifications"],
     }),
+    getQualificationOptions: builder.query({
+      query: () => ({
+        url: "/api/qualification/options/",
+        method: "GET",
+      })
+    }),
+    getUnitOptionsByQualification: builder.query({
+      query: (qualificationId) => ({
+        url: `/api/qualification/options/${qualificationId}/units/`,
+        method: "GET",
+      }),
+    }),
+    getChecklistTemplates: builder.query({
+      query: () => ({
+        url: `/api/v1/checklists/templates/`,
+        method: "GET",
+      }),
+      providesTags: ["ChecklistTemplates"],
+    }),
+    createChecklistTemplate: builder.mutation({
+      query: (data) => ({
+        url: `/api/v1/checklists/templates/`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["ChecklistTemplates"],
+    }),
+    updateChecklistTemplate: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/api/v1/checklists/templates/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["ChecklistTemplates"],
+    }),
   }),
 });
 
-export const { useGetQualificationsAdminQuery } = qualificationApi;
+export const {
+  useGetQualificationsAdminQuery,
+  useGetQualificationOptionsQuery,
+  useGetUnitOptionsByQualificationQuery,
+  useLazyGetUnitOptionsByQualificationQuery,
+  useGetChecklistTemplatesQuery,
+  useCreateChecklistTemplateMutation,
+  useUpdateChecklistTemplateMutation,
+} = qualificationApi;

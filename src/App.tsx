@@ -89,6 +89,7 @@ const AdminQuestionBankEditor = lazy(
   () => import("./pages/admin/AdminQuestionBankEditor"),
 );
 const FinalAssessments = lazy(() => import("./pages/admin/FinalAssessments"));
+const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
 const EQAExport = lazy(() => import("./pages/admin/EQAExport"));
 const AdminQualificationDetail = lazy(
   () => import("./pages/admin/QualificationDetail"),
@@ -233,6 +234,7 @@ const App = () => {
                     <Route path="pages/:pageId" element={<PageEditor />} />
                     <Route path="settings/header" element={<HeaderSettings />} />
                     <Route path="settings/footer" element={<FooterSettings />} />
+                    <Route path="analytics" element={<AdminAnalytics />} />
                   </Route>
                   <Route path="/iqa" element={<IQALayout />}>
                     <Route path="dashboard" element={<IQADashboard />} />

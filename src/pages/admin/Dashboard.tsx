@@ -2,31 +2,73 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users, GraduationCap, UserCheck, FileText, TrendingUp, AlertCircle,
   ClipboardCheck, Shield, BookOpen, Blocks, BarChart3, Download,
-  Eye, ChevronRight
+  Eye, ChevronRight, Clock, RefreshCcw
 } from "lucide-react";
-import { adminStats, adminLearners, adminQualifications, adminTrainers } from "@/data/adminMockData";
-import { iqaSamples, trainerPerformances } from "@/data/iqaMockData";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import {
+  DashboardFilters,
+  DashboardOverviewResponse,
+  useGetDashboardOverviewQuery,
+} from "@/redux/apis/adminDashboardApi";
+import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
 
 const AdminDashboard = () => {
-  const recentEnrolments = adminLearners
-    .slice()
-    .sort((a, b) => b.enrolledDate.localeCompare(a.enrolledDate))
-    .slice(0, 5);
+  const [filters] = useState<DashboardFilters>({
+    range: "30d",
+  });
 
-  const pendingIQA = iqaSamples.filter(s => s.iqaStatus === "Pending IQA Review").length;
-  const escalatedIQA = iqaSamples.filter(s => s.iqaStatus === "Escalated to Admin").length;
-  const pendingAssessments = adminStats.pendingSubmissions;
+  const { data: dashboardResponse, isLoading, isError, refetch } = useGetDashboardOverviewQuery(filters);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-end">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+        </div>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <Skeleton className="h-[250px] w-full" />
+          <Skeleton className="h-[250px] w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  const data: DashboardOverviewResponse["data"] | undefined = dashboardResponse?.data;
+  
+  const stats = {
+    activeLearners: data?.kpis?.total_learners || 0,
+    activeQualifications: data?.kpis?.active_qualifications || 0,
+    pendingAssessments: data?.pipeline?.trainer_review_pending || 0,
+    pendingIQA: data?.pipeline?.iqa_review_pending || 0,
+    escalatedIQA: data?.escalated_iqa_count || 0,
+    monthlyEnrolments: data?.charts?.enrolments_trend_simple || [],
+    categoryDistribution: data?.charts?.learners_by_category_simple || [],
+    trainerPerformances: data?.trainer_overview || [],
+    recentEnrolments: data?.recent_enrolments || []
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-muted-foreground text-sm">System-wide monitoring and management</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
+          <p className="text-muted-foreground text-sm">System-wide monitoring and management</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="h-9">
+          <RefreshCcw className="w-4 h-4 mr-2" /> Sync Data
+        </Button>
       </div>
 
       {/* Top Stats Grid */}
@@ -38,7 +80,7 @@ const AdminDashboard = () => {
                 <Users className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{adminStats.activeLearners}</p>
+                <p className="text-2xl font-bold">{stats.activeLearners}</p>
                 <p className="text-xs text-muted-foreground">Active Learners</p>
               </div>
             </div>
@@ -51,7 +93,7 @@ const AdminDashboard = () => {
                 <GraduationCap className="w-5 h-5 text-secondary-foreground" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{adminStats.activeQualifications}</p>
+                <p className="text-2xl font-bold">{stats.activeQualifications}</p>
                 <p className="text-xs text-muted-foreground">Active Qualifications</p>
               </div>
             </div>
@@ -64,7 +106,7 @@ const AdminDashboard = () => {
                 <AlertCircle className="w-5 h-5 text-destructive" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{pendingAssessments}</p>
+                <p className="text-2xl font-bold">{stats.pendingAssessments}</p>
                 <p className="text-xs text-muted-foreground">Pending Assessments</p>
               </div>
             </div>
@@ -77,7 +119,7 @@ const AdminDashboard = () => {
                 <Shield className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{pendingIQA}</p>
+                <p className="text-2xl font-bold">{stats.pendingIQA}</p>
                 <p className="text-xs text-muted-foreground">Pending IQA Reviews</p>
               </div>
             </div>
@@ -86,13 +128,13 @@ const AdminDashboard = () => {
       </div>
 
       {/* Escalated Alert */}
-      {escalatedIQA > 0 && (
+      {stats.escalatedIQA > 0 && (
         <Card className="border-destructive/40 bg-destructive/5">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-destructive" />
               <div>
-                <p className="text-sm font-semibold text-destructive">{escalatedIQA} IQA Escalation{escalatedIQA > 1 ? "s" : ""} Require Admin Attention</p>
+                <p className="text-sm font-semibold text-destructive">{stats.escalatedIQA} IQA Escalation{stats.escalatedIQA > 1 ? "s" : ""} Require Admin Attention</p>
                 <p className="text-xs text-muted-foreground">Flagged by Internal Quality Assurer for compliance review</p>
               </div>
             </div>
@@ -111,7 +153,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={adminStats.monthlyEnrolments}>
+              <BarChart data={stats.monthlyEnrolments}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis dataKey="month" className="text-xs" />
                 <YAxis allowDecimals={false} className="text-xs" />
@@ -131,8 +173,8 @@ const AdminDashboard = () => {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={adminStats.categoryDistribution} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                  {adminStats.categoryDistribution.map((_, i) => (
+                <Pie data={stats.categoryDistribution} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                  {stats.categoryDistribution.map((_, i: number) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
@@ -167,29 +209,26 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {trainerPerformances.map((t) => {
-                  const adminTrainer = adminTrainers.find(at => at.name === t.name);
-                  return (
-                    <tr key={t.id} className="border-b border-border/50">
-                      <td className="py-2.5 font-medium">{t.name}</td>
-                      <td className="py-2.5 text-center">{adminTrainer?.assignedLearners ?? t.totalAssessments}</td>
-                      <td className="py-2.5 text-center">{t.totalAssessments}</td>
-                      <td className="py-2.5 text-center">
-                        {t.iqaFlags > 3 ? (
-                          <Badge variant="destructive" className="text-xs">{t.iqaFlags}</Badge>
-                        ) : (
-                          <span>{t.iqaFlags}</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 text-center">{t.iqaApprovals}</td>
-                      <td className="py-2.5 text-center">
-                        <Badge variant={t.status === "Active" ? "default" : "secondary"} className="text-xs">
-                          {t.status}
-                        </Badge>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {stats.trainerPerformances.map((t) => (
+                  <tr key={t.id} className="border-b border-border/50">
+                    <td className="py-2.5 font-medium">{t.name}</td>
+                    <td className="py-2.5 text-center">{t.assigned_learners}</td>
+                    <td className="py-2.5 text-center">{t.total_assessments}</td>
+                    <td className="py-2.5 text-center">
+                      {t.iqa_flags > 3 ? (
+                        <Badge variant="destructive" className="text-xs">{t.iqa_flags}</Badge>
+                      ) : (
+                        <span>{t.iqa_flags}</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 text-center">{t.iqa_approvals}</td>
+                    <td className="py-2.5 text-center">
+                      <Badge variant={t.status === "Active" ? "default" : "secondary"} className="text-xs">
+                        {t.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -208,7 +247,6 @@ const AdminDashboard = () => {
                 <GraduationCap className="w-4 h-4 text-primary" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Manage Qualifications</p>
-                  <p className="text-xs text-muted-foreground">{adminQualifications.length} qualifications configured</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
@@ -218,7 +256,6 @@ const AdminDashboard = () => {
                 <Users className="w-4 h-4 text-primary" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Manage Learners</p>
-                  <p className="text-xs text-muted-foreground">{adminStats.activeLearners} active enrolments</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
@@ -228,67 +265,6 @@ const AdminDashboard = () => {
                 <UserCheck className="w-4 h-4 text-primary" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Manage Trainers</p>
-                  <p className="text-xs text-muted-foreground">{adminStats.activeTrainers} active trainers</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </Link>
-            <Link to="/admin/progress" className="block p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <BarChart3 className="w-4 h-4 text-primary" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Progress Monitoring</p>
-                  <p className="text-xs text-muted-foreground">Track learner progress & at-risk alerts</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </Link>
-            <Link to="/admin/question-bank" className="block p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <BookOpen className="w-4 h-4 text-primary" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Question Bank</p>
-                  <p className="text-xs text-muted-foreground">Manage quizzes & assessment questions</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </Link>
-            <Link to="/admin/final-assessments" className="block p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <ClipboardCheck className="w-4 h-4 text-primary" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Final Assessments</p>
-                  <p className="text-xs text-muted-foreground">Qualification-wide final assessment management</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </Link>
-            <Link to="/admin/reports" className="block p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <FileText className="w-4 h-4 text-primary" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Reports & Export</p>
-                  <p className="text-xs text-muted-foreground">Generate compliance reports</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </Link>
-            <Link to="/admin/eqa-export" className="block p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <Download className="w-4 h-4 text-primary" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">EQA Portfolio Export</p>
-                  <p className="text-xs text-muted-foreground">Full learner portfolios for external quality assurers</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </Link>
-            <Link to="/admin/pages" className="block p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <Blocks className="w-4 h-4 text-primary" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Page Builder</p>
-                  <p className="text-xs text-muted-foreground">Manage website content & pages</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </div>
@@ -302,17 +278,17 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentEnrolments.map((l) => (
+              {stats.recentEnrolments.map((l) => (
                 <div key={l.id} className="flex items-center justify-between text-sm">
                   <div>
-                    <p className="font-medium">{l.name}</p>
-                    <p className="text-xs text-muted-foreground">{l.qualification}</p>
+                    <p className="font-medium">{l.learner_name}</p>
+                    <p className="text-xs text-muted-foreground">{l.qualification_title}</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-muted-foreground">{l.enrolledDate}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(l.enrolled_at).toLocaleDateString()}</span>
                     <div>
-                      <Badge variant={l.paymentStatus === "paid" ? "default" : l.paymentStatus === "pending" ? "secondary" : "destructive"} className="text-xs mt-0.5">
-                        {l.paymentStatus}
+                      <Badge variant={l.payment_status === "paid" ? "default" : "secondary"} className="text-xs mt-0.5">
+                        {l.payment_status}
                       </Badge>
                     </div>
                   </div>
@@ -322,6 +298,15 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {isError && (
+        <Card className="border-destructive bg-destructive/5">
+          <CardContent className="p-6 text-center">
+            <p className="text-destructive font-medium">Failed to sync with server. Using cached data.</p>
+            <Button variant="outline" size="sm" mt-4 onClick={() => refetch()}>Retry Sync</Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

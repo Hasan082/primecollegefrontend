@@ -99,7 +99,11 @@ export const api = createApi({
     "LearnerDeclaration",
     "CourseEvaluationTemplate",
     "CourseEvaluationSubmission",
+<<<<<<< HEAD
     "NavbarSettings",
+=======
+    "ChecklistTemplates",
+>>>>>>> f42b67135e507e3cb9d9ef5fed5fe3e95ae59863
   ],
   endpoints: () => ({}),
 });
