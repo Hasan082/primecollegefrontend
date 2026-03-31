@@ -19,7 +19,6 @@ import AdminLayout from "./components/admin/AdminLayout";
 import IQALayout from "./components/iqa/IQALayout";
 import LearnerLayout from "./components/learner/LearnerLayout";
 import TrainerLayout from "./components/trainer/TrainerLayout";
-import { useDispatch } from "react-redux";
 import { useAppDispatch } from "./redux/hooks";
 import { useGetCsrfTokenQuery } from "./redux/apis/authApi";
 import { setCsrfToken } from "./redux/api";
@@ -100,6 +99,8 @@ const ChecklistBuilder = lazy(() => import("./pages/admin/ChecklistBuilder"));
 const AdminCPDFinalAssessmentEditor = lazy(
   () => import("./pages/admin/AdminCPDFinalAssessmentEditor"),
 );
+const HeaderSettings = lazy(() => import("./pages/admin/HeaderSettings"));
+const FooterSettings = lazy(() => import("./pages/admin/FooterSettings"));
 
 // iqa dashboard
 const IQADashboard = lazy(() => import("./pages/iqa/Dashboard"));
@@ -231,6 +232,8 @@ const App = () => {
                     <Route path="pages" element={<PageManagement />} />
                     <Route path="pages/:pageId" element={<PageEditor />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
+                    <Route path="settings/header" element={<HeaderSettings />} />
+                    <Route path="settings/footer" element={<FooterSettings />} />
                   </Route>
                   <Route path="/iqa" element={<IQALayout />}>
                     <Route path="dashboard" element={<IQADashboard />} />
