@@ -22,6 +22,8 @@ interface IQAUser {
   createdDate: string;
 }
 
+import { StaffCreateForm } from "@/components/admin/StaffCreateForm";
+
 const STORAGE_KEY = "admin_iqa_users";
 
 const loadIQAs = (): IQAUser[] => {
@@ -52,8 +54,6 @@ const IQAManagement = () => {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState<string | null>(null);
-  const [newName, setNewName] = useState("");
-  const [newEmail, setNewEmail] = useState("");
   const [selectedQual, setSelectedQual] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [detailIqa, setDetailIqa] = useState<IQAUser | null>(null);
@@ -71,27 +71,6 @@ const IQAManagement = () => {
   );
   const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  const handleCreate = () => {
-    if (!newName.trim() || !newEmail.trim()) {
-      toast({ title: "Name and Email are required", variant: "destructive" });
-      return;
-    }
-    const newIqa: IQAUser = {
-      id: `iqa-${Date.now()}`,
-      name: newName.trim(),
-      email: newEmail.trim(),
-      status: "active",
-      assignedQualifications: [],
-      createdDate: new Date().toLocaleDateString("en-GB"),
-    };
-    const updated = [newIqa, ...iqas];
-    setIqas(updated);
-    saveIQAs(updated);
-    setNewName("");
-    setNewEmail("");
-    setCreateOpen(false);
-    toast({ title: "IQA account created" });
-  };
 
   const toggleStatus = (id: string) => {
     const updated = iqas.map((i) =>
@@ -142,22 +121,15 @@ const IQAManagement = () => {
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-1" /> Add IQA</Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Create IQA Account</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-1.5">
-                <Label>Full Name *</Label>
-                <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Claire Morgan" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email *</Label>
-                <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="iqa@primecollege.edu" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreate}>Create Account</Button>
-            </DialogFooter>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create IQA Account</DialogTitle>
+            </DialogHeader>
+            <StaffCreateForm 
+              role="iqa" 
+              onSuccess={() => setCreateOpen(false)} 
+              onCancel={() => setCreateOpen(false)} 
+            />
           </DialogContent>
         </Dialog>
       </div>
