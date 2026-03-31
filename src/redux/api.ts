@@ -102,6 +102,7 @@ export const api = createApi({
     "NavbarSettings",
     "FooterSettings",
     "ChecklistTemplates",
+    "EmailLogs",
   ],
   endpoints: () => ({}),
 });

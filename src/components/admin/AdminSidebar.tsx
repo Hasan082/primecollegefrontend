@@ -1,4 +1,4 @@
-import { LayoutDashboard, GraduationCap, Users, UserCheck, BarChart3, FileText, Blocks, BookOpen, ClipboardCheck, Download, Shield, ClipboardList, PanelTop, PanelBottom } from "lucide-react";
+import { LayoutDashboard, GraduationCap, Users, UserCheck, BarChart3, FileText, Blocks, BookOpen, ClipboardCheck, Download, Shield, ClipboardList, PanelTop, PanelBottom, Mail } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -38,6 +38,7 @@ const toolsNavItems = [
 const siteSettingsItems = [
   { title: "Header", url: "/admin/settings/header", icon: PanelTop },
   { title: "Footer", url: "/admin/settings/footer", icon: PanelBottom },
+  { title: "Email Delivery Monitor", url: "/admin/settings/email-delivery-monitor", icon: Mail },
 ];
 
 const AdminSidebar = () => {

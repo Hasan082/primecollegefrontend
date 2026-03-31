@@ -296,6 +296,8 @@ const AdminDashboard = () => {
                       fontSize: "13px",
                       fontWeight: 500,
                     }}
+                    itemStyle={{ color: "#fff" }}
+                    labelStyle={{ color: "#fff" }}
                   />
                 </PieChart>
               </ResponsiveContainer>

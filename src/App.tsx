@@ -101,6 +101,9 @@ const AdminCPDFinalAssessmentEditor = lazy(
 );
 const HeaderSettings = lazy(() => import("./pages/admin/HeaderSettings"));
 const FooterSettings = lazy(() => import("./pages/admin/FooterSettings"));
+const EmailDeliveryMonitor = lazy(
+  () => import("./pages/admin/settings/EmailDeliveryMonitor"),
+);
 
 // iqa dashboard
 const IQADashboard = lazy(() => import("./pages/iqa/Dashboard"));
@@ -233,6 +236,11 @@ const App = () => {
                     <Route path="pages/:pageId" element={<PageEditor />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
                     <Route path="settings/header" element={<HeaderSettings />} />
+                    <Route path="settings/footer" element={<FooterSettings />} />
+                    <Route
+                      path="settings/email-delivery-monitor"
+                      element={<EmailDeliveryMonitor />}
+                    />
 
                   </Route>
                   <Route path="/iqa" element={<IQALayout />}>
