@@ -100,6 +100,7 @@ export const api = createApi({
     "CourseEvaluationTemplate",
     "CourseEvaluationSubmission",
     "NavbarSettings",
+    "FooterSettings",
     "ChecklistTemplates",
   ],
   endpoints: () => ({}),

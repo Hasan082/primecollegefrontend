@@ -2,7 +2,7 @@ import { api } from "../../api";
 
 const qualificationSupportApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getAwardingBodies: builder.query({
+    getAwardingBodies: builder.query<any, void>({
       query: () => ({
         url: "/api/qualification/awarding-bodies/",
         method: "GET",

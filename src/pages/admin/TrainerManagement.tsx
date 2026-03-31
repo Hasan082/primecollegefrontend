@@ -16,6 +16,8 @@ import TrainerDetailModal from "@/components/admin/TrainerDetailModal";
 
 const ITEMS_PER_PAGE = 10;
 
+import { StaffCreateForm } from "@/components/admin/StaffCreateForm";
+
 const TrainerManagement = () => {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -66,24 +68,15 @@ const TrainerManagement = () => {
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-1" /> Add Trainer</Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Add New Trainer</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-1.5"><Label>Full Name</Label><Input placeholder="e.g. Dr. Helen Clark" /></div>
-              <div className="space-y-1.5"><Label>Email</Label><Input type="email" placeholder="trainer@primecollege.edu" /></div>
-              <div className="space-y-1.5">
-                <Label>Specialisms</Label>
-                <Select>
-                  <SelectTrigger><SelectValue placeholder="Primary specialism" /></SelectTrigger>
-                  <SelectContent>
-                    {["Business","Care","Management","First Aid"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full" onClick={() => { setDialogOpen(false); toast({ title: "Trainer added (demo)" }); }}>
-                Add Trainer
-              </Button>
-            </div>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Trainer</DialogTitle>
+            </DialogHeader>
+            <StaffCreateForm 
+              role="trainer" 
+              onSuccess={() => setDialogOpen(false)} 
+              onCancel={() => setDialogOpen(false)} 
+            />
           </DialogContent>
         </Dialog>
       </div>
