@@ -16,7 +16,22 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 
-const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
+// Vibrant color palettes for dashboard charts
+const chartColors = {
+  primary: ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#14b8a6"],
+  warm: ["#f97316", "#ef4444", "#eab308", "#f43f5e", "#fb923c"],
+};
+
+const adjustColorBrightness = (color: string, factor: number) => {
+  const hex = color.replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const newR = Math.min(255, Math.round(r * factor));
+  const newG = Math.min(255, Math.round(g * factor));
+  const newB = Math.min(255, Math.round(b * factor));
+  return `#${newR.toString(16).padStart(2, "0")}${newG.toString(16).padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
+};
 
 const AdminDashboard = () => {
   const [filters] = useState<DashboardFilters>({
@@ -46,7 +61,7 @@ const AdminDashboard = () => {
   }
 
   const data: DashboardOverviewResponse["data"] | undefined = dashboardResponse?.data;
-  
+
   const stats = {
     activeLearners: data?.kpis?.total_learners || 0,
     activeQualifications: data?.kpis?.active_qualifications || 0,
@@ -56,7 +71,8 @@ const AdminDashboard = () => {
     monthlyEnrolments: data?.charts?.enrolments_trend_simple || [],
     categoryDistribution: data?.charts?.learners_by_category_simple || [],
     trainerPerformances: data?.trainer_overview || [],
-    recentEnrolments: data?.recent_enrolments || []
+    recentEnrolments: data?.recent_enrolments || [],
+    statusBreakdown: data?.status_breakdown || []
   };
 
   return (
@@ -152,15 +168,49 @@ const AdminDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={stats.monthlyEnrolments}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis allowDecimals={false} className="text-xs" />
-                <Tooltip />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {stats.monthlyEnrolments.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={stats.monthlyEnrolments} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    className="text-xs"
+                    tick={{ fill: "#6b7280", fontSize: 11, fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    className="text-xs"
+                    tick={{ fill: "#6b7280", fontSize: 11, fontWeight: 500 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(59, 130, 246, 0.1)" }}
+                    contentStyle={{
+                      backgroundColor: "rgba(0, 0, 0, 0.85)",
+                      border: "none",
+                      borderRadius: "10px",
+                      padding: "12px 16px",
+                      color: "#fff",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                    }}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill="#3b82f6"
+                    radius={[6, 6, 0, 0]}
+                    animationDuration={800}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[220px] flex items-center justify-center text-muted-foreground text-sm">
+                No enrolment data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -171,16 +221,49 @@ const AdminDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={stats.categoryDistribution} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                  {stats.categoryDistribution.map((_, i: number) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {stats.categoryDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={stats.categoryDistribution}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={75}
+                    innerRadius={35}
+                    dataKey="value"
+                    paddingAngle={3}
+                    stroke="#fff"
+                    strokeWidth={2}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    labelLine={false}
+                  >
+                    {stats.categoryDistribution.map((entry: any, i: number) => (
+                      <Cell
+                        key={i}
+                        fill={chartColors.warm[i % chartColors.warm.length]}
+                        stroke={adjustColorBrightness(chartColors.warm[i % chartColors.warm.length], 1.15)}
+                        strokeWidth={3}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "rgba(0, 0, 0, 0.85)",
+                      border: "none",
+                      borderRadius: "10px",
+                      padding: "12px 16px",
+                      color: "#fff",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[220px] flex items-center justify-center text-muted-foreground text-sm">
+                No category data available
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
