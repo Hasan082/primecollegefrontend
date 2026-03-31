@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { CalendarDays, CheckCircle2, Home, Mail, PackageOpen } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Home,
+  Mail,
+  PackageOpen,
+} from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
-import { useGetPublicOrderStatusQuery } from "@/redux/apis/orderApi";
 
 const STORAGE_KEY = "primecollege_pending_checkout";
 
 const CheckoutSuccess = () => {
   const { clearCart } = useCart();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const checkoutSummary = useMemo(() => {
     const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -36,65 +39,6 @@ const CheckoutSuccess = () => {
     }
   }, []);
 
-  const checkoutForm = useMemo(() => {
-    const raw = sessionStorage.getItem("primecollege_checkout_form");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as { email?: string };
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const orderNumberFromUrl = searchParams.get("order_number") || "";
-  const orderNumber = orderNumberFromUrl || checkoutSummary?.orderNumber || "";
-  const orderEmail = checkoutSummary?.customer?.email || checkoutForm?.email || "";
-  const [shouldPollOrderStatus, setShouldPollOrderStatus] = useState(true);
-
-  const {
-    data: orderStatusResponse,
-    isFetching: isStatusFetching,
-  } = useGetPublicOrderStatusQuery(
-    { order_number: orderNumber, email: orderEmail },
-    {
-      skip: !orderNumber || !orderEmail,
-      pollingInterval: shouldPollOrderStatus ? 3000 : 0,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-    },
-  );
-
-  const orderStatus = orderStatusResponse?.data;
-
-  useEffect(() => {
-    if (orderStatus?.status_view === "failed") {
-      const next = new URLSearchParams({
-        order_number: orderStatus.order_number,
-      });
-      if (orderStatus.status_message) {
-        next.set("message", orderStatus.status_message);
-      }
-      navigate(`/checkout/failed?${next.toString()}`, { replace: true });
-      return;
-    }
-
-    if (orderStatus?.status_view === "cancelled") {
-      navigate("/checkout/cancel", { replace: true });
-    }
-  }, [navigate, orderStatus]);
-
-  useEffect(() => {
-    // Stop polling after successful payment once order details are present.
-    if (orderStatus?.status_view === "paid" && (orderStatus?.items?.length ?? 0) > 0) {
-      setShouldPollOrderStatus(false);
-    }
-  }, [orderStatus?.items?.length, orderStatus?.status_view]);
-
-  useEffect(() => {
-    // Re-enable polling when the tracked order identity changes.
-    setShouldPollOrderStatus(true);
-  }, [orderEmail, orderNumber]);
-
   useEffect(() => {
     clearCart();
     sessionStorage.removeItem("primecollege_payment_setup");
@@ -103,23 +47,12 @@ const CheckoutSuccess = () => {
     // but the cart itself is now empty in localStorage.
   }, [clearCart]);
 
-  const currency = orderStatus?.currency || checkoutSummary?.currency || "GBP";
-  const subtotal = Number(checkoutSummary?.subtotal || checkoutSummary?.grandTotal || orderStatus?.grand_total || 0);
+  const currency = checkoutSummary?.currency || "GBP";
+  const subtotal = Number(
+    checkoutSummary?.subtotal || checkoutSummary?.grandTotal || 0,
+  );
   const discountTotal = Number(checkoutSummary?.discountTotal || 0);
-  const totalPaid = Number(orderStatus?.grand_total || checkoutSummary?.grandTotal || 0);
-  const enrolledItems = orderStatus?.items?.length
-    ? orderStatus.items.map((item) => ({
-      key: item.qualification_id,
-      title: item.qualification_title,
-      price: `${currency} ${Number(item.line_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      meta: item.status,
-    }))
-    : (checkoutSummary?.items || []).map((item) => ({
-      key: item.slug,
-      title: item.title,
-      price: item.price,
-      meta: [item.level, item.duration, item.qualificationSessionTitle].filter(Boolean).join(" • "),
-    }));
+  const totalPaid = Number(checkoutSummary?.grandTotal || 0);
 
   return (
     <div className="min-h-screen bg-muted px-4 py-16">
@@ -128,41 +61,59 @@ const CheckoutSuccess = () => {
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/8">
             <CheckCircle2 className="h-10 w-10 text-primary" />
           </div>
-          <h1 className="text-4xl font-bold text-foreground">Enrollment Successful!</h1>
+          <h1 className="text-4xl font-bold text-foreground">
+            Enrollment Successful!
+          </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
-            {orderStatus?.status_message ||
-              "Thank you for enrolling with The Prime College. We are confirming your payment."}
+            Thank you for enrolling with The Prime College. A confirmation email
+            has been sent to your inbox.
           </p>
-          {(orderStatus?.status_view === "processing" || isStatusFetching) ? (
-            <p className="mt-2 text-xs text-muted-foreground">Payment confirmation is in progress. This page refreshes automatically.</p>
-          ) : null}
         </section>
 
         <section className="rounded-md border border-border bg-card p-6 shadow-sm md:p-8">
-          <h2 className="text-2xl font-bold text-foreground">Enrollment Details</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            Enrollment Details
+          </h2>
 
           <div className="mt-6 flex items-center justify-between border-b border-border pb-4 text-sm">
             <span className="text-muted-foreground">Order ID</span>
-            <span className="font-semibold text-foreground">{orderStatus?.order_number || checkoutSummary?.orderNumber || "Pending"}</span>
+            <span className="font-semibold text-foreground">
+              {checkoutSummary?.orderNumber || "Pending"}
+            </span>
           </div>
 
           <div className="mt-4 border-b border-border pb-5">
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Enrolled Courses</p>
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+              Enrolled Courses
+            </p>
             <div className="space-y-4">
-              {enrolledItems.map((item) => (
-                <div key={item.key} className="flex items-start justify-between gap-4">
+              {checkoutSummary?.items?.map((item) => (
+                <div
+                  key={item.slug}
+                  className="flex items-start justify-between gap-4"
+                >
                   <div>
-                    <p className="font-semibold text-foreground">{item.title}</p>
+                    <p className="font-semibold text-foreground">
+                      {item.title}
+                    </p>
                     <div className="mt-1 flex flex-wrap gap-2 text-sm text-muted-foreground">
-                      {item.meta ? <span>{item.meta}</span> : null}
+                      {item.level ? <span>{item.level}</span> : null}
+                      {item.duration ? <span>• {item.duration}</span> : null}
+                      {item.qualificationSessionTitle ? (
+                        <span>• {item.qualificationSessionTitle}</span>
+                      ) : null}
                     </div>
                   </div>
-                  <span className="shrink-0 font-semibold text-foreground">{item.price}</span>
+                  <span className="shrink-0 font-semibold text-foreground">
+                    {item.price}
+                  </span>
                 </div>
-              ))}
-              {enrolledItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Your enrolled courses will appear here once payment confirmation is available.</p>
-              ) : null}
+              )) || (
+                <p className="text-sm text-muted-foreground">
+                  Your enrolled courses will appear here once payment
+                  confirmation is available.
+                </p>
+              )}
             </div>
           </div>
 
@@ -170,28 +121,42 @@ const CheckoutSuccess = () => {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
               <span className="text-foreground">
-                {currency} {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {currency}{" "}
+                {subtotal.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
             {discountTotal > 0 ? (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Discount</span>
                 <span className="text-primary">
-                  -{currency} {discountTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  -{currency}{" "}
+                  {discountTotal.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             ) : null}
             <div className="flex justify-between border-t border-border pt-3 text-2xl font-bold">
               <span className="text-foreground">Total Paid</span>
               <span className="text-primary">
-                {currency} {totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {currency}{" "}
+                {totalPaid.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             </div>
           </div>
         </section>
 
         <section className="rounded-md border border-border bg-card p-6 shadow-sm md:p-8">
-          <h2 className="text-2xl font-bold text-foreground">What Happens Next?</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            What Happens Next?
+          </h2>
 
           <div className="mt-6 space-y-5">
             <SuccessStep
@@ -242,10 +207,14 @@ const SuccessStep = ({
   description: string;
 }) => (
   <div className="flex gap-4">
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/8">{icon}</div>
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/8">
+      {icon}
+    </div>
     <div>
       <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-      <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+        {description}
+      </p>
     </div>
   </div>
 );

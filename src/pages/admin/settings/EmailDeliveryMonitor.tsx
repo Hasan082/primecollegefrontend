@@ -151,7 +151,7 @@ const EmailDeliveryMonitor = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Mail className="w-5 h-5 text-primary" /> Email Delivery Monitor
+            <Mail className="w-5 h-5 text-primary" /> Email Delivery Logs
           </h1>
           <p className="text-sm text-muted-foreground">Track failed outbound emails and retry delivery.</p>
         </div>

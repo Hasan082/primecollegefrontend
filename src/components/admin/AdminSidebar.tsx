@@ -38,7 +38,7 @@ const toolsNavItems = [
 const siteSettingsItems = [
   { title: "Header", url: "/admin/settings/header", icon: PanelTop },
   { title: "Footer", url: "/admin/settings/footer", icon: PanelBottom },
-  { title: "Email Delivery Monitor", url: "/admin/settings/email-delivery-monitor", icon: Mail },
+  { title: "Email Logs", url: "/admin/settings/email-delivery-monitor", icon: Mail },
 ];
 
 const AdminSidebar = () => {

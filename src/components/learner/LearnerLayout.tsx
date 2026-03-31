@@ -41,7 +41,7 @@ const LearnerLayout = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex flex-col w-full">
         {/* Header - full width */}
         <header className="bg-primary text-primary-foreground sticky top-0 z-30">

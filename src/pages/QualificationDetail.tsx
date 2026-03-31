@@ -191,7 +191,7 @@ const QualificationDetail = () => {
             </div>
           </section>
 
-          {qualification.has_sessions && qualification.upcoming_sessions.length > 0 ? (
+          {qualification.has_sessions && qualification?.upcoming_sessions?.length > 0 ? (
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
               <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
@@ -244,9 +244,9 @@ const QualificationDetail = () => {
             </section>
           ) : null}
 
-          {bodyBlocks.length > 0 ? (
+          {bodyBlocks?.length > 0 ? (
             <section className="space-y-8">
-              {bodyBlocks.map((block) => (
+              {bodyBlocks?.map((block) => (
                 <QualificationBlockRenderer key={block.id} block={block} />
               ))}
             </section>
