@@ -51,6 +51,8 @@ describe("EmailDeliveryMonitor", () => {
             metadata: {},
             attempt_count: 1,
             error_message: "SMTPAuthenticationError",
+            can_resend: true,
+            resend_block_reason: null,
             sent_at: null,
             created_at: "2026-03-31T08:14:34.529217Z",
             updated_at: "2026-03-31T08:14:40.529217Z",

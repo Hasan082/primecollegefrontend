@@ -277,6 +277,26 @@ const Checkout = () => {
         publishableKey: response.data.stripe_publishable_key,
         orderNumber: response.data.order.order_number,
       });
+      sessionStorage.setItem(
+        "primecollege_pending_checkout",
+        JSON.stringify({
+          orderNumber: response.data.order.order_number,
+          subtotal: response.data.order.subtotal,
+          discountTotal: response.data.order.discount_total,
+          grandTotal: response.data.order.grand_total,
+          currency: response.data.order.currency,
+          items: response.data.order.items.map((item) => ({
+            slug: item.id,
+            title: item.qualification_title,
+            price: `${response.data.order.currency} ${Number(item.line_total).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`,
+            qualificationSessionTitle: item.qualification_session_title,
+          })),
+          customer: { firstName: form.firstName, email: form.email },
+        }),
+      );
       lastPreparedSignatureRef.current = checkoutSignature;
 
       toast({

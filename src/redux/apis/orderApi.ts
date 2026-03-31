@@ -52,6 +52,38 @@ export interface CheckoutOnlineResponse {
   };
 }
 
+export interface PublicOrderStatusResponse {
+  success: boolean;
+  message: string;
+  data: {
+    order_id: string;
+    order_number: string;
+    customer_email: string;
+    status: string;
+    status_label: string;
+    status_view: "pending" | "processing" | "paid" | "failed" | "cancelled" | "refunded";
+    status_message: string;
+    is_terminal: boolean;
+    poll_recommended_seconds: number | null;
+    payment_method: string;
+    currency: string;
+    grand_total: string;
+    paid_at: string | null;
+    items: Array<{
+      qualification_id: string;
+      qualification_title: string;
+      status: string;
+      line_total: string;
+    }>;
+    stripe: {
+      payment_intent_id: string | null;
+      latest_session_status: string | null;
+      latest_webhook_event_type: string | null;
+      latest_webhook_processing_status: string | null;
+    };
+  };
+}
+
 const orderApi = api.injectEndpoints({
   endpoints: (builder) => ({
     checkoutOnline: builder.mutation<CheckoutOnlineResponse, CheckoutOnlinePayload>({
@@ -61,7 +93,14 @@ const orderApi = api.injectEndpoints({
         body: data,
       }),
     }),
+    getPublicOrderStatus: builder.query<PublicOrderStatusResponse, { order_number: string; email: string }>({
+      query: ({ order_number, email }) => ({
+        url: `/api/orders/status/`,
+        method: "GET",
+        params: { order_number, email },
+      }),
+    }),
   }),
 });
 
-export const { useCheckoutOnlineMutation } = orderApi;
+export const { useCheckoutOnlineMutation, useGetPublicOrderStatusQuery } = orderApi;

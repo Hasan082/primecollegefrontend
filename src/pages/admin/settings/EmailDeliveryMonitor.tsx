@@ -248,7 +248,7 @@ const EmailDeliveryMonitor = () => {
                     <TableCell>{formatDateTime(log.created_at)}</TableCell>
                     <TableCell>{formatDateTime(log.sent_at)}</TableCell>
                     <TableCell className="text-right">
-                      {log.status === "failed" ? (
+                      {log.status === "failed" && log.can_resend ? (
                         <Button
                           size="sm"
                           variant="outline"
@@ -258,6 +258,8 @@ const EmailDeliveryMonitor = () => {
                           <Send className="w-3.5 h-3.5 mr-1.5" />
                           {resendingId === log.id ? "Resending..." : "Resend"}
                         </Button>
+                      ) : log.status === "failed" && log.resend_block_reason ? (
+                        <span className="text-xs text-muted-foreground">{log.resend_block_reason}</span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}

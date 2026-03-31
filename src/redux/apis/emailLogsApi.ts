@@ -16,6 +16,8 @@ export interface EmailLog {
   metadata: Record<string, unknown>;
   attempt_count: number;
   error_message: string | null;
+  can_resend: boolean;
+  resend_block_reason: string | null;
   sent_at: string | null;
   created_at: string;
   updated_at: string;

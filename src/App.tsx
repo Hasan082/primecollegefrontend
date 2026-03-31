@@ -35,6 +35,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const CheckoutSuccess = lazy(() => import("./pages/checkout/CheckoutSuccess"));
 const CheckoutCancel = lazy(() => import("./pages/checkout/CheckoutCancel"));
+const CheckoutFailed = lazy(() => import("./pages/checkout/CheckoutFailed"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const StaffLogin = lazy(() => import("./pages/StaffLogin"));
 const Blog = lazy(() => import("./pages/Blog"));
@@ -165,6 +166,7 @@ const App = () => {
                     element={<CheckoutSuccess />}
                   />
                   <Route path="/checkout/cancel" element={<CheckoutCancel />} />
+                  <Route path="/checkout/failed" element={<CheckoutFailed />} />
                   <Route path="/set-password" element={<SetPassword />} />
                   <Route path="/learner" element={<LearnerLayout />}>
                     <Route path="dashboard" element={<Dashboard />} />
