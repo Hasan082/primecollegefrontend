@@ -41,6 +41,42 @@ const emptyChartData = {
   datasets: [],
 };
 
+// Vibrant color palettes for charts
+const chartColorPalettes = {
+  primary: ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#14b8a6", "#84cc16", "#06b6d4", "#f43f5e"],
+  warm: ["#f97316", "#ef4444", "#eab308", "#f43f5e", "#fb923c"],
+  cool: ["#3b82f6", "#06b6d4", "#14b8a6", "#8b5cf6", "#6366f1"],
+  success: ["#22c55e", "#14b8a6", "#84cc16", "#84cc16", "#22c55e"],
+  mixed: ["#3b82f6", "#22c55e", "#f97316", "#ec4899", "#8b5cf6", "#14b8a6", "#eab308", "#ef4444"],
+};
+
+const applyColorsToData = (data: any, colors: string[]) => {
+  if (!data || !data.datasets) return data;
+  return {
+    ...data,
+    datasets: data.datasets.map((dataset: any, index: number) => ({
+      ...dataset,
+      backgroundColor: dataset.backgroundColor || colors[index % colors.length],
+      borderColor: dataset.borderColor || colors[index % colors.length],
+      borderWidth: 2,
+      hoverBackgroundColor: dataset.backgroundColor || adjustColorBrightness(colors[index % colors.length], 1.1),
+      hoverBorderColor: dataset.borderColor || adjustColorBrightness(colors[index % colors.length], 1.15),
+      hoverOffset: 4,
+    })),
+  };
+};
+
+const adjustColorBrightness = (color: string, factor: number) => {
+  const hex = color.replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const newR = Math.min(255, Math.round(r * factor));
+  const newG = Math.min(255, Math.round(g * factor));
+  const newB = Math.min(255, Math.round(b * factor));
+  return `#${newR.toString(16).padStart(2, "0")}${newG.toString(16).padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
+};
+
 const AdminAnalytics = () => {
   const [filters, setFilters] = useState<AnalyticsFilters>({
     range: "30d",
@@ -73,11 +109,13 @@ const AdminAnalytics = () => {
         },
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        padding: 12,
-        titleFont: { size: 14 },
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
+        padding: 14,
+        titleFont: { size: 14, weight: "600" },
         bodyFont: { size: 13 },
-        cornerRadius: 8,
+        cornerRadius: 10,
+        displayColors: true,
+        usePointStyle: true,
       },
     },
     scales: {
@@ -86,16 +124,18 @@ const AdminAnalytics = () => {
           display: false,
         },
         ticks: {
-          font: { size: 10 },
+          font: { size: 11, weight: "500" },
+          color: "#6b7280",
         },
       },
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.05)",
+          color: "rgba(0, 0, 0, 0.06)",
         },
         ticks: {
-          font: { size: 10 },
+          font: { size: 11, weight: "500" },
+          color: "#6b7280",
         },
       },
     },
@@ -268,7 +308,10 @@ const AdminAnalytics = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
-                <Bar data={safeCharts.enrolments_trend} options={chartOptions} />
+                <Bar 
+                  data={applyColorsToData(safeCharts.enrolments_trend, chartColorPalettes.primary)} 
+                  options={chartOptions} 
+                />
               </div>
             </CardContent>
           </Card>
@@ -283,7 +326,7 @@ const AdminAnalytics = () => {
             <CardContent>
               <div className="h-[300px]">
                 <Line
-                  data={safeCharts.revenue_trend}
+                  data={applyColorsToData(safeCharts.revenue_trend, chartColorPalettes.success)}
                   options={{
                     ...chartOptions,
                     plugins: {
@@ -294,7 +337,7 @@ const AdminAnalytics = () => {
                       line: {
                         tension: 0.4,
                         fill: true,
-                        backgroundColor: "rgba(59, 130, 246, 0.1)",
+                        backgroundColor: "rgba(34, 197, 94, 0.15)",
                       },
                     },
                   }}
@@ -313,7 +356,7 @@ const AdminAnalytics = () => {
             <CardContent className="flex justify-center">
               <div className="h-[280px] w-full max-w-[280px]">
                 <Doughnut
-                  data={safeCharts.qualification_type_split}
+                  data={applyColorsToData(safeCharts.qualification_type_split, chartColorPalettes.warm)}
                   options={{
                     ...pieOptions,
                     cutout: "70%",
@@ -332,7 +375,10 @@ const AdminAnalytics = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
-                <Bar data={safeCharts.learners_by_category} options={{ ...chartOptions, indexAxis: 'y' as const }} />
+                <Bar 
+                  data={applyColorsToData(safeCharts.learners_by_category, chartColorPalettes.cool)} 
+                  options={{ ...chartOptions, indexAxis: 'y' as const }} 
+                />
               </div>
             </CardContent>
           </Card>
@@ -344,7 +390,10 @@ const AdminAnalytics = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
-                <Bar data={safeCharts.top_qualifications_by_enrolment} options={chartOptions} />
+                <Bar 
+                  data={applyColorsToData(safeCharts.top_qualifications_by_enrolment, chartColorPalettes.mixed)} 
+                  options={chartOptions} 
+                />
               </div>
             </CardContent>
           </Card>
@@ -356,7 +405,10 @@ const AdminAnalytics = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
-                <Bar data={safeCharts.staff_workload} options={chartOptions} />
+                <Bar 
+                  data={applyColorsToData(safeCharts.staff_workload, chartColorPalettes.primary)} 
+                  options={chartOptions} 
+                />
               </div>
             </CardContent>
           </Card>

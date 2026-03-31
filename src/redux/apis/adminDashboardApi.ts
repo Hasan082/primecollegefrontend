@@ -16,15 +16,44 @@ export interface DashboardOverviewResponse {
   success: boolean;
   message: string;
   data: {
+    filters: {
+      range: string;
+      qualification_id: string | null;
+      is_cpd: boolean | null;
+      assessor_id: string | null;
+      iqa_id: string | null;
+    };
     kpis: {
       total_learners: number;
-      active_qualifications: number;
+      active_enrolments: number;
+      completed_enrolments: number;
+      on_hold_enrolments: number;
+      withdrawn_enrolments: number;
+      certificates_issued: number;
+      gross_revenue: string;
+      paid_orders: number;
+      average_completion_rate: number;
+    };
+    today: {
+      new_enrolments: number;
+      completed_enrolments: number;
+      issued_certificates: number;
+      paid_orders: number;
+      revenue: string;
     };
     pipeline: {
       trainer_review_pending: number;
       iqa_review_pending: number;
+      declaration_pending: number;
+      evaluation_pending: number;
+      final_assessment_pending: number;
     };
-    escalated_iqa_count: number;
+    alerts: any[];
+    status_breakdown: Array<{
+      key: string;
+      label: string;
+      count: number;
+    }>;
     charts: {
       enrolments_trend_simple: Array<{
         month: string;
@@ -35,7 +64,34 @@ export interface DashboardOverviewResponse {
         value: number;
       }>;
     };
-    trainer_overview: Array<{
+    recent_enrolments: Array<{
+      id: string;
+      enrolment_number: string;
+      learner_name: string;
+      qualification_title: string;
+      is_cpd: boolean;
+      status: string;
+      payment_status: string;
+      enrolled_at: string;
+    }>;
+    recent_orders: Array<{
+      id: string;
+      order_number: string;
+      customer_name: string;
+      status: string;
+      payment_method: string;
+      currency: string;
+      grand_total: string;
+      paid_at: string;
+    }>;
+    top_qualifications: Array<{
+      qualification_id: string;
+      title: string;
+      enrolments: number;
+      completions: number;
+      revenue: string;
+    }>;
+    trainer_overview?: Array<{
       id: string;
       name: string;
       assigned_learners: number;
@@ -44,13 +100,7 @@ export interface DashboardOverviewResponse {
       iqa_approvals: number;
       status: string;
     }>;
-    recent_enrolments: Array<{
-      id: string;
-      learner_name: string;
-      qualification_title: string;
-      payment_status: string;
-      enrolled_at: string;
-    }>;
+    escalated_iqa_count?: number;
   };
 }
 

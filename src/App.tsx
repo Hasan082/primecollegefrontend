@@ -19,7 +19,6 @@ import AdminLayout from "./components/admin/AdminLayout";
 import IQALayout from "./components/iqa/IQALayout";
 import LearnerLayout from "./components/learner/LearnerLayout";
 import TrainerLayout from "./components/trainer/TrainerLayout";
-import { useDispatch } from "react-redux";
 import { useAppDispatch } from "./redux/hooks";
 import { useGetCsrfTokenQuery } from "./redux/apis/authApi";
 import { setCsrfToken } from "./redux/api";
@@ -232,9 +231,9 @@ const App = () => {
                     <Route path="checklists" element={<ChecklistBuilder />} />
                     <Route path="pages" element={<PageManagement />} />
                     <Route path="pages/:pageId" element={<PageEditor />} />
-                    <Route path="settings/header" element={<HeaderSettings />} />
-                    <Route path="settings/footer" element={<FooterSettings />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
+                    <Route path="settings/header" element={<HeaderSettings />} />
+
                   </Route>
                   <Route path="/iqa" element={<IQALayout />}>
                     <Route path="dashboard" element={<IQADashboard />} />
