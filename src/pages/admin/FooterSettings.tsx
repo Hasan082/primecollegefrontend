@@ -16,6 +16,12 @@ import LinkGroupManager from "@/components/admin/settings/footer/LinkGroupManage
 import LinkGroupForm from "@/components/admin/settings/footer/LinkGroupForm";
 import SocialLinksManager from "@/components/admin/settings/footer/SocialLinksManager";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const FooterSettings = () => {
   const { toast } = useToast();
@@ -111,27 +117,39 @@ const FooterSettings = () => {
 
   const handleSaveAll = async () => {
     try {
-      const formData = new FormData();
-      if (settings.id) formData.append("id", settings.id);
-      
-      if (settings.footer_logo instanceof File) {
-        formData.append("footer_logo", settings.footer_logo);
-      } else if (typeof settings.footer_logo === "string") {
-        formData.append("footer_logo", settings.footer_logo);
-      }
-      
-      formData.append("footer_logo_alt_text", settings.footer_logo_alt_text);
-      formData.append("description", settings.description);
-      formData.append("address", settings.address);
-      formData.append("email", settings.email);
-      formData.append("phone", settings.phone);
-      formData.append("copyright_name", settings.copyright_name);
-      formData.append("copyright_year", String(settings.copyright_year));
-      
-      formData.append("link_groups", JSON.stringify(settings.link_groups));
-      formData.append("social_links", JSON.stringify(settings.social_links));
+      const isNewLogo = settings.footer_logo instanceof File;
+      let payload: any;
 
-      await updateFooter(formData).unwrap();
+      if (isNewLogo) {
+        // Use FormData if there is a new file to upload
+        const formData = new FormData();
+        if (settings.id) formData.append("id", settings.id);
+        formData.append("footer_logo", settings.footer_logo as File);
+        formData.append("footer_logo_alt_text", settings.footer_logo_alt_text);
+        formData.append("description", settings.description);
+        formData.append("address", settings.address);
+        formData.append("email", settings.email);
+        formData.append("phone", settings.phone);
+        formData.append("copyright_name", settings.copyright_name);
+        formData.append("copyright_year", String(settings.copyright_year));
+        
+        // Complex objects must be stringified in FormData
+        formData.append("link_groups", JSON.stringify(settings.link_groups));
+        formData.append("social_links", JSON.stringify(settings.social_links));
+        payload = formData;
+      } else {
+        // Use plain JSON object if no new file is being uploaded
+        payload = {
+          ...settings,
+          // Ensure numbers are numbers
+          copyright_year: Number(settings.copyright_year),
+          // Backend might expect these even if they haven't changed
+          link_groups: settings.link_groups,
+          social_links: settings.social_links,
+        };
+      }
+
+      await updateFooter(payload).unwrap();
       toast({ 
         title: "Success",
         description: "Footer settings saved successfully!",
@@ -156,10 +174,7 @@ const FooterSettings = () => {
   }
 
   return (
-    <div className={cn(
-      "max-w-5xl mx-auto space-y-8 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500",
-      groupFormConfig.show && "pointer-events-none opacity-40 blur-[1px]"
-    )}>
+    <div className="max-w-5xl mx-auto space-y-8 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 sticky top-0 z-20 bg-background/80 backdrop-blur-md py-4 -mx-4 px-4 rounded-b-xl border-b border-border/50">
         <div className="space-y-1">
@@ -241,18 +256,27 @@ const FooterSettings = () => {
       </div>
 
       {/* Overlay Form for Link Group */}
-      {groupFormConfig.show && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/20 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-auto">
-          <div className="w-full max-w-2xl animate-in zoom-in-95 duration-300">
-            <LinkGroupForm
-              onSave={handleSaveGroup}
-              onCancel={() => setGroupFormConfig({ show: false, index: null })}
-              initialData={groupFormConfig.initialData}
-              title={groupFormConfig.index !== null ? "Edit Link Group" : "Create New Link Group"}
-            />
-          </div>
-        </div>
-      )}
+      <Dialog 
+        open={groupFormConfig.show} 
+        onOpenChange={(open) => !open && setGroupFormConfig({ show: false, index: null })}
+      >
+        <DialogContent className="max-w-2xl p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="px-6 pt-6 pb-2">
+             <DialogTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
+               <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                 <PanelBottom className="h-5 w-5" />
+               </div>
+               {groupFormConfig.index !== null ? "Edit Link Group" : "Create New Link Group"}
+             </DialogTitle>
+          </DialogHeader>
+          <LinkGroupForm
+            onSave={handleSaveGroup}
+            onCancel={() => setGroupFormConfig({ show: false, index: null })}
+            initialData={groupFormConfig.initialData}
+            title={groupFormConfig.index !== null ? "Edit Link Group" : "Create New Link Group"}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

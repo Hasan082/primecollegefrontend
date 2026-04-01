@@ -48,11 +48,11 @@ const footerApi = api.injectEndpoints({
       }),
       providesTags: ["FooterSettings"],
     }),
-    updateFooterSettings: builder.mutation<{ success: boolean; message: string; data: FooterSettings }, FormData>({
-      query: (formData) => ({
+    updateFooterSettings: builder.mutation<{ success: boolean; message: string; data: FooterSettings }, FormData | any>({
+      query: (body) => ({
         url: "/api/settings/footer/admin/",
         method: "PATCH",
-        body: formData,
+        body,
       }),
       invalidatesTags: ["FooterSettings"],
     }),
