@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateMeMutation, useGetMeQuery } from "@/redux/apis/authApi";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const Profile = () => {
   const { toast } = useToast();
