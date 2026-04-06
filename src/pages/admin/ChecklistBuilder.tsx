@@ -38,14 +38,15 @@ import {
   useGetChecklistTemplatesQuery,
   useGetQualificationOptionsQuery,
 } from "@/redux/apis/qualification/qualificationApi";
+import {
+  mapChecklistTemplateFromApi,
+  type ChecklistApiTemplate,
+} from "@/lib/checklists";
 import CreateChecklistModal from "../../components/iqa/checkLists/CreateChecklistModal";
 import EditChecklistModal from "../../components/iqa/checkLists/EditChecklistModal";
 import ChecklistViewModal from "../../components/iqa/checkLists/ChecklistViewModal";
 
 const ITEMS_PER_PAGE = 10;
-
-const formatChecklistDate = (date?: string) =>
-  date ? new Date(date).toLocaleDateString("en-GB") : "";
 
 const ChecklistBuilder = () => {
   const [qualFilter, setQualFilter] = useState("all");
@@ -73,17 +74,19 @@ const ChecklistBuilder = () => {
   });
 
   const qualificationOptions = qualificationOptionsResponse?.data || [];
-  const templates = checklistTemplatesResponse?.data?.results || [];
+  const templates = (
+    (checklistTemplatesResponse?.data?.results as ChecklistApiTemplate[]) || []
+  ).map(mapChecklistTemplateFromApi);
   const totalItems = checklistTemplatesResponse?.data?.count || 0;
 
   const getQualTitle = (template: any) =>
-    template?.qualification_title ||
-    qualificationOptions.find((q: any) => q.id === template?.qualification_id)
+    template?.qualificationTitle ||
+    qualificationOptions.find((q: any) => q.id === template?.qualificationId)
       ?.title ||
     "-";
 
   const getUnitLabel = (template: any) =>
-    template?.unit_title || "Qualification-level";
+    template?.unitTitle || "Qualification-level";
 
   const startEdit = (template: any) => {
     setEditingTemplate(template);
@@ -176,26 +179,26 @@ const ChecklistBuilder = () => {
                     </TableCell>
 
                     <TableCell className="max-w-[280px] truncate">
-                      {template?.qualification_title}
+                      {template.qualificationTitle || "-"}
                     </TableCell>
 
                     <TableCell className="max-w-[260px] truncate">
-                      {template?.unit_title}
+                      {template.unitTitle}
                     </TableCell>
 
                     <TableCell>
                       <Badge
-                        variant={template.is_active ? "default" : "secondary"}
+                        variant={template.isActive ? "default" : "secondary"}
                         className="text-[10px]"
                       >
-                        {template.is_active ? "Active" : "Inactive"}
+                        {template.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
 
                     <TableCell>{template.items?.length || 0}</TableCell>
 
                     <TableCell>
-                      {formatChecklistDate(template.updated_at)}
+                      {template.updatedDate}
                     </TableCell>
 
                     <TableCell className="text-right">
