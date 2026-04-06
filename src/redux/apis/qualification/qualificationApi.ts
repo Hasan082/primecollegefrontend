@@ -27,10 +27,14 @@ const qualificationApi = api.injectEndpoints({
       }),
     }),
     getChecklistTemplates: builder.query({
-      query: () => ({
-        url: `/api/v1/checklists/templates/`,
-        method: "GET",
-      }),
+      query: (args) => {
+        const filteredParams = cleanObject(args);
+        return {
+          url: `/api/v1/checklists/templates/`,
+          method: "GET",
+          params: filteredParams,
+        };
+      },
       providesTags: ["ChecklistTemplates"],
     }),
     createChecklistTemplate: builder.mutation({
