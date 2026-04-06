@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
+import { Eye, ArrowLeft, AlertTriangle, Loader2, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -14,24 +15,32 @@ import {
 } from "@/components/ui/table";
 import TablePagination from "@/components/admin/TablePagination";
 import { useGetTrainerEnrolmentsQuery } from "@/redux/apis/trainer/assignedLearnersApi";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const ITEMS_PER_PAGE = 10;
-const STATIC_PROGRESS_TEXT = "3/10 (30%)";
-const STATIC_QUALIFICATION_TYPE = "General";
 
 const AssignedLearners = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const debouncedSearch = useDebounce(search, 400);
+
+  const queryParams = {
+    page: currentPage,
+    page_size: ITEMS_PER_PAGE,
+    search: debouncedSearch.trim() || undefined,
+  };
+
   const {
     data: enrolmentsResponse,
     isLoading,
+    isFetching,
     error,
-  } = useGetTrainerEnrolmentsQuery();
+  } = useGetTrainerEnrolmentsQuery(queryParams);
 
-  const learners = enrolmentsResponse?.data ?? [];
-  const paginatedLearners = learners.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE,
-  );
+  const data = enrolmentsResponse?.data;
+  const learners = data?.results || [];
+  const totalItems = data?.count || 0;
 
   if (isLoading) {
     return (
@@ -66,6 +75,7 @@ const AssignedLearners = () => {
       >
         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
       </Link>
+
       <h1 className="text-3xl font-bold text-foreground mb-1">
         Assigned Learners
       </h1>
@@ -73,51 +83,89 @@ const AssignedLearners = () => {
         View all learners under your assessment
       </p>
 
+      <div className="mb-4">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search learners..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       <Card className="p-6">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Learner Name</TableHead>
-              <TableHead>ID</TableHead>
+              <TableHead>Learner ID</TableHead>
               <TableHead>Qualification</TableHead>
               <TableHead>Progress</TableHead>
+              <TableHead>Pending</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
-            {paginatedLearners.length === 0 ? (
+            {isFetching ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
+                  className="text-center py-10 text-muted-foreground"
+                >
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : learners.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
                   className="text-center py-10 text-muted-foreground"
                 >
                   No assigned learners found.
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedLearners.map((learner) => (
+              learners.map((learner) => (
                 <TableRow key={learner.id}>
                   <TableCell>
                     <div className="font-medium text-primary">
                       {learner.learner.name}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {learner.learner.email}
-                    </div>
                   </TableCell>
+
                   <TableCell className="text-sm">
-                    {learner.enrolment_number}
+                    {learner.learner.learner_id}
                   </TableCell>
+
                   <TableCell>
                     <div className="text-sm">{learner.qualification.title}</div>
                     <Badge className="bg-primary text-primary-foreground text-[10px] mt-0.5">
-                      {learner.qualification.is_cpd ? "CPD" : STATIC_QUALIFICATION_TYPE}
+                      {learner.qualification.category}
                     </Badge>
                   </TableCell>
+
                   <TableCell className="text-sm">
-                    {/* TODO: we will implement real learner progress data later */}
-                    {STATIC_PROGRESS_TEXT}
+                    {learner.progress.completed_units}/
+                    {learner.progress.total_units} (
+                    {learner.progress.progress_percent}%)
                   </TableCell>
+
+                  <TableCell className="text-sm">
+                    {learner.pending_count > 0 ? (
+                      <Badge variant="secondary" className="text-xs">
+                        {learner.pending_count}
+                      </Badge>
+                    ) : (
+                      "None"
+                    )}
+                  </TableCell>
+
                   <TableCell>
                     <Button
                       variant="outline"
@@ -135,9 +183,10 @@ const AssignedLearners = () => {
             )}
           </TableBody>
         </Table>
+
         <TablePagination
           currentPage={currentPage}
-          totalItems={learners.length}
+          totalItems={totalItems}
           itemsPerPage={ITEMS_PER_PAGE}
           onPageChange={setCurrentPage}
         />
