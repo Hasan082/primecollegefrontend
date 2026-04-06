@@ -286,10 +286,21 @@ const App = () => {
                       path="learner/:learnerId/unit/:unitCode"
                       element={<UnitManagement />}
                     />
-                    <Route path="question-bank" element={<QuestionBank />} />
+                    <Route
+                      path="qualifications/:qualificationId/final-assessment"
+                      element={<AdminCPDFinalAssessmentEditor />}
+                    />
+                    <Route
+                      path="question-bank"
+                      element={<AdminQuestionBank />}
+                    />
                     <Route
                       path="question-bank/:qualificationId/:unitCode"
-                      element={<QuestionBankEditor />}
+                      element={<AdminQuestionBankEditor />}
+                    />
+                    <Route
+                      path="final-assessments"
+                      element={<FinalAssessments />}
                     />
                     <Route path="profile" element={<TrainerProfile />} />
                     <Route

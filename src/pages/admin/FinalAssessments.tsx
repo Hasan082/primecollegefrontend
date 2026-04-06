@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, ClipboardCheck, Settings2, Search, Shield, ChevronRight, Loader2, AlertCircle
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useGetQualificationsAdminQuery } from "@/redux/apis/qualification/qualificationApi";
 
 const FinalAssessments = () => {
   const [search, setSearch] = useState("");
+  const location = useLocation();
+  const basePath = location.pathname.startsWith("/trainer") ? "/trainer" : "/admin";
   const { data: qualificationsResponse, isLoading, error } = useGetQualificationsAdminQuery({
     is_cpd: true,
     search,
@@ -20,7 +22,7 @@ const FinalAssessments = () => {
 
   return (
     <div className="space-y-6">
-      <Link to="/admin/dashboard" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm font-medium">
+      <Link to={`${basePath}/dashboard`} className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm font-medium">
         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
       </Link>
 
@@ -85,7 +87,7 @@ const FinalAssessments = () => {
               cpdQualifications.map((fa: any) => (
                 <Link
                   key={fa.id}
-                  to={`/admin/qualifications/${fa.id}/final-assessment`}
+                  to={`${basePath}/qualifications/${fa.id}/final-assessment`}
                   className="group block"
                 >
                   <Card className="hover:border-primary/50 hover:shadow-md transition-all duration-300 group-hover:bg-primary/[0.01]">

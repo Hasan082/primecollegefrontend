@@ -1,4 +1,10 @@
-import { CalendarDays, CheckCircle2, ClipboardList, FileText, Layers3 } from "lucide-react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  FileText,
+  Layers3,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,17 +15,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { RESPONSE_TYPE_LABELS, type ChecklistItem } from "@/lib/checklists";
+import {
+  RESPONSE_TYPE_LABELS,
+  type AdminChecklistTemplate,
+} from "@/lib/checklists";
 
 type ChecklistViewModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  template: {
-    title: string;
-    isActive: boolean;
-    updatedDate: string;
-    items: ChecklistItem[];
-  } | null;
+  template: Pick<
+    AdminChecklistTemplate,
+    "title" | "isActive" | "updatedDate" | "items"
+  > | null;
   qualificationTitle: string;
   unitLabel: string;
 };
@@ -64,9 +71,13 @@ const ChecklistViewModal = ({
               <div className="rounded-lg border bg-card p-4">
                 <div className="mb-2 flex items-center gap-2 text-muted-foreground">
                   <Layers3 className="h-4 w-4" />
-                  <span className="text-xs uppercase tracking-wide">Qualification</span>
+                  <span className="text-xs uppercase tracking-wide">
+                    Qualification
+                  </span>
                 </div>
-                <p className="text-sm font-medium leading-6">{qualificationTitle}</p>
+                <p className="text-sm font-medium leading-6">
+                  {qualificationTitle}
+                </p>
               </div>
 
               <div className="rounded-lg border bg-card p-4">
@@ -80,9 +91,13 @@ const ChecklistViewModal = ({
               <div className="rounded-lg border bg-card p-4">
                 <div className="mb-2 flex items-center gap-2 text-muted-foreground">
                   <CalendarDays className="h-4 w-4" />
-                  <span className="text-xs uppercase tracking-wide">Updated</span>
+                  <span className="text-xs uppercase tracking-wide">
+                    Updated
+                  </span>
                 </div>
-                <p className="text-sm font-medium leading-6">{template.updatedDate}</p>
+                <p className="text-sm font-medium leading-6">
+                  {template.updatedDate}
+                </p>
               </div>
             </div>
 
@@ -93,7 +108,8 @@ const ChecklistViewModal = ({
                 <div>
                   <p className="text-sm font-semibold">Checklist Items</p>
                   <p className="text-xs text-muted-foreground">
-                    {template.items.length} item{template.items.length === 1 ? "" : "s"}
+                    {template.items.length} item
+                    {template.items.length === 1 ? "" : "s"}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   BookOpen,
   ChevronRight,
@@ -19,9 +19,11 @@ import { useGetQuestionBankUnitsQuery } from "@/redux/apis/quiz/quizApi";
 const QualificationBankSection = ({
   qualification,
   search,
+  basePath,
 }: {
   qualification: any;
   search: string;
+  basePath: string;
 }) => {
   const { data: unitsResponse, isLoading } = useGetQuestionBankUnitsQuery(
     qualification.id,
@@ -70,7 +72,7 @@ const QualificationBankSection = ({
           filteredUnits.map((unit: any) => (
             <Link
               key={unit.id}
-              to={`/admin/question-bank/${qualification.id}/${unit.unit_code}`}
+              to={`${basePath}/question-bank/${qualification.id}/${unit.unit_code}`}
               className="flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors group"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -114,6 +116,8 @@ const QualificationBankSection = ({
 
 const AdminQuestionBank = () => {
   const [search, setSearch] = useState("");
+  const location = useLocation();
+  const basePath = location.pathname.startsWith("/trainer") ? "/trainer" : "/admin";
   const {
     data: qualificationsResponse,
     isLoading,
@@ -127,7 +131,7 @@ const AdminQuestionBank = () => {
   return (
     <div>
       <Link
-        to="/admin/dashboard"
+        to={`${basePath}/dashboard`}
         className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -211,6 +215,7 @@ const AdminQuestionBank = () => {
               key={qual.id}
               qualification={qual}
               search={search}
+              basePath={basePath}
             />
           ))
         )}
