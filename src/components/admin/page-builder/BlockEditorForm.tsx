@@ -117,6 +117,34 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
         <ItemListEditor blockType={block.type} items={local.slides} onChange={(slides: any) => update("slides", slides)} onImageUpload={onImageUpload} isUploading={isUploading} />
       )}
 
+      {block.type === "contact-form" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Contact Details</Label>
+          <Field label="Address" value={local.address as string} onChange={(v) => update("address", v)} />
+          <Field label="Email" value={local.email as string} onChange={(v) => update("email", v)} />
+          <Field label="Phone" value={local.phone as string} onChange={(v) => update("phone", v)} />
+          <Field label="Office Hours" value={local.hours as string} onChange={(v) => update("hours", v)} />
+          
+          <div className="pt-2">
+            <Label className="text-sm font-bold">Form Fields Configuration</Label>
+            <ItemListEditor 
+              blockType="contact-form" 
+              items={local.formFields as any[]} 
+              onChange={(v) => update("formFields", v)} 
+            />
+          </div>
+        </div>
+      )}
+
+      {block.type === "map" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Map Configuration</Label>
+          <Field label="Title" value={local.title as string} onChange={(v) => update("title", v)} />
+          <Field label="Google Maps Embed URL (iframe src)" value={local.iframeUrl as string} onChange={(v) => update("iframeUrl", v)} />
+          <p className="text-[10px] text-muted-foreground italic">Use the URL from the 'src' attribute of a Google Maps iframe embed code.</p>
+        </div>
+      )}
+
       {block.type === "cta" && <CTABackgroundEditor local={local} update={update} onImageUpload={onImageUpload} isUploading={isUploading} />}
 
       <BlockStylePanel style={blockStyle} onChange={setBlockStyle} />

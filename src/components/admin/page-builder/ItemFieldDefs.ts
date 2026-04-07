@@ -57,5 +57,11 @@ export const ITEM_FIELDS: Partial<Record<BlockType, ItemField[]>> = {
     { key: "category", label: "Category", type: "input", placeholder: "e.g. Business" },
     { key: "level", label: "Level", type: "input", placeholder: "e.g. Level 3" },
     { key: "price", label: "Price", type: "input", placeholder: "e.g. £450" },
+  ],
+  "contact-form": [
+    { key: "name", label: "Field ID (name)", type: "input", placeholder: "e.g. first_name" },
+    { key: "label", label: "Label", type: "input", placeholder: "e.g. First Name" },
+    { key: "type", label: "Type (text, email, textarea)", type: "input", placeholder: "e.g. text" },
+    { key: "required", label: "Required (true/false)", type: "input", placeholder: "e.g. true" },
   ]
 };

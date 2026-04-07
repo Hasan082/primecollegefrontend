@@ -17,7 +17,9 @@ export type BlockType =
   | "pricing"
   | "about-split"
   | "popular-qualifications"
-  | "features";
+  | "features"
+  | "contact-form"
+  | "map";
 
 export type TextAlignment = "left" | "center" | "right";
 
@@ -211,6 +213,31 @@ export interface FeaturesBlock extends BlockBase {
   };
 }
 
+export interface ContactFormBlock extends BlockBase {
+  type: "contact-form";
+  data: {
+    title: string;
+    address: string;
+    email: string;
+    phone: string;
+    hours: string;
+    formFields: Array<{
+      name: string;
+      label: string;
+      type: string;
+      required: boolean;
+    }>;
+  };
+}
+
+export interface MapBlock extends BlockBase {
+  type: "map";
+  data: {
+    title: string;
+    iframeUrl: string;
+  };
+}
+
 export type ContentBlock =
   | HeroBlock
   | QualificationHeroBlock
@@ -228,7 +255,9 @@ export type ContentBlock =
   | PricingBlock
   | AboutSplitBlock
   | PopularQualificationsBlock
-  | FeaturesBlock;
+  | FeaturesBlock
+  | ContactFormBlock
+  | MapBlock;
 
 export interface PageConfig {
   id: string;
@@ -273,6 +302,8 @@ export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   "about-split": "About Split",
   "popular-qualifications": "Popular Qualifications",
   features: "Features Grid",
+  "contact-form": "Contact Form",
+  map: "Google Map",
 };
 
 export const getDefaultBlockData = (type: BlockType): ContentBlock => {
@@ -297,6 +328,29 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
     "about-split": () => ({ id, type: "about-split", label, data: { headline: "Headline", paragraphs: ["Paragraph 1", "Paragraph 2"], ctaLabel: "About Us", ctaHref: "/about" } }),
     "popular-qualifications": () => ({ id, type: "popular-qualifications", label, data: { title: "Popular Qualifications", items: [] } }),
     features: () => ({ id, type: "features", label, data: { title: "Features", items: [{ title: "Feature", description: "Description" }] } }),
+    "contact-form": () => ({ 
+      id, type: "contact-form", label, 
+      data: { 
+        title: "Get in Touch", 
+        address: "13 Lanark Square, London E14 9QD", 
+        email: "info@primecollege.uk", 
+        phone: "+44 20 1234 5678", 
+        hours: "Mon - Fri: 9:00 AM - 5:00 PM",
+        formFields: [
+          { name: "name", label: "Full Name", type: "text", required: true },
+          { name: "email", label: "Email Address", type: "email", required: true },
+          { name: "subject", label: "Subject", type: "text", required: false },
+          { name: "message", label: "Message", type: "textarea", required: true },
+        ]
+      } 
+    }),
+    map: () => ({ 
+      id, type: "map", label, 
+      data: { 
+        title: "Find Us", 
+        iframeUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.234!2d-0.0175!3d51.5075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487602d64e0e8b7f%3A0x1234567890abcdef!2s13%20Lanark%20Square%2C%20London%20E14%209QD!5e0!3m2!1sen!2suk!4v1700000000000" 
+      } 
+    }),
   };
 
   return defaults[type]();

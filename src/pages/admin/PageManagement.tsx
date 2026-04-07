@@ -15,6 +15,8 @@ import {
 import { TryCatch } from "@/utils/apiTryCatch";
 import { handleResponse } from "@/utils/handleResponse";
 import { getHomeDefaultBlocks } from "@/data/homeBlocks";
+import { getAboutDefaultBlocks } from "@/data/aboutBlocks";
+import { getContactDefaultBlocks } from "@/data/contactBlocks";
 
 // Refactored Components
 import PageCard from "@/components/admin/page-builder/PageCard";
@@ -41,7 +43,11 @@ const PageManagement = () => {
     const cleanSlug = normalizePageSlug(newPage.slug || newPage.title, newPage.type);
     const page: PageConfig = {
       id: cleanSlug, title: newPage.title, slug: cleanSlug, type: newPage.type,
-      blocks: cleanSlug === "home" ? getHomeDefaultBlocks() : [],
+      blocks: 
+        cleanSlug === "home" ? getHomeDefaultBlocks() : 
+        cleanSlug === "about" ? getAboutDefaultBlocks() : 
+        cleanSlug === "contact" ? getContactDefaultBlocks() : 
+        [],
       updatedAt: new Date().toISOString(),
     };
     const [data, error] = await TryCatch(createPage(page).unwrap());

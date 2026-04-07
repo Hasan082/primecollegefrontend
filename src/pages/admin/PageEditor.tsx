@@ -17,6 +17,8 @@ import {
 import { handleResponse } from "@/utils/handleResponse";
 import { TryCatch } from "@/utils/apiTryCatch";
 import { getHomeDefaultBlocks } from "@/data/homeBlocks";
+import { getAboutDefaultBlocks } from "@/data/aboutBlocks";
+import { getContactDefaultBlocks } from "@/data/contactBlocks";
 
 // Refactored Components
 import PageEditorHeader from "@/components/admin/page-builder/PageEditorHeader";
@@ -61,11 +63,20 @@ const PageEditor = () => {
       const rawBlocks = cmsPage.blocks;
       const parsed = typeof rawBlocks === "string" ? JSON.parse(rawBlocks) : rawBlocks;
       let finalBlocks = parsed || [];
-      if (pageId === "home" && finalBlocks.length === 0) {
-        finalBlocks = getHomeDefaultBlocks();
+      if (finalBlocks.length === 0) {
+        if (pageId === "home") finalBlocks = getHomeDefaultBlocks();
+        else if (pageId === "about") finalBlocks = getAboutDefaultBlocks();
+        else if (pageId === "contact") finalBlocks = getContactDefaultBlocks();
       }
       setBlocks(finalBlocks);
-    } catch (e) { console.error("Failed to parse blocks:", e); setBlocks(pageId === "home" ? getHomeDefaultBlocks() : []); }
+    } catch (e) { 
+      console.error("Failed to parse blocks:", e); 
+      let fallback = [];
+      if (pageId === "home") fallback = getHomeDefaultBlocks();
+      else if (pageId === "about") fallback = getAboutDefaultBlocks();
+      else if (pageId === "contact") fallback = getContactDefaultBlocks();
+      setBlocks(fallback); 
+    }
     setSlug((cmsPage.slug || pageId || "").replace(/^\//, ""));
     setIsPublished(cmsPage.is_published || false);
     setMeta({ title: cmsPage.seo_title || "", description: cmsPage.seo_description || "" });
@@ -106,6 +117,9 @@ const PageEditor = () => {
   };
 
   const isHomePage = pageId === 'home' || slug === 'home';
+  const isAboutPage = pageId === 'about' || slug === 'about';
+  const isContactPage = pageId === 'contact' || slug === 'contact';
+  const isSpecialPage = isHomePage || isAboutPage || isContactPage;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-4">
@@ -117,7 +131,7 @@ const PageEditor = () => {
       />
       <SEOPanel slug={slug} onSlugChange={setSlug} meta={meta} onMetaChange={setMeta} />
       <div className={`grid gap-6 ${showPreview ? "grid-cols-1 lg:grid-cols-[1fr_320px]" : "grid-cols-1 max-w-4xl"}`}>
-        <BlockList blocks={blocks} setBlocks={setBlocks} onEdit={setEditBlock} onRemove={handleRemove} onAdd={() => setAddOpen(true)} isHomePage={isHomePage} />
+        <BlockList blocks={blocks} setBlocks={setBlocks} onEdit={setEditBlock} onRemove={handleRemove} onAdd={() => setAddOpen(true)} isHomePage={isSpecialPage} />
         {showPreview && (
           <div className="hidden lg:block sticky top-6 rounded-lg border border-border bg-background overflow-hidden h-[80vh]">
             <div className="bg-muted px-3 py-1.5 border-b border-border flex items-center gap-2 text-[9px] font-mono">
@@ -130,7 +144,10 @@ const PageEditor = () => {
         )}
       </div>
       <AddBlockDialog open={addOpen} onOpenChange={setAddOpen} addBlock={handleAdd} 
-        allowedBlocks={isHomePage ? ["cta", "text", "faq", "stats", "logos", "cards"] : undefined} 
+        allowedBlocks={isHomePage ? ["cta", "text", "faq", "stats", "logos", "cards"] : 
+                       isAboutPage ? ["cta", "text", "faq", "stats", "features", "image-text", "about-split"] :
+                       isContactPage ? ["cta", "text", "contact-form", "map"] :
+                       undefined} 
       />
       <EditBlockDialog block={editBlock} open={!!editBlock} isUploading={isUploading} setIsUploading={setIsUploading} onSave={handleBlockSave} onClose={() => setEditBlock(null)} />
     </div>

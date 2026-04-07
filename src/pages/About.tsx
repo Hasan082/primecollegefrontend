@@ -1,178 +1,171 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { GraduationCap, Clock, TrendingUp, Heart, RefreshCw, Users, Target, BarChart3, Shield, Lightbulb } from "lucide-react";
+import { Users, Clock, Award, Target, CheckCircle } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
-import { fetchContent } from "@/lib/api";
 import CTASection from "@/components/CTASection";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useGetPageQuery } from "@/redux/apis/pageBuilderApi";
+import { safeParseBlocks } from "@/utils/pageBuilder";
+import { ContentBlock } from "@/types/pageBuilder";
+
 import aboutHero from "@/assets/about-hero.jpg";
 import aboutMission from "@/assets/about-mission.jpg";
 
 const iconMap: Record<string, React.ElementType> = {
-  GraduationCap, Clock, TrendingUp, Heart, RefreshCw, Users, Target, BarChart: BarChart3, Shield, Lightbulb,
+  Users, Clock, Award, Target, CheckCircle
 };
 
-interface AboutData {
-  title: string;
-  intro: string;
-  about: {
-    label: string;
-    headline: string;
-    paragraphs: string[];
-  };
-  vision: {
-    title: string;
-    items: Array<{ label: string; content: string }>;
-  };
-  mission: {
-    title: string;
-    content: string;
-  };
-  approach: {
-    title: string;
-    intro: string;
-    items: Array<{ title: string; description: string; icon: string }>;
-  };
-  values: {
-    title: string;
-    intro: string;
-    items: Array<{ title: string; description: string; icon: string }>;
-    footer: string;
-  };
-  stats: Array<{ label: string; value: string }>;
-}
-
 const About = () => {
-  const [data, setData] = useState<AboutData | null>(null);
+  const { data: pageResponse, isLoading } = useGetPageQuery("about");
+  const blocks = safeParseBlocks(pageResponse?.data?.blocks || []);
 
-  useEffect(() => {
-    fetchContent<AboutData>("about").then(setData);
-  }, []);
-
-  if (!data) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div>
-      {/* Hero Banner with Image */}
-      <div className="relative h-[400px] overflow-hidden">
-        <img src={aboutHero} alt="About Prime College" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-foreground/70" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-background">{data.title}</h1>
+      {blocks.length > 0 ? (
+        blocks.map((block) => <AboutBlockRenderer key={block.id} block={block} />)
+      ) : (
+        <div className="py-20 text-center text-muted-foreground">
+          No content available for this page yet.
         </div>
-      </div>
-      <Breadcrumb items={[{ label: "About Us" }]} />
+      )}
+    </div>
+  );
+};
 
-      {/* About Section - two column */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-secondary mb-2 block">{data.about.label}</span>
-            <h2 className="text-3xl font-bold text-foreground leading-snug">{data.about.headline}</h2>
+const AboutBlockRenderer = ({ block }: { block: ContentBlock }) => {
+  const d = block.data as any;
+
+  switch (block.type) {
+    case "hero":
+      return (
+        <div className="relative h-[400px] overflow-hidden">
+          <img 
+            src={d.image || aboutHero} 
+            alt={d.title} 
+            className="w-full h-full object-cover" 
+          />
+          <div className="absolute inset-0 bg-foreground/70" />
+          <div className="absolute inset-0 flex items-center justify-center text-center px-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-background">{d.title}</h1>
+              {d.subtitle && <p className="mt-4 text-background/80 max-w-2xl mx-auto text-lg">{d.subtitle}</p>}
+            </div>
           </div>
-          <div className="space-y-4">
-            {data.about.paragraphs.map((p, i) => (
-              <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
-            ))}
+          <div className="absolute bottom-0 w-full">
+             <Breadcrumb items={[{ label: "About Us" }]} />
           </div>
         </div>
-      </section>
+      );
 
-      {/* Vision Section - text left, image right */}
-      <section className="bg-muted py-16 px-4">
-        <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="bg-card rounded-xl p-8 border border-border">
-            <h2 className="text-2xl font-bold text-foreground mb-6">{data.vision.title}</h2>
-            <div className="space-y-5">
-              {data.vision.items.map((item) => (
-                <div key={item.label}>
-                  <h3 className="font-semibold text-primary mb-1">{item.label}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.content}</p>
+    case "about-split":
+      return (
+        <section className="py-16 px-4">
+          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground leading-snug">{d.headline}</h2>
+              {d.ctaLabel && (
+                <Link
+                  to={d.ctaHref || "/about"}
+                  className="mt-6 inline-block bg-secondary text-secondary-foreground px-6 py-2 rounded text-sm font-semibold hover:opacity-90"
+                >
+                  {d.ctaLabel}
+                </Link>
+              )}
+            </div>
+            <div className="space-y-4">
+              {Array.isArray(d.paragraphs) && d.paragraphs.map((p: string, i: number) => (
+                <div key={i} className="text-muted-foreground leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: p }} />
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+
+    case "image-text":
+      return (
+        <section className="bg-muted py-16 px-4">
+          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className={`bg-card rounded-xl p-8 border border-border ${d.imagePosition === "right" ? "order-1" : "order-2"}`}>
+              <h2 className="text-2xl font-bold text-foreground mb-6">{d.headline}</h2>
+              <div className="space-y-4 text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none">
+                {Array.isArray(d.paragraphs) && d.paragraphs.map((p: string, i: number) => (
+                   <div key={i} dangerouslySetInnerHTML={{ __html: p }} />
+                ))}
+              </div>
+            </div>
+            <div className={`rounded-xl overflow-hidden ${d.imagePosition === "right" ? "order-2" : "order-1"}`}>
+              <img src={d.image || aboutHero} alt={d.headline} className="w-full h-[400px] object-cover rounded-xl" />
+            </div>
+          </div>
+        </section>
+      );
+
+    case "why-us":
+      return (
+        <section className="bg-muted py-16 px-4">
+          <div className="container mx-auto text-center">
+            <h2 className="text-3xl font-bold text-foreground mb-4">{d.title}</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-12">{d.content}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              {Array.isArray(d.items) && d.items.map((item: any) => {
+                const Icon = iconMap[item.icon] || Users;
+                return (
+                  <div key={item.title} className="bg-card border border-border rounded-xl p-6 text-left shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
+                        <Icon className="w-5 h-5 text-secondary" strokeWidth={2} />
+                      </div>
+                      <h3 className="font-semibold text-foreground">{item.title}</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      );
+
+    case "features":
+      return (
+        <section className="py-16 px-4">
+          <div className="container mx-auto text-center">
+            <h2 className="text-3xl font-bold text-foreground mb-4">{d.title}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+              {Array.isArray(d.items) && d.items.map((item: any) => (
+                <div key={item.title} className="bg-card border border-border rounded-xl p-6 text-center shadow-sm">
+                  <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-xl overflow-hidden">
-            <img src={aboutHero} alt="Our Vision" className="w-full h-[400px] object-cover rounded-xl" />
+        </section>
+      );
+
+    case "cta":
+      return (
+        <section className="relative py-20 px-4 overflow-hidden bg-primary text-primary-foreground text-center">
+          {d.bgImage && <img src={d.bgImage} className="absolute inset-0 w-full h-full object-cover opacity-20" alt="" />}
+          <div className="relative z-10 max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4">{d.title}</h2>
+            <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto leading-relaxed">{d.content}</p>
+            {d.ctaLabel && (
+              <Link
+                to={d.ctaHref || "/qualifications"}
+                className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 transition shadow-lg"
+              >
+                {d.ctaLabel}
+              </Link>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      );
 
-      {/* Mission Section - image strip + text overlay */}
-      <section className="relative">
-        <div className="h-[400px] overflow-hidden">
-          <img src={aboutMission} alt="Our Mission" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-foreground/65" />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center px-4">
-          <div className="bg-card border border-border rounded-xl p-8 max-w-xl text-center shadow-lg">
-            <h2 className="text-2xl font-bold text-foreground mb-4">{data.mission.title}</h2>
-            <p className="text-muted-foreground leading-relaxed">{data.mission.content}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Smart Approach */}
-      <section className="bg-muted py-16 px-4">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{data.approach.title}</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-12">{data.approach.intro}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {data.approach.items.map((item) => {
-              const Icon = iconMap[item.icon] || Users;
-              return (
-                <div key={item.title} className="bg-card border border-border rounded-xl p-6 text-left">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-secondary" strokeWidth={2} />
-                    </div>
-                    <h3 className="font-semibold text-foreground">{item.title}</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Team Photo Strip */}
-      <div className="grid grid-cols-4 h-[200px]">
-        <img src={aboutHero} alt="Team" className="w-full h-full object-cover" />
-        <img src={aboutMission} alt="Team" className="w-full h-full object-cover" />
-        <img src={aboutHero} alt="Team" className="w-full h-full object-cover object-left" />
-        <img src={aboutMission} alt="Team" className="w-full h-full object-cover object-right" />
-      </div>
-
-      {/* Values */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{data.values.title}</h2>
-          <p className="text-muted-foreground max-w-3xl mx-auto mb-12">{data.values.intro}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-10">
-            {data.values.items.map((item) => {
-              const Icon = iconMap[item.icon] || Target;
-              return (
-                <div key={item.title} className="bg-card border border-border rounded-xl p-6 text-center shadow-sm">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
-                      <Icon className="w-8 h-8 text-primary-foreground" strokeWidth={1.5} />
-                    </div>
-                  </div>
-                  <h3 className="font-bold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-                </div>
-              );
-            })}
-          </div>
-          <p className="text-sm text-muted-foreground max-w-3xl mx-auto italic">{data.values.footer}</p>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <CTASection />
-    </div>
-  );
+    default:
+      return null;
+  }
 };
 
 export default About;

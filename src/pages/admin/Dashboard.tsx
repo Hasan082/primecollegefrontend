@@ -366,8 +366,8 @@ const AdminDashboard = () => {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Recent Enrolments</CardTitle>
-            <Link to="/admin/enrolments" className="text-xs text-primary hover:underline">View All →</Link>
+            <CardTitle className="text-base">Recent Enrollments</CardTitle>
+            <Link to="/admin/enrollments" className="text-xs text-primary hover:underline">View All →</Link>
           </div>
         </CardHeader>
         <CardContent>
@@ -379,6 +379,8 @@ const AdminDashboard = () => {
                   <th className="py-2 font-medium text-muted-foreground">Qualification</th>
                   <th className="py-2 font-medium text-muted-foreground text-center">Status</th>
                   <th className="py-2 font-medium text-muted-foreground text-center">Payment</th>
+                  <th className="py-2 font-medium text-muted-foreground text-center">Amount</th>
+                  
                   <th className="py-2 font-medium text-muted-foreground text-right">Enrolled</th>
                 </tr>
               </thead>
@@ -397,6 +399,12 @@ const AdminDashboard = () => {
                         {enrolment.payment_status}
                       </Badge>
                     </td>
+                    <td className="py-2.5 text-center">
+                 
+                    {`${enrolment?.currency} ${enrolment?.amount}`}
+                     
+                    </td>
+                    
                     <td className="py-2.5 text-right text-muted-foreground">
                       {new Date(enrolment.enrolled_at).toLocaleDateString()}
                     </td>

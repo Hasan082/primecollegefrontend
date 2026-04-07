@@ -3,7 +3,7 @@ import type { ContentBlock } from "@/types/pageBuilder";
 
 // Refactored Renderers
 import { HeroRenderer, ImageRenderer, TextRenderer } from "./renderers/CommonRenderers";
-import { ImageTextRenderer, WhyUsRenderer, CTARenderer } from "./renderers/ComplexRenderers";
+import { ImageTextRenderer, WhyUsRenderer, CTARenderer, ContactFormRenderer, MapRenderer } from "./renderers/ComplexRenderers";
 import { CardRenderer, StatsRenderer, FAQRenderer, LogoRenderer } from "./renderers/GridRenderers";
 
 interface BlockPreviewRendererProps {
@@ -41,6 +41,10 @@ const renderBlock = (block: ContentBlock) => {
       return <WhyUsRenderer block={block} />;
     case "cta":
       return <CTARenderer block={block} />;
+    case "contact-form":
+      return <ContactFormRenderer block={block} />;
+    case "map":
+      return <MapRenderer block={block} />;
     case "stats":
       return <StatsRenderer block={block} />;
     case "faq":
