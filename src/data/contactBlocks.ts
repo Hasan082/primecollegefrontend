@@ -16,7 +16,7 @@ export const getContactDefaultBlocks = (): ContentBlock[] => [
   {
     id: "contact_form",
     type: "contact-form",
-    label: "Contact Details & Form",
+    label: "Contact Details",
     isLocked: true,
     data: {
       title: "Get in Touch",

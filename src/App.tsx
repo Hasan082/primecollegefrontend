@@ -41,6 +41,7 @@ const StaffLogin = lazy(() => import("./pages/StaffLogin"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogDetail = lazy(() => import("./pages/BlogDetail"));
 const SetPassword = lazy(() => import("./pages/SetPassword"));
+const StaticPage = lazy(() => import("./pages/StaticPage"));
 
 // learner dashboard
 const Dashboard = lazy(() => import("./pages/learner/Dashboard"));
@@ -339,6 +340,7 @@ const App = () => {
                             <Route path="/blog" element={<Navigate to="/blogs" replace />} />
                             <Route path="/blog/:slug" element={<BlogDetail />} />
                             <Route path="/contact" element={<Contact />} />
+                            <Route path="/pages/:slug" element={<StaticPage />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </main>

@@ -12,11 +12,27 @@ const learnerManagementApi = api.injectEndpoints({
                     params: filteredParams,
                 };
             },
-            // providesTags: ["EnrolledLearners"],
+            providesTags: ["EnrollLearners"],
+        }),
+        enrollLearner: builder.mutation({
+            query: (body) => ({
+                url: "/api/orders/admission/office/",
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: ["EnrollLearners"],
+        }),
+        getQualificationOnly: builder.query({
+            query: () => ({
+                url: `/api/qualification/only/`,
+                method: "GET",
+            }),
         }),
     }),
 });
 
 export const {
     useGetEnrolledLearnersQuery,
+    useEnrollLearnerMutation,
+    useGetQualificationOnlyQuery,
 } = learnerManagementApi;

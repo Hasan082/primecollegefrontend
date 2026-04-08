@@ -103,6 +103,7 @@ export const api = createApi({
     "FooterSettings",
     "ChecklistTemplates",
     "EmailLogs",
+    "EnrollLearners"
   ],
   endpoints: () => ({}),
 });

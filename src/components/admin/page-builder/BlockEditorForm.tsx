@@ -251,15 +251,6 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
           <Field label="Email" value={local.email as string} onChange={(v) => update("email", v)} />
           <Field label="Phone" value={local.phone as string} onChange={(v) => update("phone", v)} />
           <Field label="Office Hours" value={local.hours as string} onChange={(v) => update("hours", v)} />
-          
-          <div className="pt-2">
-            <Label className="text-sm font-bold">Form Fields Configuration</Label>
-            <ItemListEditor 
-              blockType="contact-form" 
-              items={local.formFields as any[]} 
-              onChange={(v) => update("formFields", v)} 
-            />
-          </div>
         </div>
       )}
 

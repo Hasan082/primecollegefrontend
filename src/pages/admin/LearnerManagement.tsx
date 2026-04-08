@@ -16,21 +16,12 @@ import { Progress } from "@/components/ui/progress";
 import { Search, ArrowLeft, UserPlus, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import TablePagination from "@/components/admin/TablePagination";
 import LearnerDetailModal from "@/components/admin/LearnerDetailModal";
 import { type AdminLearner } from "@/data/adminMockData";
@@ -38,6 +29,10 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useGetEnrolledLearnersQuery } from "@/redux/apis/admin/learnerManagementApi";
 import { useGetQualificationOnlyListQuery } from "@/redux/apis/qualification/qualificationApi";
 import { useCreateOfficeAdmissionMutation } from "@/redux/apis/orderApi";
+import EnrollLearnerModal from "@/components/admin/learnerManagement/EnrollLearnerModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const ITEMS_PER_PAGE = 10;
 type QualificationSessionDateOption = {
@@ -92,7 +87,7 @@ const LearnerManagement = () => {
     null,
   );
   const [detailOpen, setDetailOpen] = useState(false);
-  const { toast } = useToast();
+  const { toast } = useToast()
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -551,6 +546,9 @@ const LearnerManagement = () => {
             </div>
           </DialogContent>
         </Dialog>
+        <Button onClick={() => setDialogOpen(true)}>
+          <UserPlus className="w-4 h-4 mr-1" /> Enrol Learner
+        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -701,6 +699,11 @@ const LearnerManagement = () => {
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onUpdate={handleLearnerUpdate}
+      />
+
+      <EnrollLearnerModal
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
       />
     </div>
   );
