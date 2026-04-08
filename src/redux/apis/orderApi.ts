@@ -165,6 +165,7 @@ const orderApi = api.injectEndpoints({
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ["EnrollLearners"],
     }),
     getPublicOrderStatus: builder.query<PublicOrderStatusResponse, { order_number: string; email: string }>({
       query: ({ order_number, email }) => ({
