@@ -16,7 +16,7 @@ import { useGetMeQuery } from "@/redux/apis/authApi";
 import LoadingSpinner from "../LoadingSpinner";
 
 const IQALayout = () => {
-  const { data: userData, isLoading } = useGetMeQuery(null);
+  const { data: userData, isLoading } = useGetMeQuery(undefined);
   const { logout } = useAuth();
   const navigate = useNavigate();
 

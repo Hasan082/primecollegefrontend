@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   Plus,
@@ -38,6 +38,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const AdminCPDFinalAssessmentEditor = () => {
   const { qualificationId } = useParams();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith("/trainer") ? "/trainer" : "/admin";
   const { toast } = useToast();
 
   const {
@@ -237,7 +239,7 @@ const AdminCPDFinalAssessmentEditor = () => {
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4 text-foreground">
-      <Link to="/admin/final-assessments" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6">
+      <Link to={`${basePath}/final-assessments`} className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Final Assessments
       </Link>
 

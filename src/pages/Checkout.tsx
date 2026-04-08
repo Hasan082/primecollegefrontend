@@ -7,10 +7,22 @@ import { useCart } from "@/contexts/CartContext";
 import { useCheckoutOnlineMutation } from "@/redux/apis/orderApi";
 import { useToast } from "@/hooks/use-toast";
 
+const normalizeCurrencyCode = (currency?: string | null) => {
+  const value = (currency || "").trim();
+
+  if (!value) return "GBP";
+  if (value === "£") return "GBP";
+  if (value === "$") return "USD";
+  if (value === "€") return "EUR";
+  if (/^[A-Z]{3}$/.test(value)) return value;
+
+  return "GBP";
+};
+
 const formatMoney = (value: number, currency = "GBP") =>
   new Intl.NumberFormat("en-GB", {
     style: "currency",
-    currency,
+    currency: normalizeCurrencyCode(currency),
     maximumFractionDigits: 2,
   }).format(value);
 

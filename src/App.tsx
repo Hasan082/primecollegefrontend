@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy, useEffect, useState } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 
@@ -287,10 +287,21 @@ const App = () => {
                       path="learner/:learnerId/unit/:unitCode"
                       element={<UnitManagement />}
                     />
-                    <Route path="question-bank" element={<QuestionBank />} />
+                    <Route
+                      path="qualifications/:qualificationId/final-assessment"
+                      element={<AdminCPDFinalAssessmentEditor />}
+                    />
+                    <Route
+                      path="question-bank"
+                      element={<AdminQuestionBank />}
+                    />
                     <Route
                       path="question-bank/:qualificationId/:unitCode"
-                      element={<QuestionBankEditor />}
+                      element={<AdminQuestionBankEditor />}
+                    />
+                    <Route
+                      path="final-assessments"
+                      element={<FinalAssessments />}
                     />
                     <Route path="profile" element={<TrainerProfile />} />
                     <Route
@@ -323,8 +334,10 @@ const App = () => {
                               path="/recruitment"
                               element={<Recruitment />}
                             />
-                            <Route path="/blog" element={<Blog />} />
-                            <Route path="/blog/:id" element={<BlogDetail />} />
+                            <Route path="/blogs" element={<Blog />} />
+                            <Route path="/blogs/:slug" element={<BlogDetail />} />
+                            <Route path="/blog" element={<Navigate to="/blogs" replace />} />
+                            <Route path="/blog/:slug" element={<BlogDetail />} />
                             <Route path="/contact" element={<Contact />} />
                             <Route path="*" element={<NotFound />} />
                           </Routes>

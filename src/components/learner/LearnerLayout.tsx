@@ -17,7 +17,7 @@ import LoadingSpinner from "../LoadingSpinner";
 import { useGetMeQuery } from "@/redux/apis/authApi";
 
 const LearnerLayout = () => {
-  const { data: userData, isLoading } = useGetMeQuery(null);
+  const { data: userData, isLoading } = useGetMeQuery(undefined);
   const { logout } = useAuth();
   const navigate = useNavigate();
 

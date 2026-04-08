@@ -22,11 +22,15 @@ const heroImageMap: Record<string, string> = {
 };
 
 const BlogDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug = "" } = useParams<{ slug: string }>();
 
   const allBlogPosts = defaultPages.filter((p) => p.type === "blog-post");
   const post = allBlogPosts.find(
-    (p) => p.slug === `/blog/${id}` || p.id === `blog-${id}` || p.slug.endsWith(`/${id}`)
+    (p) =>
+      p.slug === `/blogs/${slug}` ||
+      p.slug === `/blog/${slug}` ||
+      p.id === `blog-${slug}` ||
+      p.slug.endsWith(`/${slug}`)
   );
 
   // Category counts
@@ -42,7 +46,7 @@ const BlogDetail = () => {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold text-foreground mb-4">Post Not Found</h1>
-        <Link to="/blog" className="text-primary hover:underline">← Back to Blog</Link>
+        <Link to="/blogs" className="text-primary hover:underline">← Back to Blog</Link>
       </div>
     );
   }
@@ -52,7 +56,7 @@ const BlogDetail = () => {
 
   return (
     <div>
-      <Breadcrumb items={[{ label: "Blog", href: "/blog" }, { label: post.title }]} />
+      <Breadcrumb items={[{ label: "Blogs", href: "/blogs" }, { label: post.title }]} />
 
       <div className="bg-muted/30">
         <div className="container mx-auto px-4 py-10">
@@ -106,7 +110,7 @@ const BlogDetail = () => {
               {/* Back Link */}
               <div className="mt-12 pt-8 border-t border-border">
                 <Link
-                  to="/blog"
+                  to="/blogs"
                   className="inline-flex items-center gap-2 text-primary font-semibold hover:opacity-80 transition-opacity"
                 >
                   <ArrowLeft className="w-4 h-4" />

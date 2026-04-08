@@ -16,7 +16,7 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../LoadingSpinner";
 
 const TrainerLayout = () => {
-  const { data: userData, isLoading } = useGetMeQuery(null);
+  const { data: userData, isLoading } = useGetMeQuery(undefined);
   const { logout } = useAuth();
   const navigate = useNavigate();
 

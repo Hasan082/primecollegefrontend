@@ -7,6 +7,7 @@ import {
   useUpdateChecklistTemplateMutation,
 } from "@/redux/apis/qualification/qualificationApi";
 import {
+  type AdminChecklistTemplate,
   type CheckResponseType,
   type ChecklistItem,
 } from "@/lib/checklists";
@@ -17,15 +18,6 @@ type FormErrors = {
   unit?: string;
   title?: string;
   items?: string;
-};
-
-type ChecklistRow = {
-  id: string;
-  qualificationId: string;
-  unitId: string | null;
-  isActive: boolean;
-  title: string;
-  items: ChecklistItem[];
 };
 
 const serializeResponseType = (responseType: CheckResponseType) => {
@@ -44,7 +36,7 @@ const serializeResponseType = (responseType: CheckResponseType) => {
 type EditChecklistModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  template: ChecklistRow | null;
+  template: AdminChecklistTemplate | null;
   onSuccess?: () => void;
 };
 

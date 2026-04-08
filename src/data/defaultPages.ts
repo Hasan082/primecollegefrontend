@@ -142,7 +142,7 @@ export const defaultPages: PageConfig[] = [
   {
     id: "blog-how-to-choose-the-right-qualification",
     title: "How to Choose the Right Qualification for Your Career",
-    slug: "/blog/how-to-choose-the-right-qualification",
+    slug: "/blogs/how-to-choose-the-right-qualification",
     type: "blog-post",
     blogMeta: {
       author: "The Prime College",
@@ -218,7 +218,7 @@ export const defaultPages: PageConfig[] = [
   {
     id: "blog-importance-of-accredited-qualifications",
     title: "The Importance of Accredited Qualifications in the UK Job Market",
-    slug: "/blog/importance-of-accredited-qualifications",
+    slug: "/blogs/importance-of-accredited-qualifications",
     type: "blog-post",
     blogMeta: {
       author: "The Prime College",
@@ -281,7 +281,7 @@ export const defaultPages: PageConfig[] = [
   {
     id: "blog-prime-college-100-percent-completion-rate",
     title: "The Prime College Achieves 100% Learner Completion Rate",
-    slug: "/blog/prime-college-100-percent-completion-rate",
+    slug: "/blogs/prime-college-100-percent-completion-rate",
     type: "blog-post",
     blogMeta: {
       author: "The Prime College",

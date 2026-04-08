@@ -8,6 +8,12 @@ export interface QualificationOption {
 
 const qualificationApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getQualificationOnlyList: builder.query({
+      query: () => ({
+        url: "/api/qualification/only/",
+        method: "GET",
+      }),
+    }),
     getQualificationsAdmin: builder.query({
       query: (args) => {
         const filteredParams = cleanObject(args);
@@ -40,10 +46,14 @@ const qualificationApi = api.injectEndpoints({
       }),
     }),
     getChecklistTemplates: builder.query({
-      query: () => ({
-        url: `/api/v1/checklists/templates/`,
-        method: "GET",
-      }),
+      query: (args) => {
+        const filteredParams = cleanObject(args);
+        return {
+          url: `/api/v1/checklists/templates/`,
+          method: "GET",
+          params: filteredParams,
+        };
+      },
       providesTags: ["ChecklistTemplates"],
     }),
     createChecklistTemplate: builder.mutation({
@@ -66,6 +76,7 @@ const qualificationApi = api.injectEndpoints({
 });
 
 export const {
+  useGetQualificationOnlyListQuery,
   useGetQualificationsAdminQuery,
   useGetQualificationOptionsQuery,
   useGetQualificationSliderOptionsQuery,

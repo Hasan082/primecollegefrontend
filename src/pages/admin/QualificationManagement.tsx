@@ -50,6 +50,7 @@ type AdminQualificationRow = {
   awarding_body: string;
   access_duration: string;
   total_units: number;
+  is_cpd: boolean;
   active_enrolments_count: number;
   status: "active" | "draft" | "archived" | "inactive";
   created_at?: string;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import {
   ArrowLeft, Plus, Trash2, CheckCircle2, X, Save, Settings2,
   BookOpen, PenLine, Shuffle, Clock, Shield, Hash, RotateCcw, Loader2, AlertCircle,
@@ -28,6 +28,8 @@ import {
 
 const AdminQuestionBankEditor = () => {
   const { qualificationId, unitCode } = useParams();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith("/trainer") ? "/trainer" : "/admin";
   const { toast } = useToast();
 
   const { data: qualGuard, isLoading: isLoadingGuard } = useGetQuestionBankQualificationGuardQuery(qualificationId!);
@@ -141,7 +143,7 @@ const AdminQuestionBankEditor = () => {
           <p className="font-bold text-foreground">Qualification or Unit not found.</p>
           <p className="text-xs mt-1">We couldn't locate unit "{unitCode}" in this qualification.</p>
         </div>
-        <Link to="/admin/question-bank" className="text-primary font-bold text-xs ring-offset-background hover:underline mt-2">
+        <Link to={`${basePath}/question-bank`} className="text-primary font-bold text-xs ring-offset-background hover:underline mt-2">
           Back to Question Bank
         </Link>
       </div>
@@ -164,7 +166,7 @@ const AdminQuestionBankEditor = () => {
           </p>
         </div>
         <Button asChild variant="outline">
-          <Link to="/admin/question-bank" className="gap-2">
+          <Link to={`${basePath}/question-bank`} className="gap-2">
             <ArrowLeft className="w-4 h-4" /> Back to Question Bank
           </Link>
         </Button>
@@ -174,7 +176,7 @@ const AdminQuestionBankEditor = () => {
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4 text-foreground">
-      <Link to="/admin/question-bank" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6">
+      <Link to={`${basePath}/question-bank`} className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Question Bank
       </Link>
 
