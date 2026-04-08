@@ -2,17 +2,17 @@ import { ContentBlock } from "@/types/pageBuilder";
 
 export const getHomeDefaultBlocks = (): ContentBlock[] => [
   {
-    id: "home_hero",
-    type: "hero",
-    label: "Hero Slider",
+    id: "home_popular",
+    type: "qualification_slider",
+    label: "Qualification Slider",
     isLocked: true,
     isFixed: true,
     data: {
-      title: "Hero Slider",
-      slides: [
-        { category: "Healthcare", title: "Level 2 Diploma in Care", price: "£650", cta: "Enroll Now", image: "care" },
-        { category: "Management", title: "Level 5 Leadership & Management", price: "£1,200", cta: "Learn More", image: "leadership" }
-      ]
+      selection_mode: "latest",
+      qualification_ids: [],
+      show_count: 4,
+      autoplay: true,
+      delay_ms: 5000,
     }
   },
   {
@@ -50,16 +50,6 @@ export const getHomeDefaultBlocks = (): ContentBlock[] => [
         { title: "Flexible Learning", description: "Study at your own pace.", icon: "Award" },
         { title: "Global Certification", description: "Recognized worldwide.", icon: "CheckCircle" }
       ]
-    }
-  },
-  {
-    id: "home_popular",
-    type: "popular-qualifications",
-    label: "Popular Qualifications",
-    isLocked: true,
-    data: {
-      title: "Popular Qualifications",
-      items: []
     }
   },
   {

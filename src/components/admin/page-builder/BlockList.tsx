@@ -50,11 +50,12 @@ const BlockList = ({
       setBlocks((prev) => {
         const oldIndex = prev.findIndex((b) => b.id === active.id);
         const newIndex = prev.findIndex((b) => b.id === over.id);
+        const activeBlock = prev[oldIndex];
+        const overBlock = prev[newIndex];
 
-        // If Home page, prevent moving anything into or out of index 0 (the Slider)
-        if (isHomePage) {
-          if (oldIndex === 0 || newIndex === 0) return prev;
-        }
+        if (!activeBlock || !overBlock) return prev;
+        if (activeBlock.isFixed || overBlock.isFixed) return prev;
+        if (isHomePage && (oldIndex === 0 || newIndex === 0)) return prev;
 
         return arrayMove(prev, oldIndex, newIndex);
       });
@@ -94,7 +95,7 @@ const BlockList = ({
                 block={block}
                 onEdit={() => onEdit(block)}
                 onRemove={() => onRemove(block.id)}
-                isFixed={isHomePage && index === 0} // Fix the first block (Slider) on Home page
+                isFixed={Boolean(block.isFixed) || (isHomePage && index === 0)}
               />
             ))}
           </div>

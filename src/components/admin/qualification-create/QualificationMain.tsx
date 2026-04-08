@@ -460,7 +460,7 @@ const QualificationMain = () => {
               name="qualification_code"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Qualification Code</FormLabel>
+                  <FormLabel>Qualification Code *</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. QUAL-2024-PM" {...field} />
                   </FormControl>

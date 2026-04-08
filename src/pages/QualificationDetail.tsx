@@ -4,6 +4,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import CTASection from "@/components/CTASection";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import UpsellModal from "@/components/UpsellModal";
+import { CMSPageRenderer } from "@/components/cms/CMSBlockRenderer";
 import { useCart } from "@/contexts/CartContext";
 import {
   QualificationUpsellItem,
@@ -11,8 +12,7 @@ import {
   useGetUpSalesQuery,
 } from "@/redux/apis/qualificationApi";
 import { useGetPageQuery } from "@/redux/apis/pageBuilderApi";
-import { safeParseBlocks } from "@/utils/pageBuilder";
-import { ContentBlock } from "@/types/pageBuilder";
+import { filterOutSystemBlocks, getRenderableBlocks } from "@/utils/pageBuilder";
 
 const formatMoney = (value: string | number | null | undefined, currency = "GBP") =>
   `${currency} ${Number(value || 0).toLocaleString(undefined, {
@@ -44,7 +44,8 @@ const QualificationDetail = () => {
   const { data: upsellResponse } = useGetUpSalesQuery(slug, { skip: !slug });
   const qualification = data?.data;
   const detailPageSlug = qualification?.detail_page?.slug;
-  const { data: pageResponse } = useGetPageQuery(detailPageSlug!, {
+  const detailPagePublished = qualification?.detail_page?.is_published;
+  const { data: pageResponse } = useGetPageQuery(detailPageSlug || "", {
     skip: !detailPageSlug,
   });
 
@@ -119,9 +120,11 @@ const QualificationDetail = () => {
     navigate("/checkout");
   };
 
-  const bodyBlocks = safeParseBlocks(pageResponse?.blocks ?? pageResponse?.data?.blocks ?? [])
-    .filter((block) => block.type !== "qualification_hero");
+  const bodyBlocks = detailPageSlug
+    ? filterOutSystemBlocks(getRenderableBlocks(pageResponse?.data, detailPageSlug))
+    : [];
 
+  const hasCmsBody = detailPagePublished !== false && bodyBlocks.length > 0;
   const alreadyInCart = isInCart(qualification.slug);
 
   return (
@@ -244,16 +247,17 @@ const QualificationDetail = () => {
             </section>
           ) : null}
 
-          {bodyBlocks?.length > 0 ? (
-            <section className="space-y-8">
-              {bodyBlocks?.map((block) => (
-                <QualificationBlockRenderer key={block.id} block={block} />
-              ))}
-            </section>
+          {hasCmsBody ? (
+            <CMSPageRenderer blocks={bodyBlocks} pageSlug={detailPageSlug || slug} />
           ) : (
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
               <h2 className="text-2xl font-semibold text-foreground">About this qualification</h2>
               <p className="mt-4 text-sm leading-7 text-muted-foreground">{qualification.short_description}</p>
+              {detailPageSlug && detailPagePublished === false ? (
+                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  Detail page content is currently unpublished.
+                </p>
+              ) : null}
             </section>
           )}
         </div>
@@ -312,103 +316,5 @@ const DetailStat = ({ label, value }: { label: string; value: string }) => (
     <p className="mt-2 text-base font-semibold text-foreground">{value}</p>
   </div>
 );
-
-const QualificationBlockRenderer = ({ block }: { block: ContentBlock }) => {
-  const d = block.data as Record<string, unknown>;
-
-  switch (block.type) {
-    case "text":
-      return (
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
-          {d.title ? <h2 className="text-2xl font-semibold text-foreground">{String(d.title)}</h2> : null}
-          <div
-            className="prose mt-4 max-w-none text-muted-foreground prose-headings:text-foreground prose-p:leading-7"
-            dangerouslySetInnerHTML={{ __html: String(d.content || "") }}
-          />
-        </section>
-      );
-
-    case "image-text":
-      return (
-        <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-          <div className={`grid gap-0 md:grid-cols-2 ${d.imagePosition === "left" ? "" : "md:[&>*:first-child]:order-2"}`}>
-            {d.image ? (
-              <img src={String(d.image)} alt={String(d.headline || "")} className="h-full min-h-[280px] w-full object-cover" />
-            ) : null}
-            <div className="p-6 md:p-8">
-              <h2 className="text-2xl font-semibold text-foreground">{String(d.headline || "")}</h2>
-              <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground">
-                {Array.isArray(d.paragraphs)
-                  ? (d.paragraphs as string[]).map((paragraph, index) => (
-                      <div key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
-                    ))
-                  : null}
-              </div>
-            </div>
-          </div>
-        </section>
-      );
-
-    case "modules":
-      return (
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
-          {d.title ? <h2 className="text-2xl font-semibold text-foreground">{String(d.title)}</h2> : null}
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {Array.isArray(d.items)
-              ? (d.items as { title: string; description?: string }[]).map((item, index) => (
-                  <div key={index} className="rounded-2xl bg-muted/30 p-5">
-                    <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
-                    {item.description ? (
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
-                    ) : null}
-                  </div>
-                ))
-              : null}
-          </div>
-        </section>
-      );
-
-    case "faq":
-      return (
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
-          {d.title ? <h2 className="text-2xl font-semibold text-foreground">{String(d.title)}</h2> : null}
-          <div className="mt-5 divide-y divide-border">
-            {Array.isArray(d.items)
-              ? (d.items as { question: string; answer: string }[]).map((item, index) => (
-                  <details key={index} className="group py-4">
-                    <summary className="cursor-pointer list-none text-base font-semibold text-foreground">
-                      {item.question}
-                    </summary>
-                    <div
-                      className="mt-3 text-sm leading-7 text-muted-foreground"
-                      dangerouslySetInnerHTML={{ __html: item.answer }}
-                    />
-                  </details>
-                ))
-              : null}
-          </div>
-        </section>
-      );
-
-    case "cta":
-      return (
-        <section className="rounded-3xl bg-primary px-6 py-10 text-primary-foreground shadow-sm md:px-8">
-          <h2 className="text-2xl font-semibold">{String(d.title || "")}</h2>
-          {d.content ? <p className="mt-3 max-w-2xl text-sm leading-7 text-primary-foreground/82">{String(d.content)}</p> : null}
-          {d.ctaLabel && d.ctaHref ? (
-            <Link
-              to={String(d.ctaHref)}
-              className="mt-6 inline-flex rounded-full bg-secondary px-5 py-3 text-sm font-semibold text-secondary-foreground hover:opacity-90"
-            >
-              {String(d.ctaLabel)}
-            </Link>
-          ) : null}
-        </section>
-      );
-
-    default:
-      return null;
-  }
-};
 
 export default QualificationDetail;

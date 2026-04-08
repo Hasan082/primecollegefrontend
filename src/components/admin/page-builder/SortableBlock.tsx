@@ -33,6 +33,7 @@ const SortableBlock = ({ block, onEdit, onRemove, isFixed }: SortableBlockProps)
 
   const showDragHandle = !isFixed && !block.isFixed;
   const showDelete = !block.isLocked;
+  const showEdit = block.type !== "qualification_hero";
 
   return (
     <Card ref={setNodeRef} style={style} className="group">
@@ -51,9 +52,11 @@ const SortableBlock = ({ block, onEdit, onRemove, isFixed }: SortableBlockProps)
           <p className="text-sm text-muted-foreground truncate">{getBlockPreview(block)}</p>
         </div>
         <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
-            <Eye className="h-3.5 w-3.5" />
-          </Button>
+          {showEdit && (
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
+          )}
           {showDelete && (
             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={onRemove}>
               <Trash2 className="h-3.5 w-3.5" />

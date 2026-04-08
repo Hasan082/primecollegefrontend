@@ -1,10 +1,31 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Loader2, Plus, X } from "lucide-react";
 import { useUploadCMSImageMutation } from "@/redux/apis/pageBuilderApi";
+import { useGetQualificationSliderOptionsQuery } from "@/redux/apis/qualification/qualificationApi";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 import type { ContentBlock, TextAlignment, BlockStyle } from "@/types/pageBuilder";
+import { normalizeQualificationSliderData } from "@/utils/pageBuilder";
 import RichTextEditor from "./RichTextEditor";
 import BlockStylePanel from "./BlockStylePanel";
 import ItemListEditor from "./ItemListEditor";
@@ -22,18 +43,88 @@ interface BlockEditorFormProps {
   onUploadingChange?: (isUploading: boolean) => void;
 }
 
+interface QualificationOption {
+  id: string;
+  title: string;
+  category?: string;
+  level?: string;
+}
+
+const SortableQualificationRow = ({
+  qualification,
+  onRemove,
+}: {
+  qualification: QualificationOption;
+  onRemove: (qualificationId: string) => void;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: qualification.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex min-w-0 items-center gap-3 rounded-lg border bg-background px-3 py-2 shadow-sm"
+    >
+      <button
+        type="button"
+        className="cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted"
+        aria-label={`Reorder ${qualification.title}`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="line-clamp-2 break-words text-sm font-medium leading-5 text-foreground">
+          {qualification.title}
+        </div>
+        <div className="truncate text-[11px] text-muted-foreground">
+          {[qualification.category, qualification.level].filter(Boolean).join(" • ") || qualification.id}
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 shrink-0"
+        onClick={() => onRemove(qualification.id)}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
 const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEditorFormProps) => {
   const [local, setLocal] = useState<Record<string, unknown>>(block.data as Record<string, unknown>);
   const [alignment, setAlignment] = useState<TextAlignment>(block.alignment || "center");
   const [blockStyle, setBlockStyle] = useState<BlockStyle>(block.style || {});
   const [blockLabel, setBlockLabel] = useState(block.label);
   const [isUploading, _setIsUploading] = useState(false);
+  const [qualificationSelectOpen, setQualificationSelectOpen] = useState(false);
   const [uploadCMSImage] = useUploadCMSImageMutation();
+  const { data: qualificationOptionsResponse = [], isLoading: isQualificationsLoading } = useGetQualificationSliderOptionsQuery();
+  const qualificationOptions = qualificationOptionsResponse as QualificationOption[];
+  const qualificationSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const setIsUploading = (v: boolean) => { _setIsUploading(v); onUploadingChange?.(v); };
   const update = (key: string, value: unknown) => setLocal((prev) => ({ ...prev, [key]: value }));
 
-  const handleSave = () => { if (!isUploading) { onSave(local, { alignment, style: blockStyle, label: blockLabel }); onClose(); } };
+  const handleSave = () => {
+    if (isUploading) return;
+    const nextLocal = block.type === "qualification_slider"
+      ? normalizeQualificationSliderData(local)
+      : local;
+    onSave(nextLocal, { alignment, style: blockStyle, label: blockLabel });
+    onClose();
+  };
 
   const onImageUpload = async (file: File, path: string) => {
     setIsUploading(true);
@@ -53,6 +144,42 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
     } catch (e) { console.error("Upload failed:", e); } finally { setIsUploading(false); }
   };
 
+  const toggleQualification = (qualificationId: string, checked: boolean) => {
+    const current = Array.isArray(local.qualification_ids)
+      ? (local.qualification_ids as string[]).filter(Boolean)
+      : [];
+
+    const next = checked
+      ? Array.from(new Set([...current, qualificationId]))
+      : current.filter((id) => id !== qualificationId);
+
+    update("qualification_ids", next);
+  };
+
+  const handleQualificationDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const current = Array.isArray(local.qualification_ids)
+      ? (local.qualification_ids as string[]).filter(Boolean)
+      : [];
+    const oldIndex = current.findIndex((id) => id === active.id);
+    const newIndex = current.findIndex((id) => id === over.id);
+
+    if (oldIndex < 0 || newIndex < 0) return;
+    update("qualification_ids", arrayMove(current, oldIndex, newIndex));
+  };
+
+  const selectedQualificationIds = Array.isArray(local.qualification_ids)
+    ? (local.qualification_ids as string[]).filter(Boolean)
+    : [];
+  const selectedQualifications = selectedQualificationIds.map((id) =>
+    qualificationOptions.find((qualification) => qualification.id === id) || { id, title: id },
+  );
+  const availableQualifications = qualificationOptions.filter(
+    (qualification) => !selectedQualificationIds.includes(qualification.id),
+  );
+
   const showGlobalAlignment = block.type !== "text";
 
   return (
@@ -70,7 +197,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
         </div>
       )}
 
-      {(typeof local.title === "string" || typeof local.headline === "string") && (
+      {((typeof local.title === "string" && block.type !== "qualification_slider") || typeof local.headline === "string") && (
         <div className="flex items-end gap-3">
           <div className="flex-1">
             <Field label={typeof local.title === "string" ? "Title / Headline" : "Headline"} 
@@ -109,7 +236,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
                     imagePosition={local.imagePosition as string} onPositionChange={(v) => update("imagePosition", v)} />
       )}
 
-      {Array.isArray(local.items) && (
+      {Array.isArray(local.items) && block.type !== "qualification_slider" && (
         <ItemListEditor blockType={block.type} items={local.items} onChange={(items: any) => update("items", items)} onImageUpload={onImageUpload} isUploading={isUploading} />
       )}
 
@@ -156,10 +283,17 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
               <select 
                 className="w-full h-8 text-sm border rounded bg-background"
                 value={(local.selection_mode as string) || "manual"}
-                onChange={(e) => update("selection_mode", e.target.value)}
+                onChange={(e) => {
+                  const mode = e.target.value;
+                  update("selection_mode", mode);
+                  if (mode === "latest") {
+                    update("qualification_ids", []);
+                    setQualificationSelectOpen(false);
+                  }
+                }}
               >
                 <option value="manual">Manual Selection</option>
-                <option value="auto">Automatic (Recent)</option>
+                <option value="latest">Latest Qualifications</option>
               </select>
             </div>
             <Field label="Show Count" value={String(local.show_count || 4)} onChange={(v) => update("show_count", parseInt(v) || 4)} />
@@ -178,14 +312,93 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
             <Field label="Delay (ms)" value={String(local.delay_ms || 5000)} onChange={(v) => update("delay_ms", parseInt(v) || 5000)} />
           </div>
 
-          <div className="pt-2">
-            <Label className="text-sm font-bold">Qualification IDs</Label>
-            <ItemListEditor 
-              blockType="qualification_slider" 
-              items={(local.qualification_ids as string[] || []).map(id => ({ id }))} 
-              onChange={(items: any[]) => update("qualification_ids", items.map(i => i.id))} 
-            />
-          </div>
+          {(local.selection_mode as string) !== "latest" && (
+            <div className="pt-2 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <Label className="text-sm font-bold">Manual Qualification Selection</Label>
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  {selectedQualificationIds.length} selected
+                </span>
+              </div>
+              <div className="rounded-xl border bg-muted/20 p-3 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Selected qualifications</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Add qualifications, then drag and drop to control the slider order.
+                    </p>
+                  </div>
+                  <Popover open={qualificationSelectOpen} onOpenChange={setQualificationSelectOpen}>
+                    <PopoverTrigger asChild>
+                      <Button type="button" variant="outline" size="sm" className="shrink-0">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Qualification
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[min(420px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-0" align="end">
+                      <Command>
+                        <CommandInput placeholder="Search qualifications..." />
+                        <CommandList>
+                          <CommandEmpty>
+                            {isQualificationsLoading ? "Loading qualifications..." : "No more qualifications available."}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {availableQualifications.map((qualification) => (
+                              <CommandItem
+                                key={qualification.id}
+                                value={`${qualification.title} ${qualification.category || ""} ${qualification.level || ""} ${qualification.id}`}
+                                onSelect={() => {
+                                  toggleQualification(qualification.id, true);
+                                  setQualificationSelectOpen(false);
+                                }}
+                                className="gap-3"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <div className="truncate text-sm font-medium">{qualification.title}</div>
+                                  <div className="text-[11px] text-muted-foreground">
+                                    {[qualification.category, qualification.level].filter(Boolean).join(" • ") || qualification.id}
+                                  </div>
+                                </div>
+                                <Plus className="h-4 w-4 text-muted-foreground" />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {selectedQualifications.length > 0 ? (
+                  <DndContext
+                    sensors={qualificationSensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleQualificationDragEnd}
+                  >
+                    <SortableContext items={selectedQualificationIds} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-2">
+                        {selectedQualifications.map((qualification) => (
+                          <SortableQualificationRow
+                            key={qualification.id}
+                            qualification={qualification}
+                            onRemove={(qualificationId) => toggleQualification(qualificationId, false)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                ) : (
+                  <div className="rounded-lg border border-dashed bg-background px-4 py-6 text-center">
+                    <p className="text-sm text-muted-foreground">No qualifications added yet.</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Use <span className="font-medium text-foreground">Add Qualification</span> to start building the manual slider.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
         </div>
       )}
 

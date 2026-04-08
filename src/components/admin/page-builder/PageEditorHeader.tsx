@@ -8,25 +8,23 @@ import { Switch } from "@/components/ui/switch";
 interface PageEditorHeaderProps {
   pageTitle: string;
   setPageTitle: (v: string) => void;
-  slug: string;
+  previewPath: string;
   isPublished: boolean;
   setIsPublished: (v: boolean) => void;
   showPreview: boolean;
   setShowPreview: (v: boolean) => void;
   handleSave: () => void;
-  getPreviewPath: (slug: string) => string;
 }
 
 const PageEditorHeader = ({
   pageTitle,
   setPageTitle,
-  slug,
+  previewPath,
   isPublished,
   setIsPublished,
   showPreview,
   setShowPreview,
   handleSave,
-  getPreviewPath,
 }: PageEditorHeaderProps) => {
   const navigate = useNavigate();
 
@@ -46,7 +44,7 @@ const PageEditorHeader = ({
           className="text-xl font-bold border-none bg-transparent px-0 h-auto focus-visible:ring-0"
         />
         <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-          {getPreviewPath(slug)}
+          {previewPath}
         </p>
       </div>
 

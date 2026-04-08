@@ -43,7 +43,7 @@ const EditBlockDialog = ({
         }}
       >
         <DialogHeader>
-          <DialogTitle>Edit: {block?.label}</DialogTitle>
+          <DialogTitle className="pr-8 truncate">Edit: {block?.label}</DialogTitle>
         </DialogHeader>
         {block && (
           <BlockEditorForm

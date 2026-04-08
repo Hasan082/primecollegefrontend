@@ -114,14 +114,16 @@ export const MapRenderer = ({ block }: { block: ContentBlock }) => {
 export const QualificationSliderRenderer = ({ block }: { block: ContentBlock }) => {
   const d = block.data as any;
   const ids = Array.isArray(d.qualification_ids) ? d.qualification_ids : [];
+  const items = Array.isArray(d.items) ? d.items : [];
+  const previewItems = items.length > 0 ? items : ids.map((id: string) => ({ id }));
 
   return (
     <StyledWrapper block={block} defaultClass="bg-primary/5 py-6 px-5 border border-dashed border-primary/20 rounded-md">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-[12px] font-bold text-foreground">{d.title as string}</h3>
+          <h3 className="text-[12px] font-bold text-foreground">Featured Qualifications</h3>
           <p className="text-[8px] text-muted-foreground mt-0.5 uppercase tracking-wider">
-            {d.selection_mode === "auto" ? "Automatic (Recent)" : "Manual Selection"} • {d.show_count} items
+            {d.selection_mode === "latest" ? "Latest Qualifications" : "Manual Selection"} • {d.show_count} items
           </p>
         </div>
         <div className="flex items-center gap-1.5">
@@ -131,26 +133,42 @@ export const QualificationSliderRenderer = ({ block }: { block: ContentBlock }) 
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        {ids.length > 0 ? (
-          ids.slice(0, 6).map((id: string, i: number) => (
-            <div key={i} className="min-w-[80px] h-[60px] bg-background border border-border/40 rounded p-2 flex flex-col justify-between">
-              <div className="text-[7px] text-muted-foreground truncate font-mono">{id}</div>
-              <div className="h-1 w-full bg-muted/30 rounded-full" />
-              <div className="h-3 w-1/2 bg-primary/20 rounded" />
+        {previewItems.length > 0 ? (
+          previewItems.slice(0, 6).map((item: any, i: number) => (
+            <div key={item.id || i} className="min-w-[120px] bg-background border border-border/40 rounded p-2 flex flex-col justify-between gap-2">
+              <div>
+                <div className="text-[8px] font-bold text-foreground leading-tight line-clamp-2">
+                  {item.title || item.id}
+                </div>
+                {(item.category || item.level) && (
+                  <div className="mt-1 text-[7px] text-muted-foreground">
+                    {[item.category, item.level].filter(Boolean).join(" • ")}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="h-1 flex-1 bg-muted/30 rounded-full" />
+                {item.current_price && (
+                  <div className="text-[8px] font-bold text-primary">
+                    {item.currency || "£"}{item.current_price}
+                  </div>
+                )}
+              </div>
             </div>
           ))
         ) : (
           <div className="w-full py-4 text-center border border-dashed border-border/50 rounded bg-muted/5">
-            <p className="text-[9px] text-muted-foreground italic">No qualifications selected yet</p>
+            <p className="text-[9px] text-muted-foreground italic">
+              {d.selection_mode === "latest" ? "Latest qualifications will be resolved by the backend" : "No qualifications selected yet"}
+            </p>
           </div>
         )}
-        {ids.length > 6 && (
+        {previewItems.length > 6 && (
           <div className="min-w-[40px] h-[60px] flex items-center justify-center text-[10px] text-muted-foreground">
-            +{ids.length - 6}
+            +{previewItems.length - 6}
           </div>
         )}
       </div>
     </StyledWrapper>
   );
 };
-

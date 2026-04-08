@@ -25,6 +25,7 @@ const BLOCK_DESCRIPTIONS: Partial<Record<BlockType, string>> = {
   "about-split": "Split layout for about page",
   "popular-qualifications": "Grid of popular qualifications",
   features: "Feature grid with icons",
+  qualification_slider: "Qualification slider from CMS-resolved items",
 };
 
 interface AddBlockDialogProps {
@@ -40,7 +41,8 @@ const AddBlockDialog = ({
   addBlock,
   allowedBlocks,
 }: AddBlockDialogProps) => {
-  const blockTypes = allowedBlocks || (Object.keys(BLOCK_TYPE_LABELS) as BlockType[]);
+  const blockTypes = (allowedBlocks || (Object.keys(BLOCK_TYPE_LABELS) as BlockType[]))
+    .filter((type) => type !== "qualification_hero");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -1,4 +1,4 @@
-// ─── Block type definitions for the page builder ───
+// Shared CMS/page-builder block and page contracts.
 
 export type BlockType =
   | "hero"
@@ -23,6 +23,8 @@ export type BlockType =
   | "qualification_slider";
 
 export type TextAlignment = "left" | "center" | "right";
+export type CmsPageCategory = "static" | "blog_post" | "qualification_detail" | "general";
+export type PreviewPageKind = "home" | "static" | "qualification-detail" | "blog-detail" | "unknown";
 
 export interface BlockStyle {
   textColor?: string;
@@ -43,8 +45,16 @@ export interface BlockBase {
   label: string;
   alignment?: TextAlignment;
   style?: BlockStyle;
-  isLocked?: boolean; // Cannot be deleted
-  isFixed?: boolean;  // Cannot be reordered
+  isLocked?: boolean;
+  isFixed?: boolean;
+}
+
+export interface HeroSlideItem {
+  category: string;
+  title: string;
+  price: string;
+  cta: string;
+  image: string;
 }
 
 export interface HeroBlock extends BlockBase {
@@ -56,19 +66,15 @@ export interface HeroBlock extends BlockBase {
     ctaLabel?: string;
     ctaHref?: string;
     badges?: string[];
-    slides?: Array<{
-      category: string;
-      title: string;
-      price: string;
-      cta: string;
-      image: string;
-    }>;
+    slides?: HeroSlideItem[];
   };
 }
 
 export interface QualificationHeroBlock extends BlockBase {
   type: "qualification_hero";
   data: Record<string, unknown>;
+  isLocked?: true;
+  isFixed?: true;
 }
 
 export interface TextBlock extends BlockBase {
@@ -76,7 +82,7 @@ export interface TextBlock extends BlockBase {
   data: {
     title?: string;
     content: string;
-    alignment?: "left" | "center" | "right";
+    alignment?: TextAlignment;
   };
 }
 
@@ -106,7 +112,10 @@ export interface ModulesBlock extends BlockBase {
   type: "modules";
   data: {
     title?: string;
-    items: { title: string; description?: string }[];
+    items: Array<{
+      title: string;
+      description?: string;
+    }>;
   };
 }
 
@@ -114,7 +123,10 @@ export interface FAQBlock extends BlockBase {
   type: "faq";
   data: {
     title?: string;
-    items: { question: string; answer: string }[];
+    items: Array<{
+      question: string;
+      answer: string;
+    }>;
   };
 }
 
@@ -124,11 +136,11 @@ export interface StatsBlock extends BlockBase {
     title?: string;
     subtitle?: string;
     content?: string;
-    items: {
+    items: Array<{
       title: string;
       value: string;
       description?: string;
-    }[];
+    }>;
   };
 }
 
@@ -150,7 +162,15 @@ export interface CardsBlock extends BlockBase {
   type: "cards";
   data: {
     title?: string;
-    items: { title: string; category?: string; level?: string; price?: string; image?: string; slug?: string }[];
+    items: Array<{
+      title: string;
+      category?: string;
+      level?: string;
+      price?: string;
+      image?: string;
+      slug?: string;
+      description?: string;
+    }>;
   };
 }
 
@@ -158,7 +178,10 @@ export interface LogosBlock extends BlockBase {
   type: "logos";
   data: {
     title?: string;
-    items: { title: string; image?: string }[];
+    items: Array<{
+      title: string;
+      image?: string;
+    }>;
   };
 }
 
@@ -166,7 +189,14 @@ export interface BlogBlock extends BlockBase {
   type: "blog";
   data: {
     title?: string;
-    items: { title: string; description: string; date: string; category: string; image?: string }[];
+    items: Array<{
+      title: string;
+      description: string;
+      date: string;
+      category: string;
+      image?: string;
+      slug?: string;
+    }>;
   };
 }
 
@@ -175,7 +205,11 @@ export interface WhyUsBlock extends BlockBase {
   data: {
     title?: string;
     content?: string;
-    items: { title: string; icon?: string; description: string }[];
+    items: Array<{
+      title: string;
+      icon?: string;
+      description: string;
+    }>;
   };
 }
 
@@ -195,6 +229,7 @@ export interface AboutSplitBlock extends BlockBase {
     paragraphs: string[];
     ctaLabel?: string;
     ctaHref?: string;
+    description?: string;
   };
 }
 
@@ -202,7 +237,7 @@ export interface PopularQualificationsBlock extends BlockBase {
   type: "popular-qualifications";
   data: {
     title: string;
-    items: any[];
+    items: Array<Record<string, unknown>>;
   };
 }
 
@@ -210,7 +245,10 @@ export interface FeaturesBlock extends BlockBase {
   type: "features";
   data: {
     title: string;
-    items: { title: string; description: string }[];
+    items: Array<{
+      title: string;
+      description: string;
+    }>;
   };
 }
 
@@ -239,15 +277,28 @@ export interface MapBlock extends BlockBase {
   };
 }
 
+export interface QualificationSliderItem {
+  id: string;
+  title: string;
+  slug: string;
+  featured_image: string | null;
+  short_description: string;
+  category: string | null;
+  level: string | null;
+  qualification_type: string | null;
+  current_price: string | null;
+  currency: string;
+}
+
 export interface QualificationSliderBlock extends BlockBase {
   type: "qualification_slider";
   data: {
-    title: string;
-    selection_mode: "manual" | "auto";
-    qualification_ids: string[];
+    selection_mode: "manual" | "latest";
+    qualification_ids?: string[];
     show_count: number;
     autoplay: boolean;
     delay_ms: number;
+    items?: QualificationSliderItem[];
   };
 }
 
@@ -273,16 +324,62 @@ export type ContentBlock =
   | MapBlock
   | QualificationSliderBlock;
 
+export interface CMSPage {
+  id: string;
+  title: string;
+  slug: string;
+  page_type?: Exclude<CmsPageCategory, "general"> | null;
+  page_context?: {
+    qualification_id: string;
+    qualification_slug: string;
+    qualification_title: string;
+  } | null;
+  blocks: ContentBlock[] | string | null;
+  is_published: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CMSPageListResponse {
+  success?: boolean;
+  message?: string;
+  data?: {
+    count?: number;
+    next?: string | null;
+    previous?: string | null;
+    results: CMSPage[];
+  };
+}
+
+export interface CMSPageDetailResponse {
+  success?: boolean;
+  message?: string;
+  data?: CMSPage;
+}
+
+export interface CMSImageUploadResponse {
+  success?: boolean;
+  message?: string;
+  data?: {
+    id?: string;
+    image?: string;
+  };
+}
+
 export interface PageConfig {
   id: string;
   title: string;
   slug: string;
   type: "static" | "qualification" | "blog-post";
   blocks: ContentBlock[];
-  meta?: { title?: string; description?: string };
+  meta?: {
+    title?: string;
+    description?: string;
+  };
   updatedAt?: string;
   is_published?: boolean;
-  // Blog post specific fields
   blogMeta?: {
     author?: string;
     date?: string;
@@ -294,9 +391,19 @@ export interface PageConfig {
   };
 }
 
-// Helper
-let _counter = 0;
-export const generateBlockId = (): string => `block_${Date.now()}_${++_counter}`;
+export interface PreviewRouteContext {
+  slug: string;
+  pageType?: CmsPageCategory;
+  pageContext?: CMSPage["page_context"];
+  qualificationSlug?: string | null;
+  isHomePage?: boolean;
+}
+
+let counter = 0;
+export const generateBlockId = (): string => `block_${Date.now()}_${++counter}`;
+
+export const SYSTEM_BLOCK_TYPES: BlockType[] = ["qualification_hero"];
+export const LOCKED_BLOCK_TYPES: BlockType[] = ["qualification_hero"];
 
 export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   hero: "Hero Banner",
@@ -326,56 +433,172 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
   const label = BLOCK_TYPE_LABELS[type];
 
   const defaults: Record<BlockType, () => ContentBlock> = {
-    hero: () => ({ id, type: "hero", label, data: { title: "Page Title", subtitle: "", image: "", ctaLabel: "", ctaHref: "" } }),
-    text: () => ({ id, type: "text", label, data: { title: "Section Title", content: "Enter your content here." } }),
-    image: () => ({ id, type: "image", label, data: { image: "", alt: "", caption: "" } }),
-    "image-text": () => ({ id, type: "image-text", label, data: { headline: "Headline", paragraphs: ["Paragraph text here."], description: "", image: "", imagePosition: "right", ctaLabel: "", ctaHref: "" } }),
-    modules: () => ({ id, type: "modules", label, data: { title: "Modules", items: [{ title: "Module 1", description: "Description" }] } }),
-    faq: () => ({ id, type: "faq", label, data: { title: "FAQs", items: [{ question: "Question?", answer: "Answer." }] } }),
-    stats: () => ({ id, type: "stats", label, data: { title: "Key Stats", items: [{ title: "Stat", value: "100", description: "Description" }] } }),
-    cta: () => ({ id, type: "cta", label, data: { title: "Ready to Start?", content: "Contact us today.", ctaLabel: "Get Started", ctaHref: "/contact", bgMode: "color", bgColor: "#0c2d6b", bgImage: "", overlayColor: "rgba(0,0,0,0.5)" } }),
-    cards: () => ({ id, type: "cards", label, data: { title: "Featured Items", items: [] } }),
-    logos: () => ({ id, type: "logos", label, data: { title: "Our Partners", items: [] } }),
-    blog: () => ({ id, type: "blog", label, data: { title: "Latest News", items: [] } }),
-    "why-us": () => ({ id, type: "why-us", label, data: { title: "Why Choose Us", items: [{ title: "Feature", description: "Description" }] } }),
-    pricing: () => ({ id, type: "pricing", label, data: { price: "£0", duration: "12 months" } }),
-    qualification_hero: () => ({ id, type: "qualification_hero", label, data: {} }),
-    "about-split": () => ({ id, type: "about-split", label, data: { headline: "Headline", paragraphs: ["Paragraph 1", "Paragraph 2"], ctaLabel: "About Us", ctaHref: "/about" } }),
-    "popular-qualifications": () => ({ id, type: "popular-qualifications", label, data: { title: "Popular Qualifications", items: [] } }),
-    features: () => ({ id, type: "features", label, data: { title: "Features", items: [{ title: "Feature", description: "Description" }] } }),
-    "contact-form": () => ({ 
-      id, type: "contact-form", label, 
-      data: { 
-        title: "Get in Touch", 
-        address: "13 Lanark Square, London E14 9QD", 
-        email: "info@primecollege.uk", 
-        phone: "+44 20 1234 5678", 
+    hero: () => ({
+      id,
+      type: "hero",
+      label,
+      data: { title: "Page Title", subtitle: "", image: "", ctaLabel: "", ctaHref: "" },
+    }),
+    text: () => ({
+      id,
+      type: "text",
+      label,
+      data: { title: "Section Title", content: "Enter your content here." },
+    }),
+    image: () => ({
+      id,
+      type: "image",
+      label,
+      data: { image: "", alt: "", caption: "" },
+    }),
+    "image-text": () => ({
+      id,
+      type: "image-text",
+      label,
+      data: {
+        headline: "Headline",
+        paragraphs: ["Paragraph text here."],
+        description: "",
+        image: "",
+        imagePosition: "right",
+        ctaLabel: "",
+        ctaHref: "",
+      },
+    }),
+    modules: () => ({
+      id,
+      type: "modules",
+      label,
+      data: { title: "Modules", items: [{ title: "Module 1", description: "Description" }] },
+    }),
+    faq: () => ({
+      id,
+      type: "faq",
+      label,
+      data: { title: "FAQs", items: [{ question: "Question?", answer: "Answer." }] },
+    }),
+    stats: () => ({
+      id,
+      type: "stats",
+      label,
+      data: { title: "Key Stats", items: [{ title: "Stat", value: "100", description: "Description" }] },
+    }),
+    cta: () => ({
+      id,
+      type: "cta",
+      label,
+      data: {
+        title: "Ready to Start?",
+        content: "Contact us today.",
+        ctaLabel: "Get Started",
+        ctaHref: "/contact",
+        bgMode: "color",
+        bgColor: "#0c2d6b",
+        bgImage: "",
+        overlayColor: "rgba(0,0,0,0.5)",
+      },
+    }),
+    cards: () => ({
+      id,
+      type: "cards",
+      label,
+      data: { title: "Featured Items", items: [] },
+    }),
+    logos: () => ({
+      id,
+      type: "logos",
+      label,
+      data: { title: "Our Partners", items: [] },
+    }),
+    blog: () => ({
+      id,
+      type: "blog",
+      label,
+      data: { title: "Latest News", items: [] },
+    }),
+    "why-us": () => ({
+      id,
+      type: "why-us",
+      label,
+      data: { title: "Why Choose Us", items: [{ title: "Feature", description: "Description" }] },
+    }),
+    pricing: () => ({
+      id,
+      type: "pricing",
+      label,
+      data: { price: "£0", duration: "12 months" },
+    }),
+    qualification_hero: () => ({
+      id,
+      type: "qualification_hero",
+      label,
+      isLocked: true,
+      isFixed: true,
+      data: {},
+    }),
+    "about-split": () => ({
+      id,
+      type: "about-split",
+      label,
+      data: {
+        headline: "Headline",
+        paragraphs: ["Paragraph 1", "Paragraph 2"],
+        ctaLabel: "About Us",
+        ctaHref: "/about",
+      },
+    }),
+    "popular-qualifications": () => ({
+      id,
+      type: "popular-qualifications",
+      label,
+      data: { title: "Popular Qualifications", items: [] },
+    }),
+    features: () => ({
+      id,
+      type: "features",
+      label,
+      data: { title: "Features", items: [{ title: "Feature", description: "Description" }] },
+    }),
+    "contact-form": () => ({
+      id,
+      type: "contact-form",
+      label,
+      data: {
+        title: "Get in Touch",
+        address: "13 Lanark Square, London E14 9QD",
+        email: "info@primecollege.uk",
+        phone: "+44 20 1234 5678",
         hours: "Mon - Fri: 9:00 AM - 5:00 PM",
         formFields: [
           { name: "name", label: "Full Name", type: "text", required: true },
           { name: "email", label: "Email Address", type: "email", required: true },
           { name: "subject", label: "Subject", type: "text", required: false },
           { name: "message", label: "Message", type: "textarea", required: true },
-        ]
-      } 
+        ],
+      },
     }),
-    map: () => ({ 
-      id, type: "map", label, 
-      data: { 
-        title: "Find Us", 
-        iframeUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.234!2d-0.0175!3d51.5075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487602d64e0e8b7f%3A0x1234567890abcdef!2s13%20Lanark%20Square%2C%20London%20E14%209QD!5e0!3m2!1sen!2suk!4v1700000000000" 
-      } 
+    map: () => ({
+      id,
+      type: "map",
+      label,
+      data: {
+        title: "Find Us",
+        iframeUrl:
+          "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.234!2d-0.0175!3d51.5075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487602d64e0e8b7f%3A0x1234567890abcdef!2s13%20Lanark%20Square%2C%20London%20E14%209QD!5e0!3m2!1sen!2suk!4v1700000000000",
+      },
     }),
     qualification_slider: () => ({
-      id, type: "qualification_slider", label,
+      id,
+      type: "qualification_slider",
+      label,
       data: {
-        title: "Featured Qualifications",
         selection_mode: "manual",
         qualification_ids: [],
         show_count: 4,
         autoplay: true,
         delay_ms: 5000,
-      }
+        items: [],
+      },
     }),
   };
 

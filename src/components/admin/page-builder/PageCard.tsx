@@ -3,8 +3,8 @@ import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { PageConfig } from "@/types/pageBuilder";
-import { safeParseBlocks } from "@/utils/pageBuilder";
+import type { CMSPage, CmsPageCategory } from "@/types/pageBuilder";
+import { getPreviewPath, safeParseBlocks } from "@/utils/pageBuilder";
 
 const showDeleteButton = (slug: string) => {
   const lists = ["home", "contact", "about"];
@@ -12,7 +12,8 @@ const showDeleteButton = (slug: string) => {
 };
 
 interface PageCardProps {
-  page: PageConfig;
+  page: CMSPage;
+  pageType?: CmsPageCategory;
   onDelete?: (id: string) => void;
   isPageDeleting: boolean;
   deletingId: string;
@@ -20,11 +21,19 @@ interface PageCardProps {
 
 const PageCard = ({
   page,
+  pageType,
   onDelete,
   isPageDeleting,
   deletingId,
 }: PageCardProps) => {
   const blockCount = safeParseBlocks(page.blocks).length;
+  const previewPath = getPreviewPath({
+    slug: page.slug,
+    pageType,
+    pageContext: page.page_context,
+    qualificationSlug: page.page_context?.qualification_slug,
+    isHomePage: page.slug === "home",
+  });
 
   return (
     <Card className="hover:shadow-md transition-shadow h-full flex flex-col">
@@ -35,7 +44,7 @@ const PageCard = ({
               {page.title}
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-              {`/${page.slug}`}
+              {previewPath}
             </p>
           </div>
           <div className="ml-2 shrink-0 flex flex-col items-end gap-1">
@@ -48,6 +57,11 @@ const PageCard = ({
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 flex-wrap">
+          {pageType === "qualification_detail" && page.page_context?.qualification_title ? (
+            <Badge variant="outline" className="text-[10px]">
+              {page.page_context.qualification_title}
+            </Badge>
+          ) : null}
           {safeParseBlocks(page.blocks)
             .slice(0, 3)
             .map((b) => (
@@ -61,7 +75,7 @@ const PageCard = ({
         </div>
         <div className="mt-auto flex gap-2">
           <Link
-            to={`/admin/pages/${page.slug.replace(/^\//, "")}`}
+            to={`/admin/pages/${page.slug.replace(/^\//, "")}?pageType=${encodeURIComponent(pageType || "general")}${page.page_context?.qualification_slug ? `&qualificationSlug=${encodeURIComponent(page.page_context.qualification_slug)}` : ""}`}
             className="flex-1"
           >
             <Button size="sm" className="w-full">
