@@ -56,7 +56,11 @@ import {
   ChevronsUpDown,
 } from "lucide-react";
 import type { AdminLearner } from "@/data/adminMockData";
-import { useGetEnrolledLearnerActionModalDataQuery } from "@/redux/apis/admin/learnerManagementApi";
+import {
+  useGetEnrolledLearnerActionModalDataQuery,
+  useUpdateEnrolmentStatusMutation,
+  useUpdateLearnerPersonalInfoMutation,
+} from "@/redux/apis/admin/learnerManagementApi";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -80,6 +84,9 @@ type HeaderData = {
 };
 
 type PersonalInfoContent = {
+  first_name: string;
+  middle_name: string;
+  last_name: string;
   email: string;
   phone: string;
   enrolled_at: string;
@@ -392,15 +399,21 @@ const StaffOptionCombobox = ({
 };
 
 // TODO: need to work here for unit assignment
-const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
+const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<LearnerActionTab>(DEFAULT_TAB);
   const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
   const [selectedTrainer, setSelectedTrainer] = useState(UNASSIGNED_VALUE);
   const [selectedIqa, setSelectedIqa] = useState(UNASSIGNED_VALUE);
   const [isEditing, setIsEditing] = useState(false);
+  const [updateLearnerPersonalInfo, { isLoading: isUpdatingPersonalInfo }] =
+    useUpdateLearnerPersonalInfoMutation();
+  const [updateEnrolmentStatus, { isLoading: isUpdatingStatus }] =
+    useUpdateEnrolmentStatusMutation();
   const [editData, setEditData] = useState({
-    name: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
     email: "",
     phone: "",
     status: "active" as AdminLearner["status"],
@@ -414,7 +427,12 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
     }
   }, [open, learner?.id]);
 
-  const { data, isFetching, error } = useGetEnrolledLearnerActionModalDataQuery(
+  const {
+    data,
+    isFetching,
+    error,
+    refetch,
+  } = useGetEnrolledLearnerActionModalDataQuery(
     {
       enrolmentId: learner?.id,
       tab: activeTab,
@@ -432,10 +450,10 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
 
   const personalInfo = useMemo(
     () =>
-      activeTab === "personal_info"
+      activeTab === "personal_info" && responseTab === "personal_info"
         ? (content as PersonalInfoContent | undefined)
         : undefined,
-    [activeTab, content],
+    [activeTab, content, responseTab],
   );
 
   const staffAssignment = useMemo(
@@ -477,7 +495,9 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
   useEffect(() => {
     if (header || personalInfo) {
       setEditData({
-        name: header?.learner_name || learner?.name || "",
+        firstName: personalInfo?.first_name || "",
+        middleName: personalInfo?.middle_name || "",
+        lastName: personalInfo?.last_name || "",
         email: personalInfo?.email || learner?.email || "",
         phone: personalInfo?.phone || learner?.phone || "",
         status: (header?.status ||
@@ -503,7 +523,9 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
 
   const startEditing = () => {
     setEditData({
-      name: header?.learner_name || learner.name,
+      firstName: personalInfo?.first_name || "",
+      middleName: personalInfo?.middle_name || "",
+      lastName: personalInfo?.last_name || "",
       email: personalInfo?.email || learner.email || "",
       phone: personalInfo?.phone || learner.phone || "",
       status: (header?.status || learner.status) as AdminLearner["status"],
@@ -515,39 +537,128 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
     setIsEditing(false);
   };
 
-  const saveChanges = () => {
-    const updated: AdminLearner = {
-      ...learner,
-      name: editData.name.trim(),
-      email: editData.email.trim(),
+  const saveChanges = async () => {
+    if (!personalInfo) return;
+
+    const personalInfoPayload = {
+      first_name: editData.firstName.trim(),
+      middle_name: editData.middleName.trim(),
+      last_name: editData.lastName.trim(),
       phone: editData.phone.trim(),
-      status: editData.status,
     };
+    const personalInfoChanged =
+      personalInfoPayload.first_name !== (personalInfo.first_name || "") ||
+      personalInfoPayload.middle_name !== (personalInfo.middle_name || "") ||
+      personalInfoPayload.last_name !== (personalInfo.last_name || "") ||
+      personalInfoPayload.phone !== (personalInfo.phone || "");
+    const statusChanged = editData.status !== (header?.status || learner.status);
 
-    setIsEditing(false);
-    toast({
-      title: "Learner update prepared",
-      description:
-        "The form arrangement is ready. You can connect your PATCH API next.",
-    });
+    if (!personalInfoChanged && !statusChanged) {
+      setIsEditing(false);
+      return;
+    }
+
+    if (personalInfoChanged && !learner.learnerUserId) {
+      toast({
+        title: "Unable to update learner",
+        description: "Learner id is missing for the personal info update.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (personalInfoChanged) {
+        await updateLearnerPersonalInfo({
+          learnerId: learner.learnerUserId,
+          body: personalInfoPayload,
+        }).unwrap();
+      }
+
+      if (statusChanged) {
+        await updateEnrolmentStatus({
+          enrolmentId: learner.id,
+          body: { status: editData.status },
+        }).unwrap();
+      }
+
+      await refetch();
+
+      const updatedName = [
+        personalInfoPayload.first_name,
+        personalInfoPayload.middle_name,
+        personalInfoPayload.last_name,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const updated: AdminLearner = {
+        ...learner,
+        name: updatedName || learner.name,
+        email: editData.email.trim(),
+        phone: personalInfoPayload.phone,
+        status: editData.status,
+      };
+
+      onUpdate?.(updated);
+      setIsEditing(false);
+      toast({
+        title: "Learner updated",
+        description: "Personal info and status were saved successfully.",
+      });
+    } catch (saveError: unknown) {
+      const errorMessage =
+        typeof saveError === "object" &&
+        saveError !== null &&
+        "data" in saveError &&
+        typeof saveError.data === "object" &&
+        saveError.data !== null
+          ? ("detail" in saveError.data &&
+              typeof saveError.data.detail === "string" &&
+              saveError.data.detail) ||
+            ("message" in saveError.data &&
+              typeof saveError.data.message === "string" &&
+              saveError.data.message) ||
+            "Please try again."
+          : "Please try again.";
+
+      toast({
+        title: "Failed to update learner",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
-  const statusBadge = (status?: string) => {
-    const variant =
-      status === "active"
-        ? "default"
-        : status === "completed"
-          ? "secondary"
-          : status === "suspended"
-            ? "destructive"
-            : "outline";
-
-    return <Badge variant={variant}>{formatLabel(status)}</Badge>;
-  };
+  const isSaving = isUpdatingPersonalInfo || isUpdatingStatus;
 
   const titleName = header?.learner_name || learner.name;
   const titleLearnerId = header?.qualification_learner_id || learner.learnerId;
   const titleStatus = header?.status || learner.status;
+
+  const displayFullName = [
+    personalInfo?.first_name,
+    personalInfo?.middle_name,
+    personalInfo?.last_name,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const displayStatus = titleStatus === "on_hold" ? "On Hold" : formatLabel(titleStatus);
+
+  const statusVariant =
+    titleStatus === "active"
+      ? "default"
+      : titleStatus === "completed"
+        ? "secondary"
+        : titleStatus === "suspended"
+          ? "destructive"
+          : "outline";
+
+  const editStatusValue =
+    editData.status === "suspended" ? "on_hold" : editData.status;
+
+  const titleDisplayName = displayFullName || titleName;
 
   return (
     <Dialog
@@ -566,13 +677,13 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <span>{titleName}</span>
+              <span>{titleDisplayName}</span>
               <p className="text-xs font-normal text-muted-foreground">
                 {titleLearnerId}
               </p>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              {statusBadge(titleStatus)}
+              <Badge variant={statusVariant}>{displayStatus}</Badge>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -609,14 +720,15 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
                         <Button
                           variant="outline"
                           size="sm"
+                          disabled={isSaving}
                           onClick={cancelEditing}
                         >
                           <X className="mr-1 h-3.5 w-3.5" />
                           Cancel
                         </Button>
-                        <Button size="sm" onClick={saveChanges}>
+                        <Button size="sm" disabled={isSaving} onClick={saveChanges}>
                           <Save className="mr-1 h-3.5 w-3.5" />
-                          Save Changes
+                          {isSaving ? "Saving..." : "Save Changes"}
                         </Button>
                       </>
                     ) : (
@@ -635,14 +747,41 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
                     <CardContent className="p-4">
                       {isEditing ? (
                         <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">First Name</Label>
+                              <Input
+                                value={editData.firstName}
+                                onChange={(e) =>
+                                  setEditData((prev) => ({
+                                    ...prev,
+                                    firstName: e.target.value,
+                                  }))
+                                }
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Middle Name</Label>
+                              <Input
+                                value={editData.middleName}
+                                onChange={(e) =>
+                                  setEditData((prev) => ({
+                                    ...prev,
+                                    middleName: e.target.value,
+                                  }))
+                                }
+                              />
+                            </div>
+                          </div>
+
                           <div className="space-y-1.5">
-                            <Label className="text-xs">Full Name</Label>
+                            <Label className="text-xs">Last Name</Label>
                             <Input
-                              value={editData.name}
+                              value={editData.lastName}
                               onChange={(e) =>
                                 setEditData((prev) => ({
                                   ...prev,
-                                  name: e.target.value,
+                                  lastName: e.target.value,
                                 }))
                               }
                             />
@@ -675,7 +814,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
                           <div className="space-y-1.5">
                             <Label className="text-xs">Status</Label>
                             <Select
-                              value={editData.status}
+                              value={editStatusValue}
                               onValueChange={(value) =>
                                 setEditData((prev) => ({
                                   ...prev,
@@ -688,12 +827,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="suspended">
-                                  Suspended
-                                </SelectItem>
-                                <SelectItem value="completed">
-                                  Completed
-                                </SelectItem>
+                                <SelectItem value="on_hold">On Hold</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>

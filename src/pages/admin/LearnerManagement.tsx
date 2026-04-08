@@ -278,14 +278,20 @@ const LearnerManagement = () => {
   const mapLearnerForModal = (l: any): AdminLearner =>
     ({
       id: l.id,
+      learnerUserId: l.learner?.id,
       name: l.learner.name,
       learnerId: l.learner.learner_id,
       email: l.learner.email,
+      phone: l.learner.phone || "",
       qualification: l.qualification.title,
+      qualificationId: l.qualification.id,
       assignedTrainer: l.trainer?.name || "Unassigned",
+      enrolledDate: l.enrolled_at || "",
+      paymentMethod: l.payment.method || "manual",
       progress: l.progress.progress_percent,
       paymentStatus: l.payment.status,
       status: l.status,
+      accessExpiry: l.access_expires_at || "",
     }) as AdminLearner;
 
   if (error) {

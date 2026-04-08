@@ -22,6 +22,7 @@ export interface AdminQualification {
 
 export interface AdminLearner {
   id: string;
+  learnerUserId?: string;
   name: string;
   email: string;
   phone: string;
@@ -33,7 +34,7 @@ export interface AdminLearner {
   paymentMethod: "online" | "manual" | "employer";
   paymentStatus: "paid" | "pending" | "overdue";
   progress: number;
-  status: "active" | "completed" | "suspended";
+  status: "active" | "completed" | "suspended" | "on_hold";
   accessExpiry: string;
 }
 
