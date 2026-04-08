@@ -147,6 +147,48 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
 
       {block.type === "cta" && <CTABackgroundEditor local={local} update={update} onImageUpload={onImageUpload} isUploading={isUploading} />}
 
+      {block.type === "qualification_slider" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Slider Configuration</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Selection Mode</Label>
+              <select 
+                className="w-full h-8 text-sm border rounded bg-background"
+                value={(local.selection_mode as string) || "manual"}
+                onChange={(e) => update("selection_mode", e.target.value)}
+              >
+                <option value="manual">Manual Selection</option>
+                <option value="auto">Automatic (Recent)</option>
+              </select>
+            </div>
+            <Field label="Show Count" value={String(local.show_count || 4)} onChange={(v) => update("show_count", parseInt(v) || 4)} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2 pt-4">
+              <input 
+                type="checkbox" 
+                id="autoplay"
+                checked={!!local.autoplay} 
+                onChange={(e) => update("autoplay", e.target.checked)} 
+              />
+              <Label htmlFor="autoplay" className="text-xs">Autoplay</Label>
+            </div>
+            <Field label="Delay (ms)" value={String(local.delay_ms || 5000)} onChange={(v) => update("delay_ms", parseInt(v) || 5000)} />
+          </div>
+
+          <div className="pt-2">
+            <Label className="text-sm font-bold">Qualification IDs</Label>
+            <ItemListEditor 
+              blockType="qualification_slider" 
+              items={(local.qualification_ids as string[] || []).map(id => ({ id }))} 
+              onChange={(items: any[]) => update("qualification_ids", items.map(i => i.id))} 
+            />
+          </div>
+        </div>
+      )}
+
       <BlockStylePanel style={blockStyle} onChange={setBlockStyle} />
 
       <div className="flex justify-end gap-2 pt-2 border-t">

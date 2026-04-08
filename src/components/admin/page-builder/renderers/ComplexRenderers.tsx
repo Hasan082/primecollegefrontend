@@ -110,3 +110,47 @@ export const MapRenderer = ({ block }: { block: ContentBlock }) => {
     </StyledWrapper>
   );
 };
+
+export const QualificationSliderRenderer = ({ block }: { block: ContentBlock }) => {
+  const d = block.data as any;
+  const ids = Array.isArray(d.qualification_ids) ? d.qualification_ids : [];
+
+  return (
+    <StyledWrapper block={block} defaultClass="bg-primary/5 py-6 px-5 border border-dashed border-primary/20 rounded-md">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-[12px] font-bold text-foreground">{d.title as string}</h3>
+          <p className="text-[8px] text-muted-foreground mt-0.5 uppercase tracking-wider">
+            {d.selection_mode === "auto" ? "Automatic (Recent)" : "Manual Selection"} • {d.show_count} items
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {d.autoplay && <span className="text-[8px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded font-mono">AUTOPLAY</span>}
+          <span className="text-[8px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-mono">{d.delay_ms}ms</span>
+        </div>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {ids.length > 0 ? (
+          ids.slice(0, 6).map((id: string, i: number) => (
+            <div key={i} className="min-w-[80px] h-[60px] bg-background border border-border/40 rounded p-2 flex flex-col justify-between">
+              <div className="text-[7px] text-muted-foreground truncate font-mono">{id}</div>
+              <div className="h-1 w-full bg-muted/30 rounded-full" />
+              <div className="h-3 w-1/2 bg-primary/20 rounded" />
+            </div>
+          ))
+        ) : (
+          <div className="w-full py-4 text-center border border-dashed border-border/50 rounded bg-muted/5">
+            <p className="text-[9px] text-muted-foreground italic">No qualifications selected yet</p>
+          </div>
+        )}
+        {ids.length > 6 && (
+          <div className="min-w-[40px] h-[60px] flex items-center justify-center text-[10px] text-muted-foreground">
+            +{ids.length - 6}
+          </div>
+        )}
+      </div>
+    </StyledWrapper>
+  );
+};
+

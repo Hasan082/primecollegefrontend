@@ -3,7 +3,7 @@ import type { ContentBlock } from "@/types/pageBuilder";
 
 // Refactored Renderers
 import { HeroRenderer, ImageRenderer, TextRenderer } from "./renderers/CommonRenderers";
-import { ImageTextRenderer, WhyUsRenderer, CTARenderer, ContactFormRenderer, MapRenderer } from "./renderers/ComplexRenderers";
+import { ImageTextRenderer, WhyUsRenderer, CTARenderer, ContactFormRenderer, MapRenderer, QualificationSliderRenderer } from "./renderers/ComplexRenderers";
 import { CardRenderer, StatsRenderer, FAQRenderer, LogoRenderer } from "./renderers/GridRenderers";
 
 interface BlockPreviewRendererProps {
@@ -70,6 +70,8 @@ const renderBlock = (block: ContentBlock) => {
     case "blog":
     case "popular-qualifications":
       return <CardRenderer block={block} />;
+    case "qualification_slider":
+      return <QualificationSliderRenderer block={block} />;
     default:
       return (
         <div className="p-4 bg-muted/50 border border-dashed border-border flex items-center justify-center min-h-[50px]">

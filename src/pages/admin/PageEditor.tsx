@@ -89,7 +89,7 @@ const PageEditor = () => {
     const [data, error] = await TryCatch(updatePage({
       slug: pageId as string,
       payload: {
-        blocks: JSON.stringify(updatedBlocks || blocks),
+        blocks: updatedBlocks || blocks,
         title: pageTitle, slug,
         seo_title: meta.title, seo_description: meta.description,
         is_published: isPublished,

@@ -39,8 +39,8 @@ const PageCard = ({
             </p>
           </div>
           <div className="ml-2 shrink-0 flex flex-col items-end gap-1">
-            <Badge variant={page.isPublished ? "default" : "secondary"}>
-              {page.isPublished ? "Published" : "Draft"}
+            <Badge variant={page.is_published ? "default" : "secondary"}>
+              {page.is_published ? "Published" : "Draft"}
             </Badge>
             <Badge variant="outline">
               {blockCount} block{blockCount !== 1 ? "s" : ""}

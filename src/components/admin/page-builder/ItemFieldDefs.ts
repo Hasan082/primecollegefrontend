@@ -63,5 +63,8 @@ export const ITEM_FIELDS: Partial<Record<BlockType, ItemField[]>> = {
     { key: "label", label: "Label", type: "input", placeholder: "e.g. First Name" },
     { key: "type", label: "Type (text, email, textarea)", type: "input", placeholder: "e.g. text" },
     { key: "required", label: "Required (true/false)", type: "input", placeholder: "e.g. true" },
+  ],
+  "qualification_slider": [
+    { key: "id", label: "Qualification ID (UUID)", type: "input", placeholder: "Enter UUID" },
   ]
 };

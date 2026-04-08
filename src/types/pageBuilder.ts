@@ -19,7 +19,8 @@ export type BlockType =
   | "popular-qualifications"
   | "features"
   | "contact-form"
-  | "map";
+  | "map"
+  | "qualification_slider";
 
 export type TextAlignment = "left" | "center" | "right";
 
@@ -238,6 +239,18 @@ export interface MapBlock extends BlockBase {
   };
 }
 
+export interface QualificationSliderBlock extends BlockBase {
+  type: "qualification_slider";
+  data: {
+    title: string;
+    selection_mode: "manual" | "auto";
+    qualification_ids: string[];
+    show_count: number;
+    autoplay: boolean;
+    delay_ms: number;
+  };
+}
+
 export type ContentBlock =
   | HeroBlock
   | QualificationHeroBlock
@@ -257,7 +270,8 @@ export type ContentBlock =
   | PopularQualificationsBlock
   | FeaturesBlock
   | ContactFormBlock
-  | MapBlock;
+  | MapBlock
+  | QualificationSliderBlock;
 
 export interface PageConfig {
   id: string;
@@ -267,7 +281,7 @@ export interface PageConfig {
   blocks: ContentBlock[];
   meta?: { title?: string; description?: string };
   updatedAt?: string;
-  isPublished?: boolean;
+  is_published?: boolean;
   // Blog post specific fields
   blogMeta?: {
     author?: string;
@@ -304,6 +318,7 @@ export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   features: "Features Grid",
   "contact-form": "Contact Form",
   map: "Google Map",
+  qualification_slider: "Qualification Slider",
 };
 
 export const getDefaultBlockData = (type: BlockType): ContentBlock => {
@@ -350,6 +365,17 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
         title: "Find Us", 
         iframeUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.234!2d-0.0175!3d51.5075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487602d64e0e8b7f%3A0x1234567890abcdef!2s13%20Lanark%20Square%2C%20London%20E14%209QD!5e0!3m2!1sen!2suk!4v1700000000000" 
       } 
+    }),
+    qualification_slider: () => ({
+      id, type: "qualification_slider", label,
+      data: {
+        title: "Featured Qualifications",
+        selection_mode: "manual",
+        qualification_ids: [],
+        show_count: 4,
+        autoplay: true,
+        delay_ms: 5000,
+      }
     }),
   };
 
