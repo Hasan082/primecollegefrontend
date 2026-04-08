@@ -51,6 +51,7 @@ const renderHero = (block: ContentBlock, pageSlug?: string) => {
         slides={d.slides.map((slide: any) => ({
           category: slide.category,
           title: slide.title,
+          level: slide.level,
           price: slide.price,
           cta: slide.cta,
           image: slide.image,
@@ -138,18 +139,18 @@ export const CMSBlockRenderer = ({ block, pageSlug }: { block: ContentBlock; pag
     case "about-split":
       return (
         <section className={pageSlug === "home" ? "bg-primary py-20 px-4" : "py-16 px-4"}>
-          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className={`text-3xl font-bold leading-snug ${pageSlug === "home" ? "text-primary-foreground" : "text-foreground"}`}>{d.headline}</h2>
+              <h2 className={`text-3xl md:text-4xl font-bold leading-snug ${pageSlug === "home" ? "text-primary-foreground mb-6" : "text-foreground"}`}>{d.headline}</h2>
               {d.ctaLabel ? (
-                <Link to={d.ctaHref || "/about"} className={`mt-6 inline-block px-6 py-2 rounded text-sm font-semibold hover:opacity-90 ${pageSlug === "home" ? "bg-secondary text-secondary-foreground" : "bg-secondary text-secondary-foreground"}`}>
+                <Link to={d.ctaHref || "/about"} className={`${pageSlug === "home" ? "mt-0" : "mt-6"} inline-block px-6 py-3 rounded text-sm font-semibold hover:opacity-90 bg-secondary text-secondary-foreground`}>
                   {d.ctaLabel}
                 </Link>
               ) : null}
             </div>
             <div className={`space-y-4 ${pageSlug === "home" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
               {Array.isArray(d.paragraphs) && d.paragraphs.length > 0
-                ? d.paragraphs.map((p: string, i: number) => <div key={i} className="leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: p }} />)
+                ? d.paragraphs.map((p: string, i: number) => <p key={i} className="leading-relaxed">{p}</p>)
                 : renderRichText(d.description)}
             </div>
           </div>
@@ -187,6 +188,9 @@ export const CMSBlockRenderer = ({ block, pageSlug }: { block: ContentBlock; pag
         </section>
       );
     case "cta":
+      // On the home page always use the original CTASection with background image.
+      // On other pages use dynamic data if available, otherwise fall back to CTASection.
+      if (pageSlug === "home") return <CTASection />;
       return d.bgImage || d.title || d.content ? (
         <section className="relative py-20 px-4 overflow-hidden bg-primary text-primary-foreground text-center">
           {d.bgImage ? <img src={d.bgImage} className="absolute inset-0 w-full h-full object-cover opacity-20" alt="" /> : null}
@@ -222,6 +226,55 @@ export const CMSBlockRenderer = ({ block, pageSlug }: { block: ContentBlock; pag
       );
     case "cards":
     case "popular-qualifications":
+      if (pageSlug === "home") {
+        // Original home page styling: rounded top image with m-2 padding & hover-scale
+        return (
+          <Section title={d.title || "Featured Qualifications"}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.isArray(d.items) && d.items.map((item: any, i: number) => {
+                const slug = item.slug || item.title?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                return (
+                  <div key={item.id || slug || i} className="bg-card border border-border rounded-xl overflow-hidden group flex flex-col">
+                    <Link to={`/qualifications/${slug}`}>
+                      <div className="aspect-[4/3] overflow-hidden rounded-t-xl m-2">
+                        <img
+                          src={heroImageMap[item.image || ""] || item.image || heroClassroom}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    </Link>
+                    <div className="px-4 pb-5 flex flex-col flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        {item.category ? <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">{item.category}</span> : null}
+                        {item.level ? <span className="text-xs text-muted-foreground">{item.level}</span> : null}
+                      </div>
+                      <Link to={`/qualifications/${slug}`}>
+                        <h3 className="text-sm font-semibold text-foreground leading-snug mb-3 hover:text-primary">{item.title}</h3>
+                      </Link>
+                      {item.price ? <div className="text-lg font-bold text-primary mb-4">{item.price}</div> : null}
+                      <Link
+                        to={`/qualifications/${slug}`}
+                        className="mt-auto inline-block bg-primary text-primary-foreground text-center px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
+                      >
+                        Enroll Now
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="text-center mt-8">
+              <Link
+                to="/qualifications"
+                className="inline-block bg-primary text-primary-foreground px-8 py-3 font-semibold rounded text-sm hover:opacity-90"
+              >
+                View All Qualifications
+              </Link>
+            </div>
+          </Section>
+        );
+      }
       return (
         <Section title={d.title || "Featured Qualifications"}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -293,6 +346,42 @@ export const CMSBlockRenderer = ({ block, pageSlug }: { block: ContentBlock; pag
         </section>
       );
     case "blog":
+      if (pageSlug === "home") {
+        // Original home page blog styling: entire card is a Link with hover-scale image
+        return (
+          <Section title={d.title || "Latest Blogs"}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array.isArray(d.items) && d.items.map((item: any, i: number) => {
+                const blogSlug = item.slug || item.title?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+                return (
+                  <Link
+                    key={blogSlug || i}
+                    to={`/blogs/${blogSlug}`}
+                    className="bg-card border border-border rounded-xl overflow-hidden group block"
+                  >
+                    <div className="aspect-[16/9] overflow-hidden">
+                      <img
+                        src={heroImageMap[item.image || ""] || item.image || heroClassroom}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-center gap-3 mb-3">
+                        {item.category ? <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">{item.category}</span> : null}
+                        {item.date ? <span className="text-xs text-muted-foreground">{item.date}</span> : null}
+                      </div>
+                      <h3 className="text-base font-semibold text-foreground leading-snug mb-2">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{item.description}</p>
+                      <span className="text-sm font-semibold text-primary">Read More →</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </Section>
+        );
+      }
       return (
         <Section title={d.title || "Latest Blogs"}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -314,6 +403,40 @@ export const CMSBlockRenderer = ({ block, pageSlug }: { block: ContentBlock; pag
         </Section>
       );
     case "why-us":
+      if (pageSlug === "home") {
+        // Original home page why-us: large round bg-primary circles, centered layout, 3-col grid
+        return (
+          <section className="bg-muted py-16 px-4">
+            <div className="container mx-auto text-center">
+              <h2 className="text-3xl font-bold text-foreground mb-2">{d.title}</h2>
+              <div className="w-12 h-1 bg-secondary mx-auto mb-8" />
+              {d.content && (
+                <div className="max-w-3xl mx-auto mb-12">
+                  {d.content.split("\n\n").map((p: string, i: number) => (
+                    <p key={i} className="text-muted-foreground leading-relaxed mb-4">{p}</p>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-8">
+                {Array.isArray(d.items) && d.items.map((item: any) => {
+                  const Icon = iconMap[item.icon] || Users;
+                  return (
+                    <div key={item.title} className="text-center">
+                      <div className="flex justify-center mb-4">
+                        <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
+                          <Icon className="w-10 h-10 text-primary-foreground" strokeWidth={1.5} />
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-bold text-foreground mb-3">{item.title}</h3>
+                      <p className="text-muted-foreground text-sm max-w-xs mx-auto">{item.description}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        );
+      }
       return (
         <section className="bg-muted py-16 px-4">
           <div className="container mx-auto text-center">
@@ -340,6 +463,21 @@ export const CMSBlockRenderer = ({ block, pageSlug }: { block: ContentBlock; pag
       );
     case "features":
     case "modules":
+      if (pageSlug === "home") {
+        // Original home page features: bg-muted background on the section
+        return (
+          <Section title={d.title || "Highlights"} className="bg-muted">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.isArray(d.items) && d.items.map((item: any, i: number) => (
+                <div key={item.title || i} className="bg-card p-6 rounded-xl border border-border">
+                  <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
+                  {item.description ? <p className="text-sm text-muted-foreground">{item.description}</p> : null}
+                </div>
+              ))}
+            </div>
+          </Section>
+        );
+      }
       return (
         <Section title={d.title || "Highlights"}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -352,8 +490,23 @@ export const CMSBlockRenderer = ({ block, pageSlug }: { block: ContentBlock; pag
           </div>
         </Section>
       );
-    case "qualification_slider":
-      return <QualificationSlider block={block as QualificationSliderBlock} />;
+    case "qualification_slider": {
+      const sliderBlock = block as QualificationSliderBlock;
+      // When this is the fixed hero block on the home page, render as the original HeroSlider
+      if (pageSlug === "home" && block.isFixed) {
+        const heroSlides = (sliderBlock.data.items || []).map((item) => ({
+          category: item.category || "",
+          title: item.title,
+          level: item.level || "",
+          price: item.current_price ? `${item.currency || "£"}${item.current_price}` : "",
+          cta: "Enroll Now",
+          image: item.featured_image || "",
+          slug: item.slug,
+        }));
+        return heroSlides.length > 0 ? <HeroSlider slides={heroSlides} /> : null;
+      }
+      return <QualificationSlider block={sliderBlock} />;
+    }
     case "qualification_hero":
       return null;
     default:

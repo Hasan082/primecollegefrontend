@@ -77,7 +77,7 @@ const HeroSlider = ({ slides }: HeroSliderProps) => {
     >
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${imageMap[slide.image] || heroClassroom})` }}
+        style={{ backgroundImage: `url(${imageMap[slide.image] || slide.image || heroClassroom})` }}
       />
       <div className="absolute inset-0 bg-foreground/70" />
       <div className="relative z-10 flex items-center justify-center h-full">
