@@ -28,7 +28,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   User,
@@ -337,7 +341,10 @@ const StaffOptionCombobox = ({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList className="max-h-60">
@@ -384,6 +391,7 @@ const StaffOptionCombobox = ({
   );
 };
 
+// TODO: need to work here for unit assignment
 const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<LearnerActionTab>(DEFAULT_TAB);
