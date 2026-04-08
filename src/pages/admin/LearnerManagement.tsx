@@ -29,7 +29,6 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useGetEnrolledLearnersQuery } from "@/redux/apis/admin/learnerManagementApi";
 import { useGetQualificationOnlyListQuery } from "@/redux/apis/qualification/qualificationApi";
 import { useCreateOfficeAdmissionMutation } from "@/redux/apis/orderApi";
-import EnrollLearnerModal from "@/components/admin/learnerManagement/EnrollLearnerModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -56,6 +55,7 @@ type QualificationOnlyOption = {
 
 type EnrolLearnerFormState = {
   first_name: string;
+  middle_name: string;
   last_name: string;
   email: string;
   phone: string;
@@ -73,6 +73,7 @@ const LearnerManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [enrolForm, setEnrolForm] = useState<EnrolLearnerFormState>({
     first_name: "",
+    middle_name: "",
     last_name: "",
     email: "",
     phone: "",
@@ -134,6 +135,7 @@ const LearnerManagement = () => {
   const resetEnrolForm = () => {
     setEnrolForm({
       first_name: "",
+      middle_name: "",
       last_name: "",
       email: "",
       phone: "",
@@ -208,6 +210,7 @@ const LearnerManagement = () => {
     try {
       await createOfficeAdmission({
         first_name: enrolForm.first_name.trim(),
+        middle_name: enrolForm.middle_name.trim(),
         last_name: enrolForm.last_name.trim(),
         email: enrolForm.email.trim(),
         phone: enrolForm.phone.trim(),
@@ -355,18 +358,27 @@ const LearnerManagement = () => {
                   ) : null}
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Last Name</Label>
+                  <Label>Middle Name</Label>
                   <Input
-                    placeholder="Smith"
-                    value={enrolForm.last_name}
-                    onChange={(e) => updateEnrolForm("last_name", e.target.value)}
+                    placeholder="Michael"
+                    value={enrolForm.middle_name}
+                    onChange={(e) => updateEnrolForm("middle_name", e.target.value)}
                   />
-                  {formErrors.last_name ? (
-                    <p className="text-xs text-destructive">
-                      {formErrors.last_name}
-                    </p>
-                  ) : null}
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Last Name</Label>
+                <Input
+                  placeholder="Smith"
+                  value={enrolForm.last_name}
+                  onChange={(e) => updateEnrolForm("last_name", e.target.value)}
+                />
+                {formErrors.last_name ? (
+                  <p className="text-xs text-destructive">
+                    {formErrors.last_name}
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-1.5">
@@ -564,9 +576,6 @@ const LearnerManagement = () => {
             </div>
           </DialogContent>
         </Dialog>
-        <Button onClick={() => setDialogOpen(true)}>
-          <UserPlus className="w-4 h-4 mr-1" /> Enrol Learner
-        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -717,11 +726,6 @@ const LearnerManagement = () => {
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onUpdate={handleLearnerUpdate}
-      />
-
-      <EnrollLearnerModal
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
       />
     </div>
   );
