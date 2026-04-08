@@ -52,6 +52,72 @@ export interface CheckoutOnlineResponse {
   };
 }
 
+export interface OfficeAdmissionItemPayload {
+  qualification_id: string;
+  qualification_session_id?: string | null;
+}
+
+export interface OfficeAdmissionPayload {
+  first_name: string;
+  middle_name?: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  billing_address?: string;
+  city?: string;
+  postcode?: string;
+  country?: string;
+  items: OfficeAdmissionItemPayload[];
+  payment_method: "bank_transfer" | "cash" | "invoice" | "employer";
+  amount_received: string;
+  payment_reference?: string;
+  notes?: string;
+}
+
+export interface OfficeAdmissionResponse {
+  success: boolean;
+  message: string;
+  data: {
+    order: {
+      id: string;
+      order_number: string;
+      source: string;
+      payment_method: string;
+      status: string;
+      customer_email: string;
+      first_name: string;
+      middle_name: string;
+      last_name: string;
+      phone: string;
+      billing_address: string;
+      city: string;
+      postcode: string;
+      country: string;
+      currency: string;
+      subtotal: string;
+      discount_total: string;
+      grand_total: string;
+      paid_at: string | null;
+      items: Array<{
+        id: string;
+        qualification: string;
+        qualification_title: string;
+        qualification_code: string;
+        qualification_session: string | null;
+        qualification_session_title: string | null;
+        status: string;
+        quantity: number;
+        unit_price_snapshot: string;
+        discount_amount: string;
+        is_upsell: boolean;
+        pricing_note: string;
+        line_subtotal: string;
+        line_total: string;
+      }>;
+    };
+  };
+}
+
 export interface PublicOrderStatusResponse {
   success: boolean;
   message: string;
@@ -93,6 +159,13 @@ const orderApi = api.injectEndpoints({
         body: data,
       }),
     }),
+    createOfficeAdmission: builder.mutation<OfficeAdmissionResponse, OfficeAdmissionPayload>({
+      query: (data) => ({
+        url: `/api/orders/admission/office/`,
+        method: "POST",
+        body: data,
+      }),
+    }),
     getPublicOrderStatus: builder.query<PublicOrderStatusResponse, { order_number: string; email: string }>({
       query: ({ order_number, email }) => ({
         url: `/api/orders/status/`,
@@ -103,4 +176,8 @@ const orderApi = api.injectEndpoints({
   }),
 });
 
-export const { useCheckoutOnlineMutation, useGetPublicOrderStatusQuery } = orderApi;
+export const {
+  useCheckoutOnlineMutation,
+  useCreateOfficeAdmissionMutation,
+  useGetPublicOrderStatusQuery,
+} = orderApi;

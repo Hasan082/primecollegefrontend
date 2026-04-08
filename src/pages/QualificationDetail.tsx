@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Breadcrumb from "@/components/Breadcrumb";
 import CTASection from "@/components/CTASection";
@@ -6,6 +6,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import UpsellModal from "@/components/UpsellModal";
 import { useCart } from "@/contexts/CartContext";
 import {
+  QualificationSession,
   QualificationUpsellItem,
   useGetQualificationDetailQuery,
   useGetUpSalesQuery,
@@ -13,6 +14,13 @@ import {
 import { useGetPageQuery } from "@/redux/apis/pageBuilderApi";
 import { safeParseBlocks } from "@/utils/pageBuilder";
 import { ContentBlock } from "@/types/pageBuilder";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formatMoney = (value: string | number | null | undefined, currency = "GBP") =>
   `${currency} ${Number(value || 0).toLocaleString(undefined, {
@@ -37,6 +45,7 @@ const formatDateRange = (startAt: string, endAt: string) => {
 const QualificationDetail = () => {
   const { slug = "" } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [selectedLocationName, setSelectedLocationName] = useState<string>("");
   const [selectedSessionId, setSelectedSessionId] = useState<string>("");
   const [showUpsell, setShowUpsell] = useState(false);
 
@@ -50,10 +59,75 @@ const QualificationDetail = () => {
 
   const { addItem, isInCart } = useCart();
 
+  const sessionLocations = useMemo(() => {
+    const grouped = new Map<
+      string,
+      { name: string; venueAddress: string; sessions: QualificationSession[] }
+    >();
+
+    qualification?.upcoming_sessions?.forEach((session) => {
+      const key = session.location_name || "Location to be confirmed";
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          name: key,
+          venueAddress: session.venue_address || "",
+          sessions: [],
+        });
+      }
+
+      grouped.get(key)?.sessions.push(session);
+    });
+
+    return Array.from(grouped.values());
+  }, [qualification?.upcoming_sessions]);
+
+  useEffect(() => {
+    if (!qualification?.has_sessions) {
+      return;
+    }
+
+    const firstLocation = sessionLocations[0];
+    if (!firstLocation) {
+      setSelectedLocationName("");
+      setSelectedSessionId("");
+      return;
+    }
+
+    setSelectedLocationName((current) =>
+      current && sessionLocations.some((location) => location.name === current)
+        ? current
+        : firstLocation.name,
+    );
+  }, [qualification?.has_sessions, sessionLocations]);
+
+  const selectedLocation = useMemo(
+    () =>
+      sessionLocations.find((location) => location.name === selectedLocationName) ||
+      sessionLocations[0] ||
+      null,
+    [selectedLocationName, sessionLocations],
+  );
+
+  useEffect(() => {
+    if (!qualification?.has_sessions) {
+      return;
+    }
+
+    if (!selectedLocation?.sessions?.length) {
+      setSelectedSessionId("");
+      return;
+    }
+
+    setSelectedSessionId((current) =>
+      current && selectedLocation.sessions.some((session) => session.id === current)
+        ? current
+        : selectedLocation.sessions[0].id,
+    );
+  }, [qualification?.has_sessions, selectedLocation]);
+
   const selectedSession = useMemo(
     () =>
       qualification?.upcoming_sessions.find((session) => session.id === selectedSessionId) ||
-      qualification?.upcoming_sessions[0] ||
       null,
     [qualification?.upcoming_sessions, selectedSessionId],
   );
@@ -110,6 +184,10 @@ const QualificationDetail = () => {
   };
 
   const handleAddToCart = () => {
+    if (qualification.has_sessions && !selectedSession) {
+      return;
+    }
+
     addItem(currentCartItem);
 
     if ((upsellResponse?.data?.length || 0) > 0) {
@@ -159,10 +237,62 @@ const QualificationDetail = () => {
                 </span>
               </div>
 
+              {qualification.has_sessions && sessionLocations.length > 0 ? (
+                <div className="mt-8 grid gap-4 rounded-3xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm md:grid-cols-2">
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-primary-foreground">Location</p>
+                    <Select
+                      value={selectedLocation?.name || ""}
+                      onValueChange={(value) => {
+                        setSelectedLocationName(value);
+                        setSelectedSessionId("");
+                      }}
+                    >
+                      <SelectTrigger className="border-white/20 bg-white/5 text-primary-foreground">
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sessionLocations.map((location) => (
+                          <SelectItem key={location.name} value={location.name}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedLocation?.venueAddress ? (
+                      <p className="text-xs text-primary-foreground/75">
+                        {selectedLocation.venueAddress}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-primary-foreground">Date</p>
+                    <Select
+                      value={selectedSessionId}
+                      onValueChange={setSelectedSessionId}
+                      disabled={!selectedLocation}
+                    >
+                      <SelectTrigger className="border-white/20 bg-white/5 text-primary-foreground">
+                        <SelectValue placeholder="Select date" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedLocation?.sessions.map((session) => (
+                          <SelectItem key={session.id} value={session.id}>
+                            {formatDateRange(session.start_at, session.end_at)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : null}
+
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="mt-8 rounded-md bg-secondary px-8 py-3 font-semibold text-secondary-foreground transition hover:opacity-90"
+                disabled={qualification.has_sessions && !selectedSession}
+                className="mt-8 rounded-md bg-secondary px-8 py-3 font-semibold text-secondary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Enrol Now - {formatMoney(
                   selectedSession?.effective_price || qualification.current_price,
@@ -202,7 +332,7 @@ const QualificationDetail = () => {
                 </div>
               </div>
               <div className="mt-6 grid gap-4">
-                {qualification.upcoming_sessions.map((session) => {
+                {(selectedLocation?.sessions || qualification.upcoming_sessions).map((session) => {
                   const isSelected = selectedSession?.id === session.id;
                   return (
                     <button

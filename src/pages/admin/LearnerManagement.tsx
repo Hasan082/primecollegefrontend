@@ -33,21 +33,61 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import TablePagination from "@/components/admin/TablePagination";
 import LearnerDetailModal from "@/components/admin/LearnerDetailModal";
-import {
-  adminQualifications,
-  adminTrainers,
-  type AdminLearner,
-} from "@/data/adminMockData";
+import { type AdminLearner } from "@/data/adminMockData";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useGetEnrolledLearnersQuery } from "@/redux/apis/admin/learnerManagementApi";
+import { useGetQualificationOnlyListQuery } from "@/redux/apis/qualification/qualificationApi";
+import { useCreateOfficeAdmissionMutation } from "@/redux/apis/orderApi";
 
 const ITEMS_PER_PAGE = 10;
-// TODO: need to work here for create enrollment and view details modal
+type QualificationSessionDateOption = {
+  id: string;
+  label: string;
+};
+
+type QualificationSessionLocationOption = {
+  id: string;
+  name: string;
+  dates: QualificationSessionDateOption[];
+};
+
+type QualificationOnlyOption = {
+  id: string;
+  name: string;
+  slug: string;
+  is_session: boolean;
+  session_locations: QualificationSessionLocationOption[];
+};
+
+type EnrolLearnerFormState = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  qualification_id: string;
+  location_id: string;
+  qualification_session_id: string;
+  payment_method: "bank_transfer" | "cash" | "invoice" | "employer" | "";
+  amount_received: string;
+};
+
 const LearnerManagement = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [enrolForm, setEnrolForm] = useState<EnrolLearnerFormState>({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    qualification_id: "",
+    location_id: "",
+    qualification_session_id: "",
+    payment_method: "",
+    amount_received: "",
+  });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [selectedLearner, setSelectedLearner] = useState<AdminLearner | null>(
     null,
   );
@@ -69,12 +109,130 @@ const LearnerManagement = () => {
     isFetching,
     error,
   } = useGetEnrolledLearnersQuery(queryParams);
+  const { data: qualificationOnlyResponse } =
+    useGetQualificationOnlyListQuery(undefined);
+  const [createOfficeAdmission, { isLoading: isSubmittingAdmission }] =
+    useCreateOfficeAdmissionMutation();
 
   const learners = enrolledLearnersResponse?.data?.results || [];
   const totalItems = enrolledLearnersResponse?.data?.count || 0;
+  const qualificationOptions: QualificationOnlyOption[] = Array.isArray(
+    qualificationOnlyResponse,
+  )
+    ? qualificationOnlyResponse
+    : qualificationOnlyResponse?.data || [];
+  const selectedQualification = qualificationOptions.find(
+    (qualification) => qualification.id === enrolForm.qualification_id,
+  );
+  const selectedLocation = selectedQualification?.session_locations.find(
+    (location) => location.id === enrolForm.location_id,
+  );
+  const isSessionQualification = Boolean(selectedQualification?.is_session);
 
   const handleLearnerUpdate = (updated: AdminLearner) => {
     setSelectedLearner(updated);
+  };
+
+  const resetEnrolForm = () => {
+    setEnrolForm({
+      first_name: "",
+      last_name: "",
+      email: "",
+      phone: "",
+      qualification_id: "",
+      location_id: "",
+      qualification_session_id: "",
+      payment_method: "",
+      amount_received: "",
+    });
+    setFormErrors({});
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      resetEnrolForm();
+    }
+  };
+
+  const updateEnrolForm = (
+    field: keyof EnrolLearnerFormState,
+    value: string,
+  ) => {
+    setEnrolForm((prev) => ({ ...prev, [field]: value }));
+    setFormErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const validateEnrolForm = () => {
+    const nextErrors: Record<string, string> = {};
+
+    if (!enrolForm.first_name.trim()) {
+      nextErrors.first_name = "First name is required";
+    }
+    if (!enrolForm.last_name.trim()) {
+      nextErrors.last_name = "Last name is required";
+    }
+    if (!enrolForm.email.trim()) {
+      nextErrors.email = "Email is required";
+    }
+    if (!enrolForm.qualification_id) {
+      nextErrors.qualification_id = "Qualification is required";
+    }
+    if (isSessionQualification && !enrolForm.location_id) {
+      nextErrors.location_id = "Location is required";
+    }
+    if (isSessionQualification && !enrolForm.qualification_session_id) {
+      nextErrors.qualification_session_id = "Date is required";
+    }
+    if (!enrolForm.payment_method) {
+      nextErrors.payment_method = "Payment method is required";
+    }
+    if (!enrolForm.amount_received.trim()) {
+      nextErrors.amount_received = "Amount received is required";
+    }
+
+    setFormErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleEnrolLearner = async () => {
+    if (!validateEnrolForm()) {
+      return;
+    }
+
+    try {
+      await createOfficeAdmission({
+        first_name: enrolForm.first_name.trim(),
+        last_name: enrolForm.last_name.trim(),
+        email: enrolForm.email.trim(),
+        phone: enrolForm.phone.trim(),
+        items: [
+          {
+            qualification_id: enrolForm.qualification_id,
+            qualification_session_id:
+              enrolForm.qualification_session_id || null,
+          },
+        ],
+        payment_method: enrolForm.payment_method as
+          | "bank_transfer"
+          | "cash"
+          | "invoice"
+          | "employer",
+        amount_received: enrolForm.amount_received.trim(),
+      }).unwrap();
+
+      handleDialogOpenChange(false);
+      toast({ title: "Learner enrolled successfully" });
+    } catch (submissionError: any) {
+      toast({
+        title: "Failed to enrol learner",
+        description:
+          submissionError?.data?.detail ||
+          submissionError?.data?.message ||
+          "Please check the form and try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const paymentBadge = (status: string) => {
@@ -164,7 +322,7 @@ const LearnerManagement = () => {
           </p>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="w-4 h-4 mr-1" /> Enrol Learner
@@ -180,81 +338,215 @@ const LearnerManagement = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>First Name</Label>
-                  <Input placeholder="John" />
+                  <Input
+                    placeholder="John"
+                    value={enrolForm.first_name}
+                    onChange={(e) => updateEnrolForm("first_name", e.target.value)}
+                  />
+                  {formErrors.first_name ? (
+                    <p className="text-xs text-destructive">
+                      {formErrors.first_name}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="space-y-1.5">
                   <Label>Last Name</Label>
-                  <Input placeholder="Smith" />
+                  <Input
+                    placeholder="Smith"
+                    value={enrolForm.last_name}
+                    onChange={(e) => updateEnrolForm("last_name", e.target.value)}
+                  />
+                  {formErrors.last_name ? (
+                    <p className="text-xs text-destructive">
+                      {formErrors.last_name}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <Label>Email</Label>
-                <Input type="email" placeholder="learner@example.com" />
+                <Input
+                  type="email"
+                  placeholder="learner@example.com"
+                  value={enrolForm.email}
+                  onChange={(e) => updateEnrolForm("email", e.target.value)}
+                />
+                {formErrors.email ? (
+                  <p className="text-xs text-destructive">{formErrors.email}</p>
+                ) : null}
               </div>
 
               <div className="space-y-1.5">
                 <Label>Phone</Label>
-                <Input placeholder="+44 7700 000000" />
+                <Input
+                  placeholder="+44 7700 000000"
+                  value={enrolForm.phone}
+                  onChange={(e) => updateEnrolForm("phone", e.target.value)}
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label>Qualification</Label>
-                <Select>
+                <Select
+                  value={enrolForm.qualification_id}
+                  onValueChange={(value) => {
+                    setEnrolForm((prev) => ({
+                      ...prev,
+                      qualification_id: value,
+                      location_id: "",
+                      qualification_session_id: "",
+                    }));
+                    setFormErrors((prev) => ({
+                      ...prev,
+                      qualification_id: "",
+                      location_id: "",
+                      qualification_session_id: "",
+                    }));
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select qualification" />
                   </SelectTrigger>
                   <SelectContent>
-                    {adminQualifications
-                      .filter((q) => q.status === "active")
-                      .map((q) => (
-                        <SelectItem key={q.id} value={q.id}>
-                          {q.title}
-                        </SelectItem>
-                      ))}
+                    {qualificationOptions.map((qualification) => (
+                      <SelectItem
+                        key={qualification.id}
+                        value={qualification.id}
+                      >
+                        {qualification.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                {formErrors.qualification_id ? (
+                  <p className="text-xs text-destructive">
+                    {formErrors.qualification_id}
+                  </p>
+                ) : null}
               </div>
 
-              <div className="space-y-1.5">
-                <Label>Assign Trainer</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select trainer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {adminTrainers
-                      .filter((t) => t.status === "active")
-                      .map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {isSessionQualification ? (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Location</Label>
+                    <Select
+                      value={enrolForm.location_id}
+                      onValueChange={(value) => {
+                        setEnrolForm((prev) => ({
+                          ...prev,
+                          location_id: value,
+                          qualification_session_id: "",
+                        }));
+                        setFormErrors((prev) => ({
+                          ...prev,
+                          location_id: "",
+                          qualification_session_id: "",
+                        }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedQualification?.session_locations.map(
+                          (location) => (
+                            <SelectItem key={location.id} value={location.id}>
+                              {location.name}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.location_id ? (
+                      <p className="text-xs text-destructive">
+                        {formErrors.location_id}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Date</Label>
+                    <Select
+                      value={enrolForm.qualification_session_id}
+                      onValueChange={(value) =>
+                        updateEnrolForm("qualification_session_id", value)
+                      }
+                      disabled={!selectedLocation}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select date" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedLocation?.dates.map((dateOption) => (
+                          <SelectItem
+                            key={dateOption.id}
+                            value={dateOption.id}
+                          >
+                            {dateOption.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.qualification_session_id ? (
+                      <p className="text-xs text-destructive">
+                        {formErrors.qualification_session_id}
+                      </p>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
 
               <div className="space-y-1.5">
                 <Label>Payment Method</Label>
-                <Select>
+                <Select
+                  value={enrolForm.payment_method}
+                  onValueChange={(value) =>
+                    updateEnrolForm("payment_method", value)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="manual">Manual / Invoice</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="invoice">Invoice</SelectItem>
                     <SelectItem value="employer">Employer Funded</SelectItem>
                   </SelectContent>
                 </Select>
+                {formErrors.payment_method ? (
+                  <p className="text-xs text-destructive">
+                    {formErrors.payment_method}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Amount Received</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={enrolForm.amount_received}
+                  onChange={(e) =>
+                    updateEnrolForm("amount_received", e.target.value)
+                  }
+                />
+                {formErrors.amount_received ? (
+                  <p className="text-xs text-destructive">
+                    {formErrors.amount_received}
+                  </p>
+                ) : null}
               </div>
 
               <Button
                 className="w-full"
-                onClick={() => {
-                  setDialogOpen(false);
-                  toast({ title: "Learner enrolled (demo)" });
-                }}
+                disabled={isSubmittingAdmission}
+                onClick={handleEnrolLearner}
               >
-                Enrol Learner
+                {isSubmittingAdmission ? "Enrolling..." : "Enrol Learner"}
               </Button>
             </div>
           </DialogContent>

@@ -3,6 +3,12 @@ import { api } from "../../api";
 
 const qualificationApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getQualificationOnlyList: builder.query({
+      query: () => ({
+        url: "/api/qualification/only/",
+        method: "GET",
+      }),
+    }),
     getQualificationsAdmin: builder.query({
       query: (args) => {
         const filteredParams = cleanObject(args);
@@ -57,6 +63,7 @@ const qualificationApi = api.injectEndpoints({
 });
 
 export const {
+  useGetQualificationOnlyListQuery,
   useGetQualificationsAdminQuery,
   useGetQualificationOptionsQuery,
   useGetUnitOptionsByQualificationQuery,
