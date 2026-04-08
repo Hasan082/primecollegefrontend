@@ -14,6 +14,13 @@ const learnerManagementApi = api.injectEndpoints({
             },
             providesTags: ["EnrollLearners"],
         }),
+        getEnrolledLearnerActionModalData: builder.query({
+            query: ({ enrolmentId, tab }) => ({
+                url: `/api/enrolments/admin/${enrolmentId}/learner-action-modal/`,
+                method: "GET",
+                params: { tab },
+            }),
+        }),
         enrollLearner: builder.mutation({
             query: (body) => ({
                 url: "/api/orders/admission/office/",
@@ -33,6 +40,7 @@ const learnerManagementApi = api.injectEndpoints({
 
 export const {
     useGetEnrolledLearnersQuery,
+    useGetEnrolledLearnerActionModalDataQuery,
     useEnrollLearnerMutation,
     useGetQualificationOnlyQuery,
 } = learnerManagementApi;

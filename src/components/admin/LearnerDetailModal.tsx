@@ -1,5 +1,10 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,13 +13,36 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Phone, Calendar, GraduationCap, CreditCard, Clock, CheckCircle2, AlertTriangle, FileText, Pencil, Save, X, ChevronDown, ChevronUp, Timer, CalendarPlus, Check, XCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  GraduationCap,
+  CreditCard,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  Users,
+  ShieldCheck,
+  Pencil,
+  Save,
+  X,
+} from "lucide-react";
 import type { AdminLearner } from "@/data/adminMockData";
-import { adminTrainers, adminQualifications } from "@/data/adminMockData";
-import { DEADLINE_PRESETS, createDeadline, getDeadlineStatus, getDaysRemaining, getDeadlineLabel, getDeadlineBadgeVariant, EXTENSION_PLANS, type UnitDeadline, type ExtensionRequest } from "@/lib/deadlines";
-import { mockExtensionRequests } from "@/data/extensionRequestsMockData";
+import { useGetEnrolledLearnerActionModalDataQuery } from "@/redux/apis/admin/learnerManagementApi";
+import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   learner: AdminLearner | null;
@@ -23,105 +51,361 @@ interface Props {
   onUpdate?: (updated: AdminLearner) => void;
 }
 
-interface UnitTimeline {
-  date: string;
-  event: string;
-  type: "submission" | "assessment" | "feedback" | "enrolment";
-}
+type LearnerActionTab =
+  | "personal_info"
+  | "unit_progress"
+  | "staff_assignment"
+  | "payment";
 
-interface UnitData {
+type HeaderData = {
+  learner_name: string;
+  qualification_learner_id: string;
+  status: string;
+};
+
+type PersonalInfoContent = {
+  email: string;
+  phone: string;
+  enrolled_at: string;
+  access_expires_at: string;
+  qualification: {
+    id: string;
+    title: string;
+  } | null;
+  assigned_trainer: {
+    id: string;
+    name: string;
+  } | null;
+  assigned_iqa: {
+    id: string;
+    name: string;
+  } | null;
+  progress: {
+    completed_units: number;
+    total_units: number;
+    progress_percent: number;
+  } | null;
+};
+
+type StaffMember = {
+  id: string;
   name: string;
-  status: "completed" | "in-progress" | "not-started";
-  lastSubmission: string | null;
-  timeline: UnitTimeline[];
-}
+};
 
-const mockUnits = (progress: number, isCpd: boolean): UnitData[] => {
-  const total = 6;
-  const completed = Math.round((progress / 100) * total);
-  const unitNames = ["Introduction & Fundamentals", "Core Principles", "Applied Practice", "Professional Skills", "Advanced Concepts", "Final Portfolio"];
+type StaffAssignmentContent = {
+  current: {
+    trainer: StaffMember | null;
+    iqa: StaffMember | null;
+  };
+  options: {
+    trainers: StaffMember[];
+    iqas: StaffMember[];
+  };
+};
 
-  return Array.from({ length: total }, (_, i) => {
-    const status = i < completed ? "completed" as const : i === completed ? "in-progress" as const : "not-started" as const;
-    let timeline: UnitTimeline[] = [];
+type UnitTimelineItem = {
+  type: string;
+  label: string;
+  date: string;
+};
 
-    if (status === "completed") {
-      timeline = isCpd ? [
-        { date: `${20 + i}/01/2025`, event: `All learning resources accessed`, type: "enrolment" },
-        { date: `${15 + i}/01/2025`, event: `Unit study started`, type: "enrolment" },
-      ] : [
-        { date: `${20 + i}/01/2025`, event: `Marked as Competent by Sarah Jones`, type: "assessment" },
-        { date: `${15 + i}/01/2025`, event: `Evidence submitted for assessment`, type: "submission" },
-      ];
-    } else if (status === "in-progress") {
-      timeline = isCpd ? [
-        { date: `${10 + i}/02/2025`, event: `Learning resources revisited`, type: "enrolment" },
-        { date: `${28}/01/2025`, event: `Unit study started`, type: "enrolment" },
-      ] : [
-        { date: `${10 + i}/02/2025`, event: `Resubmission uploaded`, type: "submission" },
-        { date: `${5 + i}/02/2025`, event: `Resubmission Required — feedback provided`, type: "feedback" },
-        { date: `${28}/01/2025`, event: `Evidence submitted for assessment`, type: "submission" },
-      ];
-    }
+type UnitProgressItem = {
+  unit_id: string;
+  unit_code: string;
+  title: string;
+  status: string;
+  last_activity_at: string | null;
+  timeline: UnitTimelineItem[];
+};
 
-    return {
-      name: `Unit ${i + 1}: ${unitNames[i]}`,
-      status,
-      lastSubmission: timeline.length > 0 ? timeline[0].date : null,
-      timeline,
-    };
-  });
+type PaymentHistoryItem = {
+  id: string;
+  label: string;
+  amount: string;
+  currency: string;
+  status: string;
+  paid_at: string | null;
+};
+
+type PaymentContent = {
+  payment_method: string;
+  payment_status: string;
+  history: PaymentHistoryItem[];
+};
+
+type LearnerActionResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    header: HeaderData;
+    tab: LearnerActionTab;
+    content:
+      | PersonalInfoContent
+      | StaffAssignmentContent
+      | UnitProgressItem[]
+      | PaymentContent;
+  };
+};
+
+const DEFAULT_TAB: LearnerActionTab = "personal_info";
+const UNASSIGNED_VALUE = "__unassigned__";
+
+const formatLabel = (value?: string | null) => {
+  if (!value) return "N/A";
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const formatDate = (value?: string | null, includeTime = false) => {
+  if (!value) return "N/A";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    ...(includeTime ? { timeStyle: "short" } : {}),
+  }).format(date);
+};
+
+const formatCurrency = (amount: string, currency: string) => {
+  const numericAmount = Number(amount);
+  if (Number.isNaN(numericAmount)) {
+    return `${currency} ${amount}`;
+  }
+
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency,
+  }).format(numericAmount);
 };
 
 const paymentBadge = (status: string) => {
-  const map: Record<string, "default" | "secondary" | "destructive"> = { paid: "default", pending: "secondary", overdue: "destructive" };
-  return <Badge variant={map[status] || "outline"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+  const map: Record<
+    string,
+    "default" | "secondary" | "destructive" | "outline"
+  > = {
+    paid: "default",
+    pending: "secondary",
+    overdue: "destructive",
+  };
+
+  return (
+    <Badge variant={map[status] || "outline"}>{formatLabel(status)}</Badge>
+  );
 };
 
 const unitStatusBadge = (status: string) => {
-  if (status === "completed") return <Badge variant="default" className="text-[10px]"><CheckCircle2 className="w-3 h-3 mr-1" />Completed</Badge>;
-  if (status === "in-progress") return <Badge variant="secondary" className="text-[10px]"><Clock className="w-3 h-3 mr-1" />In Progress</Badge>;
-  return <Badge variant="outline" className="text-[10px]">Not Started</Badge>;
+  if (status === "completed" || status === "competent") {
+    return (
+      <Badge variant="default" className="text-[10px]">
+        <CheckCircle2 className="mr-1 h-3 w-3" />
+        Completed
+      </Badge>
+    );
+  }
+
+  if (status === "in_progress") {
+    return (
+      <Badge variant="secondary" className="text-[10px]">
+        <Clock className="mr-1 h-3 w-3" />
+        In Progress
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="outline" className="text-[10px]">
+      {formatLabel(status)}
+    </Badge>
+  );
 };
 
 const timelineIcon = (type: string) => {
-  if (type === "submission") return <FileText className="w-3 h-3 text-primary" />;
-  if (type === "assessment") return <CheckCircle2 className="w-3 h-3 text-green-600" />;
-  if (type === "feedback") return <AlertTriangle className="w-3 h-3 text-amber-500" />;
-  return <Calendar className="w-3 h-3 text-muted-foreground" />;
+  if (type.includes("submitted")) {
+    return <FileText className="h-3 w-3 text-primary" />;
+  }
+
+  if (type === "competent") {
+    return <CheckCircle2 className="h-3 w-3 text-green-600" />;
+  }
+
+  if (type.includes("required")) {
+    return <AlertTriangle className="h-3 w-3 text-amber-500" />;
+  }
+
+  return <Calendar className="h-3 w-3 text-muted-foreground" />;
 };
 
-const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ name: "", email: "", phone: "", assignedTrainer: "", status: "" as AdminLearner["status"] });
-  const [expandedUnits, setExpandedUnits] = useState<Set<number>>(new Set());
-  const [unitDeadlines, setUnitDeadlines] = useState<Map<string, UnitDeadline>>(new Map());
-  const [extensionRequests, setExtensionRequests] = useState<ExtensionRequest[]>(mockExtensionRequests);
+const LoadingState = () => (
+  <div className="space-y-3 pr-3">
+    <Skeleton className="h-28 w-full" />
+    <Skeleton className="h-24 w-full" />
+  </div>
+);
+
+const ErrorState = () => (
+  <Card>
+    <CardContent className="py-10 text-center">
+      <p className="text-sm font-medium text-destructive">
+        Failed to load tab data
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Please try again by reopening the modal or selecting the tab again.
+      </p>
+    </CardContent>
+  </Card>
+);
+
+const EmptyState = ({ message }: { message: string }) => (
+  <Card>
+    <CardContent className="py-10 text-center text-sm text-muted-foreground">
+      {message}
+    </CardContent>
+  </Card>
+);
+
+const getSafeStaffAssignmentContent = (
+  value: LearnerActionResponse["data"]["content"] | undefined,
+): StaffAssignmentContent | undefined => {
+  if (!value || Array.isArray(value) || !("current" in value)) {
+    return undefined;
+  }
+
+  return {
+    current: {
+      trainer: value.current?.trainer ?? null,
+      iqa: value.current?.iqa ?? null,
+    },
+    options: {
+      trainers: Array.isArray(value.options?.trainers)
+        ? value.options.trainers
+        : [],
+      iqas: Array.isArray(value.options?.iqas) ? value.options.iqas : [],
+    },
+  };
+};
+
+const LearnerDetailModal = ({ learner, open, onOpenChange }: Props) => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<LearnerActionTab>(DEFAULT_TAB);
+  const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
+  const [selectedTrainer, setSelectedTrainer] = useState(UNASSIGNED_VALUE);
+  const [selectedIqa, setSelectedIqa] = useState(UNASSIGNED_VALUE);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    status: "active" as AdminLearner["status"],
+  });
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab(DEFAULT_TAB);
+      setExpandedUnits(new Set());
+      setIsEditing(false);
+    }
+  }, [open, learner?.id]);
+
+  const { data, isFetching, error } = useGetEnrolledLearnerActionModalDataQuery(
+    {
+      enrolmentId: learner?.id,
+      tab: activeTab,
+    },
+    {
+      skip: !open || !learner?.id,
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
+  const modalData = data as LearnerActionResponse | undefined;
+  const header = modalData?.data?.header;
+  const content = modalData?.data?.content;
+  const responseTab = modalData?.data?.tab;
+
+  const personalInfo = useMemo(
+    () =>
+      activeTab === "personal_info"
+        ? (content as PersonalInfoContent | undefined)
+        : undefined,
+    [activeTab, content],
+  );
+
+  const staffAssignment = useMemo(
+    () =>
+      activeTab === "staff_assignment" && responseTab === "staff_assignment"
+        ? getSafeStaffAssignmentContent(content)
+        : undefined,
+    [activeTab, content, responseTab],
+  );
+
+  const unitProgress = useMemo(
+    () =>
+      activeTab === "unit_progress" && responseTab === "unit_progress"
+        ? ((content as UnitProgressItem[] | undefined) ?? [])
+        : [],
+    [activeTab, content, responseTab],
+  );
+
+  const paymentInfo = useMemo(
+    () =>
+      activeTab === "payment" && responseTab === "payment"
+        ? (content as PaymentContent | undefined)
+        : undefined,
+    [activeTab, content, responseTab],
+  );
+
+  useEffect(() => {
+    if (staffAssignment) {
+      setSelectedTrainer(
+        staffAssignment.current.trainer?.id || UNASSIGNED_VALUE,
+      );
+      setSelectedIqa(staffAssignment.current.iqa?.id || UNASSIGNED_VALUE);
+    } else {
+      setSelectedTrainer(UNASSIGNED_VALUE);
+      setSelectedIqa(UNASSIGNED_VALUE);
+    }
+  }, [staffAssignment]);
+
+  useEffect(() => {
+    if (header || personalInfo) {
+      setEditData({
+        name: header?.learner_name || learner?.name || "",
+        email: personalInfo?.email || learner?.email || "",
+        phone: personalInfo?.phone || learner?.phone || "",
+        status: ((header?.status || learner?.status || "active") as AdminLearner["status"]),
+      });
+    }
+  }, [header, personalInfo, learner]);
 
   if (!learner) return null;
 
-  const qualification = adminQualifications.find(q => q.id === learner.qualificationId);
-  const isCpd = qualification?.is_cpd || false;
-  const units = mockUnits(learner.progress, isCpd);
-
-  const toggleUnit = (i: number) => {
-    setExpandedUnits(prev => {
+  const toggleUnit = (unitId: string) => {
+    setExpandedUnits((prev) => {
       const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
+      if (next.has(unitId)) {
+        next.delete(unitId);
+      } else {
+        next.add(unitId);
+      }
       return next;
     });
   };
 
   const startEditing = () => {
     setEditData({
-      name: learner.name,
-      email: learner.email,
-      phone: learner.phone,
-      assignedTrainer: learner.assignedTrainer,
-      status: learner.status,
+      name: header?.learner_name || learner.name,
+      email: personalInfo?.email || learner.email || "",
+      phone: personalInfo?.phone || learner.phone || "",
+      status: (header?.status || learner.status) as AdminLearner["status"],
     });
     setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
   };
 
   const saveChanges = () => {
@@ -130,403 +414,532 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
       name: editData.name.trim(),
       email: editData.email.trim(),
       phone: editData.phone.trim(),
-      assignedTrainer: editData.assignedTrainer,
       status: editData.status,
     };
-    onUpdate?.(updated);
+
     setIsEditing(false);
-    toast({ title: "Learner updated", description: `${updated.name}'s details have been saved.` });
+    toast({
+      title: "Learner update prepared",
+      description: "The form arrangement is ready. You can connect your PATCH API next.",
+    });
   };
 
-  const cancelEditing = () => setIsEditing(false);
+  const statusBadge = (status?: string) => {
+    const variant =
+      status === "active"
+        ? "default"
+        : status === "completed"
+          ? "secondary"
+          : status === "suspended"
+            ? "destructive"
+            : "outline";
 
-  const statusBadge = (status: string) => {
-    const v = status === "active" ? "default" : status === "completed" ? "secondary" : "destructive";
-    return <Badge variant={v}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+    return <Badge variant={variant}>{formatLabel(status)}</Badge>;
   };
 
-  const activeTrainers = adminTrainers.filter(t => t.status === "active");
+  const titleName = header?.learner_name || learner.name;
+  const titleLearnerId = header?.qualification_learner_id || learner.learnerId;
+  const titleStatus = header?.status || learner.status;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { setIsEditing(false); setExpandedUnits(new Set()); } onOpenChange(o); }}>
-      <DialogContent className="max-w-2xl max-h-[85vh]">
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          setExpandedUnits(new Set());
+        }
+        onOpenChange(nextOpen);
+      }}
+    >
+      <DialogContent className="max-h-[85vh] max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-5 h-5 text-primary" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <span>{isEditing ? editData.name : learner.name}</span>
-              <p className="text-xs text-muted-foreground font-normal">{learner.learnerId}</p>
+              <span>{titleName}</span>
+              <p className="text-xs font-normal text-muted-foreground">
+                {titleLearnerId}
+              </p>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              {statusBadge(isEditing ? editData.status : learner.status)}
+              {statusBadge(titleStatus)}
             </div>
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="info" className="mt-2">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as LearnerActionTab)}
+          className="mt-2 max-h-[70vh] overflow-y-auto"
+        >
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="info" className="text-xs">Personal Info</TabsTrigger>
-            <TabsTrigger value="progress" className="text-xs">Unit Progress</TabsTrigger>
-            <TabsTrigger value="extensions" className="text-xs">
-              Extensions
+            <TabsTrigger value="personal_info" className="text-xs">
+              Personal Info
             </TabsTrigger>
-            <TabsTrigger value="payment" className="text-xs">Payment</TabsTrigger>
+            <TabsTrigger value="unit_progress" className="text-xs">
+              Unit Progress
+            </TabsTrigger>
+            <TabsTrigger value="staff_assignment" className="text-xs">
+              Staff Management
+            </TabsTrigger>
+            <TabsTrigger value="payment" className="text-xs">
+              Payment
+            </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[400px] mt-3">
-            <TabsContent value="info" className="mt-0 space-y-4 pr-3">
-              {/* Edit / Save / Cancel buttons */}
-              <div className="flex justify-end gap-2">
-                {isEditing ? (
-                  <>
-                    <Button variant="outline" size="sm" onClick={cancelEditing}>
-                      <X className="w-3.5 h-3.5 mr-1" /> Cancel
-                    </Button>
-                    <Button size="sm" onClick={saveChanges}>
-                      <Save className="w-3.5 h-3.5 mr-1" /> Save Changes
-                    </Button>
-                  </>
-                ) : (
-                  <Button variant="outline" size="sm" onClick={startEditing}>
-                    <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
-                  </Button>
-                )}
-              </div>
+          <ScrollArea className="mt-3 h-[400px]">
+            <TabsContent value="personal_info" className="mt-0 pr-3">
+              {isFetching ? <LoadingState /> : null}
+              {!isFetching && error ? <ErrorState /> : null}
+              {!isFetching && !error && personalInfo ? (
+                <div className="space-y-4">
+                  <div className="flex justify-end gap-2">
+                    {isEditing ? (
+                      <>
+                        <Button variant="outline" size="sm" onClick={cancelEditing}>
+                          <X className="mr-1 h-3.5 w-3.5" />
+                          Cancel
+                        </Button>
+                        <Button size="sm" onClick={saveChanges}>
+                          <Save className="mr-1 h-3.5 w-3.5" />
+                          Save Changes
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={startEditing}>
+                        <Pencil className="mr-1 h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
 
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  {isEditing ? (
-                    <div className="space-y-3">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Full Name</Label>
-                        <Input value={editData.name} onChange={(e) => setEditData(d => ({ ...d, name: e.target.value }))} />
+                  <Card>
+                    <CardContent className="p-4">
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-xs">Full Name</Label>
+                            <Input
+                              value={editData.name}
+                              onChange={(e) =>
+                                setEditData((prev) => ({
+                                  ...prev,
+                                  name: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Email</Label>
+                              <Input
+                                type="email"
+                                value={editData.email}
+                                disabled
+                                className="cursor-not-allowed bg-muted/50"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Phone</Label>
+                              <Input
+                                value={editData.phone}
+                                onChange={(e) =>
+                                  setEditData((prev) => ({
+                                    ...prev,
+                                    phone: e.target.value,
+                                  }))
+                                }
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label className="text-xs">Status</Label>
+                            <Select
+                              value={editData.status}
+                              onValueChange={(value) =>
+                                setEditData((prev) => ({
+                                  ...prev,
+                                  status: value as AdminLearner["status"],
+                                }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="suspended">
+                                  Suspended
+                                </SelectItem>
+                                <SelectItem value="completed">
+                                  Completed
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Email</p>
+                              <p className="font-medium">
+                                {personalInfo.email || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Phone</p>
+                              <p className="font-medium">
+                                {personalInfo.phone || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Enrolled Date
+                              </p>
+                              <p className="font-medium">
+                                {formatDate(personalInfo.enrolled_at, true)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Access Expiry
+                              </p>
+                              <p className="font-medium">
+                                {formatDate(personalInfo.access_expires_at, true)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {!isEditing && (
+                    <Card>
+                    <CardContent className="space-y-3 p-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Qualification
+                          </p>
+                          <p className="font-medium">
+                            {personalInfo.qualification?.title || "N/A"}
+                          </p>
+                        </div>
                       </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Assigned Trainer
+                          </p>
+                          <p className="font-medium">
+                            {personalInfo.assigned_trainer?.name ||
+                              "Unassigned"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Assigned IQA
+                          </p>
+                          <p className="font-medium">
+                            {personalInfo.assigned_iqa?.name || "Unassigned"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center gap-3">
+                        <Progress
+                          value={personalInfo.progress?.progress_percent || 0}
+                          className="h-2 flex-1"
+                        />
+                        <span className="text-sm font-bold">
+                          {personalInfo.progress?.progress_percent || 0}%
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {personalInfo.progress?.completed_units || 0} of{" "}
+                        {personalInfo.progress?.total_units || 0} units
+                        completed
+                      </p>
+                    </CardContent>
+                    </Card>
+                  )}
+                </div>
+              ) : null}
+            </TabsContent>
+
+            <TabsContent value="unit_progress" className="mt-0 space-y-2 pr-3">
+              {isFetching ? <LoadingState /> : null}
+              {!isFetching && error ? <ErrorState /> : null}
+              {!isFetching && !error && unitProgress.length === 0 ? (
+                <EmptyState message="No unit progress found for this learner." />
+              ) : null}
+              {!isFetching && !error
+                ? unitProgress.map((unit) => {
+                    const isExpanded = expandedUnits.has(unit.unit_id);
+                    const hasTimeline = unit.timeline.length > 0;
+
+                    return (
+                      <Card key={unit.unit_id}>
+                        <CardContent className="p-0">
+                          <button
+                            type="button"
+                            className="flex w-full items-center justify-between gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted/30"
+                            onClick={() => toggleUnit(unit.unit_id)}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">
+                                {unit.unit_code ? `${unit.unit_code} - ` : ""}
+                                {unit.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Last activity:{" "}
+                                {formatDate(unit.last_activity_at, true)}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {unitStatusBadge(unit.status)}
+                              {isExpanded ? (
+                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </div>
+                          </button>
+
+                          {isExpanded && (
+                            <div className="space-y-3 border-t border-border px-4 pb-3 pt-1">
+                              {hasTimeline ? (
+                                <div>
+                                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Activity Timeline
+                                  </p>
+                                  <div className="relative space-y-3 pl-5">
+                                    <div className="absolute bottom-1 left-[7px] top-1 w-px bg-border" />
+                                    {unit.timeline.map((item, index) => (
+                                      <div
+                                        key={`${unit.unit_id}-${index}`}
+                                        className="relative flex items-start gap-2.5"
+                                      >
+                                        <div className="absolute -left-5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-border bg-background">
+                                          {timelineIcon(item.type)}
+                                        </div>
+                                        <div>
+                                          <p className="text-xs">
+                                            {item.label}
+                                          </p>
+                                          <p className="text-[10px] text-muted-foreground">
+                                            {formatDate(item.date, true)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-xs text-muted-foreground">
+                                  No activity timeline available for this unit.
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                : null}
+            </TabsContent>
+
+            <TabsContent
+              value="staff_assignment"
+              className="mt-0 space-y-3 pr-3"
+            >
+              {isFetching ? <LoadingState /> : null}
+              {!isFetching && error ? <ErrorState /> : null}
+              {!isFetching && !error && staffAssignment ? (
+                <>
+                  <Card>
+                    <CardContent className="space-y-4 p-4">
+                      <p className="flex items-center gap-1.5 text-sm font-semibold">
+                        <Users className="h-4 w-4" />
+                        Current Assignment
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="rounded-md bg-muted/30 p-3">
+                          <p className="text-xs text-muted-foreground">
+                            Trainer
+                          </p>
+                          <p className="mt-1 font-medium">
+                            {staffAssignment.current.trainer?.name ||
+                              "Unassigned"}
+                          </p>
+                        </div>
+                        <div className="rounded-md bg-muted/30 p-3">
+                          <p className="text-xs text-muted-foreground">IQA</p>
+                          <p className="mt-1 font-medium">
+                            {staffAssignment.current.iqa?.name || "Unassigned"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="space-y-4 p-4">
+                      <p className="flex items-center gap-1.5 text-sm font-semibold">
+                        <ShieldCheck className="h-4 w-4" />
+                        Staff Management
+                      </p>
+
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <Label className="text-xs">Email</Label>
-                          <Input type="email" value={editData.email} disabled className="bg-muted/50 cursor-not-allowed" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">Phone</Label>
-                          <Input value={editData.phone} onChange={(e) => setEditData(d => ({ ...d, phone: e.target.value }))} />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">Assigned Trainer</Label>
-                          <Select value={editData.assignedTrainer} onValueChange={(v) => setEditData(d => ({ ...d, assignedTrainer: v }))}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          <p className="text-xs text-muted-foreground">
+                            Trainer Options
+                          </p>
+                          <Select
+                            value={selectedTrainer}
+                            onValueChange={setSelectedTrainer}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select trainer" />
+                            </SelectTrigger>
                             <SelectContent>
-                              {activeTrainers.map(t => (
-                                <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                              <SelectItem value={UNASSIGNED_VALUE}>
+                                Unassigned
+                              </SelectItem>
+                              {staffAssignment.options.trainers.map(
+                                (trainer) => (
+                                  <SelectItem
+                                    key={trainer.id}
+                                    value={trainer.id}
+                                  >
+                                    {trainer.name}
+                                  </SelectItem>
+                                ),
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <p className="text-xs text-muted-foreground">
+                            IQA Options
+                          </p>
+                          <Select
+                            value={selectedIqa}
+                            onValueChange={setSelectedIqa}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select IQA" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={UNASSIGNED_VALUE}>
+                                Unassigned
+                              </SelectItem>
+                              {staffAssignment.options.iqas.map((iqa) => (
+                                <SelectItem key={iqa.id} value={iqa.id}>
+                                  {iqa.name}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">Status</Label>
-                          <Select value={editData.status} onValueChange={(v) => setEditData(d => ({ ...d, status: v as AdminLearner["status"] }))}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="suspended">Suspended</SelectItem>
-                              <SelectItem value="completed">Completed</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Email</p>
-                          <p className="font-medium">{learner.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Phone</p>
-                          <p className="font-medium">{learner.phone}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Enrolled Date</p>
-                          <p className="font-medium">{learner.enrolledDate}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Access Expiry</p>
-                          <p className="font-medium">{learner.accessExpiry}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
 
-              {!isEditing && (
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-sm mb-2">
-                      <GraduationCap className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Qualification</p>
-                        <p className="font-medium">{learner.qualification}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">Assigned Trainer: <span className="font-medium text-foreground">{learner.assignedTrainer}</span></p>
-                    <div className="mt-3 flex items-center gap-3">
-                      <Progress value={learner.progress} className="flex-1 h-2" />
-                      <span className="text-sm font-bold">{learner.progress}%</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                      <p className="text-xs text-muted-foreground">
+                        Staff options are loaded from the enrolment action modal
+                        API for this learner.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : null}
             </TabsContent>
 
-            <TabsContent value="progress" className="mt-0 space-y-2 pr-3">
-              {units.map((unit, i) => {
-                const isExpanded = expandedUnits.has(i);
-                const hasTimeline = unit.timeline.length > 0;
-                const unitKey = `unit-${i}`;
-                const deadline = unitDeadlines.get(unitKey);
-                const deadlineStatus = deadline ? getDeadlineStatus(deadline.deadlineDate) : "none";
-                const daysLeft = deadline ? getDaysRemaining(deadline.deadlineDate) : 0;
-
-                const setDeadline = (days: number) => {
-                  const dl = createDeadline(days, unitKey);
-                  setUnitDeadlines(prev => new Map(prev).set(unitKey, dl));
-                  toast({ title: "Deadline set", description: `${unit.name} — ${days} day deadline assigned` });
-                };
-
-                const removeDeadline = () => {
-                  setUnitDeadlines(prev => {
-                    const next = new Map(prev);
-                    next.delete(unitKey);
-                    return next;
-                  });
-                  toast({ title: "Deadline removed" });
-                };
-
-                return (
-                  <Card key={i}>
-                    <CardContent className="p-0">
-                      <button
-                        className="w-full p-3 flex items-center justify-between gap-3 text-left hover:bg-muted/30 transition-colors rounded-lg"
-                        onClick={() => toggleUnit(i)}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{unit.name}</p>
-                          {unit.lastSubmission && (
-                            <p className="text-xs text-muted-foreground">Last activity: {unit.lastSubmission}</p>
-                          )}
+            <TabsContent value="payment" className="mt-0 space-y-4 pr-3">
+              {isFetching ? <LoadingState /> : null}
+              {!isFetching && error ? <ErrorState /> : null}
+              {!isFetching && !error && paymentInfo ? (
+                <>
+                  <Card>
+                    <CardContent className="space-y-3 p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-sm">
+                          <p className="text-xs text-muted-foreground">
+                            Payment Method
+                          </p>
+                          <p className="font-medium capitalize">
+                            {formatLabel(paymentInfo.payment_method)}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {deadline && unit.status !== "completed" && (
-                            <Badge variant={getDeadlineBadgeVariant(deadlineStatus)} className="text-[10px] gap-1">
-                              <Timer className="w-3 h-3" />
-                              {getDeadlineLabel(deadlineStatus, daysLeft)}
-                            </Badge>
-                          )}
-                          {unitStatusBadge(unit.status)}
-                          {isExpanded
-                            ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                            : <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                          }
+                        <div className="text-sm">
+                          <p className="text-xs text-muted-foreground">
+                            Payment Status
+                          </p>
+                          <div className="mt-0.5">
+                            {paymentBadge(paymentInfo.payment_status)}
+                          </div>
                         </div>
-                      </button>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                      {isExpanded && (
-                        <div className="px-4 pb-3 pt-1 border-t border-border space-y-3">
-                          {/* Deadline Setting — Only show if NOT CPD */}
-                          {unit.status !== "completed" && !isCpd && (
-                            <div>
-                              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                                <Timer className="w-3 h-3 inline mr-1" />Deadline
-                              </p>
-                              {deadline ? (
-                                <div className="flex items-center gap-2 text-xs">
-                                  <Badge variant={getDeadlineBadgeVariant(deadlineStatus)} className="text-[10px]">
-                                    {getDeadlineLabel(deadlineStatus, daysLeft)}
-                                  </Badge>
-                                  <span className="text-muted-foreground">Due: {deadline.deadlineDate}</span>
-                                  <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px] text-destructive" onClick={removeDeadline}>
-                                    Remove
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  {DEADLINE_PRESETS.map(p => (
-                                    <Button key={p.value} variant="outline" size="sm" className="h-6 text-[10px] px-2" onClick={() => setDeadline(p.value)}>
-                                      {p.label}
-                                    </Button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
+                  <Card>
+                    <CardContent className="p-4">
+                      <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                        Payment History
+                      </h4>
 
-                          {/* Activity Timeline */}
-                          {hasTimeline && (
-                            <div>
-                              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Activity Timeline</p>
-                              <div className="relative pl-5 space-y-3">
-                                <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border" />
-                                {unit.timeline.map((item, j) => (
-                                  <div key={j} className="relative flex items-start gap-2.5">
-                                    <div className="absolute -left-5 top-0.5 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center">
-                                      {timelineIcon(item.type)}
-                                    </div>
-                                    <div>
-                                      <p className="text-xs">{item.event}</p>
-                                      <p className="text-[10px] text-muted-foreground">{item.date}</p>
-                                    </div>
-                                  </div>
-                                ))}
+                      <div className="space-y-2 text-sm">
+                        {paymentInfo.history.length === 0 ? (
+                          <p className="text-muted-foreground">
+                            No payment history available.
+                          </p>
+                        ) : (
+                          paymentInfo.history.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2"
+                            >
+                              <div>
+                                <p>{item.label}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDate(item.paid_at, true)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  {formatCurrency(item.amount, item.currency)}
+                                </span>
+                                {paymentBadge(item.status)}
                               </div>
                             </div>
-                          )}
-                        </div>
-                      )}
+                          ))
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
-                );
-              })}
-            </TabsContent>
-
-            <TabsContent value="extensions" className="mt-0 space-y-3 pr-3">
-              {/* Admin Manual Extension */}
-              <Card className="border-dashed">
-                <CardContent className="p-4 space-y-3">
-                  <p className="text-sm font-semibold flex items-center gap-1.5">
-                    <CalendarPlus className="w-4 h-4" /> Grant Manual Extension
-                  </p>
-                  <p className="text-xs text-muted-foreground">Extend this learner's access without requiring payment (e.g. employer-funded, goodwill).</p>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {EXTENSION_PLANS.map(plan => (
-                      <Button
-                        key={plan.id}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => {
-                          const newReq: ExtensionRequest = {
-                            id: `er-manual-${Date.now()}`,
-                            learnerId: learner.id,
-                            learnerName: learner.name,
-                            qualificationId: "q1",
-                            qualificationTitle: learner.qualification,
-                            plan,
-                            requestedDate: new Date().toLocaleDateString("en-GB"),
-                            status: "approved",
-                            reviewedBy: "Admin (Manual)",
-                            reviewedDate: new Date().toLocaleDateString("en-GB"),
-                            note: "Manually extended by admin — no payment required",
-                          };
-                          setExtensionRequests(prev => [newReq, ...prev]);
-                          toast({ title: "Extension granted", description: `${plan.label} extension activated for ${learner.name} — no payment required.` });
-                        }}
-                      >
-                        <CalendarPlus className="w-3 h-3" /> {plan.label}
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Extension History */}
-              {(() => {
-                const learnerRequests = extensionRequests.filter(r => r.learnerId === learner.id);
-                if (learnerRequests.length === 0) {
-                  return (
-                    <div className="text-center py-6 text-muted-foreground">
-                      <p className="text-sm">No extensions yet</p>
-                    </div>
-                  );
-                }
-
-                return learnerRequests.map(req => (
-                  <Card key={req.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div>
-                          <p className="text-sm font-medium">{req.plan.label} Extension</p>
-                          <p className="text-xs text-muted-foreground">{req.qualificationTitle}</p>
-                        </div>
-                        <Badge
-                          variant={req.status === "approved" ? "default" : "secondary"}
-                          className="text-[10px]"
-                        >
-                          {req.note?.includes("no payment") ? "Manual" : "Paid"} — Active
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-2">
-                        <div>
-                          <p className="font-medium text-foreground">{req.note?.includes("no payment") ? "£0 (waived)" : `£${req.plan.price}`}</p>
-                          <p>Fee</p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{req.plan.months} month{req.plan.months > 1 ? "s" : ""}</p>
-                          <p>Duration</p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{req.requestedDate}</p>
-                          <p>Date</p>
-                        </div>
-                      </div>
-                      {req.note && (
-                        <p className="text-[10px] text-muted-foreground italic">{req.note}</p>
-                      )}
-                      {req.reviewedBy && (
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          By {req.reviewedBy} on {req.reviewedDate}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ));
-              })()}
-            </TabsContent>
-            <TabsContent value="payment" className="mt-0 space-y-4 pr-3">
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-sm">
-                      <p className="text-xs text-muted-foreground">Payment Method</p>
-                      <p className="font-medium capitalize">{learner.paymentMethod}</p>
-                    </div>
-                    <div className="text-sm">
-                      <p className="text-xs text-muted-foreground">Payment Status</p>
-                      <div className="mt-0.5">{paymentBadge(learner.paymentStatus)}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-muted-foreground" /> Payment History
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center bg-muted/30 rounded-md px-3 py-2">
-                      <span>Initial enrolment payment</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">£1,200.00</span>
-                        <Badge variant="default" className="text-[10px]">Paid</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </>
+              ) : null}
             </TabsContent>
           </ScrollArea>
         </Tabs>
