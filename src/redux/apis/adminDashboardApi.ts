@@ -6,7 +6,7 @@ export interface DashboardFilters {
   end_date?: string;
   qualification_id?: string;
   is_cpd?: boolean;
-  assessor_id?: string;
+  trainer_id?: string;
   iqa_id?: string;
 }
 
@@ -24,7 +24,7 @@ export interface DashboardOverviewResponse {
       end_date?: string | null;
       qualification_id: string | null;
       is_cpd: boolean | null;
-      assessor_id: string | null;
+      trainer_id: string | null;
       iqa_id: string | null;
     };
     kpis: {

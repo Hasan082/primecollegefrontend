@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGetDashboardAnalyticsQuery, AnalyticsFilters } from "@/redux/apis/adminDashboardApi";
 import { useGetQualificationsQuery } from "@/redux/apis/qualificationApi";
+import { useGetStaffListQuery } from "@/redux/apis/staffApi";
 import { RefreshCcw, BarChart3, TrendingUp, PieChart, Users2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -87,7 +88,7 @@ const AdminAnalytics = () => {
     end_date: undefined,
     qualification_id: undefined,
     is_cpd: undefined,
-    assessor_id: undefined,
+    trainer_id: undefined,
     iqa_id: undefined,
   });
 
@@ -115,6 +116,14 @@ const AdminAnalytics = () => {
       skip: customRangeIncomplete,
     });
   const { data: qualificationsResponse } = useGetQualificationsQuery();
+  const { data: trainerListResponse } = useGetStaffListQuery({
+    role: "trainer",
+    is_active: true,
+  });
+  const { data: iqaListResponse } = useGetStaffListQuery({
+    role: "iqa",
+    is_active: true,
+  });
 
   const handleFilterChange = (key: keyof AnalyticsFilters, value: string | boolean | undefined) => {
     setFilters((prev) => {
@@ -322,15 +331,19 @@ const AdminAnalytics = () => {
               </Select>
             </div>
 
-            {/* Note: Assessor and IQA filters would need lists from the backend */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assessor</label>
-              <Select value={filters.assessor_id || "all"} onValueChange={(v) => handleFilterChange("assessor_id", v)}>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Trainer</label>
+              <Select value={filters.trainer_id || "all"} onValueChange={(v) => handleFilterChange("trainer_id", v)}>
                 <SelectTrigger className="h-9 bg-background">
-                  <SelectValue placeholder="All Assessors" />
+                  <SelectValue placeholder="All Trainers" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Assessors</SelectItem>
+                  <SelectItem value="all">All Trainers</SelectItem>
+                  {trainerListResponse?.data?.map((trainer) => (
+                    <SelectItem key={trainer.id} value={trainer.id}>
+                      {trainer.full_name || `${trainer.first_name} ${trainer.last_name}`.trim() || trainer.email}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -343,6 +356,11 @@ const AdminAnalytics = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All IQAs</SelectItem>
+                  {iqaListResponse?.data?.map((iqa) => (
+                    <SelectItem key={iqa.id} value={iqa.id}>
+                      {iqa.full_name || `${iqa.first_name} ${iqa.last_name}`.trim() || iqa.email}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -352,6 +370,10 @@ const AdminAnalytics = () => {
               Select both start and end dates to load custom analytics.
             </p>
           ) : null}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Trainer and IQA filters apply to enrolment and progress analytics.
+            Revenue charts are not staff-filtered.
+          </p>
         </CardContent>
       </Card>
 
