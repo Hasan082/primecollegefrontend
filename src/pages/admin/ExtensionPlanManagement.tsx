@@ -153,11 +153,16 @@ const ExtensionPlanManagement = () => {
 
   const onSubmit = async (values: ExtensionPlanFormValues) => {
     const payload: ExtensionPlanPayload = {
-      ...values,
       label:
         values.duration_mode === "preset"
           ? presetLabelMap.get(values.duration_months) || values.label
           : values.label,
+      duration_mode: values.duration_mode,
+      duration_months: values.duration_months,
+      amount: values.amount,
+      currency: values.currency,
+      sort_order: values.sort_order,
+      is_active: values.is_active,
     };
 
     const [, error] = await TryCatch(
