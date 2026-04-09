@@ -102,6 +102,9 @@ const AdminQualificationDetail = lazy(
 const IQAManagement = lazy(() => import("./pages/admin/IQAManagement"));
 const ChecklistBuilder = lazy(() => import("./pages/admin/ChecklistBuilder"));
 const Enrollments = lazy(() => import("./pages/admin/Enrollments"));
+const ExtensionPlanManagement = lazy(
+  () => import("./pages/admin/ExtensionPlanManagement"),
+);
 
 const AdminCPDFinalAssessmentEditor = lazy(
   () => import("./pages/admin/AdminCPDFinalAssessmentEditor"),
@@ -225,6 +228,7 @@ const App = () => {
 
                     <Route path="learners" element={<LearnerManagement />} />
                     <Route path="trainers" element={<TrainerManagement />} />
+                    <Route path="extension-plans" element={<ExtensionPlanManagement />} />
                     <Route path="progress" element={<ProgressMonitoring />} />
                     <Route path="reports" element={<Reports />} />
                     <Route
