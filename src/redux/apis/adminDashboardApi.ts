@@ -174,10 +174,10 @@ export const adminDashboardApi = api.injectEndpoints({
         params: filters,
       }),
     }),
-    getRecentEnrolments: builder.query<PaginatedEnrolmentResponse, { page?: number }>({
-      query: ({ page = 1 }) => ({
+    getRecentEnrolments: builder.query<PaginatedEnrolmentResponse, { page?: number; search?: string }>({
+      query: ({ page = 1, search }) => ({
         url: "/api/admin/dashboard/recent-enrolments/",
-        params: { page },
+        params: { page, ...(search ? { search } : {}) },
       }),
       providesTags: ["Enrolments"],
     }),

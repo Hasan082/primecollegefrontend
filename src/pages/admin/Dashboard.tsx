@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users, GraduationCap, UserCheck, FileText, TrendingUp, AlertCircle,
   ClipboardCheck, Shield, BookOpen, Blocks, BarChart3, Download,
-  Eye, ChevronRight, Clock, RefreshCcw, UserPlus, CheckCircle2, 
+  Eye, ChevronRight, Clock, RefreshCcw, UserPlus, CheckCircle2,
   CreditCard, PoundSterling, Wallet
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -40,10 +40,9 @@ const AdminDashboard = () => {
   const [filters] = useState<DashboardFilters>({
     range: "30d",
   });
-  const [enrollmentPage, setEnrollmentPage] = useState(1);
 
   const { data: dashboardResponse, isLoading, isError, refetch } = useGetDashboardOverviewQuery(filters);
-  const { data: enrollmentResponse, isLoading: isLoadingEnrolments } = useGetRecentEnrolmentsQuery({ page: enrollmentPage });
+
 
   if (isLoading) {
     return (
@@ -80,8 +79,8 @@ const AdminDashboard = () => {
     monthlyEnrolments: data?.charts?.enrolments_trend_simple || [],
     categoryDistribution: data?.charts?.learners_by_category_simple || [],
     trainerPerformances: data?.trainer_overview || [],
-    recentEnrolments: enrollmentResponse?.data?.results || [],
-    enrolmentsCount: enrollmentResponse?.data?.count || 0,
+    recentEnrolments: data?.recent_enrolments || [],
+
     recentOrders: data?.recent_orders || [],
     topQualifications: data?.top_qualifications || [],
     statusBreakdown: data?.status_breakdown || [],
@@ -428,12 +427,12 @@ const AdminDashboard = () => {
                   <th className="py-2 font-medium text-muted-foreground text-center">Status</th>
                   <th className="py-2 font-medium text-muted-foreground text-center">Payment</th>
                   <th className="py-2 font-medium text-muted-foreground text-center">Amount</th>
-                  
+
                   <th className="py-2 font-medium text-muted-foreground text-right">Enrolled</th>
                 </tr>
               </thead>
               <tbody>
-                {stats.recentEnrolments.slice(0, 8).map((enrolment) => (
+                {stats.recentEnrolments?.map((enrolment) => (
                   <tr key={enrolment.id} className="border-b border-border/50">
                     <td className="py-2.5 font-medium">{enrolment.learner_name}</td>
                     <td className="py-2.5 text-muted-foreground">{enrolment.qualification_title}</td>
@@ -448,11 +447,11 @@ const AdminDashboard = () => {
                       </Badge>
                     </td>
                     <td className="py-2.5 text-center">
-                 
-                    {`${enrolment?.currency} ${enrolment?.amount}`}
-                     
+
+                      {`${enrolment?.currency} ${enrolment?.amount}`}
+
                     </td>
-                    
+
                     <td className="py-2.5 text-right text-muted-foreground">
                       {new Date(enrolment.enrolled_at).toLocaleDateString()}
                     </td>
@@ -461,12 +460,7 @@ const AdminDashboard = () => {
               </tbody>
             </table>
           </div>
-          <TablePagination
-            currentPage={enrollmentPage}
-            totalItems={stats.enrolmentsCount}
-            itemsPerPage={10}
-            onPageChange={setEnrollmentPage}
-          />
+
         </CardContent>
       </Card>
 
@@ -553,7 +547,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {isError && (
         <Card className="border-destructive bg-destructive/5">
           <CardContent className="p-6 text-center">

@@ -362,7 +362,7 @@ const LearnerManagement = () => {
             </Button>
           </DialogTrigger>
 
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Manual Learner Enrolment</DialogTitle>
             </DialogHeader>

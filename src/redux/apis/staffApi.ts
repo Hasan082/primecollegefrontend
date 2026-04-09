@@ -8,11 +8,10 @@ export interface StaffCreateRequest {
   phone?: string;
   role: "trainer" | "iqa";
   qualification_held?: string;
-  awarding_bodies?: string[]; // IDs of awarding bodies
+  specialisms?: string[];
   centre_registration_number?: string;
   standardisation_last_attended?: string; // YYYY-MM-DD
   cpd_record_url?: string;
-  send_setup_email: boolean;
 }
 
 export interface StaffResponse {

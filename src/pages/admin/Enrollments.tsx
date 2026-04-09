@@ -1,19 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, ArrowLeft, Download } from "lucide-react";
+import { Search, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import TablePagination from "@/components/admin/TablePagination";
 import { useGetRecentEnrolmentsQuery } from "@/redux/apis/adminDashboardApi";
 
 const Enrollments = () => {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  
-  const { data: response, isLoading } = useGetRecentEnrolmentsQuery({ page: currentPage });
+
+  // Debounce search input by 400ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCurrentPage(1); // reset to first page on new search
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data: response, isLoading } = useGetRecentEnrolmentsQuery({
+    page: currentPage,
+    search: debouncedSearch || undefined,
+  });
 
   const paymentBadge = (status: string) => {
     const map: Record<string, "default" | "secondary" | "destructive"> = { 
