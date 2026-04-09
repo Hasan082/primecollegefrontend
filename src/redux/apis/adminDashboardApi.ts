@@ -1,7 +1,9 @@
 import { api } from "../api";
 
 export interface DashboardFilters {
-  range?: "7d" | "30d" | "90d" | "12m";
+  range?: "7d" | "30d" | "90d" | "6m" | "12m" | "custom";
+  start_date?: string;
+  end_date?: string;
   qualification_id?: string;
   is_cpd?: boolean;
   assessor_id?: string;
@@ -18,6 +20,8 @@ export interface DashboardOverviewResponse {
   data: {
     filters: {
       range: string;
+      start_date?: string | null;
+      end_date?: string | null;
       qualification_id: string | null;
       is_cpd: boolean | null;
       assessor_id: string | null;

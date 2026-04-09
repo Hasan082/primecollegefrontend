@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Chart as ChartJS,
@@ -16,6 +16,7 @@ import {
 } from "chart.js";
 import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGetDashboardAnalyticsQuery, AnalyticsFilters } from "@/redux/apis/adminDashboardApi";
 import { useGetQualificationsQuery } from "@/redux/apis/qualificationApi";
@@ -82,17 +83,51 @@ const AdminAnalytics = () => {
   const [filters, setFilters] = useState<AnalyticsFilters>({
     range: "30d",
     group_by: "day",
+    start_date: undefined,
+    end_date: undefined,
     qualification_id: undefined,
     is_cpd: undefined,
     assessor_id: undefined,
     iqa_id: undefined,
   });
 
-  const { data: analyticsResponse, isLoading, isError, refetch } = useGetDashboardAnalyticsQuery(filters);
+  const analyticsQueryFilters = useMemo(() => {
+    if (filters.range !== "custom") {
+      return filters;
+    }
+
+    if (!filters.start_date || !filters.end_date) {
+      return {
+        ...filters,
+        start_date: undefined,
+        end_date: undefined,
+      };
+    }
+
+    return filters;
+  }, [filters]);
+
+  const customRangeIncomplete =
+    filters.range === "custom" && (!filters.start_date || !filters.end_date);
+
+  const { data: analyticsResponse, isLoading, isError, refetch } =
+    useGetDashboardAnalyticsQuery(analyticsQueryFilters, {
+      skip: customRangeIncomplete,
+    });
   const { data: qualificationsResponse } = useGetQualificationsQuery();
 
   const handleFilterChange = (key: keyof AnalyticsFilters, value: string | boolean | undefined) => {
-    setFilters((prev) => ({ ...prev, [key]: value === "all" ? undefined : value }));
+    setFilters((prev) => {
+      const nextValue = value === "all" ? undefined : value;
+      const nextFilters = { ...prev, [key]: nextValue };
+
+      if (key === "range" && value !== "custom") {
+        nextFilters.start_date = undefined;
+        nextFilters.end_date = undefined;
+      }
+
+      return nextFilters;
+    });
   };
 
   const chartOptions = {
@@ -213,10 +248,36 @@ const AdminAnalytics = () => {
                   <SelectItem value="7d">Last 7 Days</SelectItem>
                   <SelectItem value="30d">Last 30 Days</SelectItem>
                   <SelectItem value="90d">Last 90 Days</SelectItem>
+                  <SelectItem value="6m">Last 6 Months</SelectItem>
                   <SelectItem value="12m">Last 12 Months</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {filters.range === "custom" ? (
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Start Date</label>
+                  <Input
+                    type="date"
+                    value={filters.start_date || ""}
+                    onChange={(event) => handleFilterChange("start_date", event.target.value || undefined)}
+                    className="h-9 bg-background"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">End Date</label>
+                  <Input
+                    type="date"
+                    value={filters.end_date || ""}
+                    onChange={(event) => handleFilterChange("end_date", event.target.value || undefined)}
+                    className="h-9 bg-background"
+                  />
+                </div>
+              </>
+            ) : null}
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Group By</label>
@@ -286,6 +347,11 @@ const AdminAnalytics = () => {
               </Select>
             </div>
           </div>
+          {customRangeIncomplete ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Select both start and end dates to load custom analytics.
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 

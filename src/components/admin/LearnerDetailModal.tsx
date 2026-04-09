@@ -58,6 +58,7 @@ import {
 import type { AdminLearner } from "@/data/adminMockData";
 import {
   useGetEnrolledLearnerActionModalDataQuery,
+  useUpdateEnrolmentStaffAssignmentMutation,
   useUpdateEnrolmentStatusMutation,
   useUpdateLearnerPersonalInfoMutation,
 } from "@/redux/apis/admin/learnerManagementApi";
@@ -145,8 +146,12 @@ type UnitProgressItem = {
   unit_id: string;
   unit_code: string;
   title: string;
-  status: string;
+  progress_status: string;
+  result_status: string | null;
   last_activity_at: string | null;
+  submission_count: number;
+  latest_submission_status: string | null;
+  summary: string;
   timeline: UnitTimelineItem[];
 };
 
@@ -228,8 +233,8 @@ const paymentBadge = (status: string) => {
   );
 };
 
-const unitStatusBadge = (status: string) => {
-  if (status === "completed" || status === "competent") {
+const unitProgressBadge = (status: string) => {
+  if (status === "completed") {
     return (
       <Badge variant="default" className="text-[10px]">
         <CheckCircle2 className="mr-1 h-3 w-3" />
@@ -254,6 +259,49 @@ const unitStatusBadge = (status: string) => {
   );
 };
 
+const unitResultBadge = (status?: string | null) => {
+  if (!status) {
+    return (
+      <Badge variant="outline" className="text-[10px]">
+        No Result
+      </Badge>
+    );
+  }
+
+  if (status === "competent") {
+    return (
+      <Badge variant="default" className="text-[10px]">
+        <CheckCircle2 className="mr-1 h-3 w-3" />
+        Competent
+      </Badge>
+    );
+  }
+
+  if (status === "pending_review") {
+    return (
+      <Badge variant="secondary" className="text-[10px]">
+        <Clock className="mr-1 h-3 w-3" />
+        Pending Review
+      </Badge>
+    );
+  }
+
+  if (status === "resubmit" || status === "not_competent") {
+    return (
+      <Badge variant="destructive" className="text-[10px]">
+        <AlertTriangle className="mr-1 h-3 w-3" />
+        {formatLabel(status)}
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="outline" className="text-[10px]">
+      {formatLabel(status)}
+    </Badge>
+  );
+};
+
 const timelineIcon = (type: string) => {
   if (type.includes("submitted")) {
     return <FileText className="h-3 w-3 text-primary" />;
@@ -261,6 +309,10 @@ const timelineIcon = (type: string) => {
 
   if (type === "competent") {
     return <CheckCircle2 className="h-3 w-3 text-green-600" />;
+  }
+
+  if (type === "pending_review") {
+    return <Clock className="h-3 w-3 text-sky-600" />;
   }
 
   if (type.includes("required")) {
@@ -410,6 +462,8 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
     useUpdateLearnerPersonalInfoMutation();
   const [updateEnrolmentStatus, { isLoading: isUpdatingStatus }] =
     useUpdateEnrolmentStatusMutation();
+  const [updateEnrolmentStaffAssignment, { isLoading: isUpdatingStaffAssignment }] =
+    useUpdateEnrolmentStaffAssignmentMutation();
   const [editData, setEditData] = useState({
     firstName: "",
     middleName: "",
@@ -631,6 +685,55 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
   };
 
   const isSaving = isUpdatingPersonalInfo || isUpdatingStatus;
+  const trainerChanged =
+    selectedTrainer !==
+    (staffAssignment?.current.trainer?.id || UNASSIGNED_VALUE);
+  const iqaChanged =
+    selectedIqa !== (staffAssignment?.current.iqa?.id || UNASSIGNED_VALUE);
+  const hasAssignmentChanges = trainerChanged || iqaChanged;
+
+  const saveStaffAssignment = async () => {
+    if (!learner?.id || !staffAssignment || !hasAssignmentChanges) return;
+
+    try {
+      await updateEnrolmentStaffAssignment({
+        enrolmentId: learner.id,
+        body: {
+          assessor_id:
+            selectedTrainer === UNASSIGNED_VALUE ? null : selectedTrainer,
+          iqa_id: selectedIqa === UNASSIGNED_VALUE ? null : selectedIqa,
+        },
+      }).unwrap();
+
+      await refetch();
+
+      toast({
+        title: "Staff assignment updated",
+        description: "Trainer and IQA assignments were saved successfully.",
+      });
+    } catch (saveError: unknown) {
+      const errorMessage =
+        typeof saveError === "object" &&
+        saveError !== null &&
+        "data" in saveError &&
+        typeof saveError.data === "object" &&
+        saveError.data !== null
+          ? ("detail" in saveError.data &&
+              typeof saveError.data.detail === "string" &&
+              saveError.data.detail) ||
+            ("message" in saveError.data &&
+              typeof saveError.data.message === "string" &&
+              saveError.data.message) ||
+            "Please try again."
+          : "Please try again.";
+
+      toast({
+        title: "Failed to update assignment",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
 
   const titleName = header?.learner_name || learner.name;
   const titleLearnerId = header?.qualification_learner_id || learner.learnerId;
@@ -701,7 +804,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
               Unit Progress
             </TabsTrigger>
             <TabsTrigger value="staff_assignment" className="text-xs">
-              Staff Management
+              Staff Assignment
             </TabsTrigger>
             <TabsTrigger value="payment" className="text-xs">
               Payment
@@ -970,9 +1073,13 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                                 Last activity:{" "}
                                 {formatDate(unit.last_activity_at, true)}
                               </p>
+                              <p className="text-xs text-muted-foreground">
+                                {unit.summary}
+                              </p>
                             </div>
                             <div className="flex items-center gap-2">
-                              {unitStatusBadge(unit.status)}
+                              {unitProgressBadge(unit.progress_status)}
+                              {unitResultBadge(unit.result_status)}
                               {isExpanded ? (
                                 <ChevronUp className="h-4 w-4 text-muted-foreground" />
                               ) : (
@@ -987,6 +1094,12 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                                 <div>
                                   <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                                     Activity Timeline
+                                  </p>
+                                  <p className="mb-3 text-xs text-muted-foreground">
+                                    Latest submission:{" "}
+                                    {unit.latest_submission_status
+                                      ? formatLabel(unit.latest_submission_status)
+                                      : "No submissions yet"}
                                   </p>
                                   <div className="relative space-y-3 pl-5">
                                     <div className="absolute bottom-1 left-[7px] top-1 w-px bg-border" />
@@ -1063,13 +1176,13 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                     <CardContent className="space-y-4 p-4">
                       <p className="flex items-center gap-1.5 text-sm font-semibold">
                         <ShieldCheck className="h-4 w-4" />
-                        Staff Management
+                        Staff Assignment
                       </p>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <p className="text-xs text-muted-foreground">
-                            Trainer Options
+                            Assign Trainer
                           </p>
                           <StaffOptionCombobox
                             value={selectedTrainer}
@@ -1083,7 +1196,7 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
 
                         <div className="space-y-1.5">
                           <p className="text-xs text-muted-foreground">
-                            IQA Options
+                            Assign IQA
                           </p>
                           <StaffOptionCombobox
                             value={selectedIqa}
@@ -1096,10 +1209,18 @@ const LearnerDetailModal = ({ learner, open, onOpenChange, onUpdate }: Props) =>
                         </div>
                       </div>
 
-                      <p className="text-xs text-muted-foreground">
-                        Staff options are loaded from the enrolment action modal
-                        API for this learner.
-                      </p>
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={saveStaffAssignment}
+                          disabled={!hasAssignmentChanges || isUpdatingStaffAssignment}
+                        >
+                          <Save className="mr-1 h-3.5 w-3.5" />
+                          {isUpdatingStaffAssignment
+                            ? "Updating..."
+                            : "Update Assignment"}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </>

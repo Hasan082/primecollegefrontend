@@ -37,6 +37,14 @@ const learnerManagementApi = api.injectEndpoints({
             }),
             invalidatesTags: ["EnrollLearners"],
         }),
+        updateEnrolmentStaffAssignment: builder.mutation({
+            query: ({ enrolmentId, body }) => ({
+                url: `/api/enrolments/admin/${enrolmentId}/assign-staff/`,
+                method: "POST",
+                body,
+            }),
+            invalidatesTags: ["EnrollLearners"],
+        }),
         enrollLearner: builder.mutation({
             query: (body) => ({
                 url: "/api/orders/admission/office/",
@@ -59,6 +67,7 @@ export const {
     useGetEnrolledLearnerActionModalDataQuery,
     useUpdateLearnerPersonalInfoMutation,
     useUpdateEnrolmentStatusMutation,
+    useUpdateEnrolmentStaffAssignmentMutation,
     useEnrollLearnerMutation,
     useGetQualificationOnlyQuery,
 } = learnerManagementApi;

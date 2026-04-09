@@ -45,6 +45,10 @@ const enrollLearnerSchema = z.object({
   country: z.string().min(1, "Country is required"),
   qualification_id: z.string().min(1, "Qualification is required"),
   qualification_session_id: z.string().optional(),
+  payment_method: z.enum(["bank_transfer", "cash", "invoice", "employer"], {
+    message: "Payment method is required",
+  }),
+  discount_amount: z.string().optional(),
 });
 
 type EnrollLearnerFormValues = z.infer<typeof enrollLearnerSchema>;
@@ -65,6 +69,8 @@ type QualificationOption = {
   name: string;
   slug: string;
   is_session: boolean;
+  current_price: string | null;
+  currency: string;
   session_locations: QualificationSessionLocation[];
 };
 
@@ -114,10 +120,13 @@ export default function EnrollLearnerModal({
       country: "United Kingdom",
       qualification_id: "",
       qualification_session_id: "",
+      payment_method: "cash",
+      discount_amount: "0.00",
     },
   });
 
   const selectedQualificationId = form.watch("qualification_id");
+  const discountAmount = form.watch("discount_amount");
   const selectedQualification = useMemo(
     () =>
       qualifications.find(
@@ -136,6 +145,23 @@ export default function EnrollLearnerModal({
       })),
     );
   }, [selectedQualification]);
+
+  const parsedBasePrice = Number.parseFloat(
+    selectedQualification?.current_price ?? "0",
+  );
+  const parsedDiscountAmount = Number.parseFloat(discountAmount || "0");
+  const safeDiscountAmount = Number.isFinite(parsedDiscountAmount)
+    ? Math.max(0, Math.min(parsedDiscountAmount, parsedBasePrice))
+    : 0;
+  const finalPrice = Math.max(0, parsedBasePrice - safeDiscountAmount);
+
+  const formatPrice = (value: number, currency: string | undefined) => {
+    const normalizedCurrency = currency === "GBP" ? "GBP" : "GBP";
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: normalizedCurrency,
+    }).format(value);
+  };
 
   useEffect(() => {
     if (!open) {
@@ -167,12 +193,15 @@ export default function EnrollLearnerModal({
       city: values.city,
       postcode: values.postcode,
       country: values.country,
+      payment_method: values.payment_method,
       items: [
         cleanObject({
           qualification_id: values.qualification_id,
           qualification_session_id: selectedQualification?.is_session
             ? values.qualification_session_id
             : undefined,
+          discount_amount:
+            safeDiscountAmount > 0 ? safeDiscountAmount.toFixed(2) : undefined,
         }),
       ],
     });
@@ -405,6 +434,71 @@ export default function EnrollLearnerModal({
                     </FormItem>
                   )}
                 />
+              ) : null}
+
+              <FormField
+                control={form.control}
+                name="payment_method"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Payment Method *</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                        <SelectItem value="invoice">Invoice</SelectItem>
+                        <SelectItem value="employer">Employer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {selectedQualification ? (
+                <>
+                  <div className="md:col-span-2 rounded-md border border-slate-200 bg-slate-50 p-4 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-slate-700">Base Price</span>
+                      <span className="text-slate-900">
+                        {formatPrice(parsedBasePrice, selectedQualification.currency)}
+                      </span>
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="discount_amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Discount Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              max={parsedBasePrice.toFixed(2)}
+                              step="0.01"
+                              placeholder="0.00"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-sm font-semibold">
+                      <span className="text-slate-900">Final Total</span>
+                      <span className="text-slate-900">
+                        {formatPrice(finalPrice, selectedQualification.currency)}
+                      </span>
+                    </div>
+                  </div>
+                </>
               ) : null}
             </div>
 

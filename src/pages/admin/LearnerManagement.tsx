@@ -50,6 +50,8 @@ type QualificationOnlyOption = {
   name: string;
   slug: string;
   is_session: boolean;
+  current_price: string | null;
+  currency: string;
   session_locations: QualificationSessionLocationOption[];
 };
 
@@ -63,7 +65,7 @@ type EnrolLearnerFormState = {
   location_id: string;
   qualification_session_id: string;
   payment_method: "bank_transfer" | "cash" | "invoice" | "employer" | "";
-  amount_received: string;
+  discount_amount: string;
 };
 
 const LearnerManagement = () => {
@@ -81,7 +83,7 @@ const LearnerManagement = () => {
     location_id: "",
     qualification_session_id: "",
     payment_method: "",
-    amount_received: "",
+    discount_amount: "0.00",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [selectedLearner, setSelectedLearner] = useState<AdminLearner | null>(
@@ -127,6 +129,20 @@ const LearnerManagement = () => {
   const hasBookableSessions = Boolean(
     selectedQualification?.session_locations?.some((location) => location.dates.length > 0),
   );
+  const basePrice = Number.parseFloat(selectedQualification?.current_price ?? "0");
+  const rawDiscount = Number.parseFloat(enrolForm.discount_amount || "0");
+  const discountAmount = Number.isFinite(rawDiscount)
+    ? Math.max(0, Math.min(rawDiscount, basePrice))
+    : 0;
+  const finalPrice = Math.max(0, basePrice - discountAmount);
+
+  const formatPrice = (value: number, currency: string | undefined) => {
+    const normalizedCurrency = currency === "GBP" ? "GBP" : "GBP";
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: normalizedCurrency,
+    }).format(value);
+  };
 
   const handleLearnerUpdate = (updated: AdminLearner) => {
     setSelectedLearner(updated);
@@ -143,7 +159,7 @@ const LearnerManagement = () => {
       location_id: "",
       qualification_session_id: "",
       payment_method: "",
-      amount_received: "",
+      discount_amount: "0.00",
     });
     setFormErrors({});
   };
@@ -194,8 +210,10 @@ const LearnerManagement = () => {
     if (!enrolForm.payment_method) {
       nextErrors.payment_method = "Payment method is required";
     }
-    if (!enrolForm.amount_received.trim()) {
-      nextErrors.amount_received = "Amount received is required";
+    if (Number.isNaN(rawDiscount) || rawDiscount < 0) {
+      nextErrors.discount_amount = "Discount must be zero or greater";
+    } else if (rawDiscount > basePrice) {
+      nextErrors.discount_amount = "Discount cannot exceed the qualification price";
     }
 
     setFormErrors(nextErrors);
@@ -219,6 +237,8 @@ const LearnerManagement = () => {
             qualification_id: enrolForm.qualification_id,
             qualification_session_id:
               enrolForm.qualification_session_id || null,
+            discount_amount:
+              discountAmount > 0 ? discountAmount.toFixed(2) : undefined,
           },
         ],
         payment_method: enrolForm.payment_method as
@@ -226,7 +246,6 @@ const LearnerManagement = () => {
           | "cash"
           | "invoice"
           | "employer",
-        amount_received: enrolForm.amount_received.trim(),
       }).unwrap();
 
       handleDialogOpenChange(false);
@@ -419,12 +438,14 @@ const LearnerManagement = () => {
                       qualification_id: value,
                       location_id: "",
                       qualification_session_id: "",
+                      discount_amount: "0.00",
                     }));
                     setFormErrors((prev) => ({
                       ...prev,
                       qualification_id: "",
                       location_id: "",
                       qualification_session_id: "",
+                      discount_amount: "",
                     }));
                   }}
                 >
@@ -551,24 +572,43 @@ const LearnerManagement = () => {
                 ) : null}
               </div>
 
-              <div className="space-y-1.5">
-                <Label>Amount Received</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={enrolForm.amount_received}
-                  onChange={(e) =>
-                    updateEnrolForm("amount_received", e.target.value)
-                  }
-                />
-                {formErrors.amount_received ? (
-                  <p className="text-xs text-destructive">
-                    {formErrors.amount_received}
-                  </p>
-                ) : null}
-              </div>
+              {selectedQualification ? (
+                <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-slate-700">Qualification Price</span>
+                    <span className="text-slate-900">
+                      {formatPrice(basePrice, selectedQualification.currency)}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Discount Amount</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max={basePrice.toFixed(2)}
+                      step="0.01"
+                      placeholder="0.00"
+                      value={enrolForm.discount_amount}
+                      onChange={(e) =>
+                        updateEnrolForm("discount_amount", e.target.value)
+                      }
+                    />
+                    {formErrors.discount_amount ? (
+                      <p className="text-xs text-destructive">
+                        {formErrors.discount_amount}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-sm font-semibold">
+                    <span className="text-slate-900">Final Total</span>
+                    <span className="text-slate-900">
+                      {formatPrice(finalPrice, selectedQualification.currency)}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
 
               <Button
                 className="w-full"

@@ -55,6 +55,7 @@ export interface CheckoutOnlineResponse {
 export interface OfficeAdmissionItemPayload {
   qualification_id: string;
   qualification_session_id?: string | null;
+  discount_amount?: string;
 }
 
 export interface OfficeAdmissionPayload {
@@ -69,7 +70,6 @@ export interface OfficeAdmissionPayload {
   country?: string;
   items: OfficeAdmissionItemPayload[];
   payment_method: "bank_transfer" | "cash" | "invoice" | "employer";
-  amount_received: string;
   payment_reference?: string;
   notes?: string;
 }
