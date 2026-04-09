@@ -249,8 +249,8 @@ const QualificationDetail = () => {
 
   const bodyBlocks = qualification
     ? filterOutSystemBlocks(
-        getRenderableBlocks(qualification.body_blocks ?? [], detailPageSlug || slug),
-      )
+      getRenderableBlocks(qualification.body_blocks ?? [], detailPageSlug || slug),
+    )
     : [];
 
   const hasCmsBody = detailPagePublished !== false && bodyBlocks.length > 0;
@@ -258,7 +258,7 @@ const QualificationDetail = () => {
 
   return (
     <div className="bg-background">
-      <section className="relative h-[500px] overflow-hidden md:h-[620px]">
+      <section className="relative min-h-[80vh] md:h-[500px] overflow-hidden md:h-[620px]">
         {heroImage ? (
           <img src={heroImage} alt={qualification.title} className="absolute inset-0 h-full w-full object-cover" />
         ) : null}
@@ -381,127 +381,9 @@ const QualificationDetail = () => {
         </div>
       </section>
 
-      <Breadcrumb items={[{ label: "Qualifications", href: "/qualifications" }, { label: qualification.title }]} />
 
-      <section className="container mx-auto grid gap-10 px-4 py-12 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-10">
-          <section className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
-            <h2 className="text-2xl font-semibold text-foreground">Course overview</h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <DetailStat label="Awarding body" value={qualification.awarding_body?.name || "Prime College"} />
-              <DetailStat label="Delivery mode" value={qualification.delivery_mode?.name || "Flexible"} />
-              <DetailStat label="Course duration" value={qualification.course_duration || "Contact us"} />
-              <DetailStat
-                label="Current fee"
-                value={formatMoney(qualification.current_price, qualification.currency)}
-              />
-            </div>
-          </section>
 
-          {usesSessionBooking && normalizedUpcomingSessions.length > 0 ? (
-            <section className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
-              <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <h2 className="text-2xl font-semibold text-foreground">Upcoming sessions</h2>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    This qualification uses a session-booking hero. Learners must choose a live session before checkout.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6 grid gap-4">
-                {(selectedLocation?.sessions.length ? selectedLocation.sessions : normalizedUpcomingSessions).map((session) => {
-                  const isSelected = selectedSession?.id === session.id;
-                  return (
-                    <button
-                      key={session.id}
-                      type="button"
-                      onClick={() => setSelectedSessionId(session.id)}
-                      className={`rounded-2xl border p-5 text-left transition ${isSelected
-                        ? "border-primary bg-primary/5 shadow-sm"
-                        : "border-border bg-background hover:border-primary/40"
-                        }`}
-                    >
-                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold text-foreground">{session.title || session.location_name}</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {formatDateRange(session.start_at, session.end_at)}
-                          </p>
-                          {session.location_name ? (
-                            <p className="mt-1 text-sm text-muted-foreground">{session.location_name}</p>
-                          ) : null}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm uppercase tracking-[0.16em] text-muted-foreground">Session fee</p>
-                          <p className="text-2xl font-bold text-primary">
-                            {formatMoney(session.effective_price, qualification.currency)}
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {session.available_seats === null
-                              ? "Seats available"
-                              : `${session.available_seats} seat(s) remaining`}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ) : null}
-
-          {hasCmsBody ? (
-            <CMSPageRenderer blocks={bodyBlocks} pageSlug={detailPageSlug || slug} />
-          ) : (
-            <section className="rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8">
-              <h2 className="text-2xl font-semibold text-foreground">About this qualification</h2>
-              <p className="mt-4 text-sm leading-7 text-muted-foreground">{qualification.short_description}</p>
-              {detailPageSlug && detailPagePublished === false ? (
-                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Detail page content is currently unpublished.
-                </p>
-              ) : null}
-            </section>
-          )}
-        </div>
-
-        <aside className="lg:sticky lg:top-6 lg:self-start">
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Enrolment</p>
-            <div className="mt-3">
-              <p className="text-sm text-muted-foreground">Current price</p>
-              <p className="text-4xl font-bold text-primary">
-                {formatMoney(selectedSession?.effective_price || qualification.current_price, qualification.currency)}
-              </p>
-            </div>
-
-            {selectedSession ? (
-              <div className="mt-5 rounded-2xl bg-primary/5 p-4">
-                <p className="text-sm font-semibold text-foreground">{selectedSession.title || selectedSession.location_name}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {formatDateRange(selectedSession.start_at, selectedSession.end_at)}
-                </p>
-              </div>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              disabled={enrolmentDisabled}
-              className="mt-6 w-full rounded-full bg-secondary px-5 py-3 text-sm font-semibold text-secondary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {alreadyInCart ? "Update basket and continue" : "Add to basket"}
-            </button>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              {usesSessionBooking
-                ? "If sessions are available, the chosen session will be sent to checkout and enrolment automatically."
-                : "This qualification can be added directly to the checkout basket."}
-            </p>
-          </div>
-        </aside>
-      </section>
-
-      <CTASection />
+      {/* <CTASection /> */}
 
       {showUpsell && upsellResponse?.data?.length ? (
         <UpsellModal
