@@ -32,8 +32,8 @@ const TopBar = () => {
               </span>
             )}
           </Link>
-          <span className="text-primary-foreground/40">|</span>
-          <div className="flex items-center gap-3">
+          <span className="text-primary-foreground/40 hidden md:block">|</span>
+          <div className=" items-center gap-3 hidden md:flex">
             <a
               href="https://x.com/PrimeCollegeUK"
               target="_blank"
