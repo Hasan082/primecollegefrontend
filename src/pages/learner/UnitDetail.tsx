@@ -13,6 +13,8 @@ import {
   CalendarPlus,
   FilePenLine,
   MessageSquare,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StrictQuizModal from "@/components/learner/StrictQuizModal";
@@ -20,59 +22,26 @@ import EvidenceUploadForm from "@/components/learner/EvidenceUploadForm";
 import ExtensionRequestModal from "@/components/learner/ExtensionRequestModal";
 import SubmissionHistory, { type SubmissionVersion } from "@/components/learner/SubmissionHistory";
 import {
-  useGetEnrolmentContentQuery,
+  useGetEnrolmentOverviewQuery,
   useGetLearnerEvidenceSubmissionsQuery,
+  useGetLearnerUnitOverviewQuery,
   useGetLearnerWrittenAssignmentQuery,
 } from "@/redux/apis/enrolmentApi";
 import type {
-  EnrolmentContent,
   LearnerEvidenceSubmission,
   LearnerWrittenAssignmentSubmission,
 } from "@/types/enrollment.types";
 
-type LearnerUnitDisplayStatus =
-  | "competent"
-  | "completed"
-  | "awaiting_assessment"
-  | "submitted"
-  | "awaiting_iqa"
-  | "resubmission"
-  | "not_started"
-  | "in_progress";
-
-const statusConfig: Record<LearnerUnitDisplayStatus, { label: string; color: string }> = {
-  competent: { label: "Competent", color: "bg-green-600 text-white" },
-  completed: { label: "Completed", color: "bg-green-600 text-white" },
-  awaiting_assessment: { label: "Awaiting Assessment", color: "bg-amber-500 text-white" },
-  submitted: { label: "Submitted", color: "bg-amber-500 text-white" },
-  awaiting_iqa: { label: "Awaiting IQA Verification", color: "bg-blue-600 text-white" },
-  resubmission: { label: "Resubmission Required", color: "bg-orange-500 text-white" },
-  not_started: { label: "Not Started", color: "bg-muted text-muted-foreground" },
-  in_progress: { label: "In Progress", color: "bg-primary text-white" },
-};
-
-const getUnitDisplayStatus = (unit: EnrolmentContent["units"][number]): LearnerUnitDisplayStatus => {
-  const competencyStatus = unit.progress?.competency_status;
-  const progressStatus = unit.progress?.status;
-
-  if (competencyStatus === "competent" || progressStatus === "completed") {
-    return "competent";
-  }
-  if (competencyStatus === "iqa_review") {
-    return "awaiting_iqa";
-  }
-  if (competencyStatus === "resubmit" || competencyStatus === "not_competent") {
-    return "resubmission";
-  }
-  if (
-    progressStatus === "in_progress" ||
-    competencyStatus === "pending" ||
-    competencyStatus === "trainer_approved"
-  ) {
-    return "awaiting_assessment";
-  }
-
-  return "not_started";
+const statusConfig: Record<string, { label: string; color: string }> = {
+  Competent: { label: "Competent", color: "bg-green-600 text-white" },
+  Completed: { label: "Completed", color: "bg-green-600 text-white" },
+  "Waiting for assessor review": { label: "Awaiting Assessment", color: "bg-amber-500 text-white" },
+  Submitted: { label: "Submitted", color: "bg-amber-500 text-white" },
+  "Waiting for IQA review": { label: "Awaiting IQA Verification", color: "bg-blue-600 text-white" },
+  "Resubmission required": { label: "Resubmission Required", color: "bg-orange-500 text-white" },
+  "Not yet competent": { label: "Not Yet Competent", color: "bg-orange-500 text-white" },
+  "Not started": { label: "Not Started", color: "bg-muted text-muted-foreground" },
+  "In progress": { label: "In Progress", color: "bg-primary text-white" },
 };
 
 const mapSubmissionStatus = (status?: string): SubmissionVersion["status"] => {
@@ -183,27 +152,32 @@ const UnitDetail = () => {
   const [showStrictQuiz, setShowStrictQuiz] = useState(false);
   const [showExtension, setShowExtension] = useState(false);
 
-  const {
-    data: enrolmentResponse,
-    isLoading,
-    error,
-    refetch,
-  } = useGetEnrolmentContentQuery(qualificationId || "", {
-    skip: !qualificationId,
-  });
+  const { data: enrolmentResponse, isLoading: isLoadingOverview, error: overviewError, refetch: refetchOverview } =
+    useGetEnrolmentOverviewQuery(qualificationId || "", {
+      skip: !qualificationId,
+    });
+
+  const { data: unitResponse, isLoading: isLoadingUnit, error: unitError, refetch: refetchUnit } =
+    useGetLearnerUnitOverviewQuery(
+      { enrolmentId: qualificationId || "", unitId: unitId || "" },
+      { skip: !qualificationId || !unitId }
+    );
 
   const enrolment = enrolmentResponse?.data;
   const qualification = enrolment?.qualification;
-  const unit = enrolment?.units.find((item) => item.id === unitId);
+  const unit = unitResponse?.data;
+  const resolvedEnrolmentId = enrolment?.id || qualificationId || "";
+  const resolvedUnitId = unit?.id || unitId || "";
 
   const {
     data: evidenceResponse,
     isLoading: isLoadingEvidence,
+    error: evidenceError,
     refetch: refetchEvidence,
   } = useGetLearnerEvidenceSubmissionsQuery(
-    { enrolmentId: qualificationId || "", unitId: unitId || "" },
+    { enrolmentId: resolvedEnrolmentId, unitId: resolvedUnitId },
     {
-      skip: !qualificationId || !unitId || !unit?.requires_evidence,
+      skip: !resolvedEnrolmentId || !resolvedUnitId || !unit?.requires_evidence,
     }
   );
 
@@ -211,13 +185,13 @@ const UnitDetail = () => {
     data: writtenResponse,
     isLoading: isLoadingWritten,
   } = useGetLearnerWrittenAssignmentQuery(
-    { enrolmentId: qualificationId || "", unitId: unitId || "" },
+    { enrolmentId: resolvedEnrolmentId, unitId: resolvedUnitId },
     {
-      skip: !qualificationId || !unitId || !unit?.has_written_assignment,
+      skip: !resolvedEnrolmentId || !resolvedUnitId || !unit?.has_written_assignment,
     }
   );
 
-  if (isLoading) {
+  if (isLoadingOverview || isLoadingUnit) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -226,19 +200,18 @@ const UnitDetail = () => {
     );
   }
 
-  if (error || !enrolment || !qualification || !unit) {
+  if (overviewError || unitError || !enrolment || !qualification || !unit) {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">Unit not found.</p>
-        <Link to="/learner/dashboard" className="text-primary hover:underline mt-2 inline-block">
-          Back to Dashboard
+        <Link to="/learner/qualifications" className="text-primary hover:underline mt-2 inline-block">
+          Back to My Qualifications
         </Link>
       </div>
     );
   }
 
-  const status = getUnitDisplayStatus(unit);
-  const cfg = statusConfig[status];
+  const status = statusConfig[unit.display_status] || statusConfig["Not started"];
   const isExpired = enrolment.access_expired;
 
   const evidenceSubmissions = evidenceResponse?.data?.submissions || [];
@@ -263,8 +236,8 @@ const UnitDetail = () => {
         getDateValue(b.outcome_set_at || b.submitted_at) - getDateValue(a.outcome_set_at || a.submitted_at)
     )[0];
 
-  const evidenceUploaded = evidenceSubmissions.length > 0 || unit.progress?.evidence_met || false;
-  const writtenSubmitted = writtenSubmissions.length > 0 || unit.progress?.assignment_met || false;
+  const evidenceUploaded = evidenceSubmissions.length > 0 || unit.evidence_portfolio_summary.submission_count > 0 || false;
+  const writtenSubmitted = writtenSubmissions.length > 0 || unit.written_assignment_summary.submission_count > 0 || false;
   const latestAssessmentSubmission = [latestEvidenceSubmission, latestWrittenSubmission]
     .filter(Boolean)
     .sort(
@@ -278,6 +251,7 @@ const UnitDetail = () => {
     evidenceRequirements.length > 0
       ? evidenceRequirements
       : ["Standard unit criteria implementation evidence"];
+  const evidenceSetupMissing = Boolean(unit.requires_evidence && !isLoadingEvidence && (evidenceError || !evidenceConfig));
 
   return (
     <div>
@@ -290,7 +264,8 @@ const UnitDetail = () => {
           onClose={() => setShowStrictQuiz(false)}
           onSubmitted={() => {
             setShowStrictQuiz(false);
-            void refetch();
+            void refetchOverview();
+            void refetchUnit();
           }}
         />
       )}
@@ -331,7 +306,7 @@ const UnitDetail = () => {
               <h1 className="text-xl font-bold text-foreground">
                 {unit.unit_code}: {unit.title}
               </h1>
-              <span className={`text-xs font-bold px-2.5 py-1 rounded flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
+              <span className={`text-xs font-bold px-2.5 py-1 rounded flex-shrink-0 ${status.color}`}>{status.label}</span>
             </div>
             <p className="text-sm text-muted-foreground mb-5">{qualification.title}</p>
 
@@ -365,20 +340,21 @@ const UnitDetail = () => {
                         <p className="font-semibold text-sm text-foreground">Unit Quiz</p>
                         <p className="text-xs text-muted-foreground">Knowledge Assessment</p>
                       </div>
-                      <span
-                        className={`text-xs font-bold px-2.5 py-1 rounded ${
-                          unit.progress?.quiz_passed ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {unit.progress?.quiz_passed ? "Passed" : "Not Started"}
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded ${unit.quiz_summary.passed ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}`}>
+                        {unit.quiz_summary.passed ? "Passed" : unit.quiz_summary.attempts_used > 0 ? "Attempted" : "Not Started"}
                       </span>
                     </button>
                     {activeAssignment === "quiz" && (
                       <div className="p-5 pt-0 border-t border-border">
                         <p className="text-sm text-muted-foreground mb-5 pt-4">
-                          Complete this quiz to demonstrate your theoretical understanding. You must score 80% or above to pass.
+                          Complete this quiz to demonstrate your theoretical understanding. You must score {unit.quiz_summary.pass_mark || 80}% or above to pass.
                         </p>
-                        {!unit.progress?.quiz_passed ? (
+                        {unit.quiz_summary.score_summary_text && (
+                          <div className="mb-4 rounded-lg border border-border bg-muted/30 p-4 text-sm text-foreground">
+                            Latest result: <strong>{unit.quiz_summary.score_summary_text}</strong>
+                          </div>
+                        )}
+                        {!unit.quiz_summary.passed ? (
                           isExpired ? (
                             <Button variant="outline" className="gap-2" onClick={() => setShowExtension(true)}>
                               <Lock className="w-4 h-4" /> Access Locked
@@ -409,39 +385,33 @@ const UnitDetail = () => {
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-sm text-foreground">
-                          {writtenConfig?.title || "Written Assignment"}
+                          {writtenConfig?.title || unit.written_assignment_summary.title || "Written Assignment"}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {writtenSubmitted
-                            ? `Submitted ${writtenSubmissions.length} time${writtenSubmissions.length === 1 ? "" : "s"}`
+                            ? `Submitted ${writtenSubmissions.length || unit.written_assignment_summary.submission_count} time${(writtenSubmissions.length || unit.written_assignment_summary.submission_count) === 1 ? "" : "s"}`
                             : "No submission yet"}
                         </p>
                       </div>
-                      <span
-                        className={`text-xs font-bold px-2.5 py-1 rounded ${
-                          latestWrittenSubmission
-                            ? statusConfig[
-                                latestWrittenSubmission.status === "competent"
-                                  ? "competent"
-                                  : latestWrittenSubmission.status === "under_review"
-                                  ? "awaiting_assessment"
-                                  : latestWrittenSubmission.status === "resubmit"
-                                  ? "resubmission"
-                                  : "submitted"
-                              ].color
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded ${
+                        latestWrittenSubmission
+                          ? latestWrittenSubmission.status === "competent"
+                            ? statusConfig["Competent"].color
+                            : latestWrittenSubmission.status === "under_review"
+                            ? statusConfig["Waiting for assessor review"].color
+                            : latestWrittenSubmission.status === "resubmit"
+                            ? statusConfig["Resubmission required"].color
+                            : statusConfig.Submitted.color
+                          : "bg-muted text-muted-foreground"
+                      }`}>
                         {latestWrittenSubmission
-                          ? statusConfig[
-                              latestWrittenSubmission.status === "competent"
-                                ? "competent"
-                                : latestWrittenSubmission.status === "under_review"
-                                ? "awaiting_assessment"
-                                : latestWrittenSubmission.status === "resubmit"
-                                ? "resubmission"
-                                : "submitted"
-                            ].label
+                          ? latestWrittenSubmission.status === "competent"
+                            ? statusConfig["Competent"].label
+                            : latestWrittenSubmission.status === "under_review"
+                            ? statusConfig["Waiting for assessor review"].label
+                            : latestWrittenSubmission.status === "resubmit"
+                            ? statusConfig["Resubmission required"].label
+                            : statusConfig.Submitted.label
                           : "Not Started"}
                       </span>
                     </button>
@@ -459,12 +429,12 @@ const UnitDetail = () => {
                                 {stripHtml(writtenConfig?.instructions) || "Written assignment instructions will appear here."}
                               </p>
                             </div>
-                            {(writtenConfig?.min_words || writtenConfig?.max_words) && (
+                            {((writtenConfig?.min_words || writtenConfig?.max_words) || (unit.written_assignment_summary.min_words || unit.written_assignment_summary.max_words)) && (
                               <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
                                 Word count
-                                {writtenConfig?.min_words ? `: minimum ${writtenConfig.min_words}` : ""}
-                                {writtenConfig?.min_words && writtenConfig?.max_words ? " • " : ""}
-                                {writtenConfig?.max_words ? `maximum ${writtenConfig.max_words}` : ""}
+                                {(writtenConfig?.min_words || unit.written_assignment_summary.min_words) ? `: minimum ${writtenConfig?.min_words || unit.written_assignment_summary.min_words}` : ""}
+                                {(writtenConfig?.min_words || unit.written_assignment_summary.min_words) && (writtenConfig?.max_words || unit.written_assignment_summary.max_words) ? " • " : ""}
+                                {(writtenConfig?.max_words || unit.written_assignment_summary.max_words) ? `maximum ${writtenConfig?.max_words || unit.written_assignment_summary.max_words}` : ""}
                               </div>
                             )}
                             {latestWrittenSubmission ? (
@@ -503,7 +473,7 @@ const UnitDetail = () => {
                 Access unit specifications, templates, and guidance materials.
               </p>
               <div className="space-y-3">
-                {unit.resources.map((resource: any, index: number) => (
+                {unit.resources.map((resource, index) => (
                   <div key={index} className="flex items-center gap-3 p-3 border border-border rounded-lg">
                     <FileText className="w-5 h-5 text-primary flex-shrink-0" />
                     <div className="flex-1">
@@ -542,16 +512,27 @@ const UnitDetail = () => {
             </div>
           )}
 
-          {!isExpired && !qualification.is_cpd && unit.requires_evidence && (
+          {!isExpired && !qualification.is_cpd && unit.requires_evidence && !evidenceSetupMissing && (
             <EvidenceUploadForm
               requirements={evidenceRequirementList}
-              enrolmentId={enrolment.id}
-              unitId={unit.id}
+              enrolmentId={resolvedEnrolmentId}
+              unitId={resolvedUnitId}
               onSuccess={() => {
-                void refetch();
+                void refetchOverview();
+                void refetchUnit();
                 void refetchEvidence();
               }}
             />
+          )}
+
+          {!isExpired && !qualification.is_cpd && evidenceSetupMissing && (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
+              <h3 className="text-base font-bold text-foreground">Evidence Upload Unavailable</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                This unit is marked as requiring evidence, but its evidence portfolio is not configured correctly yet.
+                Please contact an administrator or trainer before attempting to upload evidence.
+              </p>
+            </div>
           )}
 
           {isExpired && !qualification.is_cpd && (
@@ -596,7 +577,7 @@ const UnitDetail = () => {
               <div className="space-y-2.5 mb-4">
                 {unit.has_quiz && (
                   <div className="flex items-center gap-2">
-                    {unit.progress?.quiz_passed ? (
+                    {unit.quiz_summary.passed ? (
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
                     ) : (
                       <Circle className="w-4 h-4 text-muted-foreground" />
@@ -633,20 +614,15 @@ const UnitDetail = () => {
                     Trainer feedback and outcomes appear below once reviewed.
                   </p>
                   <div className="rounded-lg bg-muted/40 p-3">
-                    <p className="text-sm font-semibold text-foreground">
-                      Current review status:{" "}
-                      {
-                        statusConfig[
-                          latestAssessmentSubmission.status === "competent"
-                            ? "competent"
-                            : latestAssessmentSubmission.status === "under_review"
-                            ? "awaiting_assessment"
-                            : latestAssessmentSubmission.status === "resubmit"
-                            ? "resubmission"
-                            : "submitted"
-                        ].label
-                      }
-                    </p>
+                    <p className="text-sm font-semibold text-foreground">Current review status: {status.label}</p>
+                  </div>
+                </div>
+              ) : unit.quiz_summary.score_summary_text ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">Latest quiz result recorded for this unit.</p>
+                  <div className="rounded-lg bg-muted/40 p-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Clock className="w-4 h-4 text-primary" />
+                    {unit.quiz_summary.score_summary_text}
                   </div>
                 </div>
               ) : (
@@ -673,7 +649,7 @@ const UnitDetail = () => {
               <hr className="border-border" />
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
-                <p className="text-sm font-semibold text-primary capitalize">{status.replace("_", " ")}</p>
+                <p className="text-sm font-semibold text-primary">{status.label}</p>
               </div>
               {latestAssessmentSubmission && (
                 <>
@@ -698,8 +674,7 @@ const UnitDetail = () => {
               <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                 <p className="text-sm text-muted-foreground">{latestFeedbackSubmission.assessor_feedback}</p>
                 <div className="text-xs text-muted-foreground">
-                  {latestFeedbackSubmission.assessor?.name || "Trainer"} •{" "}
-                  {formatDate(latestFeedbackSubmission.outcome_set_at || latestFeedbackSubmission.submitted_at)}
+                  {latestFeedbackSubmission.assessor?.name || "Trainer"} • {formatDate(latestFeedbackSubmission.outcome_set_at || latestFeedbackSubmission.submitted_at)}
                 </div>
                 {latestFeedbackSubmission.assessor_feedback_file && (
                   <Button variant="outline" size="sm" className="gap-2" asChild>

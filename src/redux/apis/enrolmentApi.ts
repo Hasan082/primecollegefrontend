@@ -1,6 +1,8 @@
 import {
   EnrollmentAdminProgressResponse,
   EnrolmentContentResponse,
+  EnrolmentOverviewResponse,
+  LearnerUnitOverviewResponse,
   EnrolmentListResponse,
   EvidenceSubmissionResponse,
   LearnerEvidenceSubmissionListResponse,
@@ -133,6 +135,26 @@ const enrolmentApi = api.injectEndpoints({
       }),
       providesTags: ["Enrolments"],
     }),
+    getEnrolmentOverview: builder.query<EnrolmentOverviewResponse, string>({
+      query: (enrolmentId) => ({
+        url: `/api/enrolments/me/${enrolmentId}/overview/`,
+        method: "GET",
+      }),
+      providesTags: (result, error, id) => [{ type: "Enrolments", id }],
+    }),
+    getLearnerUnitOverview: builder.query<
+      LearnerUnitOverviewResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/overview/`,
+        method: "GET",
+      }),
+      providesTags: (result, error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: enrolmentId },
+        { type: "Enrolments", id: `UNIT_${unitId}` },
+      ],
+    }),
     getEnrolmentContent: builder.query<EnrolmentContentResponse, string>({
       query: (enrolmentId) => ({
         url: `/api/enrolments/me/${enrolmentId}/content/`,
@@ -228,6 +250,8 @@ const enrolmentApi = api.injectEndpoints({
 export const {
   useGetLearnerDashboardQuery,
   useGetEnrolmentsQuery,
+  useGetEnrolmentOverviewQuery,
+  useGetLearnerUnitOverviewQuery,
   useGetEnrolmentContentQuery,
   useGetLearnerWrittenAssignmentQuery,
   useGetLearnerEvidenceSubmissionsQuery,

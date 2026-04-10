@@ -31,6 +31,32 @@ const asNumber = (value: unknown, fallback: number): number => {
   return fallback;
 };
 
+const normalizePopularQualificationsBlock = (block: ContentBlock): ContentBlock => {
+  if (block.type !== "popular-qualifications") return block;
+
+  const data = isObject(block.data) ? block.data : {};
+  const rawMode = asString(data.selection_mode, Array.isArray(data.items) && data.items.length > 0 ? "manual" : "latest");
+  const selection_mode = rawMode === "latest" ? "latest" : "manual";
+  const qualification_ids = Array.isArray(data.qualification_ids)
+    ? data.qualification_ids.filter((value): value is string => typeof value === "string" && value.length > 0)
+    : [];
+  const items = Array.isArray(data.items)
+    ? data.items.filter((item): item is Record<string, unknown> => isObject(item))
+    : [];
+
+  return {
+    ...block,
+    data: {
+      ...data,
+      title: asString(data.title, "Popular Qualifications"),
+      selection_mode,
+      qualification_ids,
+      show_count: Math.max(1, asNumber(data.show_count, 4)),
+      items,
+    },
+  };
+};
+
 const normalizeQualificationSliderBlock = (block: ContentBlock): ContentBlock => {
   if (block.type !== "qualification_slider") return block;
 
@@ -107,7 +133,7 @@ export const normalizeBlock = (block: unknown, index = 0): ContentBlock | null =
     isFixed: asBoolean(block.isFixed, type === "qualification_hero"),
   } as ContentBlock;
 
-  return normalizeQualificationSliderBlock(normalized);
+  return normalizePopularQualificationsBlock(normalizeQualificationSliderBlock(normalized));
 };
 
 /**
