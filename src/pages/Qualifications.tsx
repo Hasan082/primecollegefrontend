@@ -185,7 +185,7 @@ const Qualifications = () => {
                 duration={qualification.course_duration}
                 price={
                   qualification.current_price
-                    ? `${qualification.currency || "GBP"} ${Number(qualification.current_price).toLocaleString()}`
+                    ? `${qualification.currency || "GBP"}${Number(qualification.current_price).toLocaleString()}`
                     : "Contact us"
                 }
                 description={qualification.excerpt}

@@ -228,7 +228,7 @@ const QualificationManagement = () => {
                     <TableCell className="hidden lg:table-cell">
                       <Badge variant="outline">{q.category}</Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm">
+                    <TableCell className="hidden md:table-cell text-sm whitespace-nowrap">
                       {formatPrice(q.current_price, q.currency)}
                     </TableCell>
                     <TableCell className="text-sm">
