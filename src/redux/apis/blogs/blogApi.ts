@@ -1,11 +1,25 @@
 import { cleanObject } from "@/utils/cleanObject";
 import { api } from "../../api";
 
+export interface BlogFeatureImage {
+    src: string;
+    srcset?: string;
+    sources?: {
+        mobile?: string;
+        desktop?: string;
+        card?: string;
+        tablet?: string;
+        original?: string;
+    };
+    focus?: string | null;
+}
+
 export interface BlogListItem {
     id: string;
     blog_title: string;
     blog_slug: string;
-    feature_image: string | null;
+    feature_image: BlogFeatureImage | null;
+    feature_image_focus?: string | null;
     category_name: string;
     category_slug: string;
     blog_excerpt: string;
@@ -27,17 +41,31 @@ export interface BlogCategoryListResponse {
     data: BlogCategorySummary[];
 }
 
+export interface RelatedBlogArticle {
+    id: string;
+    blog_title: string;
+    blog_slug: string;
+    feature_image?: BlogFeatureImage | null;
+    category_name?: string;
+    category_slug?: string;
+    blog_excerpt?: string;
+    is_active?: boolean;
+    created_at?: string;
+}
+
 export interface BlogDetail {
     id: string;
     blog_title: string;
     blog_slug: string;
-    feature_image: string | null;
+    feature_image: BlogFeatureImage | null;
+    feature_image_focus?: string | null;
     blog_category?: string | BlogCategorySummary | null;
     category_id?: string | null;
     category_name?: string;
     category_slug?: string;
     blog_excerpt: string;
     blog_description: string;
+    related_articles?: RelatedBlogArticle[];
     is_active: boolean;
     created_at: string;
     updated_at?: string;

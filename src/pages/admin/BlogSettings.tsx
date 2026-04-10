@@ -304,7 +304,8 @@ const BlogSettings = () => {
                           <div className="h-12 w-16 overflow-hidden rounded-md bg-muted">
                             {blog.feature_image ? (
                               <img
-                                src={blog.feature_image}
+                                src={blog.feature_image.sources?.card || blog.feature_image.src}
+                                srcSet={blog.feature_image.srcset}
                                 alt={blog.blog_title}
                                 className="h-full w-full object-cover"
                               />

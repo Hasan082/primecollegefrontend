@@ -86,7 +86,12 @@ const EditBlogModal = ({
       isActive: blog.is_active ?? false,
       featureImage: null,
     });
-    setExistingFeatureImage(blog.feature_image ?? null);
+    setExistingFeatureImage(
+      blog.feature_image?.sources?.desktop ||
+        blog.feature_image?.sources?.original ||
+        blog.feature_image?.src ||
+        null,
+    );
   }, [blogResponse?.data, isModalOpen]);
 
   useEffect(() => {

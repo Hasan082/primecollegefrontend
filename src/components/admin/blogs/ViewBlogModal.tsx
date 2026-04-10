@@ -11,6 +11,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useGetBlogQuery } from "@/redux/apis/blogs/blogApi";
 import { sanitizeRichHtml } from "@/utils/sanitizeRichHtml";
+import { format } from "date-fns";
 
 interface ViewBlogModalProps {
   isModalOpen: boolean;
@@ -23,10 +24,9 @@ const ViewBlogModal = ({
   closeModal,
   blogSlug,
 }: ViewBlogModalProps) => {
-  const { data, isLoading, isError } = useGetBlogQuery(
-    blogSlug ?? skipToken,
-    { skip: !isModalOpen || !blogSlug },
-  );
+  const { data, isLoading, isError } = useGetBlogQuery(blogSlug ?? skipToken, {
+    skip: !isModalOpen || !blogSlug,
+  });
 
   const blog = data?.data;
   const sanitizedDescription = blog?.blog_description
@@ -66,7 +66,11 @@ const ViewBlogModal = ({
               {blog.feature_image ? (
                 <div className="overflow-hidden rounded-xl border bg-muted/20">
                   <img
-                    src={blog.feature_image}
+                    src={
+                      blog.feature_image.sources?.desktop ||
+                      blog.feature_image.src
+                    }
+                    srcSet={blog.feature_image.srcset}
                     alt={blog.blog_title}
                     className="h-[320px] w-full object-cover"
                   />
@@ -95,14 +99,15 @@ const ViewBlogModal = ({
 
                 <div>
                   <h2 className="text-2xl font-bold">{blog.blog_title}</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">{blog.blog_slug}</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(blog.created_at).toLocaleString()}
-                  </span>
+                  {blog.created_at && (
+                    <span className="inline-flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {format(new Date(blog.created_at), "PPP p")}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -126,6 +131,55 @@ const ViewBlogModal = ({
                   dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
                 />
               </div>
+
+              {blog.related_articles && blog.related_articles.length > 0 ? (
+                <>
+                  <Separator />
+
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Related Articles
+                    </h3>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {blog.related_articles.map((article) => (
+                        <div
+                          key={article.id}
+                          className="overflow-hidden rounded-xl border bg-card"
+                        >
+                          {article.feature_image ? (
+                            <img
+                              src={
+                                article.feature_image.sources?.card ||
+                                article.feature_image.src
+                              }
+                              srcSet={article.feature_image.srcset}
+                              alt={article.blog_title}
+                              className="h-36 w-full object-cover"
+                            />
+                          ) : null}
+                          <div className="space-y-2 p-4">
+                            <div className="flex items-center gap-2">
+                              {article.category_name ? (
+                                <Badge variant="secondary">
+                                  {article.category_name}
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <h4 className="font-semibold leading-snug">
+                              {article.blog_title}
+                            </h4>
+                            {article.blog_excerpt ? (
+                              <p className="line-clamp-3 text-sm text-muted-foreground">
+                                {article.blog_excerpt}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : null}
             </>
           )}
         </div>
