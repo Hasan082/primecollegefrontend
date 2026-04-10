@@ -89,9 +89,9 @@ const qualificationUnitApi = api.injectEndpoints({
         Array.isArray(result)
           ? [
             ...result.map(({ id }) => ({ type: "QualificationUnits" as const, id })),
-            { type: "QualificationUnits", id: `LIST` }
+            { type: "QualificationUnits", id: `LIST` },"Unit"
           ]
-          : [{ type: "QualificationUnits", id: `LIST` }],
+          : [{ type: "QualificationUnits", id: `LIST` }, "Unit"],
     }),
 
     createUnit: builder.mutation<UnitRow, { qualificationId: string; payload: Partial<UnitRow> }>({
@@ -101,7 +101,8 @@ const qualificationUnitApi = api.injectEndpoints({
         body: payload,
       }),
       invalidatesTags: (_result, _error, { qualificationId }) => [
-        { type: "QualificationUnits", id: `LIST-${qualificationId}` }
+        { type: "QualificationUnits", id: `LIST-${qualificationId}` },
+        "Unit"
       ],
     }),
 
@@ -111,7 +112,7 @@ const qualificationUnitApi = api.injectEndpoints({
         method: "PATCH",
         body: payload,
       }),
-      invalidatesTags: (_result, _error, { unitId }) => [{ type: "QualificationUnits", id: unitId }],
+      invalidatesTags: (_result, _error, { unitId }) => [{ type: "QualificationUnits", id: unitId }, "Unit"],
     }),
 
     deleteUnit: builder.mutation<void, { unitId: string; qualificationId: string }>({
@@ -120,7 +121,8 @@ const qualificationUnitApi = api.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: (_result, _error, { qualificationId }) => [
-        { type: "QualificationUnits", id: `LIST-${qualificationId}` }
+        { type: "QualificationUnits", id: `LIST-${qualificationId}` },
+        "Unit"
       ],
     }),
 
@@ -149,7 +151,8 @@ const qualificationUnitApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, { unitId, qualificationId }) => [
         { type: "UnitResources", id: `LIST-${unitId}` },
         { type: "QualificationUnits", id: unitId },
-        { type: "QualificationUnits", id: `LIST-${qualificationId}` }
+        { type: "QualificationUnits", id: `LIST-${qualificationId}` },
+        "Unit"
       ],
     }),
 
@@ -161,7 +164,8 @@ const qualificationUnitApi = api.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { resourceId, unitId }) => [
         { type: "UnitResources", id: resourceId },
-        { type: "UnitResources", id: `LIST-${unitId}` }
+        { type: "UnitResources", id: `LIST-${unitId}` },
+        "Unit"
       ],
     }),
 
@@ -173,7 +177,8 @@ const qualificationUnitApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, { unitId, qualificationId }) => [
         { type: "UnitResources", id: `LIST-${unitId}` },
         { type: "QualificationUnits", id: unitId },
-        { type: "QualificationUnits", id: `LIST-${qualificationId}` }
+        { type: "QualificationUnits", id: `LIST-${qualificationId}` },
+        "Unit"
       ],
     }),
 

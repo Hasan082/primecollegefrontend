@@ -1,50 +1,52 @@
-import { useState, useCallback, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import {
-  ArrowLeft, GraduationCap, Users, Calendar, Banknote, Plus, Trash2,
-  GripVertical, FileUp, X, ChevronDown, ChevronUp, Loader2, Settings,
-  AlertCircle, FileText, ExternalLink, Download, Clock, Save, Shield,
-  BookOpen, Target, Timer, CheckCircle2
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import CourseEvaluationEditor from "@/components/admin/CourseEvaluationEditor";
+import LearnerDeclarationEditor from "@/components/admin/LearnerDeclarationEditor";
+import { SortableUnitRow } from "@/components/shared/qualificationManagement/sections/SortableUnitRow";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import UnitAssessmentConfig from "@/components/trainer/UnitAssessmentConfig";
-import LearnerDeclarationEditor from "@/components/admin/LearnerDeclarationEditor";
-import CourseEvaluationEditor from "@/components/admin/CourseEvaluationEditor";
-import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn, formatPrice } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { formatPrice } from "@/lib/utils";
 import {
-  DndContext,
+  useCreateUnitMutation,
+  useDeleteUnitMutation,
+  useGetUnitConfigSummaryQuery,
+  useGetUnitsQuery,
+  useUpdateUnitMutation,
+} from "@/redux/apis/qualification/qualificationUnitApi";
+import {
   closestCenter,
+  DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
+  verticalListSortingStrategy
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
-  useGetUnitConfigSummaryQuery,
-  useGetUnitsQuery,
-  useCreateUnitMutation,
-  useUpdateUnitMutation,
-  useDeleteUnitMutation,
-} from "@/redux/apis/qualification/qualificationUnitApi";
-import { SortableUnitRow } from "@/components/shared/qualificationManagement/sections/SortableUnitRow";
+  AlertCircle,
+  ArrowLeft,
+  Banknote,
+  Calendar,
+  FileText,
+  GraduationCap,
+  Loader2,
+  Plus,
+  Settings,
+  Shield,
+  Users
+} from "lucide-react";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 // ─── Main Page Component ─────────────────────────────────────────────
 const QualificationDetail = () => {
