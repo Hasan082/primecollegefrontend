@@ -1,110 +1,101 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Search, Shield, Eye, Power } from "lucide-react";
+import {
+  useGetIQAManagementQuery,
+  useGetIQAOptionsQuery,
+  useAssignIQAMutation,
+  type TrainerManagementItem as IQAManagementItem,
+  type TrainerManagementParams as IQAManagementParams,
+} from "@/redux/apis/staffApi";
+import { Search, Plus, ArrowLeft, UserCheck, Users, ChevronDown, ChevronUp, Power, Eye, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { adminQualifications } from "@/data/adminMockData";
 import TablePagination from "@/components/admin/TablePagination";
 import IQADetailModal from "@/components/admin/IQADetailModal";
-
-interface IQAUser {
-  id: string;
-  name: string;
-  email: string;
-  status: "active" | "inactive";
-  assignedQualifications: string[]; // qualification IDs
-  createdDate: string;
-}
-
 import { StaffCreateForm } from "@/components/admin/StaffCreateForm";
-
-const STORAGE_KEY = "admin_iqa_users";
-
-const loadIQAs = (): IQAUser[] => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch {}
-  return [
-    {
-      id: "iqa1",
-      name: "Claire Morgan",
-      email: "iqa@primecollege.edu",
-      status: "active",
-      assignedQualifications: ["q1", "q2", "q4"],
-      createdDate: "01/09/2024",
-    },
-  ];
-};
-
-const saveIQAs = (iqas: IQAUser[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(iqas));
-};
 
 const ITEMS_PER_PAGE = 10;
 
 const IQAManagement = () => {
-  const [iqas, setIqas] = useState<IQAUser[]>(loadIQAs);
   const [search, setSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [assignOpen, setAssignOpen] = useState<string | null>(null);
-  const [selectedQual, setSelectedQual] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [assignDialog, setAssignDialog] = useState<{ enrollmentId: string; learnerName: string; trainerName: string } | null>(null);
+  const [assignIQAId, setAssignIQAId] = useState("");
+  const [expandedIQAs, setExpandedIQAs] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const [detailIqa, setDetailIqa] = useState<IQAUser | null>(null);
+  const [selectedIQA, setSelectedIQA] = useState<IQAManagementItem | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleIqaUpdate = (updated: IQAUser) => {
-    const newList = iqas.map((i) => (i.id === updated.id ? updated : i));
-    setIqas(newList);
-    saveIQAs(newList);
-    setDetailIqa(updated);
+  const [assignIQA, { isLoading: isAssigning }] = useAssignIQAMutation();
+  const { data: iqaOptionsData } = useGetIQAOptionsQuery();
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const queryParams: IQAManagementParams = {
+    page: currentPage,
+    page_size: ITEMS_PER_PAGE,
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
   };
 
-  const filtered = iqas.filter(
-    (i) => i.name.toLowerCase().includes(search.toLowerCase()) || i.email.toLowerCase().includes(search.toLowerCase())
-  );
-  const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const { data, isLoading, isFetching, refetch } = useGetIQAManagementQuery(queryParams);
 
+  const iqas = data?.data?.results ?? [];
+  const totalCount = data?.data?.count ?? 0;
 
-  const toggleStatus = (id: string) => {
-    const updated = iqas.map((i) =>
-      i.id === id ? { ...i, status: (i.status === "active" ? "inactive" : "active") as IQAUser["status"] } : i
-    );
-    setIqas(updated);
-    saveIQAs(updated);
-    const iqa = updated.find((i) => i.id === id);
-    toast({ title: `${iqa?.name} ${iqa?.status === "active" ? "activated" : "deactivated"}` });
-  };
-
-  const assignQualification = (iqaId: string) => {
-    if (!selectedQual) return;
-    const updated = iqas.map((i) => {
-      if (i.id !== iqaId) return i;
-      if (i.assignedQualifications.includes(selectedQual)) return i;
-      return { ...i, assignedQualifications: [...i.assignedQualifications, selectedQual] };
+  const toggleExpand = (id: string) => {
+    setExpandedIQAs((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
     });
-    setIqas(updated);
-    saveIQAs(updated);
-    setSelectedQual("");
-    setAssignOpen(null);
-    toast({ title: "Qualification assigned to IQA" });
   };
 
-  const removeAssignment = (iqaId: string, qualId: string) => {
-    const updated = iqas.map((i) =>
-      i.id === iqaId ? { ...i, assignedQualifications: i.assignedQualifications.filter((q) => q !== qualId) } : i
-    );
-    setIqas(updated);
-    saveIQAs(updated);
+  const handleAssignConfirm = async () => {
+    if (!assignDialog || !assignIQAId) return;
+    try {
+      await assignIQA({
+        enrolment_id: assignDialog.enrollmentId,
+        iqa_id: assignIQAId,
+      }).unwrap();
+      toast({ title: "Learner reassigned successfully" });
+      setAssignDialog(null);
+      setAssignIQAId("");
+      refetch();
+    } catch (err: any) {
+      toast({
+        title: "Assignment failed",
+        description: err?.data?.detail || err?.data?.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    }
   };
-
-  const getQualTitle = (id: string) => adminQualifications.find((q) => q.id === id)?.title || id;
 
   return (
     <div className="space-y-6">
@@ -117,18 +108,18 @@ const IQAManagement = () => {
           <h1 className="text-2xl font-bold">IQA Management</h1>
           <p className="text-sm text-muted-foreground">Create IQA accounts and assign qualifications for quality assurance</p>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-1" /> Add IQA</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create IQA Account</DialogTitle>
+              <DialogTitle>Add New IQA</DialogTitle>
             </DialogHeader>
-            <StaffCreateForm 
-              role="iqa" 
-              onSuccess={() => setCreateOpen(false)} 
-              onCancel={() => setCreateOpen(false)} 
+            <StaffCreateForm
+              role="iqa"
+              onSuccess={() => { setDialogOpen(false); refetch(); }}
+              onCancel={() => setDialogOpen(false)}
             />
           </DialogContent>
         </Dialog>
@@ -136,105 +127,165 @@ const IQAManagement = () => {
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Search IQAs..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        <Input
+          placeholder="Search iqas..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
-      <div className="grid gap-4">
-        {paginated.map((iqa) => (
-          <Card key={iqa.id}>
-            <CardContent className="p-5">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{iqa.name}</h3>
-                    <p className="text-sm text-muted-foreground">{iqa.email}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Created: {iqa.createdDate}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <p className="text-lg font-bold">{iqa.assignedQualifications.length}</p>
-                    <p className="text-xs text-muted-foreground">Qualifications</p>
-                  </div>
-                  <Badge variant={iqa.status === "active" ? "default" : "secondary"}>
-                    {iqa.status.charAt(0).toUpperCase() + iqa.status.slice(1)}
-                  </Badge>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setDetailIqa(iqa)} title="View Details">
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => toggleStatus(iqa.id)} title={iqa.status === "active" ? "Deactivate" : "Activate"}>
-                     <Power className={`w-4 h-4 ${iqa.status === "active" ? "text-destructive" : "text-green-600"}`} />
-                   </Button>
-                </div>
-              </div>
-
-              {/* Assigned Qualifications */}
-              <div className="mt-4 border-t pt-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assigned Qualifications</p>
-                  <Dialog open={assignOpen === iqa.id} onOpenChange={(o) => setAssignOpen(o ? iqa.id : null)}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-7 text-xs"><Plus className="w-3 h-3 mr-1" /> Assign</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Assign Qualification to {iqa.name}</DialogTitle></DialogHeader>
-                      <div className="space-y-4 pt-2">
-                        <div className="space-y-1.5">
-                          <Label>Qualification</Label>
-                          <Select value={selectedQual} onValueChange={setSelectedQual}>
-                            <SelectTrigger><SelectValue placeholder="Select qualification" /></SelectTrigger>
-                            <SelectContent>
-                              {adminQualifications
-                                .filter((q) => q.status === "active" && !iqa.assignedQualifications.includes(q.id))
-                                .map((q) => (
-                                  <SelectItem key={q.id} value={q.id}>{q.title}</SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : iqas.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <UserCheck className="w-10 h-10 mx-auto mb-2 opacity-30" />
+          <p className="text-sm">No iqas found.</p>
+        </div>
+      ) : (
+        <div className={`grid gap-4 transition-opacity ${isFetching ? "opacity-60" : ""}`}>
+          {iqas.map((iqa) => {
+            const isExpanded = expandedIQAs.has(iqa.id);
+            return (
+              <Card key={iqa.id}>
+                <CardContent className="p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <UserCheck className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{iqa.full_name}</h3>
+                        <p className="text-sm text-muted-foreground">{iqa.email}</p>
+                        <div className="flex gap-1.5 mt-1">
+                          {iqa.specialisms.map((s) => (
+                            <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
+                          ))}
                         </div>
                       </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setAssignOpen(null)}>Cancel</Button>
-                        <Button onClick={() => assignQualification(iqa.id)}>Assign</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                {iqa.assignedQualifications.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic">No qualifications assigned.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {iqa.assignedQualifications.map((qId) => (
-                      <Badge key={qId} variant="outline" className="text-xs pr-1">
-                        {getQualTitle(qId)}
-                        <button className="ml-1.5 hover:text-destructive" onClick={() => removeAssignment(iqa.id, qId)}>
-                          <span className="text-[10px]">✕</span>
-                        </button>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-center">
+                        <p className="text-lg font-bold">{iqa.assigned_learners_count}</p>
+                        <p className="text-xs text-muted-foreground">Learners</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold">{iqa.pending_reviews_count}</p>
+                        <p className="text-xs text-muted-foreground">Pending</p>
+                      </div>
+                      <Badge variant={iqa.status === "active" ? "default" : "secondary"}>
+                        {iqa.status.charAt(0).toUpperCase() + iqa.status.slice(1)}
                       </Badge>
-                    ))}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => { setSelectedIQA(iqa); setDetailOpen(true); }}
+                        title="View details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
+                  {iqa.assigned_learners.length > 0 && (
+                    <div className="mt-4 border-t pt-3">
+                      <button
+                        onClick={() => toggleExpand(iqa.id)}
+                        className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+                      >
+                        <Users className="w-3 h-3" />
+                        Assigned Learners ({iqa.assigned_learners.length})
+                        {isExpanded ? <ChevronUp className="w-3 h-3 ml-auto" /> : <ChevronDown className="w-3 h-3 ml-auto" />}
+                      </button>
+                      {isExpanded && (
+                        <div className="space-y-1.5 mt-2 max-h-[220px] overflow-y-auto pr-1">
+                          {iqa.assigned_learners.map((entry) => (
+                            <div key={entry.id} className="flex items-center justify-between text-sm bg-muted/30 rounded-md px-3 py-1.5">
+                              <span>
+                                {entry.learner.name} — <span className="text-muted-foreground">{entry.qualification.title}</span>
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs h-7"
+                                onClick={() => {
+                                  setAssignIQAId("");
+                                  setAssignDialog({
+                                    enrollmentId: entry.id,
+                                    learnerName: entry.learner.name,
+                                    trainerName: iqa.full_name,
+                                  });
+                                }}
+                              >
+                                Assign
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Assign Dialog */}
+      <Dialog
+        open={!!assignDialog}
+        onOpenChange={(o) => { if (!o) { setAssignDialog(null); setAssignIQAId(""); } }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign {assignDialog?.learnerName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Currently assigned to <strong>{assignDialog?.trainerName}</strong>
+            </p>
+            <div className="space-y-1.5">
+              <Label>New IQA</Label>
+              <Select
+                value={assignIQAId}
+                onValueChange={setAssignIQAId}
+              >
+                <SelectTrigger><SelectValue placeholder="Select IQA" /></SelectTrigger>
+                <SelectContent>
+                  {(iqaOptionsData?.data ?? [])
+                    .map((o) => (
+                      <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              className="w-full"
+              disabled={!assignIQAId || isAssigning}
+              onClick={handleAssignConfirm}
+            >
+              {isAssigning && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Confirm Assignment
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <TablePagination
         currentPage={currentPage}
-        totalItems={filtered.length}
+        totalItems={totalCount}
         itemsPerPage={ITEMS_PER_PAGE}
         onPageChange={setCurrentPage}
       />
 
       <IQADetailModal
-        iqa={detailIqa}
-        open={!!detailIqa}
-        onOpenChange={(o) => !o && setDetailIqa(null)}
-        onUpdate={handleIqaUpdate}
+        trainer={iqas.find(iqa => iqa.id === selectedIQA?.id) || selectedIQA}
+        open={detailOpen}
+        onOpenChange={(o) => { setDetailOpen(o); if (!o) setSelectedIQA(null); }}
       />
     </div>
   );

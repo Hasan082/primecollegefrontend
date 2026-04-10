@@ -105,6 +105,8 @@ export const api = createApi({
     "EmailLogs",
     "EnrollLearners",
     "ExtensionPlans",
+    "Trainers",
+    "IQAs"
   ],
   endpoints: () => ({}),
 });

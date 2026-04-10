@@ -22,10 +22,7 @@ const Enrollments = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { data: response, isLoading } = useGetRecentEnrolmentsQuery({
-    page: currentPage,
-    search: debouncedSearch || undefined,
-  });
+  const { data: response, isLoading } = useGetRecentEnrolmentsQuery({});
 
   const paymentBadge = (status: string) => {
     const map: Record<string, "default" | "secondary" | "destructive"> = { 
@@ -47,8 +44,22 @@ const Enrollments = () => {
     return <Badge variant={map[status.toLowerCase()] || "outline"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
   };
 
-  const enrollments = response?.data?.results || [];
-  const totalItems = response?.data?.count || 0;
+  const allEnrollments = response?.data?.results || [];
+  
+  const filteredEnrollments = allEnrollments.filter((env) => {
+    if (!debouncedSearch) return true;
+    const lowerSearch = debouncedSearch.toLowerCase();
+    return (
+      env.enrolment_number?.toLowerCase().includes(lowerSearch) ||
+      env.learner_name?.toLowerCase().includes(lowerSearch)
+    );
+  });
+
+  const totalItems = filteredEnrollments.length;
+  const itemsPerPage = 10;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const enrollments = filteredEnrollments.slice(startIndex, startIndex + itemsPerPage);
+
 
   return (
     <div className="space-y-6">
