@@ -111,6 +111,7 @@ const AdminCPDFinalAssessmentEditor = lazy(
 );
 const HeaderSettings = lazy(() => import("./pages/admin/HeaderSettings"));
 const FooterSettings = lazy(() => import("./pages/admin/FooterSettings"));
+const BlogSettings = lazy(() => import("./pages/admin/BlogSettings"));
 const EmailDeliveryMonitor = lazy(
   () => import("./pages/admin/settings/EmailDeliveryMonitor"),
 );
@@ -228,7 +229,10 @@ const App = () => {
 
                     <Route path="learners" element={<LearnerManagement />} />
                     <Route path="trainers" element={<TrainerManagement />} />
-                    <Route path="extension-plans" element={<ExtensionPlanManagement />} />
+                    <Route
+                      path="extension-plans"
+                      element={<ExtensionPlanManagement />}
+                    />
                     <Route path="progress" element={<ProgressMonitoring />} />
                     <Route path="reports" element={<Reports />} />
                     <Route
@@ -249,8 +253,15 @@ const App = () => {
                     <Route path="pages" element={<PageManagement />} />
                     <Route path="pages/:pageId" element={<PageEditor />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
-                    <Route path="settings/header" element={<HeaderSettings />} />
-                    <Route path="settings/footer" element={<FooterSettings />} />
+                    <Route
+                      path="settings/header"
+                      element={<HeaderSettings />}
+                    />
+                    <Route path="settings/blogs" element={<BlogSettings />} />
+                    <Route
+                      path="settings/footer"
+                      element={<FooterSettings />}
+                    />
                     <Route
                       path="settings/email-delivery-monitor"
                       element={<EmailDeliveryMonitor />}
@@ -340,11 +351,23 @@ const App = () => {
                               element={<Recruitment />}
                             />
                             <Route path="/blogs" element={<Blog />} />
-                            <Route path="/blogs/:slug" element={<BlogDetail />} />
-                            <Route path="/blog" element={<Navigate to="/blogs" replace />} />
-                            <Route path="/blog/:slug" element={<BlogDetail />} />
+                            <Route
+                              path="/blogs/:slug"
+                              element={<BlogDetail />}
+                            />
+                            <Route
+                              path="/blog"
+                              element={<Navigate to="/blogs" replace />}
+                            />
+                            <Route
+                              path="/blog/:slug"
+                              element={<BlogDetail />}
+                            />
                             <Route path="/contact" element={<Contact />} />
-                            <Route path="/pages/:slug" element={<StaticPage />} />
+                            <Route
+                              path="/pages/:slug"
+                              element={<StaticPage />}
+                            />
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </main>

@@ -1,4 +1,22 @@
-import { LayoutDashboard, GraduationCap, Users, UserCheck, BarChart3, FileText, Blocks, BookOpen, ClipboardCheck, Download, Shield, ClipboardList, PanelTop, PanelBottom, Mail, CalendarPlus } from "lucide-react";
+import {
+  LayoutDashboard,
+  GraduationCap,
+  Users,
+  UserCheck,
+  BarChart3,
+  FileText,
+  Blocks,
+  BookOpen,
+  ClipboardCheck,
+  Download,
+  Shield,
+  ClipboardList,
+  PanelTop,
+  PanelBottom,
+  Mail,
+  CalendarPlus,
+  BookText,
+} from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -16,7 +34,11 @@ import {
 const mainNavItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
-  { title: "Qualifications", url: "/admin/qualifications", icon: GraduationCap },
+  {
+    title: "Qualifications",
+    url: "/admin/qualifications",
+    icon: GraduationCap,
+  },
   { title: "Learners", url: "/admin/learners", icon: Users },
   { title: "Trainers", url: "/admin/trainers", icon: UserCheck },
   { title: "IQA", url: "/admin/iqa", icon: Shield },
@@ -26,7 +48,11 @@ const mainNavItems = [
 
 const assessmentNavItems = [
   { title: "Question Bank", url: "/admin/question-bank", icon: BookOpen },
-  { title: "Final Assessments", url: "/admin/final-assessments", icon: ClipboardCheck },
+  {
+    title: "Final Assessments",
+    url: "/admin/final-assessments",
+    icon: ClipboardCheck,
+  },
 ];
 
 const toolsNavItems = [
@@ -38,8 +64,17 @@ const toolsNavItems = [
 const siteSettingsItems = [
   { title: "Header", url: "/admin/settings/header", icon: PanelTop },
   { title: "Footer", url: "/admin/settings/footer", icon: PanelBottom },
-  { title: "Email Logs", url: "/admin/settings/email-delivery-monitor", icon: Mail },
-  { title: "Extension Plans", url: "/admin/extension-plans", icon: CalendarPlus },
+  { title: "Blogs", url: "/admin/settings/blogs", icon: BookText },
+  {
+    title: "Email Logs",
+    url: "/admin/settings/email-delivery-monitor",
+    icon: Mail,
+  },
+  {
+    title: "Extension Plans",
+    url: "/admin/extension-plans",
+    icon: CalendarPlus,
+  },
 ];
 
 const AdminSidebar = () => {
@@ -50,7 +85,10 @@ const AdminSidebar = () => {
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
           asChild
-          isActive={location.pathname === item.url || location.pathname.startsWith(item.url + "/")}
+          isActive={
+            location.pathname === item.url ||
+            location.pathname.startsWith(item.url + "/")
+          }
           tooltip={item.title}
         >
           <NavLink
@@ -66,14 +104,15 @@ const AdminSidebar = () => {
     ));
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border top-14">
+    <Sidebar
+      collapsible="offcanvas"
+      className="border-r border-sidebar-border top-14"
+    >
       <SidebarContent>
         <SidebarGroup className="pt-4">
           <SidebarGroupLabel>General Routes</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {renderNavItems(mainNavItems)}
-            </SidebarMenu>
+            <SidebarMenu>{renderNavItems(mainNavItems)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -82,9 +121,7 @@ const AdminSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Assessment</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {renderNavItems(assessmentNavItems)}
-            </SidebarMenu>
+            <SidebarMenu>{renderNavItems(assessmentNavItems)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -93,9 +130,7 @@ const AdminSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Tools</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {renderNavItems(toolsNavItems)}
-            </SidebarMenu>
+            <SidebarMenu>{renderNavItems(toolsNavItems)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -104,9 +139,7 @@ const AdminSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Site Setting</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {renderNavItems(siteSettingsItems)}
-            </SidebarMenu>
+            <SidebarMenu>{renderNavItems(siteSettingsItems)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
