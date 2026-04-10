@@ -151,109 +151,113 @@ const BlogSettings = () => {
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <CardTitle className="text-lg">Blogs</CardTitle>
-              <Button onClick={() => setIsCreateModalOpen(true)} className="md:self-start">
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="md:self-start"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Blog
               </Button>
             </div>
 
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="relative w-full flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search blogs..."
-                className="pl-9"
-              />
-            </div>
+              <div className="relative w-full flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search blogs..."
+                  className="pl-9"
+                />
+              </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:flex-none">
-              <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={categoryOpen}
-                    className="w-full justify-between font-normal sm:w-[260px]"
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:flex-none">
+                <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={categoryOpen}
+                      className="w-full justify-between font-normal sm:w-[260px]"
+                    >
+                      <span className="truncate">
+                        {selectedCategory
+                          ? `${selectedCategory.name} (${selectedCategory.blog_count})`
+                          : "All categories"}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[var(--radix-popover-trigger-width)] p-0"
+                    align="end"
                   >
-                    <span className="truncate">
-                      {selectedCategory
-                        ? `${selectedCategory.name} (${selectedCategory.blog_count})`
-                        : "All categories"}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-[var(--radix-popover-trigger-width)] p-0"
-                  align="end"
-                >
-                  <Command>
-                    <CommandInput placeholder="Search categories..." />
-                    <CommandList className="max-h-64">
-                      <CommandEmpty>No categories found.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem
-                          value="all categories"
-                          onSelect={() => {
-                            setSelectedCategorySlug("");
-                            setCategoryOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedCategorySlug === ""
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          All Categories
-                        </CommandItem>
-                        {categories.map((category) => (
+                    <Command>
+                      <CommandInput placeholder="Search categories..." />
+                      <CommandList className="max-h-64">
+                        <CommandEmpty>No categories found.</CommandEmpty>
+                        <CommandGroup>
                           <CommandItem
-                            key={category.id}
-                            value={`${category.name} ${category.category_slug} ${category.blog_count}`}
+                            value="all categories"
                             onSelect={() => {
-                              setSelectedCategorySlug(category.category_slug);
+                              setSelectedCategorySlug("");
                               setCategoryOpen(false);
                             }}
                           >
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                selectedCategorySlug === category.category_slug
+                                selectedCategorySlug === ""
                                   ? "opacity-100"
                                   : "opacity-0",
                               )}
                             />
-                            {category.name} ({category.blog_count})
+                            All Categories
                           </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                          {categories.map((category) => (
+                            <CommandItem
+                              key={category.id}
+                              value={`${category.name} ${category.category_slug} ${category.blog_count}`}
+                              onSelect={() => {
+                                setSelectedCategorySlug(category.category_slug);
+                                setCategoryOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedCategorySlug ===
+                                    category.category_slug
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                              {category.name} ({category.blog_count})
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
 
-              {(search || selectedCategorySlug) && (
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setSearch("");
-                    setDebouncedSearch("");
-                    setSelectedCategorySlug("");
-                    setCurrentPage(1);
-                  }}
-                  className="px-3 sm:self-center"
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Clear
-                </Button>
-              )}
+                {(search || selectedCategorySlug) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSearch("");
+                      setDebouncedSearch("");
+                      setSelectedCategorySlug("");
+                      setCurrentPage(1);
+                    }}
+                    className="px-3 sm:self-center"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Clear
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -264,8 +268,8 @@ const BlogSettings = () => {
                   <TableHead>Blog</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
                   <TableHead className="text-right">Created</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -304,7 +308,10 @@ const BlogSettings = () => {
                           <div className="h-12 w-16 overflow-hidden rounded-md bg-muted">
                             {blog.feature_image ? (
                               <img
-                                src={blog.feature_image.sources?.card || blog.feature_image.src}
+                                src={
+                                  blog.feature_image.sources?.card ||
+                                  blog.feature_image.src
+                                }
                                 srcSet={blog.feature_image.srcset}
                                 alt={blog.blog_title}
                                 className="h-full w-full object-cover"
@@ -315,9 +322,6 @@ const BlogSettings = () => {
                             <p className="line-clamp-1 font-medium">
                               {blog.blog_title}
                             </p>
-                            {/* <p className="line-clamp-2 max-w-md text-xs text-muted-foreground">
-                              {blog.blog_excerpt || "No excerpt available."}
-                            </p> */}
                           </div>
                         </div>
                       </TableCell>
@@ -338,6 +342,9 @@ const BlogSettings = () => {
                           {blog.is_active ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground">
+                        {new Date(blog.created_at).toLocaleDateString()}
+                      </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Button
@@ -357,9 +364,6 @@ const BlogSettings = () => {
                             <Pencil className="h-4 w-4" />
                           </Button>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right text-sm text-muted-foreground">
-                        {new Date(blog.created_at).toLocaleDateString()}
                       </TableCell>
                     </TableRow>
                   ))
