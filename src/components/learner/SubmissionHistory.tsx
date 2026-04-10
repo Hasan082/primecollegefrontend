@@ -29,18 +29,25 @@ const statusConfig: Record<SubmissionVersion["status"], { label: string; color: 
 interface SubmissionHistoryProps {
   submissions: SubmissionVersion[];
   unitTitle: string;
+  title?: string;
+  subtitle?: string;
 }
 
-const SubmissionHistory = ({ submissions, unitTitle }: SubmissionHistoryProps) => {
+const SubmissionHistory = ({
+  submissions,
+  unitTitle,
+  title = "Submission History",
+  subtitle,
+}: SubmissionHistoryProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(submissions[0]?.id || null);
 
   if (!submissions.length) return null;
 
   return (
     <div className="bg-card border border-border rounded-xl p-6">
-      <h3 className="text-base font-bold text-primary mb-1">Submission History</h3>
+      <h3 className="text-base font-bold text-primary mb-1">{title}</h3>
       <p className="text-sm text-muted-foreground mb-5">
-        {submissions.length} submission{submissions.length > 1 ? "s" : ""} for this unit
+        {subtitle || `${submissions.length} submission${submissions.length > 1 ? "s" : ""} for ${unitTitle}`}
       </p>
 
       <div className="relative">
@@ -114,18 +121,20 @@ const SubmissionHistory = ({ submissions, unitTitle }: SubmissionHistoryProps) =
                       )}
 
                       {/* Files */}
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Files</p>
-                        <div className="space-y-1.5">
-                          {sub.files.map((f, fi) => (
-                            <div key={fi} className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
-                              <FileText className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                              <span className="text-sm text-foreground flex-1">{f.name}</span>
-                              <span className="text-xs text-muted-foreground">{f.size}</span>
-                            </div>
-                          ))}
+                      {sub.files.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Files</p>
+                          <div className="space-y-1.5">
+                            {sub.files.map((f, fi) => (
+                              <div key={fi} className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
+                                <FileText className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                                <span className="text-sm text-foreground flex-1">{f.name}</span>
+                                <span className="text-xs text-muted-foreground">{f.size}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Feedback */}
                       {sub.feedback && (

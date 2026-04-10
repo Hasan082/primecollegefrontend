@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 
 interface StrictQuizModalProps {
   qualificationId: string;
+  unitId?: string;
   unitCode?: string;
   unitName: string;
   onClose: () => void;
@@ -20,7 +21,12 @@ interface StrictQuizModalProps {
 
 const MAX_WARNINGS = 3;
 
-const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmitted }: StrictQuizModalProps) => {
+const getAttemptId = (attempt: QuizAttempt | null) => {
+  if (!attempt) return undefined;
+  return attempt.id || (attempt as unknown as { attempt_id?: string }).attempt_id;
+};
+
+const StrictQuizModal = ({ qualificationId, unitId, unitCode, unitName, onClose, onSubmitted }: StrictQuizModalProps) => {
   const [phase, setPhase] = useState<"intro" | "active" | "results">("intro");
   const [quiz, setQuiz] = useState<QuizAttempt | null>(null);
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
@@ -34,7 +40,10 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const { data: attemptsData, isLoading: isLoadingAttempts } = useGetUnitAttemptsQuery(unitCode);
+  const { data: attemptsData, isLoading: isLoadingAttempts } = useGetUnitAttemptsQuery(
+    { unitId: unitId || "" },
+    { skip: !unitId }
+  );
   const [startQuizMutation, { isLoading: isStarting }] = useStartQuizMutation();
   const [submitQuizMutation, { isLoading: isSubmitting }] = useSubmitQuizMutation();
 
@@ -55,10 +64,11 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
   }, [phase, timeLeft]);
 
   const handleAutoSubmit = useCallback(async () => {
-    if (!quiz) return;
+    const attemptId = getAttemptId(quiz);
+    if (!attemptId) return;
     try {
       const res = await submitQuizMutation({
-        attemptId: quiz.id,
+        attemptId,
         data: {
           answers,
           violations_count: warnings,
@@ -158,9 +168,18 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
 
   const startQuiz = async () => {
     try {
-      const res = await startQuizMutation(unitCode).unwrap();
+      if (!unitId) return;
+      const res = await startQuizMutation(unitId).unwrap();
       if (res.success) {
-        setQuiz(res.data);
+        const startedQuiz = {
+          ...(res.data as QuizAttempt),
+          id: (res.data as QuizAttempt & { attempt_id?: string }).id || (res.data as { attempt_id?: string }).attempt_id || "",
+        };
+        if (!startedQuiz.id) {
+          toast({ title: "Failed to start quiz", description: "Quiz attempt ID was missing.", variant: "destructive" });
+          return;
+        }
+        setQuiz(startedQuiz);
         // Assuming strict mode for now, or we can check a field in res.data if available
         await enterFullscreen();
         setPhase("active");
@@ -186,7 +205,8 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
   };
 
   const handleSubmit = async () => {
-    if (!quiz) return;
+    const attemptId = getAttemptId(quiz);
+    if (!quiz || !attemptId) return;
     const unanswered = quiz.questions.filter((q) => !answers[q.id]?.length);
     if (unanswered.length) {
       toast({ title: `${unanswered.length} question(s) unanswered`, description: "Please answer all questions before submitting.", variant: "destructive" });
@@ -195,7 +215,7 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
     
     try {
       const res = await submitQuizMutation({
-        attemptId: quiz.id,
+        attemptId,
         data: {
           answers,
           violations_count: warnings,

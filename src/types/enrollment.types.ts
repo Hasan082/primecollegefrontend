@@ -29,6 +29,122 @@ export interface EvidenceSubmissionResponse {
     data: EvidenceSubmission;
 }
 
+export interface LearnerSubmissionActor {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+}
+
+export interface LearnerWrittenAssignmentConfig {
+    id: string;
+    title: string;
+    instructions: string;
+    min_words: number;
+    max_words: number;
+    is_active: boolean;
+    version: number;
+    required_criteria?: string[];
+}
+
+export interface LearnerWrittenAssignmentSubmission {
+    id: string;
+    submission_number: number;
+    title: string;
+    submission_type: string;
+    response_html: string;
+    response_word_count: number;
+    declaration_signed: boolean;
+    declaration_signed_at: string | null;
+    status: string;
+    submitted_at: string;
+    outcome_set_at: string | null;
+    assessor: LearnerSubmissionActor | null;
+    assessor_score: number | null;
+    assessor_score_max: number | null;
+    assessor_band: string | null;
+    assessor_feedback: string;
+    assessor_feedback_file: string | null;
+    iqa_sampled: boolean;
+    iqa_reviewer: LearnerSubmissionActor | null;
+    iqa_review_notes: string;
+    iqa_decision: string | null;
+    iqa_reviewed_at: string | null;
+}
+
+export interface LearnerWrittenAssignmentResponse {
+    success: boolean;
+    message: string;
+    data: {
+        config: LearnerWrittenAssignmentConfig;
+        submissions: LearnerWrittenAssignmentSubmission[];
+    };
+}
+
+export interface LearnerEvidenceCriterion {
+    id: string;
+    code: string;
+    description: string;
+}
+
+export interface LearnerEvidenceItem {
+    id: string;
+    title: string;
+    description: string;
+    file: string;
+    criteria: LearnerEvidenceCriterion[];
+    display_order: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LearnerEvidencePortfolioConfig {
+    id: string;
+    instructions: string;
+    accepted_file_types: string[];
+    max_files_per_submission: number;
+    max_file_size_mb: number;
+    require_criteria_linking: boolean;
+    require_evidence_description: boolean;
+    example_evidence: string;
+    required_criteria: string[];
+    is_active: boolean;
+}
+
+export interface LearnerEvidenceSubmission {
+    id: string;
+    submission_number: number;
+    title: string;
+    submission_type: string;
+    declaration_signed: boolean;
+    declaration_signed_at: string | null;
+    status: string;
+    submitted_at: string;
+    outcome_set_at: string | null;
+    assessor: LearnerSubmissionActor | null;
+    assessor_score: number | null;
+    assessor_score_max: number | null;
+    assessor_band: string | null;
+    assessor_feedback: string;
+    assessor_feedback_file: string | null;
+    iqa_sampled: boolean;
+    iqa_reviewer: LearnerSubmissionActor | null;
+    iqa_review_notes: string;
+    iqa_decision: string | null;
+    iqa_reviewed_at: string | null;
+    evidence_items: LearnerEvidenceItem[];
+}
+
+export interface LearnerEvidenceSubmissionListResponse {
+    success: boolean;
+    message: string;
+    data: {
+        config: LearnerEvidencePortfolioConfig;
+        submissions: LearnerEvidenceSubmission[];
+    };
+}
+
 // ==================== Enrolment List ====================
 export interface EnrolmentListItem {
     id: string;
@@ -76,7 +192,7 @@ export interface EnrolmentContent {
         title: string;
         slug: string;
         is_cpd: boolean;
-        code: string;
+        code?: string;
         requires_learner_declaration?: boolean;
         requires_course_evaluation?: boolean;
     };
@@ -90,16 +206,14 @@ export interface EnrolmentContent {
         has_written_assignment: boolean;
         requires_evidence: boolean;
         resources: any[];
-        feedback: string | null;
         progress: {
             status: string;
+            competency_status?: string | null;
             started_at: string | null;
             completed_at: string | null;
             quiz_passed: boolean;
             evidence_met: boolean;
             assignment_met: boolean;
-            submitted_at: string | null;
-            feedback: string | null;
         } | null;
     }[];
 }

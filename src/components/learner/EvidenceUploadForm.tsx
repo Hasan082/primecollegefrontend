@@ -10,12 +10,32 @@ import { generateEvidenceNumber } from "@/lib/evidenceNumbering";
 import { useSubmitEvidenceMutation } from "@/redux/apis/enrolmentApi";
 
 interface EvidenceUploadFormProps {
-  requirements: string[];
+  requirements: string[] | string | Record<string, unknown> | null | undefined;
   enrolmentId: string;
   unitId: string;
   onSuccess?: () => void;
   isLocked?: boolean;
 }
+
+const normalizeRequirements = (
+  requirements: EvidenceUploadFormProps["requirements"]
+): string[] => {
+  if (Array.isArray(requirements)) {
+    return requirements.map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (typeof requirements === "string") {
+    return requirements
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  if (requirements && typeof requirements === "object") {
+    return Object.values(requirements)
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+  }
+  return [];
+};
 
 const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLocked }: EvidenceUploadFormProps) => {
   const [files, setFiles] = useState<File[]>([]);
@@ -24,6 +44,7 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
   const [declarationChecked, setDeclarationChecked] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const normalizedRequirements = normalizeRequirements(requirements);
 
   const [submitEvidence, { isLoading: isSubmitting }] = useSubmitEvidenceMutation();
 
@@ -75,7 +96,7 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
     try {
       const formData = new FormData();
       formData.append("description", description);
-      linkedCriteria.forEach(c => formData.append("linked_criteria", c));
+      linkedCriteria.forEach((criterion) => formData.append("criteria_ids", criterion));
       files.forEach(f => formData.append("files", f));
 
       await submitEvidence({ enrolmentId, unitId, body: formData }).unwrap();
@@ -170,12 +191,12 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
             Link to Assessment Criteria <span className="text-destructive">*</span>
           </Label>
           <div className="space-y-2 mt-2">
-            {requirements.map((req, i) => {
-              const criterionId = `AC ${i + 1}.1`;
+            {normalizedRequirements.map((req) => {
+              const criterionId = req;
               const checked = linkedCriteria.includes(criterionId);
               return (
                 <label
-                  key={i}
+                  key={criterionId}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                     checked ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                   }`}
@@ -187,11 +208,15 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
                   />
                   <div>
                     <span className="text-xs font-bold text-primary">{criterionId}</span>
-                    <p className="text-sm text-foreground">{req}</p>
                   </div>
                 </label>
               );
             })}
+            {normalizedRequirements.length === 0 && (
+              <div className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
+                No assessment criteria are available for this unit yet.
+              </div>
+            )}
           </div>
         </div>
 

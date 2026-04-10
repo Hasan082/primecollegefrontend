@@ -1,4 +1,11 @@
-import { EnrollmentAdminProgressResponse, EnrolmentContentResponse, EnrolmentListResponse, EvidenceSubmissionResponse } from "@/types/enrollment.types";
+import {
+  EnrollmentAdminProgressResponse,
+  EnrolmentContentResponse,
+  EnrolmentListResponse,
+  EvidenceSubmissionResponse,
+  LearnerEvidenceSubmissionListResponse,
+  LearnerWrittenAssignmentResponse,
+} from "@/types/enrollment.types";
 import { api } from "../api";
 import { cleanObject } from "@/utils/cleanObject";
 
@@ -133,6 +140,34 @@ const enrolmentApi = api.injectEndpoints({
       }),
       providesTags: (result, error, id) => [{ type: "Enrolments", id }],
     }),
+    getLearnerWrittenAssignment: builder.query<
+      LearnerWrittenAssignmentResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/written-assignment/`,
+        method: "GET",
+      }),
+      providesTags: (result, error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: enrolmentId },
+        { type: "Enrolments", id: `UNIT_${unitId}` },
+        { type: "Enrolments", id: `WRITTEN_${unitId}` },
+      ],
+    }),
+    getLearnerEvidenceSubmissions: builder.query<
+      LearnerEvidenceSubmissionListResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/evidence-submissions/`,
+        method: "GET",
+      }),
+      providesTags: (result, error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: enrolmentId },
+        { type: "Enrolments", id: `UNIT_${unitId}` },
+        { type: "Enrolments", id: `EVIDENCE_${unitId}` },
+      ],
+    }),
     getLearnerExtensionPlans: builder.query<LearnerExtensionPlansResponse, string>({
       query: (enrolmentId) => ({
         url: `/api/enrolments/me/${enrolmentId}/extension-plans/`,
@@ -194,6 +229,8 @@ export const {
   useGetLearnerDashboardQuery,
   useGetEnrolmentsQuery,
   useGetEnrolmentContentQuery,
+  useGetLearnerWrittenAssignmentQuery,
+  useGetLearnerEvidenceSubmissionsQuery,
   useGetLearnerExtensionPlansQuery,
   useCreateLearnerExtensionOrderMutation,
   useGetLearnerExtensionOrderStatusQuery,
