@@ -220,7 +220,7 @@ const IQAManagement = () => {
                                   });
                                 }}
                               >
-                                Assign
+                                Reassign
                               </Button>
                             </div>
                           ))}
