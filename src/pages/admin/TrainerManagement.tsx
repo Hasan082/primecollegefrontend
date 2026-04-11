@@ -9,6 +9,7 @@ import {
   useReassignTrainerMutation,
   TrainerManagementItem,
   TrainerManagementParams,
+  useUpdateStaffMutation,
 } from "@/redux/apis/staffApi";
 import { Search, Plus, ArrowLeft, UserCheck, Users, ChevronDown, ChevronUp, Power, Eye, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -48,6 +49,17 @@ const TrainerManagement = () => {
 
   const [reassignTrainer, { isLoading: isReassigning }] = useReassignTrainerMutation();
   const { data: trainerOptionsData } = useGetTrainerOptionsQuery();
+  const [updateStaff] = useUpdateStaffMutation();
+
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      await updateStaff({ id, body: { is_active: !currentStatus } }).unwrap();
+      toast({ title: "Status updated successfully" });
+      refetch();
+    } catch (error) {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    }
+  };
 
   // Debounce search
   useEffect(() => {
@@ -178,6 +190,15 @@ const TrainerManagement = () => {
                       <Badge variant={t.status === "active" ? "default" : "secondary"}>
                         {t.status.charAt(0).toUpperCase() + t.status.slice(1)}
                       </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-8 w-8 p-0 ${t.is_active ? 'text-destructive hover:text-destructive hover:bg-destructive/10' : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'}`}
+                        onClick={() => handleToggleActive(t.id, t.is_active)}
+                        title={t.is_active ? "Deactivate" : "Activate"}
+                      >
+                        <Power className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
