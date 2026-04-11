@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 
 interface StrictQuizModalProps {
   qualificationId: string;
+  unitId?: string;
   unitCode?: string;
   unitName: string;
   onClose: () => void;
@@ -20,7 +21,39 @@ interface StrictQuizModalProps {
 
 const MAX_WARNINGS = 3;
 
-const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmitted }: StrictQuizModalProps) => {
+type QuizAttemptPayload = QuizAttempt & {
+  attempt_id?: string;
+  total_questions?: number;
+  pass_mark?: number;
+  questions?: QuizAttempt["questions"];
+};
+
+const getAttemptId = (attempt: QuizAttempt | null) => {
+  if (!attempt) return undefined;
+  return attempt.id || (attempt as unknown as { attempt_id?: string }).attempt_id;
+};
+
+const unwrapQuizResponse = <T,>(payload: T | { success?: boolean; data?: T } | null | undefined): T | null => {
+  if (!payload) return null;
+  if (typeof payload === "object" && "data" in payload) {
+    return (payload as { data?: T }).data ?? null;
+  }
+  return payload as T;
+};
+
+const getAttemptQuestions = (attempt: QuizAttempt | null | undefined) =>
+  Array.isArray((attempt as QuizAttemptPayload | null | undefined)?.questions)
+    ? ((attempt as QuizAttemptPayload).questions ?? [])
+    : [];
+
+const getAttemptTotalQuestions = (attempt: QuizAttempt | null | undefined) => {
+  const payload = attempt as QuizAttemptPayload | null | undefined;
+  if (!payload) return 0;
+  if (typeof payload.total_questions === "number") return payload.total_questions;
+  return getAttemptQuestions(attempt).length;
+};
+
+const StrictQuizModal = ({ qualificationId, unitId, unitCode, unitName, onClose, onSubmitted }: StrictQuizModalProps) => {
   const [phase, setPhase] = useState<"intro" | "active" | "results">("intro");
   const [quiz, setQuiz] = useState<QuizAttempt | null>(null);
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
@@ -34,11 +67,16 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const { data: attemptsData, isLoading: isLoadingAttempts } = useGetUnitAttemptsQuery(unitCode);
+  const { data: attemptsData, isLoading: isLoadingAttempts } = useGetUnitAttemptsQuery(
+    { unitId: unitId || "" },
+    { skip: !unitId }
+  );
   const [startQuizMutation, { isLoading: isStarting }] = useStartQuizMutation();
   const [submitQuizMutation, { isLoading: isSubmitting }] = useSubmitQuizMutation();
 
-  const previousAttempts = attemptsData?.data || [];
+  const previousAttempts = Array.isArray((attemptsData as { data?: { attempts?: QuizAttempt[] } | QuizAttempt[] } | undefined)?.data)
+    ? (((attemptsData as { data?: QuizAttempt[] }).data as QuizAttempt[]) || [])
+    : (((attemptsData as { data?: { attempts?: QuizAttempt[] } } | undefined)?.data?.attempts) || []);
   // For mock/development, we'll assume canAttempt is true if we don't have a config yet
   // Ideally we should check the unit's quiz config
   const canTake = true; 
@@ -55,10 +93,11 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
   }, [phase, timeLeft]);
 
   const handleAutoSubmit = useCallback(async () => {
-    if (!quiz) return;
+    const attemptId = getAttemptId(quiz);
+    if (!attemptId) return;
     try {
       const res = await submitQuizMutation({
-        attemptId: quiz.id,
+        attemptId,
         data: {
           answers,
           violations_count: warnings,
@@ -158,15 +197,30 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
 
   const startQuiz = async () => {
     try {
-      const res = await startQuizMutation(unitCode).unwrap();
-      if (res.success) {
-        setQuiz(res.data);
-        // Assuming strict mode for now, or we can check a field in res.data if available
+      if (!unitId) return;
+      const res = await startQuizMutation(unitId).unwrap();
+      const startData = unwrapQuizResponse<QuizAttemptPayload>(res);
+      if (startData) {
+        const startedQuiz = {
+          ...startData,
+          id: startData.id || startData.attempt_id || "",
+          questions: Array.isArray(startData.questions) ? startData.questions : [],
+        } as QuizAttempt;
+        if (!startedQuiz.id) {
+          toast({ title: "Failed to start quiz", description: "Quiz attempt ID was missing.", variant: "destructive" });
+          return;
+        }
+        setQuiz(startedQuiz);
+        if (typeof startData.time_limit_minutes === "number" && startData.time_limit_minutes > 0) {
+          setTimeLeft(startData.time_limit_minutes * 60);
+        } else {
+          setTimeLeft(null);
+        }
         await enterFullscreen();
         setPhase("active");
-        // Set time limit if available (e.g., from a config object returned by backend)
-        // For now, let's assume no hardcoded limit unless provided
+        return;
       }
+      toast({ title: "Failed to start quiz", variant: "destructive" });
     } catch (error) {
       toast({ title: "Failed to start quiz", variant: "destructive" });
     }
@@ -186,8 +240,9 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
   };
 
   const handleSubmit = async () => {
-    if (!quiz) return;
-    const unanswered = quiz.questions.filter((q) => !answers[q.id]?.length);
+    const attemptId = getAttemptId(quiz);
+    if (!quiz || !attemptId) return;
+    const unanswered = getAttemptQuestions(quiz).filter((q) => !answers[q.id]?.length);
     if (unanswered.length) {
       toast({ title: `${unanswered.length} question(s) unanswered`, description: "Please answer all questions before submitting.", variant: "destructive" });
       return;
@@ -195,18 +250,25 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
     
     try {
       const res = await submitQuizMutation({
-        attemptId: quiz.id,
+        attemptId,
         data: {
           answers,
           violations_count: warnings,
         },
       }).unwrap();
 
-      if (res.success) {
-        setResult(res.data);
+      const resultData = unwrapQuizResponse<QuizAttemptPayload>(res);
+      if (resultData) {
+        setResult({
+          ...(resultData as QuizAttempt),
+          id: resultData.id || resultData.attempt_id || "",
+          questions: Array.isArray(resultData.questions) ? resultData.questions : [],
+        });
         setPhase("results");
         exitFullscreen();
+        return;
       }
+      toast({ title: "Error submitting quiz", variant: "destructive" });
     } catch (error) {
       toast({ title: "Error submitting quiz", variant: "destructive" });
     }
@@ -224,7 +286,7 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const totalQuestions = quiz?.questions.length || 0;
+  const totalQuestions = getAttemptTotalQuestions(quiz);
   const answeredCount = Object.keys(answers).filter((k) => answers[k]?.length > 0).length;
 
   if (isLoadingAttempts || isStarting) {
@@ -396,7 +458,7 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
             </div>
 
             <div className="space-y-6">
-              {quiz.questions.map((q, qi) => (
+              {getAttemptQuestions(quiz).map((q, qi) => (
                 <div key={q.id} className="bg-card border border-border rounded-xl p-5">
                   <p className="font-semibold text-foreground mb-3">{qi + 1}. {q.question_text}</p>
                   <p className="text-xs text-muted-foreground mb-3">
@@ -465,7 +527,7 @@ const StrictQuizModal = ({ qualificationId, unitCode, unitName, onClose, onSubmi
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Total Questions</span>
-                  <span className="font-semibold text-foreground">{result.questions.length}</span>
+                  <span className="font-semibold text-foreground">{getAttemptTotalQuestions(result)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Violations</span>

@@ -89,9 +89,9 @@ const qualificationUnitApi = api.injectEndpoints({
         Array.isArray(result)
           ? [
             ...result.map(({ id }) => ({ type: "QualificationUnits" as const, id })),
-            { type: "QualificationUnits", id: `LIST` },"Unit"
+            { type: "QualificationUnits", id: `LIST-${qualificationId}` }
           ]
-          : [{ type: "QualificationUnits", id: `LIST` }, "Unit"],
+          : [{ type: "QualificationUnits", id: `LIST-${qualificationId}` }],
     }),
 
     createUnit: builder.mutation<UnitRow, { qualificationId: string; payload: Partial<UnitRow> }>({
@@ -102,7 +102,8 @@ const qualificationUnitApi = api.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { qualificationId }) => [
         { type: "QualificationUnits", id: `LIST-${qualificationId}` },
-        "Unit"
+        "Unit",
+        { type: "Qualifications", id: `SUMMARY-${qualificationId}` },
       ],
     }),
 
@@ -122,7 +123,8 @@ const qualificationUnitApi = api.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { qualificationId }) => [
         { type: "QualificationUnits", id: `LIST-${qualificationId}` },
-        "Unit"
+        "Unit",
+        { type: "Qualifications", id: `SUMMARY-${qualificationId}` },
       ],
     }),
 

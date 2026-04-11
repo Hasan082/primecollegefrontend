@@ -21,6 +21,18 @@ import {
 } from "@/redux/apis/qualification/qualificationUnitApi";
 import { CPDConfigDrawer } from "@/components/shared/qualificationManagement/drawers/CPDConfigDrawer";
 import { ResourceItem } from "./ResourceItem";
+
+const mapFileToResourceType = (fileName: string) => {
+    const extension = fileName.split(".").pop()?.toLowerCase() || "";
+
+    if (extension === "pdf") return "pdf";
+    if (["ppt", "pptx", "key"].includes(extension)) return "slide";
+    if (["doc", "docx", "xls", "xlsx", "csv"].includes(extension)) return "template";
+    if (["mp4", "mov", "avi", "mkv", "webm"].includes(extension)) return "video";
+    if (["mp3", "wav", "m4a", "aac", "ogg"].includes(extension)) return "audio";
+
+    return "other";
+};
 // ─── Unit Expansion Section ───────────────────────────────────────────
 export const UnitExpandedContent = ({
     unit,
@@ -50,12 +62,12 @@ export const UnitExpandedContent = ({
         const formData = new FormData();
         if (files.length === 1) {
             formData.append("file", files[0]);
-            formData.append("resource_type", files[0].name.split(".").pop() || "file");
+            formData.append("resource_type", mapFileToResourceType(files[0].name));
         } else {
-            Array.from(files).slice(0, 10).forEach(file => {
+            Array.from(files).forEach(file => {
                 formData.append("files", file);
             });
-            formData.append("resource_type", "multiple");
+            formData.append("resource_type", "other");
         }
 
         try {

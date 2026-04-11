@@ -26,14 +26,14 @@ const daysOverdue = (dateStr: string) => {
 
 const MyQualifications = () => {
   const [extensionOpen, setExtensionOpen] = useState(false);
-  const [extensionQual, setExtensionQual] = useState<{ title: string; expiry: string } | null>(null);
+  const [extensionQual, setExtensionQual] = useState<{ enrolmentId: string; title: string; expiry: string } | null>(null);
 
   const { data: enrolmentsResponse, isLoading, error } = useGetEnrolmentsQuery();
 
   const enrolments = enrolmentsResponse?.data || [];
 
-  const openExtension = (title: string, expiry: string) => {
-    setExtensionQual({ title, expiry });
+  const openExtension = (enrolmentId: string, title: string, expiry: string) => {
+    setExtensionQual({ enrolmentId, title, expiry });
     setExtensionOpen(true);
   };
 
@@ -137,7 +137,7 @@ const MyQualifications = () => {
                     <Button
                       size="sm"
                       className="gap-1.5 flex-shrink-0"
-                      onClick={() => openExtension(q.title, expiry || "")}
+                      onClick={() => openExtension(enrolment.id, q.title, expiry || "")}
                     >
                       <CalendarPlus className="w-3.5 h-3.5" /> Extend Access
                     </Button>
@@ -153,6 +153,7 @@ const MyQualifications = () => {
         <ExtensionRequestModal
           open={extensionOpen}
           onOpenChange={setExtensionOpen}
+          enrolmentId={extensionQual.enrolmentId}
           qualificationTitle={extensionQual.title}
           currentExpiry={extensionQual.expiry}
         />

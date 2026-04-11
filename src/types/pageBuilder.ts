@@ -237,6 +237,9 @@ export interface PopularQualificationsBlock extends BlockBase {
   type: "popular-qualifications";
   data: {
     title: string;
+    selection_mode?: "manual" | "latest";
+    qualification_ids?: string[];
+    show_count?: number;
     items: Array<Record<string, unknown>>;
   };
 }
@@ -551,7 +554,13 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       id,
       type: "popular-qualifications",
       label,
-      data: { title: "Popular Qualifications", items: [] },
+      data: {
+        title: "Popular Qualifications",
+        selection_mode: "latest",
+        qualification_ids: [],
+        show_count: 4,
+        items: [],
+      },
     }),
     features: () => ({
       id,

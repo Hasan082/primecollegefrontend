@@ -20,6 +20,7 @@ import {
   useGetQuestionBankQualificationGuardQuery,
   useGetQuestionsQuery,
   useGetQuizConfigQuery,
+  type QuizConfig,
   useCreateQuestionMutation,
   useDeleteQuestionMutation,
   useUpdateQuizConfigMutation,
@@ -28,6 +29,22 @@ import {
   useGetQuestionBankUnitsQuery,
   useGetWrittenAssignmentConfigQuery,
 } from "@/redux/apis/quiz/quizApi";
+
+const toQuizConfigPayload = (config: QuizConfig) => ({
+  quiz_enabled: config.quiz_enabled,
+  status: config.status,
+  questions_per_quiz: config.questions_per_quiz,
+  time_limit_minutes: config.time_limit_minutes,
+  pass_score: config.pass_score,
+  shuffle_questions: config.shuffle_questions,
+  shuffle_options: config.shuffle_options,
+  max_attempts: config.max_attempts,
+  strict_mode: config.strict_mode,
+  show_results: config.show_results,
+  show_correct_answers: config.show_correct_answers,
+  show_explanations: config.show_explanations,
+  cooldown_hours: config.cooldown_hours,
+});
 
 const AdminQuestionBankEditor = () => {
   const { qualificationId, unitCode } = useParams();
@@ -64,7 +81,7 @@ const AdminQuestionBankEditor = () => {
   const [newQCorrect, setNewQCorrect] = useState<number[]>([]);
 
   // Local state for Quiz Config editing
-  const [localConfig, setLocalConfig] = useState<any>(null);
+  const [localConfig, setLocalConfig] = useState<QuizConfig | null>(null);
 
   // Local state for Written Assignment editing
   const [localWA, setLocalWA] = useState<any>(null);
@@ -130,11 +147,15 @@ const AdminQuestionBankEditor = () => {
     try {
       await updateQuizConfig({
         unitId: unitId!,
-        data: localConfig
+        data: toQuizConfigPayload(localConfig)
       }).unwrap();
       toast({ title: "Settings saved" });
     } catch (err: any) {
-      toast({ title: "Failed to save settings", variant: "destructive" });
+      toast({
+        title: "Failed to save settings",
+        description: err?.data?.detail || err?.data?.message || "Please check the quiz configuration values.",
+        variant: "destructive",
+      });
     }
   };
 

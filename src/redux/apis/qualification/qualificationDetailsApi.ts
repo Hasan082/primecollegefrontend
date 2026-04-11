@@ -18,7 +18,7 @@ const qualificationDetailsApi = api.injectEndpoints({
     }),
     getQualificationDetails: builder.query({
       query: (id) => ({
-        url: `/api/qualification/admin/${id}/details`,
+        url: `/api/qualification/admin/${id}/details/`,
         method: "GET",
       }),
     }),

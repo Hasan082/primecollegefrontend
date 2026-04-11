@@ -152,7 +152,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Pending IQA */}
+        {/* Revenue Today */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -160,8 +160,8 @@ const AdminDashboard = () => {
                 <Shield className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{stats.pendingIQA}</p>
-                <p className="text-xs text-muted-foreground">Pending IQA</p>
+                <p className="text-2xl font-bold">£{stats.todayStats.revenue}</p>
+                <p className="text-xs text-muted-foreground">Revenue Today</p>
               </div>
             </div>
           </CardContent>
@@ -212,7 +212,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Revenue */}
+        {/* Gross Revenue */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -220,8 +220,9 @@ const AdminDashboard = () => {
                 <Wallet className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">£{stats.todayStats.revenue}</p>
-                <p className="text-xs text-muted-foreground">Revenue</p>
+                <p className="text-2xl font-bold">£{stats.grossRevenue}</p>
+                <p className="text-xs text-muted-foreground">Gross Revenue</p>
+                <p className="text-[11px] text-muted-foreground/80">Today: £{stats.todayStats.revenue}</p>
               </div>
             </div>
           </CardContent>

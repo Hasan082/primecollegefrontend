@@ -12,7 +12,7 @@ const qualificationMainApi = api.injectEndpoints({
     }),
     updateQualificationMain: builder.mutation({
       query: ({ id, payload }) => ({
-        url: "/api/qualification/admin/" + id,
+        url: "/api/qualification/admin/" + id + "/",
         method: "PATCH",
         body: payload,
       }),
@@ -20,7 +20,7 @@ const qualificationMainApi = api.injectEndpoints({
     }),
     getQualificationMain: builder.query({
       query: (id) => ({
-        url: "/api/qualification/admin/" + id,
+        url: "/api/qualification/admin/" + id + "/",
         method: "GET",
       }),
       providesTags: ["Qualifications"],

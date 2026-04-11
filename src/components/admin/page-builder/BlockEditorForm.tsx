@@ -119,9 +119,20 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
 
   const handleSave = () => {
     if (isUploading) return;
-    const nextLocal = block.type === "qualification_slider"
-      ? normalizeQualificationSliderData(local)
-      : local;
+    const nextLocal =
+      block.type === "qualification_slider"
+        ? normalizeQualificationSliderData(local)
+        : block.type === "popular-qualifications"
+        ? {
+            ...local,
+            selection_mode: (local.selection_mode as string) === "manual" ? "manual" : "latest",
+            qualification_ids:
+              (local.selection_mode as string) === "manual"
+                ? selectedQualificationIds
+                : [],
+            show_count: Math.max(1, Number(local.show_count) || 4),
+          }
+        : local;
     onSave(nextLocal, { alignment, style: blockStyle, label: blockLabel });
     onClose();
   };
@@ -236,7 +247,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
                     imagePosition={local.imagePosition as string} onPositionChange={(v) => update("imagePosition", v)} />
       )}
 
-      {Array.isArray(local.items) && block.type !== "qualification_slider" && (
+      {Array.isArray(local.items) && !["qualification_slider", "popular-qualifications"].includes(block.type) && (
         <ItemListEditor blockType={block.type} items={local.items} onChange={(items: any) => update("items", items)} onImageUpload={onImageUpload} isUploading={isUploading} />
       )}
 
@@ -388,6 +399,113 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
                 )}
               </div>
 
+            </div>
+          )}
+        </div>
+      )}
+
+      {block.type === "popular-qualifications" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Popular Qualifications Configuration</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Selection Mode</Label>
+              <select
+                className="w-full h-8 text-sm border rounded bg-background"
+                value={(local.selection_mode as string) || "latest"}
+                onChange={(e) => {
+                  const mode = e.target.value;
+                  update("selection_mode", mode);
+                  if (mode === "latest") {
+                    update("qualification_ids", []);
+                    setQualificationSelectOpen(false);
+                  }
+                }}
+              >
+                <option value="latest">Auto Latest Qualifications</option>
+                <option value="manual">Manual Override</option>
+              </select>
+            </div>
+            <Field label="Show Count" value={String(local.show_count || 4)} onChange={(v) => update("show_count", parseInt(v) || 4)} />
+          </div>
+
+          {(local.selection_mode as string) !== "latest" && (
+            <div className="pt-2 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <Label className="text-sm font-bold">Manual Qualification Selection</Label>
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  {selectedQualificationIds.length} selected
+                </span>
+              </div>
+              <div className="rounded-xl border bg-muted/20 p-3 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Selected qualifications</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Add qualifications, then drag and drop to control display order.
+                    </p>
+                  </div>
+                  <Popover open={qualificationSelectOpen} onOpenChange={setQualificationSelectOpen}>
+                    <PopoverTrigger asChild>
+                      <Button type="button" variant="outline" size="sm" className="shrink-0">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Qualification
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[min(420px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] p-0" align="end">
+                      <Command>
+                        <CommandInput placeholder="Search qualifications..." />
+                        <CommandList>
+                          <CommandEmpty>
+                            {isQualificationsLoading ? "Loading qualifications..." : "No more qualifications available."}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {availableQualifications.map((qualification) => (
+                              <CommandItem
+                                key={qualification.id}
+                                value={`${qualification.title} ${qualification.category || ""} ${qualification.level || ""} ${qualification.id}`}
+                                onSelect={() => {
+                                  toggleQualification(qualification.id, true);
+                                  setQualificationSelectOpen(false);
+                                }}
+                                className="gap-3"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <div className="truncate text-sm font-medium">{qualification.title}</div>
+                                  <div className="text-[11px] text-muted-foreground">
+                                    {[qualification.category, qualification.level].filter(Boolean).join(" • ") || qualification.id}
+                                  </div>
+                                </div>
+                                <Plus className="h-4 w-4 text-muted-foreground" />
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {selectedQualifications.length > 0 ? (
+                  <DndContext sensors={qualificationSensors} collisionDetection={closestCenter} onDragEnd={handleQualificationDragEnd}>
+                    <SortableContext items={selectedQualificationIds} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-2">
+                        {selectedQualifications.map((qualification) => (
+                          <SortableQualificationRow
+                            key={qualification.id}
+                            qualification={qualification}
+                            onRemove={(qualificationId) => toggleQualification(qualificationId, false)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+                    No qualifications selected yet.
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

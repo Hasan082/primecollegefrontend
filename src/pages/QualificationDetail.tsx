@@ -13,11 +13,28 @@ import {
   useGetQualificationDetailQuery,
   useGetUpSalesQuery,
 } from "@/redux/apis/qualificationApi";
-import { filterOutSystemBlocks, getRenderableBlocks } from "@/utils/pageBuilder";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  filterOutSystemBlocks,
+  getRenderableBlocks,
+} from "@/utils/pageBuilder";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-const formatMoney = (value: string | number | null | undefined, currency = "GBP") =>
+const formatMoney = (
+  value: string | number | null | undefined,
+  currency = "GBP",
+) =>
   `${currency} ${Number(value || 0).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -59,13 +76,17 @@ const QualificationDetail = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string>("");
   const [showUpsell, setShowUpsell] = useState(false);
 
-  const { data, isLoading } = useGetQualificationDetailQuery(slug, { skip: !slug });
+  const { data, isLoading } = useGetQualificationDetailQuery(slug, {
+    skip: !slug,
+  });
   const { data: upsellResponse } = useGetUpSalesQuery(slug, { skip: !slug });
   const qualification = data?.data;
   const detailPageSlug = qualification?.detail_page?.slug;
   const detailPagePublished = qualification?.detail_page?.is_published;
   const usesSessionBooking =
-    qualification?.hero_mode === "session_booking" || qualification?.has_sessions || qualification?.is_session;
+    qualification?.hero_mode === "session_booking" ||
+    qualification?.has_sessions ||
+    qualification?.is_session;
 
   const { addItem, isInCart } = useCart();
 
@@ -85,27 +106,34 @@ const QualificationDetail = () => {
     }
 
     if (qualification.session_locations?.length) {
-      return qualification.session_locations.map((location: QualificationSessionLocation) => ({
-        id: location.id,
-        name: location.name || "Location to be confirmed",
-        venueAddress: location.venue_address || "",
-        sessions: (location.dates || []).map((date) => ({
-          id: date.id,
-          title: date.label,
-          location_name: location.name || "Location to be confirmed",
-          venue_address: location.venue_address || "",
-          start_at: date.label,
-          end_at: date.label,
-          available_seats: null,
-          effective_price: qualification.current_price,
-          is_featured: false,
-        })),
-      }));
+      return qualification.session_locations.map(
+        (location: QualificationSessionLocation) => ({
+          id: location.id,
+          name: location.name || "Location to be confirmed",
+          venueAddress: location.venue_address || "",
+          sessions: (location.dates || []).map((date) => ({
+            id: date.id,
+            title: date.label,
+            location_name: location.name || "Location to be confirmed",
+            venue_address: location.venue_address || "",
+            start_at: date.label,
+            end_at: date.label,
+            available_seats: null,
+            effective_price: qualification.current_price,
+            is_featured: false,
+          })),
+        }),
+      );
     }
 
     const grouped = new Map<
       string,
-      { id: string; name: string; venueAddress: string; sessions: QualificationSession[] }
+      {
+        id: string;
+        name: string;
+        venueAddress: string;
+        sessions: QualificationSession[];
+      }
     >();
 
     normalizedUpcomingSessions.forEach((session) => {
@@ -145,7 +173,9 @@ const QualificationDetail = () => {
 
   const selectedLocation = useMemo(
     () =>
-      sessionLocations.find((location) => location.name === selectedLocationName) || null,
+      sessionLocations.find(
+        (location) => location.name === selectedLocationName,
+      ) || null,
     [selectedLocationName, sessionLocations],
   );
 
@@ -160,7 +190,8 @@ const QualificationDetail = () => {
     }
 
     setSelectedSessionId((current) =>
-      current && selectedLocation.sessions.some((session) => session.id === current)
+      current &&
+      selectedLocation.sessions.some((session) => session.id === current)
         ? current
         : "",
     );
@@ -171,17 +202,21 @@ const QualificationDetail = () => {
       sessionLocations
         .flatMap((location) => location.sessions)
         .find((session) => session.id === selectedSessionId) ||
-      normalizedUpcomingSessions.find((session) => session.id === selectedSessionId) ||
+      normalizedUpcomingSessions.find(
+        (session) => session.id === selectedSessionId,
+      ) ||
       null,
     [normalizedUpcomingSessions, selectedSessionId, sessionLocations],
   );
 
-  const hasSessionDates = sessionLocations.some((location) => location.sessions.length > 0);
+  const hasSessionDates = sessionLocations.some(
+    (location) => location.sessions.length > 0,
+  );
   const enrolmentDisabled = usesSessionBooking && !selectedSession;
   const disabledMessage = sessionLocations.length
     ? "No available dates for the selected location yet."
     : "No available dates for this course yet.";
-
+  // TODO: need to work here convert to srcset
   const heroImage =
     qualification?.featured_image?.hero_desktop ||
     qualification?.featured_image?.hero_tablet ||
@@ -196,8 +231,12 @@ const QualificationDetail = () => {
   if (!qualification) {
     return (
       <div className="py-20 text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-4">Qualification Not Found</h1>
-        <p className="text-muted-foreground mb-6">The qualification you requested is not available.</p>
+        <h1 className="text-3xl font-bold text-foreground mb-4">
+          Qualification Not Found
+        </h1>
+        <p className="text-muted-foreground mb-6">
+          The qualification you requested is not available.
+        </p>
         <Link
           to="/qualifications"
           className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground hover:opacity-90"
@@ -229,8 +268,12 @@ const QualificationDetail = () => {
     qualificationSessionId: selectedSession?.id || null,
     qualificationSessionTitle: selectedSession?.title || null,
     isUpsell: false,
-    pricingNote: selectedSession ? `Session selected: ${selectedSession.title}` : "",
-    priceValue: Number(selectedSession?.effective_price || qualification.current_price || 0),
+    pricingNote: selectedSession
+      ? `Session selected: ${selectedSession.title}`
+      : "",
+    priceValue: Number(
+      selectedSession?.effective_price || qualification.current_price || 0,
+    ),
   };
 
   const handleAddToCart = () => {
@@ -249,8 +292,11 @@ const QualificationDetail = () => {
 
   const bodyBlocks = qualification
     ? filterOutSystemBlocks(
-      getRenderableBlocks(qualification.body_blocks ?? [], detailPageSlug || slug),
-    )
+        getRenderableBlocks(
+          qualification.body_blocks ?? [],
+          detailPageSlug || slug,
+        ),
+      )
     : [];
 
   const hasCmsBody = detailPagePublished !== false && bodyBlocks.length > 0;
@@ -260,7 +306,11 @@ const QualificationDetail = () => {
     <div className="bg-background">
       <section className="relative min-h-[80vh] md:h-[500px] overflow-hidden md:h-[620px]">
         {heroImage ? (
-          <img src={heroImage} alt={qualification.title} className="absolute inset-0 h-full w-full object-cover" />
+          <img
+            src={heroImage}
+            alt={qualification.title}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
         ) : null}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--primary)/0.95)_0%,hsl(var(--primary)/0.88)_25%,hsl(var(--primary)/0.7)_45%,hsl(var(--primary)/0.45)_65%,hsl(var(--primary)/0.2)_85%,hsl(var(--primary)/0.08)_100%)]" />
         <div className="absolute inset-0 flex items-center">
@@ -278,14 +328,19 @@ const QualificationDetail = () => {
                   {qualification.category?.name || "Qualification"}
                 </span>
                 {qualification.level?.name ? (
-                  <span className="rounded bg-white/10 px-4 py-2">{qualification.level.name}</span>
+                  <span className="rounded bg-white/10 px-4 py-2">
+                    {qualification.level.name}
+                  </span>
                 ) : null}
                 {qualification.course_duration ? (
-                  <span className="rounded bg-white/10 px-4 py-2">{qualification.course_duration}</span>
+                  <span className="rounded bg-white/10 px-4 py-2">
+                    {qualification.course_duration}
+                  </span>
                 ) : null}
                 <span className="rounded bg-white/10 px-4 py-2">
                   {formatMoney(
-                    selectedSession?.effective_price || qualification.current_price,
+                    selectedSession?.effective_price ||
+                      qualification.current_price,
                     qualification.currency,
                   )}
                 </span>
@@ -305,7 +360,11 @@ const QualificationDetail = () => {
                       >
                         <SelectTrigger className="h-12 rounded-none border-white/60 bg-white px-4 text-left text-sm text-slate-900 data-[placeholder]:text-slate-500">
                           <SelectValue
-                            placeholder={sessionLocations.length ? "Location" : "No locations available"}
+                            placeholder={
+                              sessionLocations.length
+                                ? "Location"
+                                : "No locations available"
+                            }
                           />
                         </SelectTrigger>
                         <SelectContent className="border-slate-200 bg-white text-slate-900">
@@ -322,15 +381,24 @@ const QualificationDetail = () => {
                       <Select
                         value={selectedSessionId}
                         onValueChange={setSelectedSessionId}
-                        disabled={!selectedLocation || !selectedLocation.sessions.length}
+                        disabled={
+                          !selectedLocation || !selectedLocation.sessions.length
+                        }
                       >
                         <SelectTrigger className="h-12 rounded-none border-white/60 bg-white px-4 text-left text-sm text-slate-900 data-[placeholder]:text-slate-500">
-                          <SelectValue placeholder={hasSessionDates ? "Date" : "No dates available"} />
+                          <SelectValue
+                            placeholder={
+                              hasSessionDates ? "Date" : "No dates available"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent className="border-slate-200 bg-white text-slate-900">
                           {selectedLocation?.sessions.map((session) => (
                             <SelectItem key={session.id} value={session.id}>
-                              {formatDateRange(session.start_at, session.end_at)}
+                              {formatDateRange(
+                                session.start_at,
+                                session.end_at,
+                              )}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -345,11 +413,15 @@ const QualificationDetail = () => {
                               type="button"
                               onClick={handleAddToCart}
                               disabled={enrolmentDisabled}
-                              aria-label={enrolmentDisabled ? disabledMessage : undefined}
+                              aria-label={
+                                enrolmentDisabled ? disabledMessage : undefined
+                              }
                               className="h-12 w-full rounded-none bg-secondary px-6 text-sm font-semibold text-secondary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-secondary/60 disabled:text-secondary-foreground/80 md:min-w-[210px]"
                             >
-                              Enrol Now - {formatMoney(
-                                selectedSession?.effective_price || qualification.current_price,
+                              Enrol Now -{" "}
+                              {formatMoney(
+                                selectedSession?.effective_price ||
+                                  qualification.current_price,
                                 qualification.currency,
                               )}
                             </button>
@@ -370,8 +442,10 @@ const QualificationDetail = () => {
                   onClick={handleAddToCart}
                   className="mt-8 rounded-xl bg-secondary px-8 py-4 text-base font-semibold text-secondary-foreground transition hover:opacity-90"
                 >
-                  Enrol Now - {formatMoney(
-                    selectedSession?.effective_price || qualification.current_price,
+                  Enrol Now -{" "}
+                  {formatMoney(
+                    selectedSession?.effective_price ||
+                      qualification.current_price,
                     qualification.currency,
                   )}
                 </button>
@@ -380,8 +454,6 @@ const QualificationDetail = () => {
           </div>
         </div>
       </section>
-
-
 
       {/* <CTASection /> */}
 
@@ -398,7 +470,9 @@ const QualificationDetail = () => {
 
 const DetailStat = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-2xl bg-muted/30 p-4">
-    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+      {label}
+    </p>
     <p className="mt-2 text-base font-semibold text-foreground">{value}</p>
   </div>
 );

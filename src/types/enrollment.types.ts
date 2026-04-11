@@ -29,6 +29,122 @@ export interface EvidenceSubmissionResponse {
     data: EvidenceSubmission;
 }
 
+export interface LearnerSubmissionActor {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+}
+
+export interface LearnerWrittenAssignmentConfig {
+    id: string;
+    title: string;
+    instructions: string;
+    min_words: number;
+    max_words: number;
+    is_active: boolean;
+    version: number;
+    required_criteria?: string[];
+}
+
+export interface LearnerWrittenAssignmentSubmission {
+    id: string;
+    submission_number: number;
+    title: string;
+    submission_type: string;
+    response_html: string;
+    response_word_count: number;
+    declaration_signed: boolean;
+    declaration_signed_at: string | null;
+    status: string;
+    submitted_at: string;
+    outcome_set_at: string | null;
+    assessor: LearnerSubmissionActor | null;
+    assessor_score: number | null;
+    assessor_score_max: number | null;
+    assessor_band: string | null;
+    assessor_feedback: string;
+    assessor_feedback_file: string | null;
+    iqa_sampled: boolean;
+    iqa_reviewer: LearnerSubmissionActor | null;
+    iqa_review_notes: string;
+    iqa_decision: string | null;
+    iqa_reviewed_at: string | null;
+}
+
+export interface LearnerWrittenAssignmentResponse {
+    success: boolean;
+    message: string;
+    data: {
+        config: LearnerWrittenAssignmentConfig;
+        submissions: LearnerWrittenAssignmentSubmission[];
+    };
+}
+
+export interface LearnerEvidenceCriterion {
+    id: string;
+    code: string;
+    description: string;
+}
+
+export interface LearnerEvidenceItem {
+    id: string;
+    title: string;
+    description: string;
+    file: string;
+    criteria: LearnerEvidenceCriterion[];
+    display_order: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LearnerEvidencePortfolioConfig {
+    id: string;
+    instructions: string;
+    accepted_file_types: string[];
+    max_files_per_submission: number;
+    max_file_size_mb: number;
+    require_criteria_linking: boolean;
+    require_evidence_description: boolean;
+    example_evidence: string;
+    required_criteria: string[];
+    is_active: boolean;
+}
+
+export interface LearnerEvidenceSubmission {
+    id: string;
+    submission_number: number;
+    title: string;
+    submission_type: string;
+    declaration_signed: boolean;
+    declaration_signed_at: string | null;
+    status: string;
+    submitted_at: string;
+    outcome_set_at: string | null;
+    assessor: LearnerSubmissionActor | null;
+    assessor_score: number | null;
+    assessor_score_max: number | null;
+    assessor_band: string | null;
+    assessor_feedback: string;
+    assessor_feedback_file: string | null;
+    iqa_sampled: boolean;
+    iqa_reviewer: LearnerSubmissionActor | null;
+    iqa_review_notes: string;
+    iqa_decision: string | null;
+    iqa_reviewed_at: string | null;
+    evidence_items: LearnerEvidenceItem[];
+}
+
+export interface LearnerEvidenceSubmissionListResponse {
+    success: boolean;
+    message: string;
+    data: {
+        config: LearnerEvidencePortfolioConfig;
+        submissions: LearnerEvidenceSubmission[];
+    };
+}
+
 // ==================== Enrolment List ====================
 export interface EnrolmentListItem {
     id: string;
@@ -61,6 +177,133 @@ export interface EnrolmentListResponse {
     data: EnrolmentListItem[];
 }
 
+// ==================== Enrolment Overview ====================
+export interface EnrolmentOverviewUnitProgress {
+    status: string;
+    competency_status?: string | null;
+    started_at: string | null;
+    completed_at: string | null;
+    time_spent_seconds: number;
+    min_time_met: boolean;
+    is_locked: boolean;
+}
+
+export interface EnrolmentOverviewUnit {
+    id: string;
+    title: string;
+    unit_code: string;
+    description: string;
+    order: number;
+    display_status: string;
+    progress: EnrolmentOverviewUnitProgress | null;
+}
+
+export interface EnrolmentOverviewResponse {
+    success: boolean;
+    message: string;
+    data: {
+        id: string;
+        status: string;
+        access_expires_at: string | null;
+        access_expired: boolean;
+        qualification: {
+            id: string;
+            title: string;
+            slug: string;
+            is_cpd: boolean;
+            code?: string;
+            requires_learner_declaration?: boolean;
+            requires_course_evaluation?: boolean;
+        };
+        overall_progress: {
+            completed_units: number;
+            total_units: number;
+            progress_percent: number;
+        };
+        status_counts: {
+            not_started: number;
+            in_progress: number;
+            waiting_for_assessor_review: number;
+            waiting_for_iqa_review: number;
+            competent: number;
+            resubmission_required: number;
+            not_yet_competent: number;
+            completed: number;
+        };
+        units: EnrolmentOverviewUnit[];
+    };
+}
+
+export interface LearnerUnitOverviewResource {
+    id: string;
+    title: string;
+    description: string;
+    resource_type: string;
+    file: string;
+    external_url: string;
+    estimated_minutes: number;
+    is_downloadable: boolean;
+    is_required: boolean;
+    resource_version: string;
+    order: number;
+}
+
+export interface LearnerUnitQuizSummary {
+    enabled: boolean;
+    attempts_used: number;
+    passed: boolean;
+    score_percent: string | null;
+    score_summary_text: string;
+    correct_count: number;
+    total_questions: number;
+    pass_mark: number | null;
+    submitted_at: string | null;
+    can_retake: boolean;
+}
+
+export interface LearnerUnitWrittenAssignmentSummary {
+    enabled: boolean;
+    title: string;
+    min_words: number;
+    max_words: number;
+    submission_count: number;
+    latest_submission_status: string | null;
+    latest_submitted_at: string | null;
+    latest_assessor_score: number | null;
+    latest_assessor_score_max: number | null;
+}
+
+export interface LearnerUnitEvidencePortfolioSummary {
+    enabled: boolean;
+    submission_count: number;
+    evidence_item_count: number;
+    latest_submission_status: string | null;
+    latest_submitted_at: string | null;
+    latest_assessor_score: number | null;
+    latest_assessor_score_max: number | null;
+}
+
+export interface LearnerUnitOverviewResponse {
+    success: boolean;
+    message: string;
+    data: {
+        id: string;
+        title: string;
+        unit_code: string;
+        description: string;
+        order: number;
+        has_quiz: boolean;
+        has_written_assignment: boolean;
+        requires_evidence: boolean;
+        display_status: string;
+        progress: EnrolmentOverviewUnitProgress | null;
+        resources: LearnerUnitOverviewResource[];
+        quiz_summary: LearnerUnitQuizSummary;
+        written_assignment_summary: LearnerUnitWrittenAssignmentSummary;
+        evidence_portfolio_summary: LearnerUnitEvidencePortfolioSummary;
+    };
+}
+
 // ==================== Enrolment Content ====================
 export interface EnrolmentContent {
     id: string;
@@ -76,7 +319,7 @@ export interface EnrolmentContent {
         title: string;
         slug: string;
         is_cpd: boolean;
-        code: string;
+        code?: string;
         requires_learner_declaration?: boolean;
         requires_course_evaluation?: boolean;
     };
@@ -90,16 +333,14 @@ export interface EnrolmentContent {
         has_written_assignment: boolean;
         requires_evidence: boolean;
         resources: any[];
-        feedback: string | null;
         progress: {
             status: string;
+            competency_status?: string | null;
             started_at: string | null;
             completed_at: string | null;
             quiz_passed: boolean;
             evidence_met: boolean;
             assignment_met: boolean;
-            submitted_at: string | null;
-            feedback: string | null;
         } | null;
     }[];
 }

@@ -1,33 +1,44 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck, ClipboardList } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck, ClipboardList, Lock, CalendarPlus } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import CPDFinalAssessmentModal from "@/components/learner/CPDFinalAssessmentModal";
 import LearnerDeclarationModal from "@/components/learner/LearnerDeclarationModal";
 import CourseEvaluationModal from "@/components/learner/CourseEvaluationModal";
-import { useGetEnrolmentContentQuery } from "@/redux/apis/enrolmentApi";
-import type { UnitData } from "@/data/learnerMockData";
+import ExtensionRequestModal from "@/components/learner/ExtensionRequestModal";
+import { useGetEnrolmentOverviewQuery } from "@/redux/apis/enrolmentApi";
+import type { EnrolmentOverviewUnit } from "@/types/enrollment.types";
 
-const statusConfig: Record<UnitData["status"], { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  competent: { label: "Competent", color: "bg-green-600 text-white", icon: CheckCircle2 },
-  awaiting_assessment: { label: "Awaiting Assessment", color: "bg-amber-500 text-white", icon: Clock },
-  awaiting_iqa: { label: "Awaiting IQA Verification", color: "bg-blue-600 text-white", icon: ShieldCheck },
-  resubmission: { label: "Resubmission Required", color: "bg-orange-500 text-white", icon: AlertTriangle },
-  not_started: { label: "Not Started", color: "bg-muted text-muted-foreground", icon: Circle },
+const statusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
+  Competent: { label: "Competent", color: "bg-green-600 text-white", icon: CheckCircle2 },
+  Completed: { label: "Completed", color: "bg-green-600 text-white", icon: CheckCircle2 },
+  "Waiting for assessor review": { label: "Awaiting Assessment", color: "bg-amber-500 text-white", icon: Clock },
+  "Waiting for IQA review": { label: "Awaiting IQA Verification", color: "bg-blue-600 text-white", icon: ShieldCheck },
+  "Resubmission required": { label: "Resubmission Required", color: "bg-orange-500 text-white", icon: AlertTriangle },
+  "Not yet competent": { label: "Not Yet Competent", color: "bg-orange-500 text-white", icon: AlertTriangle },
+  "In progress": { label: "In Progress", color: "bg-primary text-white", icon: Clock },
+  "Not started": { label: "Not Started", color: "bg-muted text-muted-foreground", icon: Circle },
 };
+
+const getUnitDisplayStatus = (unit: EnrolmentOverviewUnit) => statusConfig[unit.display_status] || statusConfig["Not started"];
 
 const QualificationView = () => {
   const { id } = useParams<{ id: string }>();
   const [showAssessment, setShowAssessment] = useState(false);
   const [showDeclaration, setShowDeclaration] = useState(false);
   const [showEvaluation, setShowEvaluation] = useState(false);
-  
-  const { data: enrolmentResponse, isLoading, error, refetch } = useGetEnrolmentContentQuery(id || "");
+  const [showExtension, setShowExtension] = useState(false);
+
+  const { data: enrolmentResponse, isLoading, error, refetch } = useGetEnrolmentOverviewQuery(id || "", {
+    skip: !id,
+  });
+
   const enrolment = enrolmentResponse?.data;
   const qualification = enrolment?.qualification;
   const units = enrolment?.units || [];
+  const progress = enrolment?.overall_progress;
 
   if (isLoading) {
     return (
@@ -38,34 +49,32 @@ const QualificationView = () => {
     );
   }
 
-  if (error || !enrolment || !qualification) {
+  if (error || !enrolment || !qualification || !progress) {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">Qualification not found.</p>
-        <Link to="/learner/dashboard" className="text-primary hover:underline mt-2 inline-block">
-          Back to Dashboard
+        <Link to="/learner/qualifications" className="text-primary hover:underline mt-2 inline-block">
+          Back to My Qualifications
         </Link>
       </div>
     );
   }
 
-  const completed = units.filter((u) => u.progress?.status === "completed" || u.progress?.status === "competent").length;
-  const total = units.length;
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const completed = progress.completed_units;
+  const total = progress.total_units;
+  const pct = progress.progress_percent;
   const allUnitsDone = total > 0 && completed === total;
   const isCpd = qualification.is_cpd;
-
-  // Default true if undefined to maintain backward compatibility with hardcoded behavior if backend isn't sending it yet
+  const isExpired = enrolment.access_expired;
   const requiresDeclaration = qualification.requires_learner_declaration !== false;
   const requiresEvaluation = qualification.requires_course_evaluation !== false;
 
   return (
     <div>
-      <Link to="/learner/dashboard" className="inline-flex items-center gap-2 text-primary hover:underline mb-6 text-sm font-medium">
-        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+      <Link to="/learner/qualifications" className="inline-flex items-center gap-2 text-primary hover:underline mb-6 text-sm font-medium">
+        <ArrowLeft className="w-4 h-4" /> Back to My Qualifications
       </Link>
 
-      {/* Qualification header */}
       <div className="bg-card border border-border rounded-xl p-6 mb-8 shadow-sm">
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <h1 className="text-2xl font-bold text-foreground">{qualification.title}</h1>
@@ -86,13 +95,33 @@ const QualificationView = () => {
         <Progress value={pct} className="h-3" />
       </div>
 
+      {isExpired && (
+        <div className="mb-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                <Lock className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Access Expired</h2>
+                <p className="text-sm text-muted-foreground">
+                  Your qualification access has expired. Unit actions are locked until you extend access.
+                </p>
+              </div>
+            </div>
+            <Button className="gap-2 self-start md:self-auto" onClick={() => setShowExtension(true)}>
+              <CalendarPlus className="h-4 w-4" />
+              Extend Access
+            </Button>
+          </div>
+        </div>
+      )}
+
       <h2 className="text-xl font-bold text-primary mb-1">Qualification Units</h2>
       <p className="text-sm text-muted-foreground mb-6">Select a unit to access learning resources {!qualification.is_cpd && "and submit assessment evidence"}</p>
 
-      {/* Requirements Section */}
       {allUnitsDone && (
         <div className="space-y-4 mb-8">
-          {/* CPD Final Assessment (Only for CPD) */}
           {qualification.is_cpd && (
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
               <div className="flex items-center gap-4">
@@ -104,12 +133,8 @@ const QualificationView = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     This CPD qualification requires a single final assessment.
                   </p>
-                  <Button 
-                    size="sm" 
-                    className="gap-2" 
-                    onClick={() => setShowAssessment(true)}
-                  >
-                    <ShieldCheck className="w-4 h-4" /> 
+                  <Button size="sm" className="gap-2" onClick={() => setShowAssessment(true)}>
+                    <ShieldCheck className="w-4 h-4" />
                     Start Final Assessment
                   </Button>
                 </div>
@@ -117,7 +142,6 @@ const QualificationView = () => {
             </div>
           )}
 
-          {/* Learner Declaration */}
           {requiresDeclaration && (
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
               <div className="flex items-center gap-4">
@@ -129,12 +153,8 @@ const QualificationView = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Please complete the learner declaration to finalize your qualification.
                   </p>
-                  <Button 
-                    size="sm" 
-                    className="gap-2" 
-                    onClick={() => setShowDeclaration(true)}
-                  >
-                    <FileCheck className="w-4 h-4" /> 
+                  <Button size="sm" className="gap-2" onClick={() => setShowDeclaration(true)}>
+                    <FileCheck className="w-4 h-4" />
                     Complete Declaration
                   </Button>
                 </div>
@@ -142,7 +162,6 @@ const QualificationView = () => {
             </div>
           )}
 
-          {/* Course Evaluation */}
           {requiresEvaluation && (
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
               <div className="flex items-center gap-4">
@@ -154,13 +173,8 @@ const QualificationView = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     We value your feedback! Please complete the course evaluation.
                   </p>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="gap-2" 
-                    onClick={() => setShowEvaluation(true)}
-                  >
-                    <ClipboardList className="w-4 h-4" /> 
+                  <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowEvaluation(true)}>
+                    <ClipboardList className="w-4 h-4" />
                     Complete Evaluation
                   </Button>
                 </div>
@@ -195,7 +209,7 @@ const QualificationView = () => {
           onClose={() => setShowDeclaration(false)}
           onSuccess={() => {
             setShowDeclaration(false);
-            refetch(); // Update enrolment status
+            refetch();
             if (requiresEvaluation) {
               setShowEvaluation(true);
             }
@@ -210,22 +224,33 @@ const QualificationView = () => {
           onClose={() => setShowEvaluation(false)}
           onSuccess={() => {
             setShowEvaluation(false);
-            refetch(); // Update enrolment status
+            refetch();
           }}
         />
       )}
 
       <div className="space-y-4">
         {units.map((unit) => {
-          const status = unit.progress?.status || "not_started";
-          const cfg = statusConfig[status as UnitData["status"]] || statusConfig.not_started;
+          const cfg = getUnitDisplayStatus(unit);
           const Icon = cfg.icon;
 
           return (
             <div key={unit.id} className="bg-card border border-border rounded-xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${status === "competent" ? "text-green-600" : status === "awaiting_assessment" ? "text-amber-500" : status === "awaiting_iqa" ? "text-blue-600" : status === "resubmission" ? "text-orange-500" : "text-muted-foreground"}`} />
+                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                    unit.display_status === "Competent" || unit.display_status === "Completed"
+                      ? "text-green-600"
+                      : unit.display_status === "Waiting for assessor review"
+                      ? "text-amber-500"
+                      : unit.display_status === "Waiting for IQA review"
+                      ? "text-blue-600"
+                      : unit.display_status === "Resubmission required" || unit.display_status === "Not yet competent"
+                      ? "text-orange-500"
+                      : unit.display_status === "In progress"
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                  }`} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-semibold text-foreground">
@@ -237,34 +262,36 @@ const QualificationView = () => {
                         </span>
                       )}
                     </div>
-                    {unit.progress?.submitted_at && (
-                      <p className="text-xs text-muted-foreground">Submitted: {new Date(unit.progress.submitted_at).toLocaleDateString()}</p>
-                    )}
                     {unit.progress?.completed_at && (
                       <p className="text-xs text-muted-foreground">Assessed: {new Date(unit.progress.completed_at).toLocaleDateString()}</p>
                     )}
-                    {!qualification.is_cpd && unit.progress?.feedback && (
-                      <div className="mt-3 bg-muted/50 rounded-lg p-4">
-                        <p className="text-sm font-semibold text-foreground mb-1">Assessor Feedback:</p>
-                        <p className="text-sm text-muted-foreground">{unit.progress.feedback}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
-                <Button
-                  asChild
-                  size="sm"
-                  className="flex-shrink-0"
-                >
-                  <Link to={`/learner/qualification/${id}/unit/${unit.id}`}>
-                    View Unit
-                  </Link>
-                </Button>
+                {isExpired ? (
+                  <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => setShowExtension(true)}>
+                    <Lock className="h-4 w-4" />
+                    Access Locked
+                  </Button>
+                ) : (
+                  <Button asChild size="sm" className="flex-shrink-0">
+                    <Link to={`/learner/qualification/${id}/unit/${unit.id}`}>
+                      View Unit
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      <ExtensionRequestModal
+        open={showExtension}
+        onOpenChange={setShowExtension}
+        enrolmentId={id || ""}
+        qualificationTitle={qualification.title}
+        currentExpiry={enrolment.access_expires_at ? new Date(enrolment.access_expires_at).toLocaleDateString("en-GB") : ""}
+      />
     </div>
   );
 };

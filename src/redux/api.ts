@@ -104,9 +104,13 @@ export const api = createApi({
     "ChecklistTemplates",
     "EmailLogs",
     "EnrollLearners",
+    "ExtensionPlans",
     "Trainers",
     "IQAs",
-    "Unit"
+    "Unit",
+    "BLOGS",
+    "BLOG",
+    "BLOGS_CATEGORIES",
   ],
   endpoints: () => ({}),
 });

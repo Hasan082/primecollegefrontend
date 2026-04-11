@@ -55,6 +55,12 @@ const generateSlug = (title: string) =>
     .replace(/[\s_]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+const withCacheBust = (url?: string | null) => {
+  if (!url) return undefined;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}t=${Date.now()}`;
+};
+
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
 const qualificationMainSchema = z.object({
@@ -189,10 +195,11 @@ const defaultValues: Partial<QualificationMainFormValues> = {
 interface ImageUploadProps {
   value: File | null | undefined;
   onChange: (file: File | null) => void;
+  onClearExisting: () => void;
   existingUrl?: string; // URL string from API in edit mode
 }
 
-const ImageUpload = ({ value, onChange, existingUrl }: ImageUploadProps) => {
+const ImageUpload = ({ value, onChange, onClearExisting, existingUrl }: ImageUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Derive preview: new File takes priority, then existing URL from API
@@ -206,6 +213,7 @@ const ImageUpload = ({ value, onChange, existingUrl }: ImageUploadProps) => {
 
   const handleClear = () => {
     onChange(null);
+    onClearExisting();
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -224,6 +232,13 @@ const ImageUpload = ({ value, onChange, existingUrl }: ImageUploadProps) => {
             className="absolute top-2 right-2 rounded-full bg-black/60 hover:bg-black/80 text-white p-1 transition-colors"
           >
             <X className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="absolute bottom-2 right-2 rounded-md bg-black/60 hover:bg-black/80 text-white text-xs px-2 py-1 transition-colors"
+          >
+            Replace image
           </button>
           {value && (
             <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md max-w-[80%] truncate">
@@ -282,6 +297,7 @@ const QualificationMain = () => {
   const [existingImageUrl, setExistingImageUrl] = useState<string | undefined>(
     undefined,
   );
+  const [clearFeaturedImage, setClearFeaturedImage] = useState(false);
 
   const form = useForm<QualificationMainFormValues>({
     resolver: zodResolver(qualificationMainSchema),
@@ -310,7 +326,8 @@ const QualificationMain = () => {
     if (isEditMode && data?.data) {
       const { featured_image, ...rest } = data?.data as any;
       // Keep the existing image URL for preview; don't put it in the File field
-      setExistingImageUrl(featured_image ?? undefined);
+      setExistingImageUrl(withCacheBust(featured_image));
+      setClearFeaturedImage(false);
       form.reset({ ...rest, featured_image: null });
     }
   }, [isEditMode, data?.data, form]);
@@ -322,6 +339,9 @@ const QualificationMain = () => {
     // Append the image file only when a new one was selected
     if (values.featured_image instanceof File) {
       fd.append("featured_image", values.featured_image);
+    }
+    if (clearFeaturedImage) {
+      fd.append("clear_featured_image", "true");
     }
 
     // Append all other scalar fields
@@ -353,12 +373,18 @@ const QualificationMain = () => {
         successMessage: "Qualification updated successfully",
       });
 
+      if (result.type === "success") {
+        const updatedImage = data?.data?.featured_image;
+        setExistingImageUrl(withCacheBust(updatedImage));
+        setClearFeaturedImage(false);
+        form.setValue("featured_image", null);
+      }
+
       toast({
         title: result.type === "success" ? "Success" : "Error",
         description: result.message,
         variant: result.type === "error" ? "destructive" : "default",
       });
-      toast({ title: "Qualification updated successfully" });
     } else {
       const [data, error] = await TryCatch(
         createQualificationMain(formData).unwrap(),
@@ -706,7 +732,16 @@ const QualificationMain = () => {
                   <FormControl>
                     <ImageUpload
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(file) => {
+                        if (file) {
+                          setClearFeaturedImage(false);
+                        }
+                        field.onChange(file);
+                      }}
+                      onClearExisting={() => {
+                        setExistingImageUrl(undefined);
+                        setClearFeaturedImage(true);
+                      }}
                       existingUrl={existingImageUrl}
                     />
                   </FormControl>
