@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import StrictQuizModal from "@/components/learner/StrictQuizModal";
 import EvidenceUploadForm from "@/components/learner/EvidenceUploadForm";
+import WrittenAssignmentForm from "@/components/learner/WrittenAssignmentForm";
 import ExtensionRequestModal from "@/components/learner/ExtensionRequestModal";
 import SubmissionHistory, { type SubmissionVersion } from "@/components/learner/SubmissionHistory";
 import {
@@ -184,6 +185,7 @@ const UnitDetail = () => {
   const {
     data: writtenResponse,
     isLoading: isLoadingWritten,
+    refetch: refetchWritten,
   } = useGetLearnerWrittenAssignmentQuery(
     { enrolmentId: resolvedEnrolmentId, unitId: resolvedUnitId },
     {
@@ -455,6 +457,21 @@ const UnitDetail = () => {
                               <p className="text-sm text-muted-foreground">
                                 No written assignment has been submitted for this unit yet.
                               </p>
+                            )}
+                            {!latestWrittenSubmission && (
+                              <WrittenAssignmentForm
+                                enrolmentId={resolvedEnrolmentId}
+                                unitId={resolvedUnitId}
+                                title={writtenConfig?.title || unit.written_assignment_summary.title}
+                                minWords={writtenConfig?.min_words || unit.written_assignment_summary.min_words}
+                                maxWords={writtenConfig?.max_words || unit.written_assignment_summary.max_words}
+                                isLocked={isExpired}
+                                onSuccess={() => {
+                                  void refetchOverview();
+                                  void refetchUnit();
+                                  void refetchWritten();
+                                }}
+                              />
                             )}
                           </>
                         )}
