@@ -17,6 +17,37 @@ interface EvidenceUploadFormProps {
   isLocked?: boolean;
 }
 
+const ALLOWED_EVIDENCE_EXTENSIONS = new Set([
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".rtf",
+  ".txt",
+  ".csv",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".mp3",
+  ".wav",
+  ".m4a",
+  ".aac",
+  ".ogg",
+  ".mp4",
+  ".mov",
+  ".avi",
+  ".mkv",
+  ".webm",
+  ".m4v",
+  ".wmv",
+]);
+
+const EVIDENCE_ACCEPT_ATTR = Array.from(ALLOWED_EVIDENCE_EXTENSIONS).join(",");
+
 const normalizeRequirements = (
   requirements: EvidenceUploadFormProps["requirements"]
 ): string[] => {
@@ -35,6 +66,11 @@ const normalizeRequirements = (
       .filter(Boolean);
   }
   return [];
+};
+
+const getExtension = (fileName: string) => {
+  const index = fileName.lastIndexOf(".");
+  return index >= 0 ? fileName.slice(index).toLowerCase() : "";
 };
 
 const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLocked }: EvidenceUploadFormProps) => {
@@ -66,7 +102,22 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList) return;
-    setFiles((prev) => [...prev, ...Array.from(fileList)]);
+
+    const incomingFiles = Array.from(fileList);
+    const validFiles = incomingFiles.filter((file) => ALLOWED_EVIDENCE_EXTENSIONS.has(getExtension(file.name)));
+    const invalidFiles = incomingFiles.filter((file) => !ALLOWED_EVIDENCE_EXTENSIONS.has(getExtension(file.name)));
+
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Some files were not added",
+        description: `Unsupported file type: ${invalidFiles.map((file) => file.name).join(", ")}`,
+        variant: "destructive",
+      });
+    }
+
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
+    }
   };
 
   const toggleCriteria = (criterion: string) => {
@@ -97,16 +148,15 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
       const formData = new FormData();
       formData.append("description", description);
       linkedCriteria.forEach((criterion) => formData.append("criteria_ids", criterion));
-      files.forEach(f => formData.append("files", f));
+      files.forEach((file) => formData.append("files", file));
 
       await submitEvidence({ enrolmentId, unitId, body: formData }).unwrap();
 
-      // Reset form
       setFiles([]);
       setDescription("");
       setLinkedCriteria([]);
       setDeclarationChecked(false);
-      
+
       toast({
         title: "Evidence Submitted",
         description: "Your evidence has been uploaded and submitted for assessment.",
@@ -114,9 +164,16 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
 
       if (onSuccess) onSuccess();
     } catch (err: any) {
+      const description =
+        err?.data?.files ||
+        err?.data?.criteria_ids ||
+        err?.data?.description ||
+        err?.data?.detail ||
+        err?.data?.message ||
+        "Failed to upload evidence";
       toast({
         title: "Submission failed",
-        description: err.data?.message || "Failed to upload evidence",
+        description: Array.isArray(description) ? description[0] : description,
         variant: "destructive"
       });
     }
@@ -127,7 +184,6 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
       <h3 className="text-base font-bold text-primary mb-1">Upload Evidence</h3>
       <p className="text-sm text-muted-foreground mb-5">Upload your completed evidence with a description and link to assessment criteria</p>
 
-      {/* File Upload */}
       <div className="space-y-4">
         <div>
           <Label className="text-sm font-semibold mb-2 block">Files</Label>
@@ -142,13 +198,15 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
               <span className="text-primary font-medium underline">Click to upload</span>{" "}
               <span className="text-muted-foreground">or drag and drop</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, XLSX, images (max. 10MB)</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              PDF, Word, Excel, PowerPoint, image, audio, or video files (max. 10MB)
+            </p>
           </div>
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,.docx,.xlsx,.doc,.xls,.jpg,.jpeg,.png"
+            accept={EVIDENCE_ACCEPT_ATTR}
             className="hidden"
             onChange={(e) => handleFiles(e.target.files)}
           />
@@ -169,7 +227,6 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
           )}
         </div>
 
-        {/* Evidence Description */}
         <div>
           <Label htmlFor="evidence-desc" className="text-sm font-semibold mb-2 block">
             Evidence Description <span className="text-destructive">*</span>
@@ -184,7 +241,6 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
           <p className="text-xs text-muted-foreground mt-1">Explain how this evidence meets the assessment criteria</p>
         </div>
 
-        {/* Link to Criteria */}
         <div>
           <Label className="text-sm font-semibold mb-2 flex items-center gap-1.5">
             <Link2 className="w-3.5 h-3.5" />
@@ -220,7 +276,6 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
           </div>
         </div>
 
-        {/* Learner Declaration */}
         <div className="border border-primary/20 bg-primary/5 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
@@ -241,7 +296,6 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
           </div>
         </div>
 
-        {/* Submit */}
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
             {linkedCriteria.length > 0 && (

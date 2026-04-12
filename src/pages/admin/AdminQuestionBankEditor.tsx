@@ -434,15 +434,6 @@ const AdminQuestionBankEditor = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <Label className="font-bold flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-primary" /> Assessment Visibility
-                          </Label>
-                          <p className="text-[11px] text-muted-foreground">Keep this enabled to make the final assessment available to learners.</p>
-                        </div>
-                        <Switch checked={localConfig.is_active} onCheckedChange={(value) => setLocalConfig({ ...localConfig, is_active: value })} />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="font-bold flex items-center gap-2">
                             <Shield className="w-4 h-4 text-primary" /> Show results immediately
                           </Label>
                           <p className="text-[11px] text-muted-foreground">Show results immediately after the assessment.</p>
@@ -606,8 +597,8 @@ const AdminQuestionBankEditor = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Visibility</span>
-                <Badge variant={config?.is_active ? "default" : "secondary"}>
-                  {config?.is_active ? "Live" : "Inactive"}
+                <Badge variant={config?.quiz_enabled ? "default" : "secondary"}>
+                  {config?.quiz_enabled ? "Active" : "Inactive"}
                 </Badge>
               </div>
             </div>

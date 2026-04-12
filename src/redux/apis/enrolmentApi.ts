@@ -7,6 +7,7 @@ import {
   EvidenceSubmissionResponse,
   LearnerEvidenceSubmissionListResponse,
   LearnerWrittenAssignmentResponse,
+  LearnerWrittenAssignmentSubmissionResponse,
 } from "@/types/enrollment.types";
 import { api } from "../api";
 import { cleanObject } from "@/utils/cleanObject";
@@ -176,6 +177,21 @@ const enrolmentApi = api.injectEndpoints({
         { type: "Enrolments", id: `WRITTEN_${unitId}` },
       ],
     }),
+    submitWrittenAssignment: builder.mutation<
+      LearnerWrittenAssignmentSubmissionResponse,
+      { enrolmentId: string; unitId: string; body: { response_html: string; declaration_signed: boolean } }
+    >({
+      query: ({ enrolmentId, unitId, body }) => ({
+        url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/written-assignment/submissions/`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: enrolmentId },
+        { type: "Enrolments", id: `UNIT_${unitId}` },
+        { type: "Enrolments", id: `WRITTEN_${unitId}` },
+      ],
+    }),
     getLearnerEvidenceSubmissions: builder.query<
       LearnerEvidenceSubmissionListResponse,
       { enrolmentId: string; unitId: string }
@@ -254,6 +270,7 @@ export const {
   useGetLearnerUnitOverviewQuery,
   useGetEnrolmentContentQuery,
   useGetLearnerWrittenAssignmentQuery,
+  useSubmitWrittenAssignmentMutation,
   useGetLearnerEvidenceSubmissionsQuery,
   useGetLearnerExtensionPlansQuery,
   useCreateLearnerExtensionOrderMutation,

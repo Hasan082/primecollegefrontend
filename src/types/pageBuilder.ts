@@ -191,10 +191,11 @@ export interface BlogBlock extends BlockBase {
     title?: string;
     items: Array<{
       title: string;
-      description: string;
+      blog_excerpt: string;
       date: string;
       category: string;
       image?: string;
+      image_srcset?: string;
       slug?: string;
     }>;
   };

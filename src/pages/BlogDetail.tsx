@@ -1,194 +1,243 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, Clock, User, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Link, useParams } from "react-router-dom";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { ArrowLeft, Calendar } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
-import type { PageConfig, ContentBlock } from "@/types/pageBuilder";
-import { defaultPages } from "@/data/defaultPages";
-import { safeParseBlocks } from "@/utils/pageBuilder";
+import {
+  useGetBlogCategoriesQuery,
+  useGetBlogQuery,
+  useGetBlogsQuery,
+} from "@/redux/apis/blogs/blogApi";
+import { sanitizeRichHtml } from "@/utils/sanitizeRichHtml";
 
 import heroClassroom from "@/assets/hero-classroom.jpg";
-import heroBusiness from "@/assets/hero-business.jpg";
-import heroLeadership from "@/assets/hero-leadership.jpg";
-import heroExecutive from "@/assets/hero-executive.jpg";
-import heroCare from "@/assets/hero-care.jpg";
-
-const heroImageMap: Record<string, string> = {
-  classroom: heroClassroom,
-  business: heroBusiness,
-  leadership: heroLeadership,
-  executive: heroExecutive,
-  care: heroCare,
-};
 
 const BlogDetail = () => {
   const { slug = "" } = useParams<{ slug: string }>();
 
-  const allBlogPosts = defaultPages.filter((p) => p.type === "blog-post");
-  const post = allBlogPosts.find(
-    (p) =>
-      p.slug === `/blogs/${slug}` ||
-      p.slug === `/blog/${slug}` ||
-      p.id === `blog-${slug}` ||
-      p.slug.endsWith(`/${slug}`)
-  );
-
-  // Category counts
-  const categoryCounts: Record<string, number> = {};
-  allBlogPosts.forEach((p) => {
-    const cat = p.blogMeta?.category || "Uncategorised";
-    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+  const {
+    data: blogResponse,
+    isLoading: isBlogLoading,
+    isError: isBlogError,
+  } = useGetBlogQuery(slug || skipToken, {
+    skip: !slug,
   });
 
-  const relatedPosts = allBlogPosts.filter((p) => p.id !== post?.id).slice(0, 2);
+  const blog = blogResponse?.data;
 
-  if (!post) {
+  const { data: categoriesResponse } = useGetBlogCategoriesQuery({
+    is_active: true,
+  });
+
+  const { data: relatedBlogsResponse, isLoading: isRelatedLoading } =
+    useGetBlogsQuery(
+      blog?.category_slug
+        ? {
+            category_slug: blog.category_slug,
+            page_size: 3,
+            is_active: true,
+          }
+        : skipToken,
+    );
+
+  const categories = categoriesResponse?.data ?? [];
+  const relatedPosts = (relatedBlogsResponse?.data?.results ?? []).filter(
+    (item) => item.id !== blog?.id,
+  );
+  const sanitizedDescription = blog?.blog_description
+    ? sanitizeRichHtml(blog.blog_description)
+    : "";
+
+  if (isBlogLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold text-foreground mb-4">Post Not Found</h1>
-        <Link to="/blogs" className="text-primary hover:underline">← Back to Blog</Link>
+      <div className="bg-muted/30">
+        <div className="container mx-auto px-4 py-10">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
+              <div className="h-[300px] animate-pulse rounded-xl bg-muted/40 md:h-[420px]" />
+              <div className="h-4 w-28 animate-pulse rounded bg-muted/40" />
+              <div className="h-10 w-3/4 animate-pulse rounded bg-muted/40" />
+              <div className="h-4 w-48 animate-pulse rounded bg-muted/40" />
+              <div className="space-y-3">
+                <div className="h-4 w-full animate-pulse rounded bg-muted/40" />
+                <div className="h-4 w-full animate-pulse rounded bg-muted/40" />
+                <div className="h-4 w-5/6 animate-pulse rounded bg-muted/40" />
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="h-48 animate-pulse rounded-xl bg-muted/40" />
+              <div className="h-64 animate-pulse rounded-xl bg-muted/40" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const meta = post.blogMeta || {};
-  const featuredImage = heroImageMap[meta.image || "classroom"] || heroClassroom;
+  if (isBlogError || !blog) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <h1 className="mb-4 text-2xl font-bold text-foreground">
+          Post Not Found
+        </h1>
+        <Link to="/blogs" className="text-primary hover:underline">
+          ← Back to Blog
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <Breadcrumb items={[{ label: "Blogs", href: "/blogs" }, { label: post.title }]} />
+      <Breadcrumb
+        items={[{ label: "Blogs", href: "/blogs" }, { label: blog.blog_title }]}
+      />
 
       <div className="bg-muted/30">
         <div className="container mx-auto px-4 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Main Content */}
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
             <article className="lg:col-span-2">
-              {/* Featured Image */}
-              <div className="rounded-xl overflow-hidden mb-8">
+              <div className="mb-8 overflow-hidden rounded-xl">
                 <img
-                  src={featuredImage}
-                  alt={post.title}
-                  className="w-full h-[300px] md:h-[420px] object-cover"
+                  src={
+                    blog.feature_image?.sources?.desktop ||
+                    blog.feature_image?.src ||
+                    heroClassroom
+                  }
+                  srcSet={blog.feature_image?.srcset}
+                  sizes="(min-width: 1024px) 66vw, 100vw"
+                  alt={blog.blog_title}
+                  className="h-[300px] w-full object-cover md:h-[420px]"
                 />
               </div>
 
-              {/* Category dot */}
-              <div className="flex items-center gap-2 mb-4">
-                <span className="w-2 h-2 rounded-full bg-secondary" />
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {meta.category}
+              <div className="mb-4 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-secondary" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {blog.category_name}
                 </span>
               </div>
 
-              {/* Title */}
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground leading-tight mb-4">
-                {post.title}
+              <h1 className="mb-4 text-2xl font-bold leading-tight text-foreground md:text-3xl lg:text-4xl">
+                {blog.blog_title}
               </h1>
 
-              {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 mb-8 pb-8 border-b border-border">
-                <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                  <User className="w-4 h-4" /> {meta.author}
-                </span>
-                <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                  <Calendar className="w-4 h-4" /> {meta.date}
-                </span>
-                <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                  <Clock className="w-4 h-4" /> {meta.readTime}
+              <div className="mb-8 flex flex-wrap items-center gap-4 border-b border-border pb-8">
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  {new Date(blog.created_at).toLocaleDateString()}
                 </span>
               </div>
 
-              {/* Page Builder Blocks */}
-              <div className="space-y-6">
-                {safeParseBlocks(post.blocks)
-                  .filter((b) => b.type !== "hero") // Skip hero blocks (used as featured image above)
-                  .map((block) => (
-                    <BlogBlockRenderer key={block.id} block={block} />
-                  ))}
+              {blog.blog_excerpt ? (
+                <p className="mb-8 text-base leading-relaxed text-muted-foreground">
+                  {blog.blog_excerpt}
+                </p>
+              ) : null}
+
+              <div
+                className="prose prose-lg max-w-none text-muted-foreground leading-relaxed prose-headings:text-foreground prose-headings:font-bold prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4 prose-li:text-muted-foreground prose-strong:text-foreground prose-a:text-primary"
+                dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+              />
+
+              <div className="mt-12 rounded-2xl bg-primary px-6 py-10 text-center md:px-10">
+                <h2 className="mb-3 text-2xl font-bold text-primary-foreground">
+                  Need Help Choosing?
+                </h2>
+                <p className="mx-auto mb-6 max-w-2xl text-sm text-primary-foreground/85 md:text-base">
+                  Speak to our team and we'll help you find the right
+                  qualification for your goals.
+                </p>
+                <Link
+                  to="/contact"
+                  className="inline-block rounded-lg bg-secondary px-7 py-3 text-sm font-semibold text-secondary-foreground hover:opacity-90"
+                >
+                  Contact Us
+                </Link>
               </div>
 
-              {/* Back Link */}
-              <div className="mt-12 pt-8 border-t border-border">
+              <div className="mt-12 border-t border-border pt-8">
                 <Link
                   to="/blogs"
-                  className="inline-flex items-center gap-2 text-primary font-semibold hover:opacity-80 transition-opacity"
+                  className="inline-flex items-center gap-2 font-semibold text-primary hover:opacity-80 transition-opacity"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="h-4 w-4" />
                   Back to Blog
                 </Link>
               </div>
             </article>
 
-            {/* Sidebar */}
-            <aside className="lg:col-span-1 space-y-8">
-              {/* Search */}
-              <div className="bg-card rounded-xl p-6 border border-border">
-                <h3 className="text-base font-bold text-foreground mb-1">Search</h3>
-                <div className="w-8 h-0.5 bg-primary mb-4" />
-                <div className="relative">
-                  <Input placeholder="Search..." className="pr-10" />
-                  <Search className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-
-              {/* Categories */}
-              <div className="bg-card rounded-xl p-6 border border-border">
-                <h3 className="text-base font-bold text-foreground mb-1">Categories</h3>
-                <div className="w-8 h-0.5 bg-primary mb-4" />
+            <aside className="space-y-8 lg:col-span-1">
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-1 text-base font-bold text-foreground">
+                  Categories
+                </h3>
+                <div className="mb-4 h-0.5 w-8 bg-primary" />
                 <div className="space-y-0">
-                  {Object.entries(categoryCounts).map(([cat, count]) => (
-                    <div
-                      key={cat}
-                      className="flex items-center justify-between py-2.5 border-b border-border last:border-0"
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      to={`/blogs?category=${category.category_slug}`}
+                      className={`flex items-center justify-between border-b border-border py-2.5 last:border-0 ${
+                        category.category_slug === blog.category_slug
+                          ? "font-semibold text-foreground"
+                          : "text-muted-foreground"
+                      }`}
                     >
-                      <span className="text-sm text-muted-foreground">{cat}</span>
-                      <span className="text-sm text-muted-foreground">({count})</span>
-                    </div>
+                      <span className="text-sm">{category.name}</span>
+                      <span className="text-sm">({category.blog_count})</span>
+                    </Link>
                   ))}
                 </div>
               </div>
 
-              {/* Related Posts */}
-              {relatedPosts.length > 0 && (
-                <div className="bg-card rounded-xl p-6 border border-border">
-                  <h3 className="text-base font-bold text-foreground mb-1">Related Articles</h3>
-                  <div className="w-8 h-0.5 bg-primary mb-4" />
-                  <div className="space-y-4">
-                    {relatedPosts.map((related) => (
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-1 text-base font-bold text-foreground">
+                  Related Articles
+                </h3>
+                <div className="mb-4 h-0.5 w-8 bg-primary" />
+                <div className="space-y-4">
+                  {isRelatedLoading ? (
+                    Array.from({ length: 2 }).map((_, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="aspect-[16/9] animate-pulse rounded-lg bg-muted/40" />
+                        <div className="h-3 w-24 animate-pulse rounded bg-muted/40" />
+                        <div className="h-4 w-full animate-pulse rounded bg-muted/40" />
+                      </div>
+                    ))
+                  ) : relatedPosts.length > 0 ? (
+                    relatedPosts.map((related) => (
                       <Link
                         key={related.id}
-                        to={related.slug}
+                        to={`/blogs/${related.blog_slug}`}
                         className="group block"
                       >
-                        <div className="aspect-[16/9] rounded-lg overflow-hidden mb-2">
+                        <div className="mb-2 aspect-[16/9] overflow-hidden rounded-lg">
                           <img
-                            src={heroImageMap[related.blogMeta?.image || "classroom"] || heroClassroom}
-                            alt={related.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            src={
+                              related.feature_image?.sources?.card ||
+                              related.feature_image?.src ||
+                              heroClassroom
+                            }
+                            srcSet={related.feature_image?.srcset}
+                            sizes="320px"
+                            alt={related.blog_title}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
-                        <span className="text-xs text-muted-foreground">{related.blogMeta?.date}</span>
-                        <h4 className="text-sm font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
-                          {related.title}
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(related.created_at).toLocaleDateString()}
+                        </span>
+                        <h4 className="text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+                          {related.blog_title}
                         </h4>
                       </Link>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No related articles found.
+                    </p>
+                  )}
                 </div>
-              )}
-
-              {/* CTA Card */}
-              <div className="bg-primary rounded-xl p-6 text-center">
-                <h3 className="text-lg font-bold text-primary-foreground mb-2">Ready to Start?</h3>
-                <p className="text-primary-foreground/80 text-sm mb-4">
-                  Explore our qualifications and take the next step in your career.
-                </p>
-                <Link
-                  to="/qualifications"
-                  className="inline-block bg-secondary text-secondary-foreground px-6 py-2.5 text-sm font-semibold rounded hover:opacity-90"
-                >
-                  View Qualifications
-                </Link>
               </div>
             </aside>
           </div>
@@ -196,107 +245,6 @@ const BlogDetail = () => {
       </div>
     </div>
   );
-};
-
-/** Renders a single page builder block in blog context */
-const BlogBlockRenderer = ({ block }: { block: ContentBlock }) => {
-  const d = block.data as Record<string, unknown>;
-
-  switch (block.type) {
-    case "text": {
-      const content = d.content as string;
-      const isHtml = content?.startsWith("<");
-      return (
-        <div>
-          {d.title && (
-            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-3">{d.title as string}</h2>
-          )}
-          {isHtml ? (
-            <div
-              className="prose prose-lg max-w-none text-muted-foreground leading-relaxed
-                prose-headings:text-foreground prose-headings:font-bold
-                prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:mb-4
-                prose-li:text-muted-foreground prose-strong:text-foreground
-                prose-ul:my-4 prose-li:my-1"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
-          ) : (
-            <p className="text-muted-foreground leading-relaxed">{content}</p>
-          )}
-        </div>
-      );
-    }
-
-    case "image-text":
-      return (
-        <div className={`flex flex-col md:flex-row gap-6 ${d.imagePosition === "left" ? "md:flex-row" : "md:flex-row-reverse"}`}>
-          {d.image && (
-            <div className="md:w-1/2 rounded-xl overflow-hidden">
-              <img src={d.image as string} alt="" className="w-full h-full object-cover" />
-            </div>
-          )}
-          <div className="md:w-1/2">
-            <h2 className="text-xl font-bold text-foreground mb-3">{d.headline as string}</h2>
-            {Array.isArray(d.paragraphs) && (d.paragraphs as string[]).map((p, i) => (
-              p.startsWith("<") ? (
-                <div key={i} className="text-muted-foreground leading-relaxed mb-3" dangerouslySetInnerHTML={{ __html: p }} />
-              ) : (
-                <p key={i} className="text-muted-foreground leading-relaxed mb-3">{p}</p>
-              )
-            ))}
-          </div>
-        </div>
-      );
-
-    case "cta":
-      return (
-        <div className="bg-primary rounded-xl p-8 text-center my-6">
-          <h3 className="text-xl font-bold text-primary-foreground mb-2">{d.title as string}</h3>
-          {d.content && <p className="text-primary-foreground/80 mb-4">{d.content as string}</p>}
-          {d.ctaLabel && d.ctaHref && (
-            <Link
-              to={d.ctaHref as string}
-              className="inline-block bg-secondary text-secondary-foreground px-6 py-2.5 font-semibold rounded hover:opacity-90"
-            >
-              {d.ctaLabel as string}
-            </Link>
-          )}
-        </div>
-      );
-
-    case "stats":
-      return (
-        <div className="bg-primary rounded-xl p-8 text-center my-6">
-          {d.title && <h3 className="text-xl font-bold text-primary-foreground mb-4">{d.title as string}</h3>}
-          <div className="grid grid-cols-3 gap-4">
-            {Array.isArray(d.items) && (d.items as { value: string; title: string }[]).map((item, i) => (
-              <div key={i} className="text-center">
-                <p className="text-3xl font-bold text-primary-foreground">{item.value}</p>
-                <p className="text-sm text-secondary font-semibold">{item.title}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-
-    case "faq":
-      return (
-        <div className="my-6">
-          {d.title && <h2 className="text-xl font-bold text-foreground mb-4">{d.title as string}</h2>}
-          <div className="space-y-3">
-            {Array.isArray(d.items) && (d.items as { question: string; answer: string }[]).map((item, i) => (
-              <details key={i} className="border border-border rounded-lg">
-                <summary className="px-4 py-3 cursor-pointer font-medium text-foreground">{item.question}</summary>
-                <div className="px-4 pb-3 text-muted-foreground text-sm">{item.answer}</div>
-              </details>
-            ))}
-          </div>
-        </div>
-      );
-
-    default:
-      return null;
-  }
 };
 
 export default BlogDetail;
