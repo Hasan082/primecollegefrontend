@@ -54,6 +54,11 @@ const siteSettingsItems = [
     icon: Mail,
   },
   {
+    title: "Contact Messages",
+    url: "/admin/settings/contact-messages",
+    icon: Mail,
+  },
+  {
     title: "Extension Plans",
     url: "/admin/extension-plans",
     icon: CalendarPlus,

@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { useSubmitContactFormMutation } from "@/redux/apis/contactApi";
 import { Users, Award, CheckCircle, Clock, Target } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import HeroSlider from "@/components/HeroSlider";
@@ -109,6 +112,117 @@ const renderHero = (block: ContentBlock, pageSlug?: string) => {
         </div>
       ) : null}
     </div>
+  );
+};
+
+const ContactFormBlock = ({ d }: { d: any }) => {
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [submitContactForm, { isLoading }] = useSubmitContactFormMutation();
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const fieldName = e.target.name === "name" ? "full_name" : e.target.name;
+    setFormData({ ...formData, [fieldName]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await submitContactForm(formData).unwrap();
+      toast.success("Success", {
+        description: "Your message has been sent successfully.",
+      });
+      setFormData({
+        full_name: "",
+        email: "",
+        subject: "",
+        message: "",
+      });
+    } catch (err: any) {
+      toast.error("Error", {
+        description: err?.data?.message || "Failed to send message. Please try again.",
+      });
+    }
+  };
+
+  return (
+    <Section title="">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
+        <div>
+          <h3 className="text-xl font-semibold text-foreground mb-6">
+            {d.title || "Get in Touch"}
+          </h3>
+          <div className="space-y-4 text-sm">
+            <div>
+              <div className="font-semibold text-foreground">Address</div>
+              <div className="text-muted-foreground">{d.address}</div>
+            </div>
+            <div>
+              <div className="font-semibold text-foreground">Email</div>
+              <div className="text-muted-foreground">{d.email}</div>
+            </div>
+            <div>
+              <div className="font-semibold text-foreground">Phone</div>
+              <div className="text-muted-foreground">{d.phone}</div>
+            </div>
+            <div>
+              <div className="font-semibold text-foreground">Office Hours</div>
+              <div className="text-muted-foreground">{d.hours}</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold text-foreground mb-6">
+            Send a Message
+          </h3>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {Array.isArray(d.formFields) &&
+              d.formFields.map((field: any) => (
+                <div key={field.name}>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    {field.label}
+                    {field.required ? (
+                      <span className="text-destructive ml-1">*</span>
+                    ) : null}
+                  </label>
+                  {field.type === "textarea" ? (
+                    <textarea
+                      name={field.name}
+                      required={field.required}
+                      rows={4}
+                      value={formData[(field.name === "name" ? "full_name" : field.name) as keyof typeof formData] || ""}
+                      onChange={handleChange}
+                      className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  ) : (
+                    <input
+                      type={field.type}
+                      name={field.name}
+                      required={field.required}
+                      value={formData[(field.name === "name" ? "full_name" : field.name) as keyof typeof formData] || ""}
+                      onChange={handleChange}
+                      className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  )}
+                </div>
+              ))}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-primary text-primary-foreground px-8 py-2 rounded text-sm font-semibold hover:opacity-90 transition shadow-sm disabled:opacity-50"
+            >
+              {isLoading ? "Sending..." : "Send Message"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </Section>
   );
 };
 
@@ -475,76 +589,7 @@ export const CMSBlockRenderer = ({
         </Section>
       );
     case "contact-form":
-      return (
-        <Section title="">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
-            <div>
-              <h3 className="text-xl font-semibold text-foreground mb-6">
-                {d.title || "Get in Touch"}
-              </h3>
-              <div className="space-y-4 text-sm">
-                <div>
-                  <div className="font-semibold text-foreground">Address</div>
-                  <div className="text-muted-foreground">{d.address}</div>
-                </div>
-                <div>
-                  <div className="font-semibold text-foreground">Email</div>
-                  <div className="text-muted-foreground">{d.email}</div>
-                </div>
-                <div>
-                  <div className="font-semibold text-foreground">Phone</div>
-                  <div className="text-muted-foreground">{d.phone}</div>
-                </div>
-                <div>
-                  <div className="font-semibold text-foreground">
-                    Office Hours
-                  </div>
-                  <div className="text-muted-foreground">{d.hours}</div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-foreground mb-6">
-                Send a Message
-              </h3>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                {Array.isArray(d.formFields) &&
-                  d.formFields.map((field: any) => (
-                    <div key={field.name}>
-                      <label className="block text-sm font-medium text-foreground mb-1">
-                        {field.label}
-                        {field.required ? (
-                          <span className="text-destructive ml-1">*</span>
-                        ) : null}
-                      </label>
-                      {field.type === "textarea" ? (
-                        <textarea
-                          name={field.name}
-                          required={field.required}
-                          rows={4}
-                          className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
-                      ) : (
-                        <input
-                          type={field.type}
-                          name={field.name}
-                          required={field.required}
-                          className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
-                      )}
-                    </div>
-                  ))}
-                <button
-                  type="submit"
-                  className="bg-primary text-primary-foreground px-8 py-2 rounded text-sm font-semibold hover:opacity-90 transition shadow-sm"
-                >
-                  Send Message
-                </button>
-              </form>
-            </div>
-          </div>
-        </Section>
-      );
+      return <ContactFormBlock d={d} />;
     case "map":
       return (
         <section className="bg-muted py-16 px-4">

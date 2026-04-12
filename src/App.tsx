@@ -116,6 +116,8 @@ const EmailDeliveryMonitor = lazy(
   () => import("./pages/admin/settings/EmailDeliveryMonitor"),
 );
 
+const ContactMessages = lazy(() => import("./pages/admin/settings/ContactMessages"));
+
 // iqa dashboard
 const IQADashboard = lazy(() => import("./pages/iqa/Dashboard"));
 const SamplingQueue = lazy(() => import("./pages/iqa/SamplingQueue"));
@@ -265,6 +267,10 @@ const App = () => {
                     <Route
                       path="settings/email-delivery-monitor"
                       element={<EmailDeliveryMonitor />}
+                    />
+                    <Route
+                      path="settings/contact-messages"
+                      element={<ContactMessages />}
                     />
                     <Route path="enrollments" element={<Enrollments />} />
                   </Route>
