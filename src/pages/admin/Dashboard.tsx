@@ -75,7 +75,11 @@ const AdminDashboard = () => {
     paidOrders: data?.kpis?.paid_orders || 0,
     pendingAssessments: data?.pipeline?.trainer_review_pending || 0,
     pendingIQA: data?.pipeline?.iqa_review_pending || 0,
-    escalatedIQA: data?.escalated_iqa_count || 0,
+    escalatedIQA:
+      data?.pipeline?.submission_concerns_open ||
+      data?.alerts?.find((alert) => alert?.key === "submission_concerns_open")?.count ||
+      data?.escalated_iqa_count ||
+      0,
     monthlyEnrolments: data?.charts?.enrolments_trend_simple || [],
     categoryDistribution: data?.charts?.learners_by_category_simple || [],
     trainerPerformances: data?.trainer_overview || [],

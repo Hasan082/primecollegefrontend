@@ -48,6 +48,7 @@ export interface DashboardOverviewResponse {
     pipeline: {
       trainer_review_pending: number;
       iqa_review_pending: number;
+      submission_concerns_open?: number;
       declaration_pending: number;
       evaluation_pending: number;
       final_assessment_pending: number;

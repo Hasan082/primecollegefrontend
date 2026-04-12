@@ -1,35 +1,54 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, FileText, User, GraduationCap, Calendar, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  User,
+  GraduationCap,
+  Calendar,
+  CheckCircle,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { recentAssessments } from "@/data/trainerMockData";
+import { useGetTrainerSubmissionRecordQuery } from "@/redux/apis/trainer/trainerReviewApi";
 
 const outcomeColors: Record<string, string> = {
-  "Competent": "bg-green-600 text-white",
-  "Resubmission Required": "bg-secondary text-secondary-foreground",
-  "Not Yet Competent": "bg-destructive text-destructive-foreground",
+  competent: "bg-green-600 text-white",
+  resubmit: "bg-secondary text-secondary-foreground",
+  not_competent: "bg-destructive text-destructive-foreground",
 };
 
 const AssessmentRecord = () => {
   const { id } = useParams();
-  const record = recentAssessments.find((a) => a.id === id);
+  const { data, isLoading, isError } = useGetTrainerSubmissionRecordQuery(id!, {
+    skip: !id,
+  });
 
-  if (!record) {
+  if (isLoading) {
+    return <div className="py-20 text-center text-muted-foreground">Loading assessment record...</div>;
+  }
+
+  if (isError || !data?.data) {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">Assessment record not found.</p>
-        <Link to="/trainer/dashboard" className="text-primary underline mt-2 inline-block">Back to Dashboard</Link>
+        <Link to="/trainer/dashboard" className="text-primary underline mt-2 inline-block">
+          Back to Dashboard
+        </Link>
       </div>
     );
   }
 
+  const record = data.data;
+
   return (
     <div>
-      <Link to="/trainer/history" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6">
+      <Link
+        to="/trainer/history"
+        className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm mb-6"
+      >
         <ArrowLeft className="w-4 h-4" /> Back to Assessment History
       </Link>
 
-      {/* Header Card */}
       <Card className="bg-primary text-primary-foreground p-6 mb-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
@@ -38,77 +57,114 @@ const AssessmentRecord = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold">Assessment Record</h1>
-              <p className="text-primary-foreground/80">{record.unitCode}: {record.unitTitle}</p>
+              <p className="text-primary-foreground/80">
+                {record.unit_data.unit_code}: {record.unit_data.title}
+              </p>
             </div>
           </div>
-          <Badge className={`${outcomeColors[record.outcome]} text-sm px-4 py-1.5 flex items-center gap-1.5`}>
+          <Badge
+            className={`${outcomeColors[record.status] || "bg-muted text-muted-foreground"} text-sm px-4 py-1.5 flex items-center gap-1.5`}
+          >
             <CheckCircle className="w-4 h-4" />
-            {record.outcome}
+            {record.status.replace(/_/g, " ")}
           </Badge>
         </div>
       </Card>
 
-      {/* Meta Info */}
       <Card className="p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
           <div className="flex items-start gap-3">
             <User className="w-4 h-4 mt-0.5 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Learner</p>
-              <p className="font-semibold text-primary">{record.learnerName}</p>
-              <p className="text-xs text-muted-foreground">{record.learnerId}</p>
+              <p className="font-semibold text-primary">{record.learner.name}</p>
+              <p className="text-xs text-muted-foreground">{record.learner.qualification_learner_id}</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <GraduationCap className="w-4 h-4 mt-0.5 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Qualification</p>
-              <p className="font-semibold text-primary">{record.qualification}</p>
+              <p className="font-semibold text-primary">{record.qualification.title}</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <Calendar className="w-4 h-4 mt-0.5 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Assessed By</p>
-              <p className="font-semibold text-primary">{record.assessorName}</p>
-              <p className="text-xs text-muted-foreground">{record.assessedDate}</p>
+              <p className="font-semibold text-primary">{record.assessor?.name || "N/A"}</p>
+              <p className="text-xs text-muted-foreground">
+                {record.outcome_set_at ? new Date(record.outcome_set_at).toLocaleDateString() : "—"}
+              </p>
             </div>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <Clock className="w-4 h-4 mt-0.5 text-muted-foreground" />
+          <Calendar className="w-4 h-4 mt-0.5 text-muted-foreground" />
           <div>
             <p className="text-xs text-muted-foreground">Submitted Date</p>
-            <p className="font-semibold text-primary">{record.submittedDate}</p>
+            <p className="font-semibold text-primary">
+              {new Date(record.submitted_at).toLocaleDateString()}
+            </p>
           </div>
         </div>
       </Card>
 
-      {/* Criteria */}
-      <Card className="p-6">
-        <h2 className="text-lg font-bold text-primary mb-1">Assessment Criteria</h2>
-        <p className="text-sm text-muted-foreground mb-6">Individual criterion outcomes and evidence</p>
+      <Card className="p-6 mb-6">
+        <h2 className="text-lg font-bold text-primary mb-1">Assessor Feedback</h2>
+        <p className="text-sm text-muted-foreground mb-6">Outcome and feedback recorded by trainer</p>
 
         <div className="space-y-3">
-          {record.criteria.map((c) => (
-            <div
-              key={c.code}
-              className={`rounded-xl p-4 flex items-center gap-4 ${c.met ? 'bg-green-50 border border-green-200' : 'bg-destructive/5 border border-destructive/20'}`}
-            >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white ${c.met ? 'bg-primary' : 'bg-destructive'}`}>
-                {c.code}
-              </div>
-              <div className="flex-1">
-                <p className={`font-semibold ${c.met ? 'text-primary' : 'text-destructive'}`}>{c.title}</p>
-                <p className="text-sm text-muted-foreground">Evidence: {c.evidence}</p>
-              </div>
-              <Badge className={`${c.met ? 'bg-green-600' : 'bg-destructive'} text-white text-xs`}>
-                {c.met ? 'Met' : 'Not Met'}
-              </Badge>
-            </div>
-          ))}
+          <div className="rounded-xl p-4 bg-muted/30 border">
+            <p className="text-sm text-muted-foreground mb-1">Submission Type</p>
+            <p className="font-semibold text-primary capitalize">
+              {record.submission_type.replace(/_/g, " ")}
+            </p>
+          </div>
+          <div className="rounded-xl p-4 bg-muted/30 border">
+            <p className="text-sm text-muted-foreground mb-1">Score</p>
+            <p className="font-semibold text-primary">
+              {record.assessor_score != null && record.assessor_score_max != null
+                ? `${record.assessor_score}/${record.assessor_score_max}`
+                : "—"}
+            </p>
+          </div>
+          <div className="rounded-xl p-4 bg-muted/30 border">
+            <p className="text-sm text-muted-foreground mb-1">Band</p>
+            <p className="font-semibold text-primary">
+              {record.assessor_band ? record.assessor_band.replace(/_/g, " ") : "—"}
+            </p>
+          </div>
+          <div className="rounded-xl p-4 bg-muted/30 border">
+            <p className="text-sm text-muted-foreground mb-1">Feedback</p>
+            <p className="font-semibold text-primary whitespace-pre-wrap">
+              {record.assessor_feedback || "No assessor feedback recorded."}
+            </p>
+          </div>
         </div>
       </Card>
+
+      {(record.iqa_decision || record.iqa_review_notes) && (
+        <Card className="p-6">
+          <h2 className="text-lg font-bold text-primary mb-1">IQA Review</h2>
+          <p className="text-sm text-muted-foreground mb-6">Most recent IQA review information</p>
+
+          <div className="space-y-3">
+            <div className="rounded-xl p-4 bg-muted/30 border">
+              <p className="text-sm text-muted-foreground mb-1">IQA Decision</p>
+              <p className="font-semibold text-primary">
+                {record.iqa_decision ? record.iqa_decision.replace(/_/g, " ") : "—"}
+              </p>
+            </div>
+            <div className="rounded-xl p-4 bg-muted/30 border">
+              <p className="text-sm text-muted-foreground mb-1">IQA Notes</p>
+              <p className="font-semibold text-primary whitespace-pre-wrap">
+                {record.iqa_review_notes || "No IQA notes recorded."}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

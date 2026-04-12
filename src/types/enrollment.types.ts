@@ -329,6 +329,12 @@ export interface EnrolmentContent {
     access_expires_at: string | null;
     completed_at: string | null;
     access_expired: boolean;
+    learner: {
+        id: string;
+        name: string;
+        qualification_learner_id: string;
+        email: string;
+    };
     qualification: {
         id: string;
         title: string;

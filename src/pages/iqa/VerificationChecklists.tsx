@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ClipboardCheck, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, ClipboardCheck, CheckCircle2, XCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,41 +9,106 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { adminQualifications } from "@/data/adminMockData";
 import {
-  type ChecklistTemplate,
-  type CompletedChecklist,
-  type CheckResponse,
-  loadTemplates,
-  loadCompletedChecklists,
-  saveCompletedChecklists,
-  getResponseOptions,
-  RESPONSE_TYPE_LABELS,
-} from "@/lib/checklists";
+  useCreateChecklistCompletionMutation,
+  useGetChecklistCompletionsQuery,
+  useGetChecklistTemplatesForIqaQuery,
+  useGetIqaAssignedEnrolmentsQuery,
+} from "@/redux/apis/iqa/iqaApi";
+import type { ChecklistTemplateItem } from "@/types/iqa.types";
+
+type CheckResponse = "yes" | "no" | "na" | "met" | "not_met";
+
+const RESPONSE_TYPE_LABELS: Record<ChecklistTemplateItem["response_type"], string> = {
+  yes_no: "Yes / No",
+  yes_no_na: "Yes / No / N/A",
+  met_notmet_na: "Met / Not Met / N/A",
+};
+
+const getResponseOptions = (responseType: ChecklistTemplateItem["response_type"]) => {
+  if (responseType === "yes_no") {
+    return [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" },
+    ];
+  }
+  if (responseType === "yes_no_na") {
+    return [
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" },
+      { value: "na", label: "N/A" },
+    ];
+  }
+  return [
+    { value: "met", label: "Met" },
+    { value: "not_met", label: "Not Met" },
+    { value: "na", label: "N/A" },
+  ];
+};
+
+const normalizeEnrolments = (value: unknown) => {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") {
+    const paginated = value as { results?: unknown };
+    if (Array.isArray(paginated.results)) return paginated.results;
+  }
+  return [];
+};
 
 const VerificationChecklists = () => {
   const { toast } = useToast();
-  const [templates] = useState<ChecklistTemplate[]>(loadTemplates);
-  const [completedList, setCompletedList] = useState<CompletedChecklist[]>(loadCompletedChecklists);
   const [qualFilter, setQualFilter] = useState("all");
 
   // Active checklist filling
-  const [activeTemplate, setActiveTemplate] = useState<ChecklistTemplate | null>(null);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
   const [responses, setResponses] = useState<Record<string, CheckResponse>>({});
-  const [learnerName, setLearnerName] = useState("");
+  const [selectedEnrolmentId, setSelectedEnrolmentId] = useState("");
   const [summaryComment, setSummaryComment] = useState("");
 
-  const filtered = templates.filter(
-    (t) => qualFilter === "all" || t.qualificationId === qualFilter
+  const { data: templatesResponse, isLoading: isLoadingTemplates } =
+    useGetChecklistTemplatesForIqaQuery();
+  const { data: completionsResponse, isLoading: isLoadingCompletions } =
+    useGetChecklistCompletionsQuery();
+  const { data: enrolmentsResponse, isLoading: isLoadingEnrolments } =
+    useGetIqaAssignedEnrolmentsQuery();
+  const [createChecklistCompletion, { isLoading: isSavingCompletion }] =
+    useCreateChecklistCompletionMutation();
+
+  const templates = templatesResponse?.results || [];
+  const completions = completionsResponse?.results || [];
+  const enrolments = normalizeEnrolments(enrolmentsResponse?.data);
+  const qualificationOptions = Array.from(
+    new Map(
+      templates.map((template) => [
+        template.qualification_id,
+        { id: template.qualification_id, title: template.qualification_title },
+      ]),
+    ).values(),
   );
 
-  const getQualTitle = (id: string) =>
-    adminQualifications.find((q) => q.id === id)?.title || id;
+  const filtered = templates.filter(
+    (t) => qualFilter === "all" || t.qualification_id === qualFilter
+  );
 
-  const startChecklist = (tpl: ChecklistTemplate) => {
-    setActiveTemplate(tpl);
+  const activeTemplate =
+    templates.find((template) => template.id === activeTemplateId) || null;
+
+  const eligibleEnrolments = useMemo(() => {
+    if (!activeTemplate) return [];
+    return enrolments.filter(
+      (enrolment) => enrolment.qualification.id === activeTemplate.qualification_id,
+    );
+  }, [activeTemplate, enrolments]);
+
+  const enrolmentById = useMemo(
+    () => new Map(enrolments.map((enrolment) => [enrolment.id, enrolment])),
+    [enrolments],
+  );
+
+  const startChecklist = (templateId: string) => {
+    setActiveTemplateId(templateId);
     setResponses({});
-    setLearnerName("");
+    setSelectedEnrolmentId("");
     setSummaryComment("");
   };
 
@@ -51,10 +116,10 @@ const VerificationChecklists = () => {
     setResponses((prev) => ({ ...prev, [itemId]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!activeTemplate) return;
-    if (!learnerName.trim()) {
-      toast({ title: "Please enter the learner name", variant: "destructive" });
+    if (!selectedEnrolmentId) {
+      toast({ title: "Please select the learner enrolment", variant: "destructive" });
       return;
     }
     const unanswered = activeTemplate.items.filter((i) => !responses[i.id]);
@@ -63,36 +128,33 @@ const VerificationChecklists = () => {
       return;
     }
 
-    const completed: CompletedChecklist = {
-      id: `cc-${Date.now()}`,
-      templateId: activeTemplate.id,
-      qualificationId: activeTemplate.qualificationId,
-      unitCode: activeTemplate.unitCode,
-      iqaName: "Catherine (IQA)",
-      learnerName: learnerName.trim(),
-      responses,
-      summaryComment: summaryComment.trim(),
-      completedDate: new Date().toLocaleDateString("en-GB"),
-    };
-    const updated = [completed, ...completedList];
-    setCompletedList(updated);
-    saveCompletedChecklists(updated);
-    setActiveTemplate(null);
-    toast({ title: "Verification checklist submitted", description: `${activeTemplate.title} completed for ${learnerName}.` });
-  };
-
-  const responseIcon = (val: CheckResponse) => {
-    if (val === "yes" || val === "met") return <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />;
-    if (val === "no" || val === "not-met") return <XCircle className="w-3.5 h-3.5 text-destructive" />;
-    if (val === "na") return <MinusCircle className="w-3.5 h-3.5 text-muted-foreground" />;
-    return null;
+    try {
+      const submission = await createChecklistCompletion({
+        template_id: activeTemplate.id,
+        enrolment_id: selectedEnrolmentId,
+        responses,
+        summary_comment: summaryComment.trim(),
+      }).unwrap();
+      const learnerName =
+        enrolmentById.get(selectedEnrolmentId)?.learner.name || "the learner";
+      setActiveTemplateId(null);
+      toast({
+        title: "Verification checklist submitted",
+        description: `${submission.template.title} completed for ${learnerName}.`,
+      });
+    } catch {
+      toast({
+        title: "Failed to submit verification checklist",
+        variant: "destructive",
+      });
+    }
   };
 
   // ── Filling a checklist ──
   if (activeTemplate) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" size="sm" onClick={() => setActiveTemplate(null)} className="gap-1">
+        <Button variant="ghost" size="sm" onClick={() => setActiveTemplateId(null)} className="gap-1">
           <ArrowLeft className="w-4 h-4" /> Back to Checklists
         </Button>
 
@@ -101,26 +163,32 @@ const VerificationChecklists = () => {
             <ClipboardCheck className="w-6 h-6" /> {activeTemplate.title}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {getQualTitle(activeTemplate.qualificationId)}
-            {activeTemplate.unitCode && ` · Unit: ${activeTemplate.unitCode}`}
+            {activeTemplate.qualification_title}
+            {activeTemplate.unit_title && ` · Unit: ${activeTemplate.unit_title}`}
           </p>
         </div>
 
         <Card>
           <CardContent className="p-4 space-y-2">
-            <Label className="text-xs">Learner Name *</Label>
-            <input
-              className="flex h-10 w-full max-w-sm rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              placeholder="Enter learner name"
-              value={learnerName}
-              onChange={(e) => setLearnerName(e.target.value)}
-            />
+            <Label className="text-xs">Assigned Learner *</Label>
+            <Select value={selectedEnrolmentId} onValueChange={setSelectedEnrolmentId}>
+              <SelectTrigger className="max-w-xl">
+                <SelectValue placeholder="Select learner enrolment" />
+              </SelectTrigger>
+              <SelectContent>
+                {eligibleEnrolments.map((enrolment) => (
+                  <SelectItem key={enrolment.id} value={enrolment.id}>
+                    {enrolment.learner.name} · {enrolment.enrolment_number}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardContent>
         </Card>
 
         <div className="space-y-3">
           {activeTemplate.items.map((item, i) => {
-            const options = getResponseOptions(item.responseType);
+            const options = getResponseOptions(item.response_type);
             return (
               <Card key={item.id}>
                 <CardContent className="p-4">
@@ -144,7 +212,7 @@ const VerificationChecklists = () => {
                       </RadioGroup>
                     </div>
                     <Badge variant="outline" className="text-[10px] shrink-0">
-                      {RESPONSE_TYPE_LABELS[item.responseType]}
+                      {RESPONSE_TYPE_LABELS[item.response_type]}
                     </Badge>
                   </div>
                 </CardContent>
@@ -165,8 +233,9 @@ const VerificationChecklists = () => {
           </CardContent>
         </Card>
 
-        <Button className="w-full" onClick={handleSubmit}>
-          <ClipboardCheck className="w-4 h-4 mr-1" /> Submit Verification
+        <Button className="w-full" onClick={handleSubmit} disabled={isSavingCompletion}>
+          <ClipboardCheck className="w-4 h-4 mr-1" />
+          {isSavingCompletion ? "Submitting..." : "Submit Verification"}
         </Button>
       </div>
     );
@@ -194,13 +263,19 @@ const VerificationChecklists = () => {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Qualifications</SelectItem>
-          {adminQualifications.map((q) => (
-            <SelectItem key={q.id} value={q.id}>{q.title}</SelectItem>
+          {qualificationOptions.map((qualification) => (
+            <SelectItem key={qualification.id} value={qualification.id}>
+              {qualification.title}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {filtered.length === 0 ? (
+      {isLoadingTemplates || isLoadingEnrolments ? (
+        <Card className="p-8 text-center">
+          <p className="text-sm text-muted-foreground">Loading checklist templates...</p>
+        </Card>
+      ) : filtered.length === 0 ? (
         <Card className="p-8 text-center">
           <ClipboardCheck className="w-10 h-10 mx-auto mb-2 text-muted-foreground opacity-50" />
           <p className="text-sm text-muted-foreground">No checklists available. Admin needs to create checklist templates first.</p>
@@ -213,13 +288,13 @@ const VerificationChecklists = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-0.5">
                     <p className="text-sm font-semibold">{tpl.title}</p>
-                    <Badge variant={tpl.unitCode ? "secondary" : "outline"} className="text-[10px]">
-                      {tpl.unitCode ? `Unit: ${tpl.unitCode}` : "Qualification-level"}
+                    <Badge variant={tpl.unit_id ? "secondary" : "outline"} className="text-[10px]">
+                      {tpl.unit_title ? `Unit: ${tpl.unit_title}` : "Qualification-level"}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">{getQualTitle(tpl.qualificationId)} · {tpl.items.length} checks</p>
+                  <p className="text-xs text-muted-foreground">{tpl.qualification_title} · {tpl.items.length} checks</p>
                 </div>
-                <Button size="sm" className="gap-1" onClick={() => startChecklist(tpl)}>
+                <Button size="sm" className="gap-1" onClick={() => startChecklist(tpl.id)}>
                   <ClipboardCheck className="w-3.5 h-3.5" /> Start Check
                 </Button>
               </CardContent>
@@ -229,23 +304,25 @@ const VerificationChecklists = () => {
       )}
 
       {/* Completed History */}
-      {completedList.length > 0 && (
+      {!isLoadingCompletions && completions.length > 0 && (
         <div className="pt-4">
           <h2 className="text-lg font-bold mb-3">Completed Verifications</h2>
           <div className="space-y-2">
-            {completedList.map((cc) => {
-              const tpl = templates.find((t) => t.id === cc.templateId);
-              const totalYes = Object.values(cc.responses).filter((v) => v === "yes" || v === "met").length;
-              const totalNo = Object.values(cc.responses).filter((v) => v === "no" || v === "not-met").length;
-              const total = Object.keys(cc.responses).length;
+            {completions.map((completion) => {
+              const learnerName =
+                enrolmentById.get(completion.enrolment_id)?.learner.name ||
+                completion.enrolment_id;
+              const totalYes = Object.values(completion.responses).filter((v) => v === "yes" || v === "met").length;
+              const totalNo = Object.values(completion.responses).filter((v) => v === "no" || v === "not_met").length;
+              const total = Object.keys(completion.responses).length;
 
               return (
-                <Card key={cc.id}>
+                <Card key={completion.id}>
                   <CardContent className="p-3 flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium">{tpl?.title || cc.templateId}</p>
+                      <p className="text-sm font-medium">{completion.template.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        Learner: {cc.learnerName} · {cc.completedDate} · by {cc.iqaName}
+                        Learner: {learnerName} · {new Date(completion.completed_at).toLocaleDateString("en-GB")} · by {completion.iqa_reviewer.name}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
