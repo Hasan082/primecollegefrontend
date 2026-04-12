@@ -96,13 +96,13 @@ const PaymentElementSection = ({
   const elementOptions = useMemo(
     () => ({
       clientSecret,
-      appearance: {
-        theme: "stripe" as const,
-        variables: {
-          colorPrimary: "#0e4a86",
-          borderRadius: "14px",
+        appearance: {
+          theme: "stripe" as const,
+          variables: {
+            colorPrimary: "#0e4a86",
+            borderRadius: "8px",
+          },
         },
-      },
     }),
     [clientSecret],
   );
@@ -459,7 +459,7 @@ const Checkout = () => {
             </div>
 
             {(detailsConfirmed || paymentSetup || isPreparingPayment) ? (
-              <div ref={paymentStepRef} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <div ref={paymentStepRef} className="rounded border border-border bg-card p-6 shadow-sm">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" />
                   <h2 className="text-lg font-bold text-foreground">Payment step</h2>
@@ -495,7 +495,7 @@ const Checkout = () => {
                 )}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border bg-card p-6 shadow-sm">
+              <div className="rounded border border-dashed border-border bg-card p-6 shadow-sm">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" />
                   <h2 className="text-lg font-bold text-foreground">Payment step</h2>
