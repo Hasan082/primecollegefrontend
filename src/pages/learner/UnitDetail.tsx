@@ -528,7 +528,7 @@ const UnitDetail = () => {
             </div>
           )}
 
-          {!isExpired && !qualification.is_cpd && unit.requires_evidence && !evidenceSetupMissing && (
+          {!latestEvidenceSubmission && !isExpired && !qualification.is_cpd && unit.requires_evidence && !evidenceSetupMissing && (
             <EvidenceUploadForm
               requirements={evidenceRequirementList}
               enrolmentId={resolvedEnrolmentId}
