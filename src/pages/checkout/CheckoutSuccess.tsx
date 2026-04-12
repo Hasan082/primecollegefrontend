@@ -180,10 +180,10 @@ const CheckoutSuccess = () => {
                 <CheckCircle2 className="h-10 w-10 text-primary opacity-40" />
               )}
             </div>
-            <h1 className="text-4xl font-bold text-foreground">Confirming Payment…</h1>
+            <h1 className="text-4xl font-bold text-foreground">Verifying Order…</h1>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
-              Thank you for enrolling with The Prime College. We're confirming your
-              payment with Stripe — please don't close this page.
+              Thank you for enrolling with The Prime College. We are verifying your
+              order with Stripe - please don't close this page.
             </p>
             {displayOrderNumber && displayOrderNumber !== "Pending" && (
               <p className="mt-3 text-xs text-muted-foreground">
@@ -304,6 +304,15 @@ const CheckoutSuccess = () => {
   return (
     <div className="min-h-screen bg-muted px-4 py-16">
       <div className="mx-auto max-w-3xl space-y-6">
+        <div className="flex justify-start">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted"
+          >
+            <Home className="h-4 w-4" />
+            Back to Home
+          </Link>
+        </div>
         <section className="rounded-md border border-border bg-card px-6 py-10 text-center shadow-sm md:px-10">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/8">
             <CheckCircle2 className="h-10 w-10 text-primary" />
@@ -403,8 +412,8 @@ const CheckoutSuccess = () => {
             to="/"
             className="flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-6 py-4 text-sm font-bold text-primary-foreground hover:opacity-90"
           >
-            Back to Home
             <Home className="h-4 w-4" />
+            Back to Home
           </Link>
           <Link
             to="/qualifications"
