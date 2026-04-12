@@ -541,15 +541,7 @@ const UnitDetail = () => {
             />
           )}
 
-          {!isExpired && !qualification.is_cpd && evidenceSetupMissing && (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
-              <h3 className="text-base font-bold text-foreground">Evidence Upload Unavailable</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                This unit is marked as requiring evidence, but its evidence portfolio is not configured correctly yet.
-                Please contact an administrator or trainer before attempting to upload evidence.
-              </p>
-            </div>
-          )}
+
 
           {isExpired && !qualification.is_cpd && (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
@@ -611,7 +603,7 @@ const UnitDetail = () => {
                     <span className="text-sm text-foreground">Written assignment submitted</span>
                   </div>
                 )}
-                {unit.requires_evidence || (isExpired && qualification.is_cpd && !evidenceSetupMissing) && (
+                {unit.requires_evidence && !evidenceSetupMissing && (
                   <div className="flex items-center gap-2">
                     {evidenceUploaded ? (
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
