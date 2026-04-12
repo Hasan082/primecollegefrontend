@@ -419,7 +419,7 @@ const CheckoutSuccess = () => {
             to="/qualifications"
             className="flex flex-1 items-center justify-center rounded-md border border-border bg-card px-6 py-4 text-sm font-bold text-foreground hover:bg-muted"
           >
-            Browse More Courses
+            Browse More Qualifications
           </Link>
         </div>
       </div>
