@@ -32,7 +32,10 @@ const iqaApi = api.injectEndpoints({
       }),
       providesTags: ["Enrolments"],
     }),
-    getIqaReviewQueue: builder.query<IQAReviewQueueResponse, { status?: string } | void>({
+    getIqaReviewQueue: builder.query<
+      IQAReviewQueueResponse,
+      { status?: string; qualification_id?: string; trainer_id?: string } | void
+    >({
       query: (args) => ({
         url: "/api/enrolments/iqa/review-queue/",
         method: "GET",
