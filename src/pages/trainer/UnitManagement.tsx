@@ -9,6 +9,8 @@ import {
   Loader2,
   Send,
   Upload,
+  Trophy,
+  AlertCircle,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,10 +33,10 @@ const outcomeOptions: Array<{
   label: string;
   description: string;
 }> = [
-  { value: "competent", label: "Competent", description: "Submission meets the required standard" },
-  { value: "resubmit", label: "Resubmission Required", description: "Learner needs to revise and submit again" },
-  { value: "not_competent", label: "Not Yet Competent", description: "Submission does not meet the required standard" },
-];
+    { value: "competent", label: "Competent", description: "Submission meets the required standard" },
+    { value: "resubmit", label: "Resubmission Required", description: "Learner needs to revise and submit again" },
+    { value: "not_competent", label: "Not Yet Competent", description: "Submission does not meet the required standard" },
+  ];
 
 function getBand(score?: number) {
   if (score == null) return undefined;
@@ -95,7 +97,7 @@ const UnitManagement = () => {
   const { data: quizAttemptsData, isLoading: isLoadingQuiz } = useGetUnitAttemptsQuery(
     {
       unitId: unitId!,
-      learnerId: enrolmentId!,
+      enrolmentId: enrolmentId!,
     },
     { skip: !unitId || !enrolmentId || !unit?.has_quiz },
   );
@@ -217,23 +219,125 @@ const UnitManagement = () => {
           </div>
           {isLoadingQuiz ? (
             <div className="text-sm text-muted-foreground">Loading quiz attempts...</div>
-          ) : quizAttemptsData?.data?.length ? (
-            <div className="space-y-3">
-              {quizAttemptsData.data.map((attempt) => (
-                <div key={attempt.id} className="rounded-lg border p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-sm">Attempt {quizAttemptsData.data.indexOf(attempt) + 1}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Submitted {attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleDateString() : "N/A"}
-                      </p>
+          ) : (quizAttemptsData?.data?.attempts?.length || quizAttemptsData?.data?.best_attempt) ? (
+            <div className="grid gap-4">
+              {(quizAttemptsData.data.attempts || []).map((attempt) => {
+                const isPass = attempt.passed;
+                return (
+                  <div
+                    key={attempt.id}
+                    className={`rounded-xl border p-5 transition-all hover:shadow-md ${isPass ? "bg-green-50/30 border-green-100" : "bg-red-50/30 border-red-100"
+                      }`}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`p-3 rounded-full ${isPass ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                            }`}
+                        >
+                          {isPass ? <Trophy className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-base text-foreground">
+                            {isPass ? "Successful Attempt" : "Unsuccessful Attempt"}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                            <p className="text-xs text-muted-foreground font-medium">
+                              {attempt.submitted_at
+                                ? new Date(attempt.submitted_at).toLocaleDateString(undefined, {
+                                  dateStyle: "long",
+                                })
+                                : "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex flex-col items-end">
+                          <span
+                            className={`text-2xl font-black ${isPass ? "text-green-600" : "text-red-600"
+                              }`}
+                          >
+                            {attempt.score_percent != null
+                              ? `${Math.round(Number(attempt.score_percent))}%`
+                              : attempt.status}
+                          </span>
+                          <Badge
+                            variant={isPass ? "default" : "destructive"}
+                            className={`mt-1 font-bold ${isPass ? "bg-green-600 hover:bg-green-700" : ""}`}
+                          >
+                            {isPass ? "PASSED" : "FAILED"}
+                          </Badge>
+                          {attempt.score_summary_text && (
+                            <p className="text-[11px] font-semibold text-muted-foreground mt-1.5 uppercase tracking-wider">
+                              {attempt.score_summary_text}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <Badge variant="secondary">
-                      {attempt.score_percent != null ? `${Math.round(Number(attempt.score_percent))}%` : attempt.status}
-                    </Badge>
                   </div>
-                </div>
-              ))}
+                );
+              })}
+              {!quizAttemptsData.data.attempts?.length && quizAttemptsData.data.best_attempt && (() => {
+                const attempt = quizAttemptsData.data.best_attempt;
+                const isPass = attempt.passed;
+                return (
+                  <div
+                    key={attempt.id}
+                    className={`rounded-xl border p-6 transition-all hover:shadow-md ${isPass ? "bg-green-50/30 border-green-100" : "bg-red-50/30 border-red-100"
+                      }`}
+                  >
+                    <div className="flex items-center justify-between gap-6">
+                      <div className="flex items-center gap-5">
+                        <div
+                          className={`p-4 rounded-2xl shadow-sm ${isPass ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            }`}
+                        >
+                          {isPass ? <Trophy className="w-7 h-7" /> : <AlertCircle className="w-7 h-7" />}
+                        </div>
+                        <div>
+                          <h4 className="font-extrabold text-xl text-foreground tracking-tight">Best Performance</h4>
+                          <div className="flex items-center gap-2.5 mt-2">
+                            <Clock className="w-4 h-4 text-muted-foreground/70" />
+                            <p className="text-sm font-semibold text-muted-foreground">
+                              {attempt.submitted_at
+                                ? new Date(attempt.submitted_at).toLocaleDateString(undefined, {
+                                  dateStyle: "medium",
+                                })
+                                : "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right flex flex-col items-end">
+                        <span
+                          className={`text-4xl font-black tracking-tighter leading-none ${isPass ? "text-green-600" : "text-red-600"
+                            }`}
+                        >
+                          {attempt.score_percent != null
+                            ? `${Math.round(Number(attempt.score_percent))}%`
+                            : attempt.status}
+                        </span>
+                        <div className="flex items-center gap-2 mt-3">
+                          <Badge
+                            className={`font-black px-4 py-1 text-xs shadow-sm uppercase tracking-widest ${isPass ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                              } text-white border-none`}
+                          >
+                            {isPass ? "PASSED" : "FAILED"}
+                          </Badge>
+                        </div>
+                        {attempt.score_summary_text && (
+                          <p className="text-[11px] font-bold text-muted-foreground mt-2 uppercase tracking-tight">
+                            {attempt.score_summary_text}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">No quiz attempts found.</div>
@@ -280,7 +384,7 @@ const UnitManagement = () => {
                 <Textarea
                   value={writtenFeedback}
                   onChange={(event) => setWrittenFeedback(event.target.value)}
-                    placeholder="Provide trainer feedback for the learner"
+                  placeholder="Provide trainer feedback for the learner"
                   className="min-h-[120px]"
                 />
                 <Button onClick={handleWrittenReview} disabled={isSavingWritten}>

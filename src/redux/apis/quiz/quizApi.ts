@@ -124,10 +124,11 @@ export interface QuizSubmission {
 }
 
 export interface UnitAttemptsData {
-  attempts: QuizAttempt[];
-  remaining_attempts: number;
-  max_attempts: number;
-  best_score: number | null;
+  attempts?: QuizAttempt[];
+  best_attempt?: QuizAttempt;
+  remaining_attempts?: number;
+  max_attempts?: number;
+  best_score?: number | null;
 }
 
 export interface CPDFinalAssessmentAttemptQuestion {
@@ -398,15 +399,15 @@ const quizApi = api.injectEndpoints({
       providesTags: (result, _error, attemptId) => [{ type: "Quizzes", id: `ATTEMPT_${attemptId}` }],
     }),
 
-    getUnitAttempts: builder.query<QuizResponse<UnitAttemptsData>, { unitId: string; learnerId?: string }>({
-      query: ({ unitId, learnerId }) => ({
-        url: `/api/quizzes/units/${unitId}/attempts/`,
+    getUnitAttempts: builder.query<QuizResponse<UnitAttemptsData>, { unitId: string; enrolmentId?: string }>({
+      query: ({ unitId, enrolmentId }) => ({
+        url: `/api/quizzes/units/${unitId}/best-attempt/enrolments/${enrolmentId}/`,
         method: "GET",
-        params: learnerId ? { learner_id: learnerId } : {},
+        // params: learnerId ? { learner_id: learnerId } : {},
       }),
-      providesTags: (result, _error, { unitId, learnerId }) => [
+      providesTags: (result, _error, { unitId, enrolmentId }) => [
         { type: "Quizzes", id: `ATTEMPTS_UNIT_${unitId}` },
-        ...(learnerId ? [{ type: "Quizzes" as const, id: `ATTEMPTS_UNIT_${unitId}_LEARNER_${learnerId}` }] : []),
+        ...(enrolmentId ? [{ type: "Quizzes" as const, id: `ATTEMPTS_UNIT_${unitId}_LEARNER_${enrolmentId}` }] : []),
       ],
     }),
 
