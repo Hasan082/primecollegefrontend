@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, Lock, ShieldCheck, X } from "lucide-react";
+import { ChevronLeft, CheckCircle2, Lock, PencilLine, ShieldCheck, X } from "lucide-react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useCart } from "@/contexts/CartContext";
@@ -96,13 +96,13 @@ const PaymentElementSection = ({
   const elementOptions = useMemo(
     () => ({
       clientSecret,
-      appearance: {
-        theme: "stripe" as const,
-        variables: {
-          colorPrimary: "#0e4a86",
-          borderRadius: "14px",
+        appearance: {
+          theme: "stripe" as const,
+          variables: {
+            colorPrimary: "#0e4a86",
+            borderRadius: "8px",
+          },
         },
-      },
     }),
     [clientSecret],
   );
@@ -234,10 +234,10 @@ const Checkout = () => {
         country: "United Kingdom",
       };
   });
+  const [detailsConfirmed, setDetailsConfirmed] = useState(false);
 
   const paymentStepRef = React.useRef<HTMLDivElement>(null);
   const sidebarSubmitRef = React.useRef<HTMLButtonElement>(null);
-  const autoPrepareTimeoutRef = React.useRef<number | null>(null);
   const lastPreparedSignatureRef = React.useRef<string | null>(null);
 
   useEffect(() => {
@@ -264,8 +264,15 @@ const Checkout = () => {
     })),
   }), [form, items]);
 
+  const resetPaymentState = () => {
+    setPaymentSetup(null);
+    setDetailsConfirmed(false);
+    lastPreparedSignatureRef.current = null;
+    sessionStorage.removeItem("primecollege_pending_checkout");
+  };
+
   const preparePayment = async () => {
-    if (items.length === 0) return;
+    if (items.length === 0) return false;
     try {
       const response = await checkoutOnline({
         first_name: form.firstName,
@@ -319,6 +326,8 @@ const Checkout = () => {
       setTimeout(() => {
         paymentStepRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
+
+      return true;
     } catch (error: any) {
       const description =
         extractErrorMessage(error?.data?.detail || error?.data?.data || error?.data || error?.message) ||
@@ -328,38 +337,22 @@ const Checkout = () => {
         description,
         variant: "destructive",
       });
+
+      return false;
     }
   };
 
   const handlePreparePayment = async (event: React.FormEvent) => {
     event.preventDefault();
-    await preparePayment();
+    if (!isFormComplete || isPreparingPayment) return;
+
+    setDetailsConfirmed(true);
+    const prepared = await preparePayment();
+    if (!prepared) {
+      setDetailsConfirmed(false);
+    }
   };
 
-  useEffect(() => {
-    if (items.length === 0 || paymentSetup || isPreparingPayment || !isFormComplete) {
-      return;
-    }
-
-    if (lastPreparedSignatureRef.current === checkoutSignature) {
-      return;
-    }
-
-    lastPreparedSignatureRef.current = checkoutSignature;
-
-    autoPrepareTimeoutRef.current = window.setTimeout(() => {
-      if (!isPreparingPayment && !paymentSetup && items.length > 0) {
-        void preparePayment();
-      }
-    }, 350);
-
-    return () => {
-      if (autoPrepareTimeoutRef.current) {
-        window.clearTimeout(autoPrepareTimeoutRef.current);
-        autoPrepareTimeoutRef.current = null;
-      }
-    };
-  }, [checkoutSignature, paymentSetup, isPreparingPayment, isFormComplete, items.length]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -385,10 +378,10 @@ const Checkout = () => {
   const discountTotal = selectedUpsellItem?.bundleDiscountTotal || 0;
   const estimatedTotal = subtotal - discountTotal;
   const currency = items[0]?.currency || "GBP";
-  const inputsLocked = Boolean(paymentSetup);
+  const inputsLocked = Boolean(paymentSetup) || isPreparingPayment || detailsConfirmed;
 
   const inputClass =
-    "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-70";
+    "w-full rounded border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-70";
 
   return (
     <div className="min-h-screen bg-muted">
@@ -465,42 +458,53 @@ const Checkout = () => {
               </div>
             </div>
 
-            <div ref={paymentStepRef} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-bold text-foreground">Payment step</h2>
-              </div>
-              {!paymentSetup ? (
-                <div className="mt-4 space-y-4">
-                  {/* Skeleton for card form */}
-                  <div className="animate-pulse space-y-3">
-                    <div className="h-10 rounded-xl bg-muted/50" />
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="h-10 rounded-xl bg-muted/50" />
-                      <div className="h-10 rounded-xl bg-muted/50" />
-                    </div>
-                  </div>
-                  <p className="text-center text-xs text-muted-foreground">
-                    {!isFormComplete
-                      ? "Complete the learner and billing details above to reveal secure payment fields."
-                      : isPreparingPayment ? "Preparing secure payment form..." : "Connecting to Stripe..."}
-                  </p>
+            {(detailsConfirmed || paymentSetup || isPreparingPayment) ? (
+              <div ref={paymentStepRef} className="rounded border border-border bg-card p-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-bold text-foreground">Payment step</h2>
                 </div>
-              ) : (
-                <>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground text-primary font-medium">
-                    Please enter your card details and complete payment below.
-                  </p>
-                  <PaymentElementSection
-                    clientSecret={paymentSetup.clientSecret}
-                    publishableKey={paymentSetup.publishableKey}
-                    form={form}
-                    orderNumber={paymentSetup.orderNumber}
-                    submitButtonRef={sidebarSubmitRef}
-                  />
-                </>
-              )}
-            </div>
+                {!paymentSetup ? (
+                  <div className="mt-4 space-y-4">
+                    <div className="animate-pulse space-y-3">
+                      <div className="h-10 rounded bg-muted/50" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="h-10 rounded bg-muted/50" />
+                        <div className="h-10 rounded bg-muted/50" />
+                      </div>
+                    </div>
+                    <p className="text-center text-xs text-muted-foreground">
+                      {isPreparingPayment
+                        ? "Preparing secure payment form..."
+                        : "Your payment options are being unlocked now."}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="mt-3 text-sm leading-6 text-primary font-medium text-muted-foreground">
+                      Please enter your card details and complete payment below.
+                    </p>
+                    <PaymentElementSection
+                      clientSecret={paymentSetup.clientSecret}
+                      publishableKey={paymentSetup.publishableKey}
+                      form={form}
+                      orderNumber={paymentSetup.orderNumber}
+                      submitButtonRef={sidebarSubmitRef}
+                    />
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="rounded border border-dashed border-border bg-card p-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-bold text-foreground">Payment step</h2>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  Confirm your details on the right to unlock the secure payment form.
+                </p>
+              </div>
+            )}
           </form>
 
           <div className="lg:col-span-1">
@@ -559,9 +563,11 @@ const Checkout = () => {
               <div className="rounded-xl bg-muted/50 p-4 text-xs leading-5 text-muted-foreground">
                 {paymentSetup
                   ? "Payment has been prepared for this basket. To change items or learner details, go back to qualifications and start a fresh checkout."
-                  : isFormComplete
-                    ? "We are preparing Stripe's secure payment form for this basket."
-                    : "Your card details will be handled securely by Stripe within this checkout page."}
+                  : detailsConfirmed
+                    ? "Your details are locked while we prepare secure payment options."
+                    : isFormComplete
+                      ? "Review your details, confirm them, then continue to secure payment."
+                      : "Complete the form first, then confirm your details to reveal secure payment options."}
               </div>
 
               <div className="mt-3 flex items-center justify-center gap-3 text-xs text-muted-foreground">
@@ -576,22 +582,58 @@ const Checkout = () => {
               </div>
 
               {!paymentSetup ? (
-                <button
-                  disabled
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-muted py-4 text-sm font-bold text-muted-foreground cursor-not-allowed border border-border"
-                >
-                  <Lock className="h-4 w-4" />
-                  {isFormComplete ? "Preparing Payment..." : "Complete Details to Pay"}
-                </button>
+                <div className="mt-6 space-y-3 rounded border border-border bg-background p-4">
+                  <label className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={detailsConfirmed}
+                      onChange={(e) => setDetailsConfirmed(e.target.checked)}
+                      disabled={!isFormComplete || isPreparingPayment}
+                      className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 disabled:cursor-not-allowed"
+                    />
+                    <span className="leading-6">
+                      I confirm the learner and billing details above are correct.
+                    </span>
+                  </label>
+                  <button
+                    form="checkout-form"
+                    type="submit"
+                    disabled={!isFormComplete || !detailsConfirmed || isPreparingPayment}
+                    className={`flex w-full items-center justify-center gap-2 rounded py-4 text-sm font-bold transition ${
+                      isFormComplete && detailsConfirmed && !isPreparingPayment
+                        ? "bg-primary text-primary-foreground hover:opacity-90"
+                        : "cursor-not-allowed border border-border bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {!isFormComplete
+                      ? "Complete Details First"
+                      : isPreparingPayment
+                        ? "Preparing Payment..."
+                        : "Confirm Details & Continue"}
+                  </button>
+                </div>
               ) : (
                 <button
                   ref={sidebarSubmitRef}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-sm font-bold text-secondary-foreground transition hover:opacity-90 disabled:opacity-60"
+                  className="mt-6 flex w-full items-center justify-center gap-2 rounded bg-secondary py-4 text-sm font-bold text-secondary-foreground transition hover:opacity-90 disabled:opacity-60"
                 >
                   <Lock className="h-4 w-4" />
                   Pay {formatMoney(estimatedTotal, currency)} Now
                 </button>
               )}
+
+              {!paymentSetup && detailsConfirmed ? (
+                <button
+                  type="button"
+                  onClick={resetPaymentState}
+                  disabled={isPreparingPayment}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded border border-border bg-background py-3 text-sm font-semibold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <PencilLine className="h-4 w-4" />
+                  Edit details
+                </button>
+              ) : null}
             </div>
           </div>
         </div>

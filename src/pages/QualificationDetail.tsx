@@ -35,7 +35,7 @@ const formatMoney = (
   value: string | number | null | undefined,
   currency = "GBP",
 ) =>
-  `${currency} ${Number(value || 0).toLocaleString(undefined, {
+  `${currency}${Number(value || 0).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -191,7 +191,7 @@ const QualificationDetail = () => {
 
     setSelectedSessionId((current) =>
       current &&
-      selectedLocation.sessions.some((session) => session.id === current)
+        selectedLocation.sessions.some((session) => session.id === current)
         ? current
         : "",
     );
@@ -292,11 +292,11 @@ const QualificationDetail = () => {
 
   const bodyBlocks = qualification
     ? filterOutSystemBlocks(
-        getRenderableBlocks(
-          qualification.body_blocks ?? [],
-          detailPageSlug || slug,
-        ),
-      )
+      getRenderableBlocks(
+        qualification.body_blocks ?? [],
+        detailPageSlug || slug,
+      ),
+    )
     : [];
 
   const hasCmsBody = detailPagePublished !== false && bodyBlocks.length > 0;
@@ -340,7 +340,7 @@ const QualificationDetail = () => {
                 <span className="rounded bg-white/10 px-4 py-2">
                   {formatMoney(
                     selectedSession?.effective_price ||
-                      qualification.current_price,
+                    qualification.current_price,
                     qualification.currency,
                   )}
                 </span>
@@ -421,7 +421,7 @@ const QualificationDetail = () => {
                               Enrol Now -{" "}
                               {formatMoney(
                                 selectedSession?.effective_price ||
-                                  qualification.current_price,
+                                qualification.current_price,
                                 qualification.currency,
                               )}
                             </button>
@@ -440,12 +440,12 @@ const QualificationDetail = () => {
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="mt-8 rounded-xl bg-secondary px-8 py-4 text-base font-semibold text-secondary-foreground transition hover:opacity-90"
+                  className="mt-8 rounded bg-secondary px-8 py-4 text-base font-semibold text-secondary-foreground transition hover:opacity-90"
                 >
                   Enrol Now -{" "}
                   {formatMoney(
                     selectedSession?.effective_price ||
-                      qualification.current_price,
+                    qualification.current_price,
                     qualification.currency,
                   )}
                 </button>

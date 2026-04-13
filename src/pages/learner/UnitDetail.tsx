@@ -395,25 +395,24 @@ const UnitDetail = () => {
                             : "No submission yet"}
                         </p>
                       </div>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded ${
-                        latestWrittenSubmission
-                          ? latestWrittenSubmission.status === "competent"
-                            ? statusConfig["Competent"].color
-                            : latestWrittenSubmission.status === "under_review"
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded ${latestWrittenSubmission
+                        ? latestWrittenSubmission.status === "competent"
+                          ? statusConfig["Competent"].color
+                          : latestWrittenSubmission.status === "under_review"
                             ? statusConfig["Waiting for assessor review"].color
                             : latestWrittenSubmission.status === "resubmit"
-                            ? statusConfig["Resubmission required"].color
-                            : statusConfig.Submitted.color
-                          : "bg-muted text-muted-foreground"
-                      }`}>
+                              ? statusConfig["Resubmission required"].color
+                              : statusConfig.Submitted.color
+                        : "bg-muted text-muted-foreground"
+                        }`}>
                         {latestWrittenSubmission
                           ? latestWrittenSubmission.status === "competent"
                             ? statusConfig["Competent"].label
                             : latestWrittenSubmission.status === "under_review"
-                            ? statusConfig["Waiting for assessor review"].label
-                            : latestWrittenSubmission.status === "resubmit"
-                            ? statusConfig["Resubmission required"].label
-                            : statusConfig.Submitted.label
+                              ? statusConfig["Waiting for assessor review"].label
+                              : latestWrittenSubmission.status === "resubmit"
+                                ? statusConfig["Resubmission required"].label
+                                : statusConfig.Submitted.label
                           : "Not Started"}
                       </span>
                     </button>
@@ -529,7 +528,7 @@ const UnitDetail = () => {
             </div>
           )}
 
-          {!isExpired && !qualification.is_cpd && unit.requires_evidence && !evidenceSetupMissing && (
+          {!latestEvidenceSubmission && !isExpired && !qualification.is_cpd && unit.requires_evidence && !evidenceSetupMissing && (
             <EvidenceUploadForm
               requirements={evidenceRequirementList}
               enrolmentId={resolvedEnrolmentId}
@@ -542,15 +541,7 @@ const UnitDetail = () => {
             />
           )}
 
-          {!isExpired && !qualification.is_cpd && evidenceSetupMissing && (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
-              <h3 className="text-base font-bold text-foreground">Evidence Upload Unavailable</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                This unit is marked as requiring evidence, but its evidence portfolio is not configured correctly yet.
-                Please contact an administrator or trainer before attempting to upload evidence.
-              </p>
-            </div>
-          )}
+
 
           {isExpired && !qualification.is_cpd && (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
@@ -612,7 +603,7 @@ const UnitDetail = () => {
                     <span className="text-sm text-foreground">Written assignment submitted</span>
                   </div>
                 )}
-                {unit.requires_evidence && (
+                {unit.requires_evidence && !evidenceSetupMissing && (
                   <div className="flex items-center gap-2">
                     {evidenceUploaded ? (
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
