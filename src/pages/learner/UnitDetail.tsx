@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
   Download,
-  FileText,
   CheckCircle2,
   Circle,
   ClipboardList,
@@ -16,6 +15,7 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
+import ResourceSection from "@/components/shared/ResourceSection";
 import { Button } from "@/components/ui/button";
 import StrictQuizModal from "@/components/learner/StrictQuizModal";
 import EvidenceUploadForm from "@/components/learner/EvidenceUploadForm";
@@ -491,35 +491,7 @@ const UnitDetail = () => {
             </div>
           )}
 
-          {unit.resources && unit.resources.length > 0 && (
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h3 className="text-base font-bold text-primary mb-1">Downloadable Resources</h3>
-              <p className="text-sm text-muted-foreground mb-5">
-                Access unit specifications, templates, and guidance materials.
-              </p>
-              <div className="space-y-3">
-                {unit.resources.map((resource, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                    <FileText className="w-5 h-5 text-primary flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">{resource.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {resource.resource_type}
-                        {resource.estimated_minutes ? ` • ${resource.estimated_minutes} mins` : ""}
-                      </p>
-                    </div>
-                    {resource.is_downloadable && resource.file && (
-                      <Button variant="ghost" size="sm" className="gap-1.5" asChild>
-                        <a href={resource.file}>
-                          <Download className="w-4 h-4" /> Download
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <ResourceSection resources={unit.resources} />
 
           {qualification.is_cpd && (
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-6 flex items-start gap-4">
