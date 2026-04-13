@@ -7,6 +7,7 @@ import {
   useGetUnitAttemptsQuery,
   useGetQuizConfigQuery,
   type QuizAttempt,
+  type UnitAttemptsData,
 } from "@/redux/apis/quiz/quizApi";
 import { Progress } from "@/components/ui/progress";
 
@@ -86,14 +87,25 @@ const StrictQuizModal = ({ qualificationId, unitId, unitCode, unitName, onClose,
   const [startQuizMutation, { isLoading: isStarting }] = useStartQuizMutation();
   const [submitQuizMutation, { isLoading: isSubmitting }] = useSubmitQuizMutation();
 
-  const previousAttempts = Array.isArray((attemptsData as { data?: { attempts?: QuizAttempt[] } | QuizAttempt[] } | undefined)?.data)
-    ? (((attemptsData as { data?: QuizAttempt[] }).data as QuizAttempt[]) || [])
-    : (((attemptsData as { data?: { attempts?: QuizAttempt[] } } | undefined)?.data?.attempts) || []);
+  const attemptsPayload = (attemptsData?.data || null) as UnitAttemptsData | null;
+  const previousAttempts = attemptsPayload?.attempts || [];
+  const remainingAttempts =
+    typeof attemptsPayload?.remaining_attempts === "number"
+      ? attemptsPayload.remaining_attempts
+      : null;
+  const latestAttempt = previousAttempts[0];
+  const canRetakeFromLatest = typeof latestAttempt?.can_retake === "boolean" ? latestAttempt.can_retake : null;
   
   const quizConfig = (quizConfigData as any)?.data || quizConfigData;
-  const maxAttempts = quizConfig?.max_attempts || 3;
+  const maxAttempts =
+    typeof attemptsPayload?.max_attempts === "number"
+      ? attemptsPayload.max_attempts
+      : (quizConfig?.max_attempts || 3);
   const attemptsUsed = previousAttempts.length;
-  const maxAttemptsReached = maxAttempts > 0 && attemptsUsed >= maxAttempts;
+  const maxAttemptsReached =
+    typeof remainingAttempts === "number"
+      ? remainingAttempts <= 0
+      : canRetakeFromLatest === false;
   const canTake = !maxAttemptsReached; 
 
   const finalizePendingAttempt = useCallback(async () => {

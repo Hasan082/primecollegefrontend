@@ -86,12 +86,22 @@ export interface QuizAttempt {
   unit: string;
   learner: string;
   questions: LearnerQuestion[];
+  attempt_number?: number;
   started_at: string;
   submitted_at: string | null;
   time_taken_seconds: number | null;
+  time_taken_display?: string;
   score_percent: number | null;
+  score_summary_text?: string;
+  correct_count?: number;
+  total_questions?: number;
   passed: boolean | null;
+  pass_mark_snapshot?: number;
   violations_count: number;
+  violation_count?: number;
+  auto_submitted?: boolean;
+  can_retake?: boolean;
+  remaining_attempts?: number;
   status: "in_progress" | "submitted" | "expired";
 }
 
@@ -111,6 +121,13 @@ export interface QuizAttemptReview extends QuizAttempt {
 export interface QuizSubmission {
   answers: Record<string, number[]>;
   violations_count: number;
+}
+
+export interface UnitAttemptsData {
+  attempts: QuizAttempt[];
+  remaining_attempts: number;
+  max_attempts: number;
+  best_score: number | null;
 }
 
 export interface CPDFinalAssessmentAttemptQuestion {
@@ -381,7 +398,7 @@ const quizApi = api.injectEndpoints({
       providesTags: (result, _error, attemptId) => [{ type: "Quizzes", id: `ATTEMPT_${attemptId}` }],
     }),
 
-    getUnitAttempts: builder.query<QuizResponse<QuizAttempt[]>, { unitId: string; learnerId?: string }>({
+    getUnitAttempts: builder.query<QuizResponse<UnitAttemptsData>, { unitId: string; learnerId?: string }>({
       query: ({ unitId, learnerId }) => ({
         url: `/api/quizzes/units/${unitId}/attempts/`,
         method: "GET",
