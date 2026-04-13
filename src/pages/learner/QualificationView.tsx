@@ -15,14 +15,60 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
   Competent: { label: "Competent", color: "bg-green-600 text-white", icon: CheckCircle2 },
   Completed: { label: "Completed", color: "bg-green-600 text-white", icon: CheckCircle2 },
   "Waiting for assessor review": { label: "Awaiting Assessment", color: "bg-amber-500 text-white", icon: Clock },
-  "Waiting for IQA review": { label: "Awaiting IQA Verification", color: "bg-blue-600 text-white", icon: ShieldCheck },
+  "Waiting for trainer review": { label: "Awaiting Assessment", color: "bg-amber-500 text-white", icon: Clock },
+  "Waiting for IQA review": { label: "Awaiting for IQA Assessment", color: "bg-blue-600 text-white", icon: ShieldCheck },
   "Resubmission required": { label: "Resubmission Required", color: "bg-orange-500 text-white", icon: AlertTriangle },
   "Not yet competent": { label: "Not Yet Competent", color: "bg-orange-500 text-white", icon: AlertTriangle },
   "In progress": { label: "In Progress", color: "bg-primary text-white", icon: Clock },
   "Not started": { label: "Not Started", color: "bg-muted text-muted-foreground", icon: Circle },
 };
 
-const getUnitDisplayStatus = (unit: EnrolmentOverviewUnit) => statusConfig[unit.display_status] || statusConfig["Not started"];
+const normalizeStatusKey = (value?: string | null): string => {
+  if (!value) return "Not started";
+  const normalized = value.trim().toLowerCase().replace(/_/g, " ");
+
+  if (normalized === "competent") return "Competent";
+  if (normalized === "completed") return "Completed";
+  if (normalized === "waiting for assessor review" || normalized === "waiting for trainer review") return "Waiting for assessor review";
+  if (normalized === "waiting for iqa review") return "Waiting for IQA review";
+  if (normalized === "resubmission required") return "Resubmission required";
+  if (normalized === "not yet competent") return "Not yet competent";
+  if (normalized === "in progress") return "In progress";
+  if (normalized === "not started") return "Not started";
+
+  return value;
+};
+
+const getUnitStatusKey = (unit: EnrolmentOverviewUnit): string => {
+  const displayStatus = normalizeStatusKey(unit.display_status);
+  const competencyStatus = normalizeStatusKey(unit.progress?.competency_status || "");
+
+  if (
+    competencyStatus === "Competent" &&
+    (displayStatus === "Waiting for assessor review" || displayStatus === "Waiting for trainer review")
+  ) {
+    return "Waiting for IQA review";
+  }
+
+  if (competencyStatus === "Competent" && displayStatus === "Waiting for IQA review") {
+    return "Competent";
+  }
+
+  if (displayStatus !== "Not started") {
+    return displayStatus;
+  }
+
+  if (competencyStatus !== "Not started") {
+    return competencyStatus;
+  }
+
+  return "Not started";
+};
+
+const getUnitDisplayStatus = (unit: EnrolmentOverviewUnit) => {
+  const statusKey = getUnitStatusKey(unit);
+  return statusConfig[statusKey] || statusConfig["Not started"];
+};
 
 const QualificationView = () => {
   const { id } = useParams<{ id: string }>();
@@ -231,6 +277,7 @@ const QualificationView = () => {
 
       <div className="space-y-4">
         {units.map((unit) => {
+          const statusKey = getUnitStatusKey(unit);
           const cfg = getUnitDisplayStatus(unit);
           const Icon = cfg.icon;
 
@@ -239,15 +286,15 @@ const QualificationView = () => {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
                   <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                    unit.display_status === "Competent" || unit.display_status === "Completed"
+                    statusKey === "Competent" || statusKey === "Completed"
                       ? "text-green-600"
-                      : unit.display_status === "Waiting for assessor review"
+                      : statusKey === "Waiting for assessor review" || statusKey === "Waiting for trainer review"
                       ? "text-amber-500"
-                      : unit.display_status === "Waiting for IQA review"
+                      : statusKey === "Waiting for IQA review"
                       ? "text-blue-600"
-                      : unit.display_status === "Resubmission required" || unit.display_status === "Not yet competent"
+                      : statusKey === "Resubmission required" || statusKey === "Not yet competent"
                       ? "text-orange-500"
-                      : unit.display_status === "In progress"
+                      : statusKey === "In progress"
                       ? "text-primary"
                       : "text-muted-foreground"
                   }`} />
