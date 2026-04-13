@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, FileText, Loader2, ShieldAlert } from "lucide-react";
@@ -40,8 +41,6 @@ const AssessmentReview = () => {
     [queueData?.data, id],
   );
 
-  // console.log("id:", id);
-
   const submissionType = queueItem?.submission_type;
   const isWritten = submissionType === "written";
   const isEvidence = submissionType === "evidence";
@@ -54,7 +53,8 @@ const AssessmentReview = () => {
     useGetIqaEvidenceSubmissionDetailQuery(id!, {
       skip: !id || !isEvidence,
     });
-
+  const ui_flags: any = evidenceData?.data?.ui_flags;
+  console.log("ui_flags:", ui_flags);
   const [submitWrittenReview, { isLoading: isSavingWritten }] =
     useSubmitIqaWrittenReviewMutation();
   const [submitEvidenceReview, { isLoading: isSavingEvidence }] =
@@ -273,67 +273,70 @@ const AssessmentReview = () => {
           </CardContent>
         </Card>
       )}
+      {!ui_flags?.hide_iqa_review_form && (
+        <Card>
+          <CardHeader>
+            <CardTitle>IQA Decision</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {decisions.map((item) => (
+                <Button
+                  key={item.value}
+                  type="button"
+                  variant={decision === item.value ? "default" : "outline"}
+                  onClick={() => setDecision(item.value)}
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <Label>IQA Notes</Label>
+              <Textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={5}
+                placeholder="Add IQA review notes..."
+              />
+            </div>
+            <Button onClick={handleReviewSubmit} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : null}
+              Submit IQA Review
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>IQA Decision</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {decisions.map((item) => (
-              <Button
-                key={item.value}
-                type="button"
-                variant={decision === item.value ? "default" : "outline"}
-                onClick={() => setDecision(item.value)}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </div>
-          <div className="space-y-2">
-            <Label>IQA Notes</Label>
+      {!ui_flags?.hide_admin_concern_form && (
+        <Card className="border-destructive/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4" /> Raise Concern to Admin
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <Textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              rows={5}
-              placeholder="Add IQA review notes..."
+              value={concernNote}
+              onChange={(event) => setConcernNote(event.target.value)}
+              rows={4}
+              placeholder="Explain why this submission needs admin follow-up..."
             />
-          </div>
-          <Button onClick={handleReviewSubmit} disabled={isSaving}>
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : null}
-            Submit IQA Review
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="border-destructive/30">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4" /> Raise Concern to Admin
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Textarea
-            value={concernNote}
-            onChange={(event) => setConcernNote(event.target.value)}
-            rows={4}
-            placeholder="Explain why this submission needs admin follow-up..."
-          />
-          <Button
-            variant="destructive"
-            onClick={handleRaiseConcern}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : null}
-            Raise Concern
-          </Button>
-        </CardContent>
-      </Card>
+            <Button
+              variant="destructive"
+              onClick={handleRaiseConcern}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : null}
+              Raise Concern
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
