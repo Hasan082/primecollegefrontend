@@ -63,7 +63,7 @@ const IQAReports = () => {
       acc[key].total += 1;
       acc[key].sampled += 1;
       if (item.iqa_status === "IQA Approved") acc[key].approved += 1;
-      if (item.iqa_status === "Assessor Action Required" || item.iqa_status === "Escalated to Admin") acc[key].flagged += 1;
+      if (item.iqa_status === "Trainer Action Required" || item.iqa_status === "Escalated to Admin") acc[key].flagged += 1;
       if (item.iqa_status === "Pending IQA Review") acc[key].pending += 1;
       if (item.trainer?.name) acc[key].trainers.add(item.trainer.name);
       return acc;
@@ -154,7 +154,7 @@ const IQAReports = () => {
                   <TableHead className="text-center">Flagged</TableHead>
                   <TableHead className="text-center">Pending</TableHead>
                   <TableHead className="text-center">Coverage</TableHead>
-                  <TableHead>Assessors</TableHead>
+                  <TableHead>Trainers</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,11 +182,11 @@ const IQAReports = () => {
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-foreground mb-3">Assessor Sampling Summary</h4>
+            <h4 className="text-sm font-bold text-foreground mb-3">Trainer Sampling Summary</h4>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Assessor</TableHead>
+                  <TableHead>Trainer</TableHead>
                   <TableHead className="text-center">Total Reviewed</TableHead>
                   <TableHead className="text-center">IQA Approvals</TableHead>
                   <TableHead className="text-center">IQA Flags</TableHead>

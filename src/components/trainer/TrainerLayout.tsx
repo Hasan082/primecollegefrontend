@@ -56,7 +56,7 @@ const TrainerLayout = () => {
                 />
               </a>
               <span className="text-lg font-bold hidden sm:inline">
-                Trainer / Assessor Portal
+                Trainer Portal
               </span>
             </div>
 

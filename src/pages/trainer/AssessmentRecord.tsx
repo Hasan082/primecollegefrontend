@@ -111,7 +111,7 @@ const AssessmentRecord = () => {
       </Card>
 
       <Card className="p-6 mb-6">
-        <h2 className="text-lg font-bold text-primary mb-1">Assessor Feedback</h2>
+        <h2 className="text-lg font-bold text-primary mb-1">Trainer Feedback</h2>
         <p className="text-sm text-muted-foreground mb-6">Outcome and feedback recorded by trainer</p>
 
         <div className="space-y-3">
@@ -138,7 +138,7 @@ const AssessmentRecord = () => {
           <div className="rounded-xl p-4 bg-muted/30 border">
             <p className="text-sm text-muted-foreground mb-1">Feedback</p>
             <p className="font-semibold text-primary whitespace-pre-wrap">
-              {record.assessor_feedback || "No assessor feedback recorded."}
+              {record.assessor_feedback || "No trainer feedback recorded."}
             </p>
           </div>
         </div>

@@ -34,7 +34,7 @@ const UnitRow = ({ unit }: { unit: TreeUnit }) => {
           <span className="text-sm text-muted-foreground truncate">— {unit.unitName}</span>
         </div>
         <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
-          <span>Assessor: {unit.assessorName}</span>
+          <span>Trainer: {unit.assessorName}</span>
           {unit.evidenceCount > 0 && (
             <span className="flex items-center gap-0.5"><FileText className="w-3 h-3" /> {unit.evidenceCount} evidence</span>
           )}

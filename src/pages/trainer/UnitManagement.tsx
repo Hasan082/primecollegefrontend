@@ -280,7 +280,7 @@ const UnitManagement = () => {
                 <Textarea
                   value={writtenFeedback}
                   onChange={(event) => setWrittenFeedback(event.target.value)}
-                  placeholder="Provide assessor feedback for the learner"
+                    placeholder="Provide trainer feedback for the learner"
                   className="min-h-[120px]"
                 />
                 <Button onClick={handleWrittenReview} disabled={isSavingWritten}>
@@ -359,7 +359,7 @@ const UnitManagement = () => {
                 <Textarea
                   value={evidenceFeedback}
                   onChange={(event) => setEvidenceFeedback(event.target.value)}
-                  placeholder="Provide assessor feedback for the evidence portfolio"
+                  placeholder="Provide trainer feedback for the evidence portfolio"
                   className="min-h-[120px]"
                 />
                 <Button onClick={handleEvidenceReview} disabled={isSavingEvidence}>

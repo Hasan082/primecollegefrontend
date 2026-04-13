@@ -12,7 +12,7 @@ export interface IQASample {
   trainerFeedback: string;
   evidenceFiles: string[];
   criteria: string[];
-  iqaStatus: "Pending IQA Review" | "IQA Approved" | "Assessor Action Required" | "Escalated to Admin";
+  iqaStatus: "Pending IQA Review" | "IQA Approved" | "Trainer Action Required" | "Escalated to Admin";
   iqaComments?: string;
   iqaReviewDate?: string;
   samplingReason: "Random" | "New Trainer" | "Resubmission" | "Admin Selected";
@@ -98,7 +98,7 @@ export const iqaSamples: IQASample[] = [
     trainerFeedback: "Insufficient evidence. Work does not meet the required standard.",
     evidenceFiles: ["Safeguarding_SThompson.pdf"],
     criteria: ["AC 1.1 Define safeguarding", "AC 1.2 Identify legislation", "AC 2.1 Describe procedures"],
-    iqaStatus: "Assessor Action Required",
+    iqaStatus: "Trainer Action Required",
     iqaComments: "Feedback does not clearly reference the required assessment criteria. Trainer should specify which AC points are unmet.",
     iqaReviewDate: "2026-02-07",
     samplingReason: "New Trainer",

@@ -26,10 +26,10 @@ interface IQADisagreeFormProps {
 }
 
 const ACTIONS: { value: DisagreeAction; label: string; desc: string }[] = [
-  { value: "reassess", label: "Assessor to Re-assess", desc: "Assessor must re-mark the unit and provide a new decision" },
+  { value: "reassess", label: "Trainer to Re-assess", desc: "Trainer must re-mark the unit and provide a new decision" },
   { value: "revise_feedback", label: "Revise Feedback", desc: "Decision may be correct but feedback needs more detail/clarity" },
   { value: "additional_evidence", label: "Request Additional Evidence", desc: "More evidence needed before a decision can be confirmed" },
-  { value: "assessor_training", label: "Assessor CPD / Training", desc: "Systemic issue — assessor needs additional support or training" },
+  { value: "assessor_training", label: "Trainer CPD / Training", desc: "Systemic issue — trainer needs additional support or training" },
 ];
 
 const IQADisagreeForm = ({ criteria, onSubmit, onCancel }: IQADisagreeFormProps) => {
@@ -54,7 +54,7 @@ const IQADisagreeForm = ({ criteria, onSubmit, onCancel }: IQADisagreeFormProps)
 
       {/* Action Selection */}
       <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Required Action for Assessor
+        Required Action for Trainer
       </Label>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 mb-4">
         {ACTIONS.map((a) => (

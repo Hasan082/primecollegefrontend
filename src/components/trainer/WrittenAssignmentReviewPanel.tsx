@@ -99,7 +99,7 @@ const WrittenAssignmentReviewPanel = ({ unitId, learnerId, onGraded }: WrittenAs
         <Card className="p-5 border-primary/20 bg-primary/5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <MessageSquare className="w-5 h-5 text-primary" />
-            <h4 className="font-bold text-sm text-foreground">Assessor Feedback & Decision</h4>
+            <h4 className="font-bold text-sm text-foreground">Trainer Feedback & Decision</h4>
           </div>
 
           <div className="space-y-4">

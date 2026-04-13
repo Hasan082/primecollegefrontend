@@ -19,7 +19,7 @@ const strategyOptions = [
   { value: "percentage", label: "Percentage Sampling" },
   { value: "full", label: "100% Sampling" },
   { value: "risk_based", label: "Risk Based" },
-  { value: "new_assessor", label: "New Assessor" },
+  { value: "new_assessor", label: "New Trainer" },
   { value: "custom", label: "Custom" },
 ] as const;
 

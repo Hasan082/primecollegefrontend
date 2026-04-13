@@ -156,7 +156,7 @@ const AssessmentReview = () => {
           <p><strong>Learner:</strong> {queueItem.learner.name}</p>
           <p><strong>Trainer:</strong> {queueItem.trainer?.name || "Unassigned"}</p>
           <p><strong>Submission Type:</strong> {queueItem.submission_type.replace(/_/g, " ")}</p>
-          <p><strong>Assessor Outcome:</strong> {queueItem.status.replace(/_/g, " ")}</p>
+          <p><strong>Trainer Outcome:</strong> {queueItem.status.replace(/_/g, " ")}</p>
           <p><strong>Submitted:</strong> {queueItem.submitted_at ? new Date(queueItem.submitted_at).toLocaleString() : "—"}</p>
         </CardContent>
       </Card>
@@ -172,7 +172,7 @@ const AssessmentReview = () => {
               Word count: {writtenSubmission.response_word_count || 0}
             </div>
             <div className="text-sm whitespace-pre-wrap">
-              <strong>Assessor feedback:</strong> {writtenSubmission.assessor_feedback || "No assessor feedback recorded."}
+              <strong>Trainer feedback:</strong> {writtenSubmission.assessor_feedback || "No trainer feedback recorded."}
             </div>
           </CardContent>
         </Card>
@@ -185,7 +185,7 @@ const AssessmentReview = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-sm whitespace-pre-wrap">
-              <strong>Assessor feedback:</strong> {evidenceSubmission.assessor_feedback || "No assessor feedback recorded."}
+              <strong>Trainer feedback:</strong> {evidenceSubmission.assessor_feedback || "No trainer feedback recorded."}
             </div>
             <div className="space-y-3">
               {evidenceSubmission.evidence_items.map((item) => (

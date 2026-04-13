@@ -141,7 +141,7 @@ const SubmissionHistory = ({
                         <div className="bg-muted/50 rounded-lg p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <MessageSquare className="w-4 h-4 text-primary" />
-                            <p className="text-xs font-semibold text-foreground">Assessor Feedback</p>
+                            <p className="text-xs font-semibold text-foreground">Trainer Feedback</p>
                             {sub.assessorName && (
                               <span className="text-xs text-muted-foreground">— {sub.assessorName}</span>
                             )}

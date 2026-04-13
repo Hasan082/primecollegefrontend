@@ -635,7 +635,7 @@ const StrictQuizModal = ({ qualificationId, unitId, unitCode, unitName, onClose,
                     <li key={i} className="text-xs text-amber-700">{log}</li>
                   ))}
                 </ul>
-                <p className="text-xs text-amber-600 mt-2">Logged and visible to your assessor.</p>
+                <p className="text-xs text-amber-600 mt-2">Logged and visible to your trainer.</p>
               </div>
             )}
 

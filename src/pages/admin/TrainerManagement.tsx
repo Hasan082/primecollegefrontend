@@ -118,7 +118,7 @@ const TrainerManagement = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Trainer Management</h1>
-          <p className="text-sm text-muted-foreground">Manage trainers/assessors and learner assignments</p>
+          <p className="text-sm text-muted-foreground">Manage trainers and learner assignments</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>

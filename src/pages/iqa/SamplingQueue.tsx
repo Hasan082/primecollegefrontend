@@ -11,7 +11,7 @@ import { useGetIqaReviewQueueQuery } from "@/redux/apis/iqa/iqaApi";
 const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   "Pending IQA Review": "outline",
   "IQA Approved": "default",
-  "Assessor Action Required": "secondary",
+  "Trainer Action Required": "secondary",
   "Escalated to Admin": "destructive",
 };
 

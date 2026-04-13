@@ -36,7 +36,7 @@ const ROLE_CONFIG = {
       "Provide detailed feedback",
       "Track learner progress",
     ],
-    cardTitle: "Trainer / Assessor Portal",
+    cardTitle: "Trainer Portal",
     signInLabel: "Sign In to Trainer Portal",
     demoRedirect: "/trainer/dashboard",
     placeholder: "trainer@primecollege.edu",
