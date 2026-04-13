@@ -37,8 +37,10 @@ const AssessmentReview = () => {
   const { data: queueData, isLoading: isLoadingQueue } =
     useGetIqaReviewQueueQuery();
   const queueItem = useMemo(
-    () => queueData?.data.find((item) => item.submission_id === id) || null,
-    [queueData?.data, id],
+    () =>
+      queueData?.data?.results?.find((item) => item.submission_id === id) ||
+      null,
+    [queueData?.data?.results, id],
   );
 
   const submissionType = queueItem?.submission_type;
@@ -73,6 +75,9 @@ const AssessmentReview = () => {
 
   const writtenSubmission = writtenData?.data;
   const evidenceSubmission = evidenceData?.data;
+  const submission = writtenSubmission || evidenceSubmission;
+  const uiFlags = submission?.ui_flags;
+  const adminConcerns = submission?.admin_concerns || [];
 
   const handleReviewSubmit = async () => {
     if (!id || !notes.trim()) {
@@ -273,7 +278,37 @@ const AssessmentReview = () => {
           </CardContent>
         </Card>
       )}
-      {!ui_flags?.hide_iqa_review_form && (
+      {submission?.iqa_decision && (
+        <Card>
+          <CardHeader>
+            <CardTitle>IQA Review Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <strong>Decision:</strong>
+              <Badge variant="outline">
+                {submission.iqa_decision.replace(/_/g, " ")}
+              </Badge>
+            </div>
+            <p className="whitespace-pre-wrap">
+              <strong>Notes:</strong>{" "}
+              {submission.iqa_review_notes || "No IQA notes recorded."}
+            </p>
+            <p>
+              <strong>Reviewed By:</strong>{" "}
+              {submission.iqa_reviewer?.name || "Unknown IQA"}
+            </p>
+            <p>
+              <strong>Reviewed At:</strong>{" "}
+              {submission.iqa_reviewed_at
+                ? new Date(submission.iqa_reviewed_at).toLocaleString()
+                : "—"}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!uiFlags?.hide_iqa_review_form && (
         <Card>
           <CardHeader>
             <CardTitle>IQA Decision</CardTitle>
@@ -310,7 +345,46 @@ const AssessmentReview = () => {
         </Card>
       )}
 
-      {!ui_flags?.hide_admin_concern_form && (
+      {adminConcerns.length > 0 && (
+        <Card className="border-destructive/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4" /> Admin Concern History
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {adminConcerns.map((concern: any) => (
+              <div key={concern.id} className="rounded-lg border p-4 space-y-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong>Status:</strong>
+                  <Badge variant="outline">
+                    {concern.status.replace(/_/g, " ")}
+                  </Badge>
+                </div>
+                <p className="whitespace-pre-wrap">
+                  <strong>Concern:</strong> {concern.concern_note}
+                </p>
+                <p>
+                  <strong>Raised By:</strong> {concern.raised_by?.name || "Unknown"}
+                </p>
+                <p>
+                  <strong>Raised At:</strong>{" "}
+                  {concern.created_at
+                    ? new Date(concern.created_at).toLocaleString()
+                    : "—"}
+                </p>
+                {concern.admin_response_note ? (
+                  <p className="whitespace-pre-wrap">
+                    <strong>Admin Response:</strong> {concern.admin_response_note}
+                  </p>
+                ) : null}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {!uiFlags?.hide_admin_concern_form && (
         <Card className="border-destructive/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -72,7 +72,7 @@ const SamplingQueue = () => {
     [enrollmentsData],
   );
 
-  const entries = data?.data || [];
+  const entries = data?.data?.results || [];
 
   if (isLoading) {
     return (

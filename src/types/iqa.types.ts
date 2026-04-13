@@ -28,13 +28,23 @@ export interface IQAAssignedEnrolmentItem {
     is_cpd: boolean;
   };
   trainer: LearnerSubmissionActor | null;
-  iqa: LearnerSubmissionActor | null;
 }
 
 export interface IQAAssignedEnrolmentListResponse {
   success: boolean;
   message: string;
-  data: IQAAssignedEnrolmentItem[];
+  data: {
+    summary: {
+      total_learners: number;
+      awaiting_iqa: number;
+      iqa_approved: number;
+      action_required: number;
+    };
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: IQAAssignedEnrolmentItem[];
+  };
 }
 
 export type IQAEnrolmentContentResponse = EnrolmentContentResponse;
@@ -293,5 +303,10 @@ export interface IQADashboardResponse {
 export interface IQAReviewQueueResponse {
   success: boolean;
   message: string;
-  data: IQAReviewQueueItem[];
+  data: {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: IQAReviewQueueItem[];
+  };
 }

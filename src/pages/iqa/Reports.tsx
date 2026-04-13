@@ -36,7 +36,7 @@ const IQAReports = () => {
   }
 
   const { summary, trainer_overview } = dashboardData.data;
-  const queue = queueData.data;
+  const queue = queueData.data.results;
 
   const qualificationRows = Object.values(
     queue.reduce<Record<string, {
