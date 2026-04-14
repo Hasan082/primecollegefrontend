@@ -285,6 +285,49 @@ export interface IQATrainerOverviewItem {
   avg_turnaround_days: number;
 }
 
+export interface TrainerPerformanceSummary {
+  trainer_count: number;
+  total_reviews: number;
+  total_approvals: number;
+  total_flags: number;
+  overall_approval_rate_percent: number;
+  overall_flag_rate_percent: number;
+  avg_turnaround_days: number;
+}
+
+export interface TrainerPerformanceItem {
+  trainer: {
+    id: string;
+    name: string;
+    email: string;
+    is_active: boolean;
+  } | null;
+  metrics: {
+    assessments: number;
+    iqa_approvals: number;
+    flags: number;
+    changes_required: number;
+    referred_back: number;
+    resub_rate_percent: number;
+    approval_rate_percent: number;
+    flag_rate_percent: number;
+    avg_turnaround_days: number;
+    avg_trainer_outcome_days: number;
+  };
+}
+
+export interface TrainerPerformanceResponse {
+  success: boolean;
+  message: string;
+  data: {
+    summary: TrainerPerformanceSummary;
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: TrainerPerformanceItem[];
+  };
+}
+
 export interface IQADashboardResponse {
   success: boolean;
   message: string;

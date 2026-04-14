@@ -21,6 +21,7 @@ import type {
   SamplingPlanWritePayload,
   SubmissionAdminConcernCreatePayload,
   SubmissionAdminConcernResponse,
+  TrainerPerformanceResponse,
 } from "@/types/iqa.types";
 
 const iqaApi = api.injectEndpoints({
@@ -228,6 +229,17 @@ const iqaApi = api.injectEndpoints({
       }),
       invalidatesTags: ["ChecklistTemplates"],
     }),
+    getTrainerPerformance: builder.query<
+      TrainerPerformanceResponse,
+      Record<string, unknown> | void
+    >({
+      query: (args) => ({
+        url: "/api/enrolments/iqa/trainer-performance/",
+        method: "GET",
+        params: cleanObject(args || {}),
+      }),
+      providesTags: ["Enrolments"],
+    }),
   }),
 });
 
@@ -250,6 +262,7 @@ export const {
   useGetSamplingPlansQuery,
   useCreateSamplingPlanMutation,
   useUpdateSamplingPlanMutation,
+  useGetTrainerPerformanceQuery,
 } = iqaApi;
 
 export default iqaApi;
