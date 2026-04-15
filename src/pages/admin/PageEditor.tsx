@@ -12,10 +12,12 @@ import type {
 import { getDefaultBlockData } from "@/types/pageBuilder";
 import { TryCatch } from "@/utils/apiTryCatch";
 import {
+  getAllowedBlockTypesForPage,
   getFallbackBlocksForPageType,
   getPreviewPath,
   getRenderableBlocks,
   normalizeCmsPageCategory,
+  normalizePageBlocksForSlug,
   preserveSystemBlockState,
   rememberCmsPageType,
   resolvePageType,
@@ -96,7 +98,9 @@ const PageEditor = () => {
   );
 
   const savePage = async (updatedBlocks?: ContentBlock[]) => {
-    const nextBlocks = preserveSystemBlockState(updatedBlocks || blocks, blocks);
+    const normalizedIncoming = normalizePageBlocksForSlug(updatedBlocks || blocks, slug);
+    const normalizedExisting = normalizePageBlocksForSlug(blocks, slug);
+    const nextBlocks = preserveSystemBlockState(normalizedIncoming, normalizedExisting);
     const [data, error] = await TryCatch(
       updatePage({
         slug: pageId as string,
@@ -134,6 +138,8 @@ const PageEditor = () => {
   };
 
   const handleRemove = (id: string) => {
+    const target = blocks.find((block) => block.id === id);
+    if (!target || target.type === "hero" || target.isLocked) return;
     const updated = blocks.filter((block) => block.id !== id);
     savePage(updated);
   };
@@ -153,14 +159,13 @@ const PageEditor = () => {
   };
 
   const isHomePage = pageId === "home" || slug === "home";
-  const isAboutPage = pageId === "about" || slug === "about";
-  const isContactPage = pageId === "contact" || slug === "contact";
   const isQualificationPage = pageType === "qualification_detail";
   const fallbackBlocks = useMemo(
     () => getFallbackBlocksForPageType(pageType, slug),
     [pageType, slug],
   );
-  const visibleBlocks = blocks.length > 0 ? blocks : fallbackBlocks;
+  const visibleBlocks =
+    blocks.length > 0 ? blocks : isQualificationPage ? [] : fallbackBlocks;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-4">
@@ -193,26 +198,16 @@ const PageEditor = () => {
               <span className="truncate flex-1">{previewPath}</span>
             </div>
             <div className="overflow-y-auto h-full pb-10">
-              <BlockPreviewRenderer blocks={visibleBlocks} pageTitle={pageTitle} />
+              <BlockPreviewRenderer blocks={visibleBlocks} pageTitle={pageTitle} pageSlug={slug} />
             </div>
           </div>
         )}
       </div>
-        <AddBlockDialog
+      <AddBlockDialog
         open={addOpen}
         onOpenChange={setAddOpen}
         addBlock={handleAdd}
-        allowedBlocks={
-          isHomePage
-            ? ["cta", "text", "faq", "stats", "logos", "cards"]
-            : isAboutPage
-              ? ["cta", "text", "faq", "stats", "features", "image-text", "about-split", "logos"]
-              : isContactPage
-                ? ["cta", "text", "contact-form", "map"]
-                : isQualificationPage
-                  ? ["cta", "text", "faq", "cards", "blog", "modules", "image", "image-text"]
-                : undefined
-        }
+        allowedBlocks={getAllowedBlockTypesForPage(pageType, slug)}
       />
       <EditBlockDialog
         block={editBlock}

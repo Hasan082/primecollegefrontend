@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Textarea } from "@/components/ui/textarea";
 
 import type { ContentBlock, TextAlignment, BlockStyle } from "@/types/pageBuilder";
 import { normalizeQualificationSliderData } from "@/utils/pageBuilder";
@@ -239,6 +240,37 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
         <div className="grid grid-cols-2 gap-3">
           <Field label="CTA Label" value={local.ctaLabel as string} onChange={(v) => update("ctaLabel", v)} />
           <Field label="CTA Href" value={local.ctaHref as string} onChange={(v) => update("ctaHref", v)} />
+        </div>
+      )}
+
+      {block.type === "pricing" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Pricing Configuration</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Price" value={(local.price as string) || ""} onChange={(v) => update("price", v)} />
+            <Field label="Duration" value={(local.duration as string) || ""} onChange={(v) => update("duration", v)} />
+          </div>
+          <div>
+            <Label>Features</Label>
+            <Textarea
+              value={Array.isArray(local.features) ? (local.features as string[]).join("\n") : ""}
+              onChange={(e) =>
+                update(
+                  "features",
+                  e.target.value
+                    .split(/\n|,/)
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+                )
+              }
+              placeholder={"One feature per line"}
+              className="mt-1 min-h-[120px]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="CTA Label" value={(local.ctaLabel as string) || ""} onChange={(v) => update("ctaLabel", v)} />
+            <Field label="CTA Href" value={(local.ctaHref as string) || ""} onChange={(v) => update("ctaHref", v)} />
+          </div>
         </div>
       )}
 

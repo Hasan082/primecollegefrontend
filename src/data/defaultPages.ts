@@ -9,6 +9,20 @@ export const defaultPages: PageConfig[] = [
     type: "static",
     blocks: [
       {
+        id: "home_hero",
+        type: "hero",
+        label: "Hero Banner",
+        isLocked: true,
+        isFixed: true,
+        data: {
+          title: "Welcome to Prime College",
+          subtitle: "Broaden your horizons and elevate your career with our industry-leading qualifications.",
+          image: "",
+          ctaLabel: "Browse Qualifications",
+          ctaHref: "/qualifications",
+        },
+      },
+      {
         id: "home_welcome",
         type: "text",
         label: "Welcome Section",

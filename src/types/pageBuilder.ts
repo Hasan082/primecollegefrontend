@@ -217,9 +217,13 @@ export interface WhyUsBlock extends BlockBase {
 export interface PricingBlock extends BlockBase {
   type: "pricing";
   data: {
+    title?: string;
+    content?: string;
     price: string;
     duration?: string;
     features?: string[];
+    ctaLabel?: string;
+    ctaHref?: string;
   };
 }
 
@@ -441,7 +445,15 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       id,
       type: "hero",
       label,
-      data: { title: "Page Title", subtitle: "", image: "", ctaLabel: "", ctaHref: "" },
+      isLocked: true,
+      isFixed: true,
+      data: {
+        title: "Hero Banner",
+        subtitle: "Add a short introduction for this page.",
+        image: "",
+        ctaLabel: "",
+        ctaHref: "",
+      },
     }),
     text: () => ({
       id,
@@ -530,7 +542,15 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       id,
       type: "pricing",
       label,
-      data: { price: "£0", duration: "12 months" },
+      data: {
+        title: "Pricing",
+        content: "Transparent pricing with clear course duration and outcomes.",
+        price: "£0",
+        duration: "12 months",
+        features: ["Feature 1", "Feature 2"],
+        ctaLabel: "Enquire Now",
+        ctaHref: "/contact",
+      },
     }),
     qualification_hero: () => ({
       id,

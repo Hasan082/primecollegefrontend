@@ -84,6 +84,27 @@ const normalizeQualificationSliderBlock = (block: ContentBlock): ContentBlock =>
   };
 };
 
+const normalizeHeroBlock = (block: ContentBlock): ContentBlock => {
+  if (block.type !== "hero") return block;
+
+  const data = isObject(block.data) ? block.data : {};
+
+  return {
+    ...block,
+    label: asString(block.label, BLOCK_TYPE_LABELS.hero),
+    isLocked: true,
+    isFixed: true,
+    data: {
+      ...data,
+      title: asString(data.title, "Hero Banner"),
+      subtitle: asString(data.subtitle, "Add a short introduction for this page."),
+      image: asString(data.image, ""),
+      ctaLabel: asString(data.ctaLabel, ""),
+      ctaHref: asString(data.ctaHref, ""),
+    },
+  };
+};
+
 const getHomeQualificationSliderBlock = (): ContentBlock =>
   normalizeQualificationSliderBlock({
     id: "home_popular",
@@ -101,18 +122,39 @@ const getHomeQualificationSliderBlock = (): ContentBlock =>
   } as ContentBlock);
 
 const normalizeHomePageBlocks = (blocks: ContentBlock[]): ContentBlock[] => {
-  const nonHeroBlocks = blocks.filter((block) => block.type !== "hero");
-  const qualificationIndex = nonHeroBlocks.findIndex((block) => block.type === "qualification_slider");
+  const heroIndex = blocks.findIndex((block) => block.type === "hero");
+  const heroBlock = heroIndex >= 0
+    ? normalizeHeroBlock(blocks[heroIndex])
+    : normalizeHeroBlock(getHomeDefaultBlocks()[0]);
+
+  const blocksWithoutHero = blocks.filter((block) => block.type !== "hero");
+  const qualificationIndex = blocksWithoutHero.findIndex((block) => block.type === "qualification_slider");
   const qualificationBlock = qualificationIndex >= 0
     ? normalizeQualificationSliderBlock({
-        ...nonHeroBlocks[qualificationIndex],
+        ...blocksWithoutHero[qualificationIndex],
         isLocked: true,
         isFixed: true,
       })
     : getHomeQualificationSliderBlock();
-  const remainingBlocks = nonHeroBlocks.filter((block, index) => index !== qualificationIndex);
+  const remainingBlocks = blocksWithoutHero.filter((block, index) => index !== qualificationIndex);
 
-  return [qualificationBlock, ...remainingBlocks];
+  return [heroBlock, qualificationBlock, ...remainingBlocks];
+};
+
+export const normalizePageBlocksForSlug = (
+  blocks: ContentBlock[],
+  slug?: string,
+): ContentBlock[] => {
+  if ((slug || "") === "home") return normalizeHomePageBlocks(blocks);
+  if ((slug || "") === "contact") {
+    const heroIndex = blocks.findIndex((block) => block.type === "hero");
+    const heroBlock = heroIndex >= 0
+      ? normalizeHeroBlock(blocks[heroIndex])
+      : normalizeHeroBlock(getContactDefaultBlocks()[0]);
+    const remainingBlocks = blocks.filter((block) => block.type !== "hero");
+    return [heroBlock, ...remainingBlocks];
+  }
+  return blocks;
 };
 
 export const normalizeBlock = (block: unknown, index = 0): ContentBlock | null => {
@@ -194,13 +236,13 @@ export const getRenderableBlocks = (
   if (Array.isArray(pageOrBlocks) || typeof pageOrBlocks === "string" || !pageOrBlocks) {
     const parsed = safeParseBlocks(pageOrBlocks);
     const resolvedBlocks = parsed.length > 0 ? parsed : getFallbackBlocksForSlug(fallbackSlug || "");
-    return (fallbackSlug || "") === "home" ? normalizeHomePageBlocks(resolvedBlocks) : resolvedBlocks;
+    return normalizePageBlocksForSlug(resolvedBlocks, fallbackSlug);
   }
 
   const parsed = safeParseBlocks(pageOrBlocks.blocks);
   const resolvedSlug = fallbackSlug || pageOrBlocks.slug || "";
   const resolvedBlocks = parsed.length > 0 ? parsed : getFallbackBlocksForSlug(resolvedSlug);
-  return resolvedSlug === "home" ? normalizeHomePageBlocks(resolvedBlocks) : resolvedBlocks;
+  return normalizePageBlocksForSlug(resolvedBlocks, resolvedSlug);
 };
 
 export const normalizeCmsPageCategory = (value?: string | null): CmsPageCategory => {
@@ -215,6 +257,27 @@ export const getCmsPageCategory = (slug: string): CmsPageCategory => {
   if (slug.startsWith("blog-") || slug.startsWith("blogs/")) return "blog_post";
   if (slug.startsWith("qualification-")) return "qualification_detail";
   return "general";
+};
+
+export const getAllowedBlockTypesForPage = (
+  pageType?: CmsPageCategory | null,
+  slug?: string,
+): BlockType[] | undefined => {
+  const currentSlug = slug || "";
+
+  if (currentSlug === "home") {
+    return ["text", "why-us", "stats", "logos", "features", "cta", "blog"];
+  }
+
+  if (currentSlug === "contact") {
+    return ["contact-form", "map", "cta", "text"];
+  }
+
+  if (pageType === "qualification_detail") {
+    return ["cta", "image-text", "modules", "faq", "cards"];
+  }
+
+  return undefined;
 };
 
 export const resolvePageType = (page?: Pick<CMSPage, "slug" | "page_type"> | null): CmsPageCategory => {

@@ -2,6 +2,20 @@ import { ContentBlock } from "@/types/pageBuilder";
 
 export const getHomeDefaultBlocks = (): ContentBlock[] => [
   {
+    id: "home_hero",
+    type: "hero",
+    label: "Hero Banner",
+    isLocked: true,
+    isFixed: true,
+    data: {
+      title: "Welcome to Prime College",
+      subtitle: "Broaden your horizons and elevate your career with our industry-leading qualifications.",
+      image: "",
+      ctaLabel: "Browse Qualifications",
+      ctaHref: "/qualifications",
+    },
+  },
+  {
     id: "home_popular",
     type: "qualification_slider",
     label: "Qualification Slider",

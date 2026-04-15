@@ -13,10 +13,7 @@ import {
   useGetQualificationDetailQuery,
   useGetUpSalesQuery,
 } from "@/redux/apis/qualificationApi";
-import {
-  getFallbackBlocksForPageType,
-  getRenderableBlocks,
-} from "@/utils/pageBuilder";
+import { filterOutSystemBlocks, getRenderableBlocks } from "@/utils/pageBuilder";
 import {
   Select,
   SelectContent,
@@ -305,16 +302,10 @@ const QualificationDetail = () => {
     navigate("/checkout");
   };
 
-  const rawBlocks = qualification?.body_blocks?.length
-    ? qualification.body_blocks
-    : getFallbackBlocksForPageType("qualification_detail", detailPageSlug || slug);
+  const rawBlocks = qualification?.body_blocks || [];
   const bodyBlocks = qualification
-    ? getRenderableBlocks(rawBlocks, detailPageSlug || slug)
-        .filter(
-          (block) =>
-            block.type !== "qualification_hero" &&
-            block.type !== "qualification_slider",
-        )
+    ? filterOutSystemBlocks(getRenderableBlocks(rawBlocks, detailPageSlug || slug))
+        .filter((block) => block.type !== "qualification_slider")
         .map((block) =>
           block.type === "blog"
             ? {

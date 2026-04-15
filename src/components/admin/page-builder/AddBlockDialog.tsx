@@ -1,6 +1,7 @@
 import React from "react";
 import {
   BookOpen,
+  BadgeDollarSign,
   Image as ImageIcon,
   Layers3,
   MessageSquareText,
@@ -8,6 +9,11 @@ import {
   Text,
   LayoutGrid,
   ArrowRight,
+  Users,
+  BarChart3,
+  Sparkles,
+  Mail,
+  MapPinned,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +34,14 @@ const BLOCK_DESCRIPTIONS: Partial<Record<BlockType, string>> = {
   cta: "Banner with action",
   cards: "Related items grid",
   blog: "Latest posts",
+  pricing: "Pricing table",
+  "popular-qualifications": "Qualification grid",
+  "why-us": "Why choose us",
+  stats: "Statistics",
+  logos: "Logo carousel",
+  features: "Features grid",
+  "contact-form": "Contact form",
+  map: "Google map",
 };
 
 const BLOCK_ICONS: Partial<Record<BlockType, React.ElementType>> = {
@@ -39,9 +53,24 @@ const BLOCK_ICONS: Partial<Record<BlockType, React.ElementType>> = {
   cta: ArrowRight,
   cards: Layers3,
   blog: Newspaper,
+  pricing: BadgeDollarSign,
+  "popular-qualifications": Layers3,
+  "why-us": Users,
+  stats: BarChart3,
+  logos: Sparkles,
+  features: Layers3,
+  "contact-form": Mail,
+  map: MapPinned,
 };
 
-const HIDDEN_BLOCK_TYPES: BlockType[] = ["hero", "qualification_hero", "qualification_slider"];
+const HIDDEN_BLOCK_TYPES: BlockType[] = [
+  "hero",
+  "image",
+  "pricing",
+  "popular-qualifications",
+  "qualification_hero",
+  "qualification_slider",
+];
 
 interface AddBlockDialogProps {
   open: boolean;
