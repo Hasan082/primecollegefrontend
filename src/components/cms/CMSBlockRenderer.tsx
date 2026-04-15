@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSubmitContactFormMutation } from "@/redux/apis/contactApi";
+import { Image } from "@/components/Image";
 import { Users, Award, CheckCircle, Clock, Target } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import HeroSlider from "@/components/HeroSlider";
@@ -29,6 +30,9 @@ const heroImageMap: Record<string, string> = {
   executive: heroExecutive,
   care: heroCare,
 };
+
+const resolveCmsImage = (image: unknown): unknown =>
+  typeof image === "string" ? heroImageMap[image] || image : image;
 
 const iconMap: Record<string, React.ElementType> = {
   Users,
@@ -80,11 +84,7 @@ const renderHero = (block: ContentBlock, pageSlug?: string) => {
 
   return (
     <div className="relative h-[400px] overflow-hidden">
-      <img
-        src={imageSrc}
-        alt={d.title}
-        className="w-full h-full object-cover"
-      />
+      <Image image={imageSrc} alt={d.title} className="w-full h-full object-cover" />
       <div className="absolute inset-0 bg-foreground/70" />
       <div className="absolute inset-0 flex items-center justify-center text-center px-4">
         <div>
@@ -251,8 +251,8 @@ export const CMSBlockRenderer = ({
       return (
         <section className="py-16 px-4">
           <div className="container mx-auto max-w-5xl">
-            <img
-              src={d.image}
+            <Image
+              image={resolveCmsImage(d.image) as any}
               alt={d.alt || d.caption || "CMS image"}
               className="w-full rounded-2xl border border-border object-cover"
             />
@@ -271,8 +271,8 @@ export const CMSBlockRenderer = ({
             <div
               className={`rounded-xl overflow-hidden ${d.imagePosition === "right" ? "order-2" : "order-1"}`}
             >
-              <img
-                src={d.image || aboutHero}
+              <Image
+                image={resolveCmsImage(d.image) || aboutHero}
                 alt={d.headline}
                 className="w-full h-[400px] object-cover rounded-xl"
               />
@@ -401,8 +401,8 @@ export const CMSBlockRenderer = ({
       return d.bgImage || d.title || d.content ? (
         <section className="relative py-20 px-4 overflow-hidden bg-primary text-primary-foreground text-center">
           {d.bgImage ? (
-            <img
-              src={d.bgImage}
+            <Image
+              image={resolveCmsImage(d.bgImage) as any}
               className="absolute inset-0 w-full h-full object-cover opacity-20"
               alt=""
             />
@@ -442,8 +442,8 @@ export const CMSBlockRenderer = ({
                 className="bg-card rounded-xl border border-border p-4 h-24 flex items-center justify-center"
               >
                 {item.image ? (
-                  <img
-                    src={item.image}
+                  <Image
+                    image={resolveCmsImage(item.image) as any}
                     alt={item.title}
                     className="max-h-14 w-auto object-contain"
                   />
@@ -481,15 +481,11 @@ export const CMSBlockRenderer = ({
                     >
                       <Link to={`/qualifications/${slug}`}>
                         <div className="aspect-[4/3] overflow-hidden rounded-t-xl m-2">
-                          <img
-                            src={
-                              heroImageMap[item.image || ""] ||
-                              item.image ||
-                              heroClassroom
-                            }
-                            alt={item.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
+                        <Image
+                          image={resolveCmsImage(item.image) || heroClassroom}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
                         </div>
                       </Link>
                       <div className="px-4 pb-5 flex flex-col flex-1">
@@ -547,8 +543,8 @@ export const CMSBlockRenderer = ({
                   className="bg-card border border-border rounded-xl overflow-hidden group flex flex-col"
                 >
                   {item.image ? (
-                    <img
-                      src={heroImageMap[item.image] || item.image}
+                    <Image
+                      image={resolveCmsImage(item.image) as any}
                       alt={item.title}
                       className="w-full h-48 object-cover"
                     />
@@ -633,12 +629,8 @@ export const CMSBlockRenderer = ({
                       className="bg-card border border-border rounded-xl overflow-hidden group flex h-full flex-col"
                     >
                       <div className="aspect-[16/9] overflow-hidden">
-                        <img
-                          src={
-                            heroImageMap[item.image || ""] ||
-                            item.image ||
-                            heroClassroom
-                          }
+                        <Image
+                          image={resolveCmsImage(item.image) || heroClassroom}
                           srcSet={item.image_srcset}
                           sizes="(min-width: 768px) 33vw, 100vw"
                           alt={item.title}
@@ -685,8 +677,8 @@ export const CMSBlockRenderer = ({
                   className="bg-card border border-border rounded-xl overflow-hidden"
                 >
                   {item.image ? (
-                    <img
-                      src={item.image}
+                    <Image
+                      image={resolveCmsImage(item.image) as any}
                       alt={item.title}
                       className="w-full h-48 object-cover"
                     />

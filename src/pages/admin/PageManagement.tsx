@@ -16,7 +16,7 @@ import {
 import { TryCatch } from "@/utils/apiTryCatch";
 import { handleResponse } from "@/utils/handleResponse";
 import {
-  getFallbackBlocksForSlug,
+  getFallbackBlocksForPageType,
   getRememberedCmsPageType,
   resolvePageType,
   rememberCmsPageType,
@@ -55,10 +55,16 @@ const PageManagement = () => {
     }
 
     const cleanSlug = normalizePageSlug(newPage.slug || newPage.title);
+    const resolvedPageType =
+      newPage.type === "blog-post"
+        ? "blog_post"
+        : newPage.type === "qualification"
+          ? "qualification_detail"
+          : "static";
     const payload: CreateCMSPagePayload = {
       title: newPage.title,
       slug: cleanSlug,
-      blocks: getFallbackBlocksForSlug(cleanSlug),
+      blocks: getFallbackBlocksForPageType(resolvedPageType, cleanSlug),
       is_published: false,
     };
 
@@ -68,7 +74,7 @@ const PageManagement = () => {
       error,
       successMessage: "Page created",
       onSuccess: () => {
-        rememberCmsPageType(cleanSlug, newPage.type === "blog-post" ? "blog_post" : newPage.type === "qualification" ? "qualification_detail" : "static");
+        rememberCmsPageType(cleanSlug, resolvedPageType);
         setNewPage({ title: "", slug: "", type: "static" });
         setAddOpen(false);
         refetch();

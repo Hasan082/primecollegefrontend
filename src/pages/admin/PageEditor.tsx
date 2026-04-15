@@ -12,7 +12,7 @@ import type {
 import { getDefaultBlockData } from "@/types/pageBuilder";
 import { TryCatch } from "@/utils/apiTryCatch";
 import {
-  getFallbackBlocksForSlug,
+  getFallbackBlocksForPageType,
   getPreviewPath,
   getRenderableBlocks,
   normalizeCmsPageCategory,
@@ -139,7 +139,9 @@ const PageEditor = () => {
   };
 
   const handleAdd = (type: BlockType) => {
+    if (type === "hero") return;
     if (type === "qualification_hero") return;
+    if (isQualificationPage && type === "qualification_slider") return;
     const block = getDefaultBlockData(type);
     const updated = [...blocks, block];
     savePage(updated).then(({ error }) => {
@@ -153,7 +155,11 @@ const PageEditor = () => {
   const isHomePage = pageId === "home" || slug === "home";
   const isAboutPage = pageId === "about" || slug === "about";
   const isContactPage = pageId === "contact" || slug === "contact";
-  const fallbackBlocks = useMemo(() => getFallbackBlocksForSlug(slug), [slug]);
+  const isQualificationPage = pageType === "qualification_detail";
+  const fallbackBlocks = useMemo(
+    () => getFallbackBlocksForPageType(pageType, slug),
+    [pageType, slug],
+  );
   const visibleBlocks = blocks.length > 0 ? blocks : fallbackBlocks;
 
   return (
@@ -192,17 +198,19 @@ const PageEditor = () => {
           </div>
         )}
       </div>
-      <AddBlockDialog
+        <AddBlockDialog
         open={addOpen}
         onOpenChange={setAddOpen}
         addBlock={handleAdd}
         allowedBlocks={
           isHomePage
-            ? ["cta", "text", "faq", "stats", "logos", "cards", "qualification_slider"]
+            ? ["cta", "text", "faq", "stats", "logos", "cards"]
             : isAboutPage
               ? ["cta", "text", "faq", "stats", "features", "image-text", "about-split", "logos"]
               : isContactPage
                 ? ["cta", "text", "contact-form", "map"]
+                : isQualificationPage
+                  ? ["cta", "text", "faq", "cards", "blog", "modules", "image", "image-text"]
                 : undefined
         }
       />

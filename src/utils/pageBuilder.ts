@@ -1,6 +1,7 @@
 import { getAboutDefaultBlocks } from "@/data/aboutBlocks";
 import { getContactDefaultBlocks } from "@/data/contactBlocks";
 import { getHomeDefaultBlocks } from "@/data/homeBlocks";
+import { getQualificationDefaultBlocks } from "@/data/qualificationBlocks";
 import type {
   CMSPage,
   CMSPageCategory,
@@ -173,6 +174,17 @@ export const getFallbackBlocksForSlug = (slug: string): ContentBlock[] => {
     default:
       return [];
   }
+};
+
+export const getFallbackBlocksForPageType = (
+  pageType?: CmsPageCategory | null,
+  slug?: string,
+): ContentBlock[] => {
+  if (pageType === "qualification_detail") {
+    return getQualificationDefaultBlocks();
+  }
+
+  return getFallbackBlocksForSlug(slug || "");
 };
 
 export const getRenderableBlocks = (

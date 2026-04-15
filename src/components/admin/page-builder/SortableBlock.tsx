@@ -19,9 +19,11 @@ const getBlockPreview = (block: ContentBlock): string => {
 };
 
 const SortableBlock = ({ block, onEdit, onRemove, isFixed }: SortableBlockProps) => {
+  const isHeroBlock = block.type === "hero";
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
     id: block.id,
-    disabled: isFixed || block.isFixed 
+    disabled: isHeroBlock || isFixed || block.isFixed 
   });
 
   const style = {
@@ -31,8 +33,8 @@ const SortableBlock = ({ block, onEdit, onRemove, isFixed }: SortableBlockProps)
     zIndex: isDragging ? 50 : undefined,
   };
 
-  const showDragHandle = !isFixed && !block.isFixed;
-  const showDelete = !block.isLocked;
+  const showDragHandle = !isHeroBlock && !isFixed && !block.isFixed;
+  const showDelete = !isHeroBlock && !block.isLocked;
   const showEdit = block.type !== "qualification_hero";
 
   return (

@@ -8,12 +8,24 @@ type ApiImage = {
 };
 
 interface Props extends React.ImgHTMLAttributes<HTMLImageElement> {
-  image: ApiImage;
+  image: ApiImage | string;
   alt?: string;
 }
 
 export const Image = ({ image, alt = "", ...props }: Props) => {
   if (!image || Object.keys(image).length === 0) return null;
+
+  if (typeof image === "string") {
+    return (
+      <img
+        src={image}
+        alt={alt}
+        loading="lazy"
+        {...props}
+      />
+    );
+  }
+
   const srcSet = [
     image.small && `${image.small} 100w`,
     image.medium && `${image.medium} 200w`,

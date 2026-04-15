@@ -54,7 +54,24 @@ const AddPageDialog = ({
               placeholder="e.g. our-team"
             />
           </div>
-          
+          <div>
+            <Label>Page Type</Label>
+            <Select
+              value={newPage.type}
+              onValueChange={(value) =>
+                setNewPage((p) => ({ ...p, type: value as "static" | "qualification" | "blog-post" }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select page type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="static">Static Page</SelectItem>
+                <SelectItem value="qualification">Qualification Page</SelectItem>
+                <SelectItem value="blog-post">Blog Post</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

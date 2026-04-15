@@ -1,4 +1,16 @@
+import React from "react";
+import {
+  BookOpen,
+  Image as ImageIcon,
+  Layers3,
+  MessageSquareText,
+  Newspaper,
+  Text,
+  LayoutGrid,
+  ArrowRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -8,25 +20,28 @@ import {
 import { BlockType, BLOCK_TYPE_LABELS } from "@/types/pageBuilder";
 
 const BLOCK_DESCRIPTIONS: Partial<Record<BlockType, string>> = {
-  hero: "Full-width banner",
-  text: "Title + content",
-  image: "Full-width image",
-  "image-text": "Side by side",
-  modules: "Numbered list",
-  faq: "Accordion Q&A",
-  stats: "Counter cards",
-  cta: "Action banner",
-  cards: "Grid of cards",
-  logos: "Logo carousel",
-  blog: "News grid",
-  "why-us": "Feature highlights",
-  pricing: "Price display",
-  qualification_hero: "Hero for qualification pages",
-  "about-split": "Split layout for about page",
-  "popular-qualifications": "Grid of popular qualifications",
-  features: "Feature grid with icons",
-  qualification_slider: "Qualification slider from CMS-resolved items",
+  text: "Section copy",
+  image: "Standalone image",
+  "image-text": "Text with image",
+  modules: "Course structure",
+  faq: "Frequently asked questions",
+  cta: "Banner with action",
+  cards: "Related items grid",
+  blog: "Latest posts",
 };
+
+const BLOCK_ICONS: Partial<Record<BlockType, React.ElementType>> = {
+  text: Text,
+  image: ImageIcon,
+  "image-text": LayoutGrid,
+  modules: BookOpen,
+  faq: MessageSquareText,
+  cta: ArrowRight,
+  cards: Layers3,
+  blog: Newspaper,
+};
+
+const HIDDEN_BLOCK_TYPES: BlockType[] = ["hero", "qualification_hero", "qualification_slider"];
 
 interface AddBlockDialogProps {
   open: boolean;
@@ -42,30 +57,50 @@ const AddBlockDialog = ({
   allowedBlocks,
 }: AddBlockDialogProps) => {
   const blockTypes = (allowedBlocks || (Object.keys(BLOCK_TYPE_LABELS) as BlockType[]))
-    .filter((type) => type !== "qualification_hero");
+    .filter((type) => !HIDDEN_BLOCK_TYPES.includes(type));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-6xl max-h-[90vh] overflow-hidden p-4 sm:p-6">
+        <DialogHeader className="pr-10 sm:pr-12">
           <DialogTitle>Add Block</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-3 py-2">
+        <div className="max-h-[calc(90vh-6rem)] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-3 pb-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {blockTypes.map((type) => (
             <Button
               key={type}
-              variant="outline"
-              className="h-auto py-3 flex flex-col items-center gap-1"
+              variant="ghost"
+              className="group h-full w-full p-0 text-left"
               onClick={() => addBlock(type)}
             >
-              <span className="text-sm font-medium">
-                {BLOCK_TYPE_LABELS[type]}
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                {BLOCK_DESCRIPTIONS[type]}
-              </span>
+              <Card className="h-full w-full border-border/70 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/30 group-hover:shadow-md">
+                <CardContent className="flex h-full min-h-[132px] flex-col gap-3 p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      {BLOCK_ICONS[type] ? (
+                        React.createElement(BLOCK_ICONS[type] as React.ElementType, {
+                          className: "h-5 w-5",
+                        })
+                      ) : null}
+                    </div>
+                    <span className="rounded-full border border-border px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                      Add
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="block text-sm font-semibold text-foreground">
+                      {BLOCK_TYPE_LABELS[type]}
+                    </span>
+                    <span className="block text-xs leading-relaxed text-muted-foreground">
+                      {BLOCK_DESCRIPTIONS[type] || "Add this block to the page."}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
             </Button>
           ))}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Breadcrumb from "@/components/Breadcrumb";
-import CTASection from "@/components/CTASection";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import UpsellModal from "@/components/UpsellModal";
 import { CMSPageRenderer } from "@/components/cms/CMSBlockRenderer";
 import { useCart } from "@/contexts/CartContext";
+import { useGetBlogsQuery } from "@/redux/apis/blogs/blogApi";
 import {
   QualificationSession,
   QualificationSessionLocation,
@@ -14,7 +14,7 @@ import {
   useGetUpSalesQuery,
 } from "@/redux/apis/qualificationApi";
 import {
-  filterOutSystemBlocks,
+  getFallbackBlocksForPageType,
   getRenderableBlocks,
 } from "@/utils/pageBuilder";
 import {
@@ -80,6 +80,9 @@ const QualificationDetail = () => {
     skip: !slug,
   });
   const { data: upsellResponse } = useGetUpSalesQuery(slug, { skip: !slug });
+  const { data: blogsResponse, isLoading: isBlogsLoading } = useGetBlogsQuery({
+    page_size: 3,
+  });
   const qualification = data?.data;
   const detailPageSlug = qualification?.detail_page?.slug;
   const detailPagePublished = qualification?.detail_page?.is_published;
@@ -216,6 +219,18 @@ const QualificationDetail = () => {
   const disabledMessage = sessionLocations.length
     ? "No available dates for the selected location yet."
     : "No available dates for this course yet.";
+  const blogItems = (blogsResponse?.data?.results ?? []).map((blog) => ({
+    title: blog.blog_title,
+    blog_excerpt: blog.blog_excerpt,
+    date: new Date(blog.created_at).toLocaleDateString(),
+    category: blog.category_name,
+    image:
+      blog.feature_image?.sources?.card ||
+      blog.feature_image?.sources?.desktop ||
+      blog.feature_image?.src,
+    image_srcset: blog.feature_image?.srcset,
+    slug: blog.blog_slug,
+  }));
   // TODO: need to work here convert to srcset
   const heroImage =
     qualification?.featured_image?.hero_desktop ||
@@ -224,7 +239,7 @@ const QualificationDetail = () => {
     qualification?.featured_image?.original ||
     "";
 
-  if (isLoading) {
+  if (isLoading || isBlogsLoading) {
     return <LoadingSpinner />;
   }
 
@@ -290,13 +305,27 @@ const QualificationDetail = () => {
     navigate("/checkout");
   };
 
+  const rawBlocks = qualification?.body_blocks?.length
+    ? qualification.body_blocks
+    : getFallbackBlocksForPageType("qualification_detail", detailPageSlug || slug);
   const bodyBlocks = qualification
-    ? filterOutSystemBlocks(
-      getRenderableBlocks(
-        qualification.body_blocks ?? [],
-        detailPageSlug || slug,
-      ),
-    )
+    ? getRenderableBlocks(rawBlocks, detailPageSlug || slug)
+        .filter(
+          (block) =>
+            block.type !== "qualification_hero" &&
+            block.type !== "qualification_slider",
+        )
+        .map((block) =>
+          block.type === "blog"
+            ? {
+                ...block,
+                data: {
+                  ...(block.data as any),
+                  items: blogItems,
+                },
+              }
+            : block,
+        )
     : [];
 
   const hasCmsBody = detailPagePublished !== false && bodyBlocks.length > 0;
@@ -455,7 +484,12 @@ const QualificationDetail = () => {
         </div>
       </section>
 
-      {/* <CTASection /> */}
+      {hasCmsBody ? (
+        <CMSPageRenderer
+          blocks={bodyBlocks}
+          pageSlug={detailPageSlug || slug}
+        />
+      ) : null}
 
       {showUpsell && upsellResponse?.data?.length ? (
         <UpsellModal

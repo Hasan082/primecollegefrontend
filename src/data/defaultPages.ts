@@ -109,7 +109,7 @@ export const defaultPages: PageConfig[] = [
     slug: "about",
     type: "static",
     blocks: [
-      { id: "about_hero", type: "hero", label: "About Hero", data: { title: "About Prime College", subtitle: "Broaden your horizons and elevate your career with our industry-leading qualifications.", image: "classroom" } },
+      { id: "about_hero", type: "hero", label: "About Hero", isLocked: true, isFixed: true, data: { title: "About Prime College", subtitle: "Broaden your horizons and elevate your career with our industry-leading qualifications.", image: "classroom" } },
       { id: "about_intro", type: "about-split", label: "About Us Intro", data: { headline: "Excellence in Online Learning & Professional Development", paragraphs: ["We provide high-quality education tailored to your career goals."], ctaLabel: "Learn Case Studies", ctaHref: "/about" } },
       { id: "about_approach", type: "why-us", label: "Smart Approach", data: { title: "Smart Approach", content: "Experience the difference with Prime College's unique approach to education.", items: [{ title: "Expert Tutors", description: "Learn from industry professionals.", icon: "Users" }, { title: "Flexible Learning", description: "Study at your own pace.", icon: "Clock" }, { title: "Global Certification", description: "Recognized worldwide.", icon: "Award" }] } },
     ],
@@ -121,7 +121,7 @@ export const defaultPages: PageConfig[] = [
     slug: "contact",
     type: "static",
     blocks: [
-      { id: "contact_hero", type: "hero", label: "Contact Hero", data: { title: "Get in Touch", subtitle: "Have a question or need assistance? We're here to help you every step of the way.", image: "business" } },
+      { id: "contact_hero", type: "hero", label: "Contact Hero", isLocked: true, isFixed: true, data: { title: "Get in Touch", subtitle: "Have a question or need assistance? We're here to help you every step of the way.", image: "business" } },
       { id: "contact_form", type: "contact-form", label: "Contact Details", data: { title: "Get in Touch", address: "13 Lanark Square, London E14 9QD", email: "info@primecollege.uk", phone: "+44 20 1234 5678", hours: "Mon - Fri: 9:00 AM - 5:00 PM", formFields: [{ name: "name", label: "Full Name", type: "text", required: true }, { name: "email", label: "Email Address", type: "email", required: true }, { name: "subject", label: "Subject", type: "text", required: false }, { name: "message", label: "Message", type: "textarea", required: true }] } },
       { id: "contact_map", type: "map", label: "Find Us", data: { title: "Find Us", iframeUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.234!2d-0.0175!3d51.5075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x487602d64e0e8b7f%3A0x1234567890abcdef!2s13%20Lanark%20Square%2C%20London%20E14%209QD!5e0!3m2!1sen!2suk!4v1700000000000" } },
     ],
@@ -133,7 +133,7 @@ export const defaultPages: PageConfig[] = [
     slug: "/recruitment",
     type: "static",
     blocks: [
-      { id: "rec_hero", type: "hero", label: "Hero Banner", data: { title: "Recruitment Services", subtitle: "Connecting talent with opportunity", image: "business" } },
+      { id: "rec_hero", type: "hero", label: "Hero Banner", isLocked: true, isFixed: true, data: { title: "Recruitment Services", subtitle: "Connecting talent with opportunity", image: "business" } },
       { id: "rec_text", type: "text", label: "Overview", data: { title: "Our Recruitment Services", content: "The Prime College offers a comprehensive recruitment service." } },
     ],
     meta: { title: "Recruitment – The Prime College", description: "Explore recruitment opportunities." },
@@ -157,6 +157,8 @@ export const defaultPages: PageConfig[] = [
         id: "blog1_img",
         type: "hero",
         label: "Featured Image",
+        isLocked: true,
+        isFixed: true,
         data: { title: "", subtitle: "", image: "business" },
       },
       {
@@ -233,6 +235,8 @@ export const defaultPages: PageConfig[] = [
         id: "blog2_img",
         type: "hero",
         label: "Featured Image",
+        isLocked: true,
+        isFixed: true,
         data: { title: "", subtitle: "", image: "executive" },
       },
       {
@@ -296,6 +300,8 @@ export const defaultPages: PageConfig[] = [
         id: "blog3_img",
         type: "hero",
         label: "Featured Image",
+        isLocked: true,
+        isFixed: true,
         data: { title: "", subtitle: "", image: "classroom" },
       },
       {
