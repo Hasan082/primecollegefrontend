@@ -13,7 +13,11 @@ import {
   useGetSamplingPlansQuery,
   useUpdateSamplingPlanMutation,
 } from "@/redux/apis/iqa/iqaApi";
-import type { SamplingPlanWritePayload } from "@/types/iqa.types";
+import type {
+  ChecklistQualificationOption,
+  SamplingPlan,
+  SamplingPlanWritePayload,
+} from "@/types/iqa.types";
 
 const strategyOptions = [
   { value: "percentage", label: "Percentage Sampling" },
@@ -25,10 +29,25 @@ const strategyOptions = [
 
 const today = new Date().toISOString().slice(0, 10);
 
+const toArray = <T,>(value: unknown): T[] => {
+  if (Array.isArray(value)) return value as T[];
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (Array.isArray(record.results)) return record.results as T[];
+    if (record.data && typeof record.data === "object") {
+      const data = record.data as Record<string, unknown>;
+      if (Array.isArray(data.results)) return data.results as T[];
+      if (Array.isArray(data.items)) return data.items as T[];
+    }
+    if (Array.isArray(record.items)) return record.items as T[];
+  }
+  return [];
+};
+
 const SamplingSettings = () => {
   const { toast } = useToast();
   const { data: plansResponse, isLoading: isLoadingPlans, isError: isPlansError } = useGetSamplingPlansQuery({ mine: true });
-  const { data: qualificationsResponse = [], isLoading: isLoadingQualifications } = useGetChecklistQualificationOptionsQuery();
+  const { data: qualificationsResponse, isLoading: isLoadingQualifications } = useGetChecklistQualificationOptionsQuery();
   const [createSamplingPlan, { isLoading: isCreating }] = useCreateSamplingPlanMutation();
   const [updateSamplingPlan, { isLoading: isUpdating }] = useUpdateSamplingPlanMutation();
 
@@ -37,8 +56,11 @@ const SamplingSettings = () => {
   const [newPlanPercentage, setNewPlanPercentage] = useState(25);
   const [newPlanStatus, setNewPlanStatus] = useState<"draft" | "active" | "closed">("draft");
 
-  const plans = plansResponse?.results || [];
-  const qualifications = qualificationsResponse || [];
+  const plans = useMemo<SamplingPlan[]>(() => toArray<SamplingPlan>(plansResponse), [plansResponse]);
+  const qualifications = useMemo<ChecklistQualificationOption[]>(
+    () => toArray<ChecklistQualificationOption>(qualificationsResponse),
+    [qualificationsResponse],
+  );
   const qualificationOptions = useMemo(
     () => qualifications.filter((item) => !plans.some((plan) => plan.qualification === item.id)),
     [plans, qualifications],
