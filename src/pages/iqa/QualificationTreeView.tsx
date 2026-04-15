@@ -40,6 +40,7 @@ import type {
   IQAReviewQueueItem,
 } from "@/types/iqa.types";
 import {
+  getLifecycleLabel,
   getIqaWorkflowLabel,
 } from "@/lib/iqaStatus";
 
@@ -109,20 +110,19 @@ const mapQueueStatusToUnitStatus = (
 };
 
 const mapDisplayStatusToUnitStatus = (displayStatus?: string | null): FrontendUnitStatus => {
-  switch (displayStatus) {
-    case "Waiting for IQA review":
+  switch (getLifecycleLabel(displayStatus)) {
+    case "Awaiting IQA":
       return "Awaiting IQA";
-    case "Waiting for assessor review":
+    case "Awaiting Assessment":
       return "Assessed";
-    case "Resubmission required":
-    case "Not yet competent":
+    case "Action Required":
       return "Action Required";
+    case "Signed Off":
     case "Completed":
-    case "Competent":
       return "Signed Off";
-    case "In progress":
+    case "In Progress":
       return "In Progress";
-    case "Not started":
+    case "Not Started":
       return "Not Started";
     default:
       return "Not Started";

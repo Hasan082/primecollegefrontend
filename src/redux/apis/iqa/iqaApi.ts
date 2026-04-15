@@ -7,12 +7,15 @@ import type {
   ChecklistQualificationOption,
   ChecklistTemplateListResponse,
   IQAAssignedEnrolmentListResponse,
+  IQABulkReviewPayload,
+  IQABulkReviewResponse,
   IQADashboardResponse,
   IQAEnrolmentContentResponse,
   IQAEvidenceSubmissionDetailResponse,
   IQAEvidenceSubmissionReviewPayload,
   IQAEvidenceSubmissionReviewResponse,
   IQAReviewQueueResponse,
+  IQASubmissionHistoryResponse,
   IQAWrittenAssignmentDetailResponse,
   IQAWrittenAssignmentReviewPayload,
   IQAWrittenAssignmentReviewResponse,
@@ -65,6 +68,18 @@ const iqaApi = api.injectEndpoints({
       }),
       providesTags: (_result, _error, enrolmentId) => [
         { type: "Enrolments", id: enrolmentId },
+      ],
+    }),
+    getIqaSubmissionHistory: builder.query<
+      IQASubmissionHistoryResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/iqa/${enrolmentId}/units/${unitId}/submission-history/`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: `IQA_HISTORY_${enrolmentId}_${unitId}` },
       ],
     }),
     getIqaWrittenSubmissionDetail: builder.query<
@@ -129,6 +144,14 @@ const iqaApi = api.injectEndpoints({
         { type: "Enrolments", id: `EVIDENCE_SUBMISSION_${submissionId}` },
         "Enrolments",
       ],
+    }),
+    submitIqaBulkReview: builder.mutation<IQABulkReviewResponse, IQABulkReviewPayload>({
+      query: (body) => ({
+        url: "/api/enrolments/iqa/bulk-review/",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Enrolments"],
     }),
     raiseIqaEvidenceConcern: builder.mutation<
       SubmissionAdminConcernResponse,
@@ -248,11 +271,13 @@ export const {
   useGetIqaReviewQueueQuery,
   useGetIqaAssignedEnrolmentsQuery,
   useGetIqaEnrolmentContentQuery,
+  useGetIqaSubmissionHistoryQuery,
   useGetIqaWrittenSubmissionDetailQuery,
   useSubmitIqaWrittenReviewMutation,
   useRaiseIqaWrittenConcernMutation,
   useGetIqaEvidenceSubmissionDetailQuery,
   useSubmitIqaEvidenceReviewMutation,
+  useSubmitIqaBulkReviewMutation,
   useRaiseIqaEvidenceConcernMutation,
   useGetChecklistTemplatesForIqaQuery,
   useGetChecklistQualificationOptionsQuery,

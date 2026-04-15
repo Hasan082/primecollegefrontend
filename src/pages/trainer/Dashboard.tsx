@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Users,
@@ -21,7 +21,17 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import TablePagination from "@/components/admin/TablePagination";
-import { useGetTrainerDashboardQuery } from "@/redux/apis/trainer/trainerReviewApi";
+import {
+  type TrainerNotification,
+  useGetTrainerDashboardQuery,
+  useGetTrainerNotificationsQuery,
+} from "@/redux/apis/trainer/trainerReviewApi";
+import IQANotificationsPanel from "@/components/trainer/IQANotificationsPanel";
+import {
+  getIqaDecisionLabel,
+  getSubmissionOutcomeLabel,
+  getSubmissionTypeLabel,
+} from "@/lib/iqaStatus";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -37,7 +47,13 @@ const TrainerDashboard = () => {
   const [pendingPage, setPendingPage] = useState(1);
   const [learnersPage, setLearnersPage] = useState(1);
   const [recentPage, setRecentPage] = useState(1);
+  const [iqaActionsPage, setIqaActionsPage] = useState(1);
   const { data, isLoading, isError } = useGetTrainerDashboardQuery();
+  const {
+    data: notificationsResponse,
+    isLoading: isNotificationsLoading,
+    isError: isNotificationsError,
+  } = useGetTrainerNotificationsQuery();
 
   if (isLoading) {
     return <div className="py-20 text-center text-muted-foreground">Loading dashboard...</div>;
@@ -48,6 +64,17 @@ const TrainerDashboard = () => {
   }
 
   const { summary, pending_submissions, assigned_learners, recent_assessments } = data.data;
+  const notifications = notificationsResponse?.data || [];
+  const actionRequiredNotifications = useMemo(
+    () =>
+      notifications.filter((item) =>
+        ["changes_required", "referred_back"].includes(item.iqa_decision),
+      ),
+    [notifications],
+  );
+
+  const getActionRequiredReviewLink = (notification: TrainerNotification) =>
+    `/trainer/learner/${notification.enrolment_id}/unit/${notification.unit.id}`;
 
   const stats = [
     {
@@ -69,7 +96,7 @@ const TrainerDashboard = () => {
       color: "bg-green-600 text-white",
     },
     {
-      label: "IQA Actions",
+      label: "Action Required",
       value: summary.iqa_actions,
       icon: ShieldAlert,
       color:
@@ -100,9 +127,19 @@ const TrainerDashboard = () => {
         ))}
       </div>
 
+      <IQANotificationsPanel
+        notifications={notifications}
+        isLoading={isNotificationsLoading}
+        isError={isNotificationsError}
+      />
+
       <Tabs defaultValue="pending" className="space-y-4">
         <TabsList>
           <TabsTrigger value="pending">Pending Submissions</TabsTrigger>
+          <TabsTrigger value="iqa-actions">
+            IQA Action Required
+            {actionRequiredNotifications.length > 0 ? ` (${actionRequiredNotifications.length})` : ""}
+          </TabsTrigger>
           <TabsTrigger value="learners">Assigned Learners</TabsTrigger>
           <TabsTrigger value="recent">Recent Assessments</TabsTrigger>
         </TabsList>
@@ -143,7 +180,7 @@ const TrainerDashboard = () => {
                         {submission.unit.unit_code}: {submission.unit.title}
                       </TableCell>
                       <TableCell className="text-sm capitalize">
-                        {submission.submission_type.replace(/_/g, " ")}
+                        {getSubmissionTypeLabel(submission.submission_type)}
                       </TableCell>
                       <TableCell className="text-sm">
                         {new Date(submission.submitted_at).toLocaleDateString()}
@@ -177,6 +214,88 @@ const TrainerDashboard = () => {
               totalItems={pending_submissions.length}
               itemsPerPage={ITEMS_PER_PAGE}
               onPageChange={setPendingPage}
+            />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="iqa-actions">
+          <Card className="p-6">
+            <h2 className="text-lg font-bold text-primary mb-1">IQA Action Required</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Returned IQA decisions that need assessor follow-up
+            </p>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Learner</TableHead>
+                  <TableHead>Qualification</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>IQA Outcome</TableHead>
+                  <TableHead>Reviewed</TableHead>
+                  <TableHead>IQA Note</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {actionRequiredNotifications.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="py-10 text-center text-sm text-muted-foreground"
+                    >
+                      No IQA follow-up actions are currently assigned to you.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  actionRequiredNotifications
+                    .slice(
+                      (iqaActionsPage - 1) * ITEMS_PER_PAGE,
+                      iqaActionsPage * ITEMS_PER_PAGE,
+                    )
+                    .map((notification) => (
+                      <TableRow key={notification.id}>
+                        <TableCell className="font-medium text-primary">
+                          {notification.learner.name}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {notification.qualification.title}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {notification.unit.unit_code}: {notification.unit.title}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="destructive" className="text-xs">
+                            {getIqaDecisionLabel(notification.iqa_decision)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {notification.iqa_reviewed_at
+                            ? new Date(notification.iqa_reviewed_at).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="max-w-[320px] text-sm text-muted-foreground">
+                          <div className="line-clamp-3">
+                            {notification.iqa_review_notes || "No IQA notes provided."}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            to={getActionRequiredReviewLink(notification)}
+                            className="inline-flex items-center px-3 py-1.5 bg-destructive text-destructive-foreground text-xs font-semibold rounded-md hover:opacity-90 transition-opacity"
+                          >
+                            Review Action
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                )}
+              </TableBody>
+            </Table>
+            <TablePagination
+              currentPage={iqaActionsPage}
+              totalItems={actionRequiredNotifications.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={setIqaActionsPage}
             />
           </Card>
         </TabsContent>
@@ -275,11 +394,11 @@ const TrainerDashboard = () => {
                         {assessment.unit.unit_code}: {assessment.unit.title}
                       </TableCell>
                       <TableCell className="text-sm capitalize">
-                        {assessment.submission_type.replace(/_/g, " ")}
+                        {getSubmissionTypeLabel(assessment.submission_type)}
                       </TableCell>
                       <TableCell>
                         <Badge className={outcomeColors[assessment.status] || "bg-muted text-muted-foreground"}>
-                          {assessment.status.replace(/_/g, " ")}
+                          {getSubmissionOutcomeLabel(assessment.status)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">

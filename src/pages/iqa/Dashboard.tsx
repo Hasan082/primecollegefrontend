@@ -57,7 +57,7 @@ const IQADashboard = () => {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Awaiting IQA</CardTitle>
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/iqa/sampling" className="text-xs">View All <ArrowRight className="w-3 h-3 ml-1" /></Link>
+                <Link to="/iqa/sampling" className="text-xs">Open Inbox <ArrowRight className="w-3 h-3 ml-1" /></Link>
               </Button>
             </div>
           </CardHeader>

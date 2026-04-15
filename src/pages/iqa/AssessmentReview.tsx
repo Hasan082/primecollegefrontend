@@ -1,22 +1,82 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, FileText, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, ShieldAlert, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import {
+  getIqaDecisionLabel,
+  getIqaWorkflowBadgeVariant,
+  getIqaWorkflowLabel,
+  getLifecycleLabel,
+  getSubmissionOutcomeLabel,
+  getSubmissionTypeLabel,
+} from "@/lib/iqaStatus";
+import {
   useGetIqaEvidenceSubmissionDetailQuery,
+  useGetIqaEnrolmentContentQuery,
   useGetIqaReviewQueueQuery,
+  useGetIqaSubmissionHistoryQuery,
   useGetIqaWrittenSubmissionDetailQuery,
   useRaiseIqaEvidenceConcernMutation,
   useRaiseIqaWrittenConcernMutation,
   useSubmitIqaEvidenceReviewMutation,
   useSubmitIqaWrittenReviewMutation,
 } from "@/redux/apis/iqa/iqaApi";
+
+const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"];
+
+function getFileExtension(url?: string | null) {
+  if (!url) {
+    return "";
+  }
+  const cleanUrl = url.split("?")[0].toLowerCase();
+  const lastDotIndex = cleanUrl.lastIndexOf(".");
+  return lastDotIndex >= 0 ? cleanUrl.slice(lastDotIndex) : "";
+}
+
+function canInlinePreview(url?: string | null) {
+  const extension = getFileExtension(url);
+  return extension === ".pdf" || imageExtensions.includes(extension);
+}
+
+function isImageFile(url?: string | null) {
+  return imageExtensions.includes(getFileExtension(url));
+}
+
+function buildSubmissionTimeline(submission: any, queueItem: any) {
+  return [
+    {
+      label: "Submitted",
+      value: queueItem?.submitted_at || submission?.submitted_at,
+      description: "Learner submitted work for assessment.",
+    },
+    {
+      label: "Trainer Outcome",
+      value: queueItem?.outcome_set_at || submission?.outcome_set_at,
+      description: queueItem?.status
+        ? `Trainer marked this as ${getSubmissionOutcomeLabel(queueItem.status)}.`
+        : "Trainer outcome not yet recorded.",
+    },
+    {
+      label: "IQA Review",
+      value: submission?.iqa_reviewed_at,
+      description: submission?.iqa_decision
+        ? `IQA decision: ${getIqaDecisionLabel(submission.iqa_decision)}.`
+        : "IQA decision not yet recorded.",
+    },
+  ];
+}
 
 const decisions = [
   { value: "approved", label: "Approve" },
@@ -46,6 +106,21 @@ const AssessmentReview = () => {
   const submissionType = queueItem?.submission_type;
   const isWritten = submissionType === "written";
   const isEvidence = submissionType === "evidence";
+  const { data: historyData } = useGetIqaSubmissionHistoryQuery(
+    {
+      enrolmentId: queueItem?.enrolment_id || "",
+      unitId: queueItem?.unit.id || "",
+    },
+    {
+      skip: !queueItem?.enrolment_id || !queueItem?.unit.id,
+    },
+  );
+  const { data: enrolmentContentData } = useGetIqaEnrolmentContentQuery(
+    queueItem?.enrolment_id || "",
+    {
+      skip: !queueItem?.enrolment_id,
+    },
+  );
 
   const { data: writtenData, isLoading: isLoadingWritten } =
     useGetIqaWrittenSubmissionDetailQuery(id!, {
@@ -55,8 +130,6 @@ const AssessmentReview = () => {
     useGetIqaEvidenceSubmissionDetailQuery(id!, {
       skip: !id || !isEvidence,
     });
-  const ui_flags: any = evidenceData?.data?.ui_flags;
-  console.log("ui_flags:", ui_flags);
   const [submitWrittenReview, { isLoading: isSavingWritten }] =
     useSubmitIqaWrittenReviewMutation();
   const [submitEvidenceReview, { isLoading: isSavingEvidence }] =
@@ -78,6 +151,48 @@ const AssessmentReview = () => {
   const submission = writtenSubmission || evidenceSubmission;
   const uiFlags = submission?.ui_flags;
   const adminConcerns = submission?.admin_concerns || [];
+  const evidenceCriteria = useMemo(() => {
+    if (!evidenceSubmission) {
+      return [];
+    }
+
+    const byCode = new Map<string, { code: string; description: string }>();
+    evidenceSubmission.evidence_items.forEach((item) => {
+      item.criteria.forEach((criterion) => {
+        if (!byCode.has(criterion.code)) {
+          byCode.set(criterion.code, {
+            code: criterion.code,
+            description: criterion.description,
+          });
+        }
+      });
+    });
+
+    return Array.from(byCode.values()).sort((left, right) =>
+      left.code.localeCompare(right.code),
+    );
+  }, [evidenceSubmission]);
+  const submissionTimeline = useMemo(
+    () => buildSubmissionTimeline(submission, queueItem),
+    [submission, queueItem],
+  );
+  const submissionHistory = historyData?.data?.results || [];
+  const latestOpenConcern = adminConcerns[0] || null;
+  const currentUnit = useMemo(
+    () =>
+      enrolmentContentData?.data?.units?.find((unit) => unit.id === queueItem?.unit.id) || null,
+    [enrolmentContentData?.data?.units, queueItem?.unit.id],
+  );
+  const writtenAttempts = useMemo(
+    () => submissionHistory.filter((item) => item.submission_type === "written"),
+    [submissionHistory],
+  );
+  const evidenceAttempts = useMemo(
+    () => submissionHistory.filter((item) => item.submission_type === "evidence"),
+    [submissionHistory],
+  );
+  const latestWrittenAttempt = writtenAttempts[0] || null;
+  const latestEvidenceAttempt = evidenceAttempts[0] || null;
 
   const handleReviewSubmit = async () => {
     if (!id || !notes.trim()) {
@@ -188,7 +303,11 @@ const AssessmentReview = () => {
             {queueItem.unit.title}
           </p>
         </div>
-        <Badge variant="outline">{queueItem.iqa_status}</Badge>
+        <Badge
+          variant={getIqaWorkflowBadgeVariant(getIqaWorkflowLabel(queueItem.iqa_status))}
+        >
+          {getIqaWorkflowLabel(queueItem.iqa_status)}
+        </Badge>
       </div>
 
       <Card>
@@ -204,11 +323,11 @@ const AssessmentReview = () => {
           </p>
           <p>
             <strong>Submission Type:</strong>{" "}
-            {queueItem.submission_type.replace(/_/g, " ")}
+            {getSubmissionTypeLabel(queueItem.submission_type)}
           </p>
           <p>
             <strong>Trainer Outcome:</strong>{" "}
-            {queueItem.status.replace(/_/g, " ")}
+            {getSubmissionOutcomeLabel(queueItem.status)}
           </p>
           <p>
             <strong>Submitted:</strong>{" "}
@@ -216,8 +335,117 @@ const AssessmentReview = () => {
               ? new Date(queueItem.submitted_at).toLocaleString()
               : "—"}
           </p>
+          {queueItem.has_open_admin_concern ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+              <p className="font-medium text-destructive">Admin Escalation Active</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Status: {getLifecycleLabel(queueItem.admin_concern_status)}.
+                Raised{" "}
+                {queueItem.admin_concern_raised_at
+                  ? new Date(queueItem.admin_concern_raised_at).toLocaleString()
+                  : "—"}
+                .
+              </p>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
+
+      {currentUnit ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Unit Requirements Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 lg:grid-cols-3">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">Quiz</p>
+                  <p className="text-xs text-muted-foreground">
+                    {currentUnit.has_quiz ? "Required for this unit" : "Not required"}
+                  </p>
+                </div>
+                <Badge variant={currentUnit.progress?.quiz_passed ? "default" : "outline"}>
+                  {currentUnit.has_quiz
+                    ? currentUnit.progress?.quiz_passed
+                      ? "Completed"
+                      : "Pending"
+                    : "N/A"}
+                </Badge>
+              </div>
+              {currentUnit.has_quiz ? (
+                <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                  <p>Attempts: {currentUnit.progress?.quiz_attempts ?? 0}</p>
+                  <p>
+                    Score:{" "}
+                    {currentUnit.progress?.quiz_score != null
+                      ? `${currentUnit.progress.quiz_score}%`
+                      : "Not available"}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">Written Assignment</p>
+                  <p className="text-xs text-muted-foreground">
+                    {currentUnit.has_written_assignment ? "Required for this unit" : "Not required"}
+                  </p>
+                </div>
+                <Badge variant={currentUnit.progress?.assignment_met ? "default" : "outline"}>
+                  {currentUnit.has_written_assignment
+                    ? currentUnit.progress?.assignment_met
+                      ? "Completed"
+                      : "Pending"
+                    : "N/A"}
+                </Badge>
+              </div>
+              {currentUnit.has_written_assignment ? (
+                <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                  <p>Attempts: {writtenAttempts.length}</p>
+                  <p>
+                    Latest:{" "}
+                    {latestWrittenAttempt
+                      ? `${getSubmissionOutcomeLabel(latestWrittenAttempt.status)} on ${new Date(latestWrittenAttempt.submitted_at).toLocaleDateString()}`
+                      : "No written assignment submitted"}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">Evidence Portfolio</p>
+                  <p className="text-xs text-muted-foreground">
+                    {currentUnit.requires_evidence ? "Required for this unit" : "Not required"}
+                  </p>
+                </div>
+                <Badge variant={currentUnit.progress?.evidence_met ? "default" : "outline"}>
+                  {currentUnit.requires_evidence
+                    ? currentUnit.progress?.evidence_met
+                      ? "Completed"
+                      : "Pending"
+                    : "N/A"}
+                </Badge>
+              </div>
+              {currentUnit.requires_evidence ? (
+                <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                  <p>Attempts: {evidenceAttempts.length}</p>
+                  <p>
+                    Latest:{" "}
+                    {latestEvidenceAttempt
+                      ? `${getSubmissionOutcomeLabel(latestEvidenceAttempt.status)} on ${new Date(latestEvidenceAttempt.submitted_at).toLocaleDateString()}`
+                      : "No evidence portfolio submitted"}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {isWritten && writtenSubmission && (
         <Card>
@@ -260,21 +488,217 @@ const AssessmentReview = () => {
               {evidenceSubmission.assessor_feedback ||
                 "No trainer feedback recorded."}
             </div>
-            <div className="space-y-3">
-              {evidenceSubmission.evidence_items.map((item) => (
-                <div key={item.id} className="rounded-lg border p-3 text-sm">
-                  <p className="font-medium">{item.title}</p>
+            <p className="text-sm text-muted-foreground">
+              {evidenceSubmission.evidence_items.length} evidence file
+              {evidenceSubmission.evidence_items.length !== 1 ? "s" : ""} attached.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Assessment Timeline</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {submissionTimeline.map((event) => (
+              <div key={event.label} className="rounded-lg border p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold">{event.label}</p>
+                  <Badge variant="outline">
+                    {event.value ? new Date(event.value).toLocaleString() : "Pending"}
+                  </Badge>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{event.description}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Criteria Visibility</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isEvidence && evidenceSubmission ? (
+              evidenceCriteria.length > 0 ? (
+                <div className="space-y-2">
+                  {evidenceCriteria.map((criterion) => (
+                    <div
+                      key={criterion.code}
+                      className="rounded-lg border p-3 text-sm"
+                    >
+                      <p className="font-semibold text-foreground">{criterion.code}</p>
+                      <p className="text-muted-foreground">{criterion.description}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No criteria were linked to this evidence submission.
+                </p>
+              )
+            ) : isWritten && writtenSubmission ? (
+              <div className="space-y-3 text-sm">
+                <div className="rounded-lg border p-3">
+                  <p className="font-semibold">Assignment Title</p>
+                  <p className="text-muted-foreground">
+                    {writtenSubmission.assignment_snapshot?.title || writtenSubmission.title}
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="font-semibold">Assignment Brief</p>
+                  <p className="whitespace-pre-wrap text-muted-foreground">
+                    {writtenSubmission.assignment_snapshot?.instructions ||
+                      "Detailed criteria are not exposed by the current IQA submission detail endpoint."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No criteria metadata available.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Submission History</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {submissionHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No prior submissions were found for this enrolment unit.
+            </p>
+          ) : (
+            <Accordion type="single" collapsible className="w-full">
+              {submissionHistory.map((historyItem) => (
+                <AccordionItem value={historyItem.id} key={historyItem.id}>
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex w-full flex-wrap items-center justify-between gap-3 pr-4 text-left">
+                      <div>
+                        <p className="text-sm font-semibold">
+                          Attempt {historyItem.submission_number} · {getSubmissionTypeLabel(historyItem.submission_type)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Submitted {new Date(historyItem.submitted_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{getSubmissionOutcomeLabel(historyItem.status)}</Badge>
+                        {historyItem.iqa_decision ? (
+                          <Badge variant="secondary">
+                            {getIqaDecisionLabel(historyItem.iqa_decision)}
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid gap-3 lg:grid-cols-2">
+                      <div className="rounded-lg bg-muted/30 p-3 text-sm">
+                        <p className="font-medium text-foreground">Trainer Feedback</p>
+                        <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+                          {historyItem.assessor_feedback || "No trainer feedback recorded."}
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-muted/30 p-3 text-sm">
+                        <p className="font-medium text-foreground">IQA Notes</p>
+                        <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+                          {historyItem.iqa_review_notes || "No IQA notes recorded."}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                      <div className="rounded-lg border p-3 text-sm">
+                        <p className="font-medium text-foreground">Assessor</p>
+                        <p className="mt-1 text-muted-foreground">
+                          {historyItem.assessor?.name || "Not recorded"}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3 text-sm">
+                        <p className="font-medium text-foreground">IQA Reviewer</p>
+                        <p className="mt-1 text-muted-foreground">
+                          {historyItem.iqa_reviewer?.name || "Not recorded"}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3 text-sm">
+                        <p className="font-medium text-foreground">Reviewed At</p>
+                        <p className="mt-1 text-muted-foreground">
+                          {historyItem.iqa_reviewed_at
+                            ? new Date(historyItem.iqa_reviewed_at).toLocaleString()
+                            : "Pending"}
+                        </p>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+        </CardContent>
+      </Card>
+
+      {isEvidence && evidenceSubmission && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Evidence Preview</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {evidenceSubmission.evidence_items.map((item) => (
+              <div key={item.id} className="rounded-lg border p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-foreground">{item.title}</p>
+                    {item.description ? (
+                      <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                    ) : null}
+                  </div>
                   <a
-                    className="text-primary underline"
+                    className="text-sm text-primary underline"
                     href={item.file}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Open evidence file
+                    Open file
                   </a>
                 </div>
-              ))}
-            </div>
+
+                <div className="mt-3 rounded-lg border bg-muted/20 p-3">
+                  {canInlinePreview(item.file) ? (
+                    isImageFile(item.file) ? (
+                      <img
+                        src={item.file}
+                        alt={item.title}
+                        className="max-h-[420px] w-full rounded-md object-contain"
+                      />
+                    ) : (
+                      <iframe
+                        src={item.file}
+                        title={item.title}
+                        className="h-[420px] w-full rounded-md border"
+                      />
+                    )
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <ImageIcon className="h-4 w-4" />
+                      Inline preview is available for PDF and image files only.
+                    </div>
+                  )}
+                </div>
+
+                {item.criteria.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {item.criteria.map((criterion) => (
+                      <Badge key={criterion.id} variant="outline" className="text-xs">
+                        {criterion.code}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
@@ -287,7 +711,7 @@ const AssessmentReview = () => {
             <div className="flex flex-wrap items-center gap-2">
               <strong>Decision:</strong>
               <Badge variant="outline">
-                {submission.iqa_decision.replace(/_/g, " ")}
+                {getIqaDecisionLabel(submission.iqa_decision)}
               </Badge>
             </div>
             <p className="whitespace-pre-wrap">
@@ -353,12 +777,25 @@ const AssessmentReview = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {latestOpenConcern ? (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
+                <p className="font-semibold text-destructive">Latest Escalation State</p>
+                <p className="mt-2 text-muted-foreground">
+                  Current status: {getLifecycleLabel(latestOpenConcern.status)}.
+                </p>
+                {latestOpenConcern.admin_response_note ? (
+                  <p className="mt-2 whitespace-pre-wrap text-muted-foreground">
+                    Admin response: {latestOpenConcern.admin_response_note}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
             {adminConcerns.map((concern: any) => (
               <div key={concern.id} className="rounded-lg border p-4 space-y-2 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <strong>Status:</strong>
                   <Badge variant="outline">
-                    {concern.status.replace(/_/g, " ")}
+                    {getLifecycleLabel(concern.status)}
                   </Badge>
                 </div>
                 <p className="whitespace-pre-wrap">

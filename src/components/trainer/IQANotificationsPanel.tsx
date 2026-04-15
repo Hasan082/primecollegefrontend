@@ -5,11 +5,30 @@ import {
   ShieldCheck,
   MinusCircle,
 } from "lucide-react";
-import { useGetTrainerNotificationsQuery } from "@/redux/apis/trainer/trainerReviewApi";
+import {
+  useGetTrainerNotificationsQuery,
+  type TrainerNotification,
+} from "@/redux/apis/trainer/trainerReviewApi";
 import { getIqaDecisionLabel } from "@/lib/iqaStatus";
 
-const IQANotificationsPanel = () => {
-  const { data, isLoading, isError } = useGetTrainerNotificationsQuery();
+interface IQANotificationsPanelProps {
+  notifications?: TrainerNotification[];
+  isLoading?: boolean;
+  isError?: boolean;
+}
+
+const IQANotificationsPanel = ({
+  notifications: notificationsProp,
+  isLoading: isLoadingProp,
+  isError: isErrorProp,
+}: IQANotificationsPanelProps) => {
+  const queryResult = useGetTrainerNotificationsQuery(undefined, {
+    skip: notificationsProp !== undefined || isLoadingProp !== undefined || isErrorProp !== undefined,
+  });
+
+  const isLoading = isLoadingProp ?? queryResult.isLoading;
+  const isError = isErrorProp ?? queryResult.isError;
+  const notifications = notificationsProp ?? queryResult.data?.data ?? [];
 
   if (isLoading) {
     return (
@@ -19,11 +38,9 @@ const IQANotificationsPanel = () => {
     );
   }
 
-  if (isError || !data?.data?.length) {
+  if (isError || notifications.length === 0) {
     return null;
   }
-
-  const notifications = data.data;
   const actionRequired = notifications.filter((item) =>
     ["changes_required", "referred_back"].includes(item.iqa_decision),
   );

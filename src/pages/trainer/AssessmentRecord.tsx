@@ -10,7 +10,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useGetTrainerSubmissionRecordQuery } from "@/redux/apis/trainer/trainerReviewApi";
-import { getIqaDecisionLabel } from "@/lib/iqaStatus";
+import {
+  getIqaDecisionLabel,
+  getSubmissionOutcomeLabel,
+  getSubmissionTypeLabel,
+} from "@/lib/iqaStatus";
 
 const outcomeColors: Record<string, string> = {
   competent: "bg-green-600 text-white",
@@ -67,7 +71,7 @@ const AssessmentRecord = () => {
             className={`${outcomeColors[record.status] || "bg-muted text-muted-foreground"} text-sm px-4 py-1.5 flex items-center gap-1.5`}
           >
             <CheckCircle className="w-4 h-4" />
-            {record.status.replace(/_/g, " ")}
+            {getSubmissionOutcomeLabel(record.status)}
           </Badge>
         </div>
       </Card>
@@ -119,7 +123,7 @@ const AssessmentRecord = () => {
           <div className="rounded-xl p-4 bg-muted/30 border">
             <p className="text-sm text-muted-foreground mb-1">Submission Type</p>
             <p className="font-semibold text-primary capitalize">
-              {record.submission_type.replace(/_/g, " ")}
+              {getSubmissionTypeLabel(record.submission_type)}
             </p>
           </div>
           <div className="rounded-xl p-4 bg-muted/30 border">
