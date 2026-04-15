@@ -3,6 +3,7 @@ import type {
   LearnerEvidenceSubmission,
   LearnerEvidenceSubmissionListResponse,
   LearnerSubmissionActor,
+  LearnerWrittenAssignmentResponse,
   LearnerWrittenAssignmentSubmission,
   LearnerWrittenAssignmentSubmissionResponse,
 } from "@/types/enrollment.types";
@@ -63,6 +64,8 @@ export interface IQAEvidenceSubmissionReviewPayload {
 
 export type IQAWrittenAssignmentDetailResponse =
   LearnerWrittenAssignmentSubmissionResponse;
+
+export type IQAWrittenAssignmentResponse = LearnerWrittenAssignmentResponse;
 
 export interface IQAEvidenceSubmissionDetailResponse {
   success: boolean;
@@ -286,6 +289,8 @@ export interface IQASubmissionHistoryItem {
   status: string;
   submitted_at: string;
   outcome_set_at: string | null;
+  response_html?: string;
+  response_word_count?: number | null;
   assessor_feedback: string;
   iqa_decision: string | null;
   iqa_review_notes: string;

@@ -27,6 +27,7 @@ import {
   useGetIqaEnrolmentContentQuery,
   useGetIqaReviewQueueQuery,
   useGetIqaSubmissionHistoryQuery,
+  useGetIqaWrittenAssignmentQuery,
   useGetIqaWrittenSubmissionDetailQuery,
   useRaiseIqaEvidenceConcernMutation,
   useRaiseIqaWrittenConcernMutation,
@@ -121,6 +122,15 @@ const AssessmentReview = () => {
       skip: !queueItem?.enrolment_id,
     },
   );
+  const { data: writtenAssignmentData } = useGetIqaWrittenAssignmentQuery(
+    {
+      enrolmentId: queueItem?.enrolment_id || "",
+      unitId: queueItem?.unit.id || "",
+    },
+    {
+      skip: !queueItem?.enrolment_id || !queueItem?.unit.id,
+    },
+  );
 
   const { data: writtenData, isLoading: isLoadingWritten } =
     useGetIqaWrittenSubmissionDetailQuery(id!, {
@@ -183,6 +193,7 @@ const AssessmentReview = () => {
       enrolmentContentData?.data?.units?.find((unit) => unit.id === queueItem?.unit.id) || null,
     [enrolmentContentData?.data?.units, queueItem?.unit.id],
   );
+  const writtenAssignmentSubmissions = writtenAssignmentData?.data?.submissions || [];
   const writtenAttempts = useMemo(
     () => submissionHistory.filter((item) => item.submission_type === "written"),
     [submissionHistory],
@@ -193,6 +204,14 @@ const AssessmentReview = () => {
   );
   const latestWrittenAttempt = writtenAttempts[0] || null;
   const latestEvidenceAttempt = evidenceAttempts[0] || null;
+  const latestWrittenSubmissionForUnit = useMemo(
+    () =>
+      [...writtenAssignmentSubmissions].sort(
+        (left, right) =>
+          new Date(right.submitted_at).getTime() - new Date(left.submitted_at).getTime(),
+      )[0] || null,
+    [writtenAssignmentSubmissions],
+  );
 
   const handleReviewSubmit = async () => {
     if (!id || !notes.trim()) {
@@ -496,6 +515,55 @@ const AssessmentReview = () => {
         </Card>
       )}
 
+      {!isWritten && latestWrittenSubmissionForUnit ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Latest Written Assignment
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <Badge variant="outline">
+                Attempt {latestWrittenSubmissionForUnit.submission_number}
+              </Badge>
+              <Badge variant="outline">
+                {getSubmissionOutcomeLabel(latestWrittenSubmissionForUnit.status)}
+              </Badge>
+              <span>
+                Submitted {new Date(latestWrittenSubmissionForUnit.submitted_at).toLocaleString()}
+              </span>
+            </div>
+            <div
+              className="rounded-lg border p-4 prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{
+                __html:
+                  latestWrittenSubmissionForUnit.response_html ||
+                  "<p>No written response recorded.</p>",
+              }}
+            />
+            <div className="text-sm text-muted-foreground">
+              Word count: {latestWrittenSubmissionForUnit.response_word_count ?? 0}
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+              <p className="font-medium text-foreground">Trainer Feedback</p>
+              <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+                {latestWrittenSubmissionForUnit.assessor_feedback ||
+                  "No trainer feedback recorded."}
+              </p>
+            </div>
+            {latestWrittenSubmissionForUnit.iqa_review_notes ? (
+              <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+                <p className="font-medium text-foreground">IQA Notes</p>
+                <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+                  {latestWrittenSubmissionForUnit.iqa_review_notes}
+                </p>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -597,6 +665,20 @@ const AssessmentReview = () => {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="grid gap-3 lg:grid-cols-2">
+                      {historyItem.submission_type === "written" ? (
+                        <div className="rounded-lg border p-3 text-sm lg:col-span-2">
+                          <p className="font-medium text-foreground">Learner Submission</p>
+                          <div
+                            className="prose prose-sm mt-2 max-w-none text-foreground"
+                            dangerouslySetInnerHTML={{
+                              __html: historyItem.response_html || "<p>No written response recorded.</p>",
+                            }}
+                          />
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            Word count: {historyItem.response_word_count ?? 0}
+                          </p>
+                        </div>
+                      ) : null}
                       <div className="rounded-lg bg-muted/30 p-3 text-sm">
                         <p className="font-medium text-foreground">Trainer Feedback</p>
                         <p className="mt-1 whitespace-pre-wrap text-muted-foreground">

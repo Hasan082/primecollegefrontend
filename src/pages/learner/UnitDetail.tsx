@@ -52,7 +52,7 @@ const lifecycleStatusConfig: Record<string, { label: string; color: string }> = 
   Submitted: statusConfig.Submitted,
   "Awaiting Assessment": statusConfig["Waiting for assessor review"],
   "Awaiting IQA": statusConfig["Waiting for IQA review"],
-  "Action Required": { label: "Action Required", color: "bg-orange-500 text-white" },
+  "Action Required": { label: "Resubmission Required", color: "bg-orange-500 text-white" },
   "Signed Off": { label: "Signed Off", color: "bg-green-600 text-white" },
   Completed: statusConfig.Completed,
 };

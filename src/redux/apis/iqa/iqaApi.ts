@@ -16,6 +16,7 @@ import type {
   IQAEvidenceSubmissionReviewResponse,
   IQAReviewQueueResponse,
   IQASubmissionHistoryResponse,
+  IQAWrittenAssignmentResponse,
   IQAWrittenAssignmentDetailResponse,
   IQAWrittenAssignmentReviewPayload,
   IQAWrittenAssignmentReviewResponse,
@@ -80,6 +81,18 @@ const iqaApi = api.injectEndpoints({
       }),
       providesTags: (_result, _error, { enrolmentId, unitId }) => [
         { type: "Enrolments", id: `IQA_HISTORY_${enrolmentId}_${unitId}` },
+      ],
+    }),
+    getIqaWrittenAssignment: builder.query<
+      IQAWrittenAssignmentResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/iqa/${enrolmentId}/units/${unitId}/written-assignment/`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: `IQA_WRITTEN_${enrolmentId}_${unitId}` },
       ],
     }),
     getIqaWrittenSubmissionDetail: builder.query<
@@ -272,6 +285,7 @@ export const {
   useGetIqaAssignedEnrolmentsQuery,
   useGetIqaEnrolmentContentQuery,
   useGetIqaSubmissionHistoryQuery,
+  useGetIqaWrittenAssignmentQuery,
   useGetIqaWrittenSubmissionDetailQuery,
   useSubmitIqaWrittenReviewMutation,
   useRaiseIqaWrittenConcernMutation,
