@@ -1,4 +1,12 @@
-import { LayoutDashboard, ClipboardCheck, Users, BarChart3, Settings, ClipboardList, FolderTree } from "lucide-react";
+import {
+  LayoutDashboard,
+  ClipboardCheck,
+  Users,
+  BarChart3,
+  Settings,
+  ClipboardList,
+  FolderTree,
+} from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -15,9 +23,13 @@ import {
 
 const mainNavItems = [
   { title: "Dashboard", url: "/iqa/dashboard", icon: LayoutDashboard },
-  { title: "Qualification Overview", url: "/iqa/qualifications", icon: FolderTree },
+  {
+    title: "Qualification Overview",
+    url: "/iqa/qualifications",
+    icon: FolderTree,
+  },
   { title: "IQA Inbox", url: "/iqa/sampling", icon: ClipboardCheck },
-  { title: "Checklists", url: "/iqa/checklists", icon: ClipboardList },
+  // { title: "Checklists", url: "/iqa/checklists", icon: ClipboardList },
   { title: "Trainer Performance", url: "/iqa/trainers", icon: Users },
   { title: "Reports", url: "/iqa/reports", icon: BarChart3 },
 ];
@@ -34,7 +46,10 @@ const IQASidebar = () => {
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
           asChild
-          isActive={location.pathname === item.url || location.pathname.startsWith(item.url + "/")}
+          isActive={
+            location.pathname === item.url ||
+            location.pathname.startsWith(item.url + "/")
+          }
           tooltip={item.title}
         >
           <NavLink
@@ -50,7 +65,10 @@ const IQASidebar = () => {
     ));
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r border-sidebar-border top-14">
+    <Sidebar
+      collapsible="offcanvas"
+      className="border-r border-sidebar-border top-14"
+    >
       <SidebarContent>
         <SidebarGroup className="pt-4">
           <SidebarGroupContent>
