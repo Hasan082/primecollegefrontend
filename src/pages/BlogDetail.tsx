@@ -3,6 +3,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { ArrowLeft, Calendar } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import {
+  type BlogCategorySummary,
   useGetBlogCategoriesQuery,
   useGetBlogQuery,
   useGetBlogsQuery,
@@ -39,7 +40,14 @@ const BlogDetail = () => {
         : skipToken,
     );
 
-  const categories = categoriesResponse?.data ?? [];
+  const categoriesPayload = categoriesResponse?.data as unknown;
+  const categories: BlogCategorySummary[] = Array.isArray(categoriesPayload)
+    ? (categoriesPayload as BlogCategorySummary[])
+    : categoriesPayload &&
+        typeof categoriesPayload === "object" &&
+        Array.isArray((categoriesPayload as { results?: unknown[] }).results)
+      ? ((categoriesPayload as { results: BlogCategorySummary[] }).results ?? [])
+      : [];
   const relatedPosts = (relatedBlogsResponse?.data?.results ?? []).filter(
     (item) => item.id !== blog?.id,
   );
