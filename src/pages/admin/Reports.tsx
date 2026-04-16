@@ -2,11 +2,19 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, FileText, Users, GraduationCap, BarChart3, Calendar } from "lucide-react";
+import { ArrowLeft, Download, FileText, Users, GraduationCap, BarChart3, Calendar, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { adminLearners, adminQualifications } from "@/data/adminMockData";
+import {
+  useLazyExportLearnerProgressReportQuery,
+  useLazyExportEnrolmentSummaryReportQuery,
+  useLazyExportAssessmentActivityReportQuery,
+  useLazyExportQualificationStatisticsReportQuery,
+  useLazyExportTrainerWorkloadReportQuery,
+  useLazyExportEvidenceSubmissionLogReportQuery,
+} from "@/redux/apis/reportsApi";
 
 interface ReportType {
   id: string;
@@ -14,27 +22,91 @@ interface ReportType {
   description: string;
   icon: typeof FileText;
   category: string;
+  exportFn?: string;
 }
 
 const reports: ReportType[] = [
-  { id: "learner-progress", title: "Learner Progress Report", description: "Individual or cohort progress, unit completion, and assessment outcomes", icon: Users, category: "Progress" },
-  { id: "enrolment-summary", title: "Enrolment Summary", description: "All enrolments with payment status, dates, and qualification breakdown", icon: GraduationCap, category: "Enrolment" },
-  { id: "assessment-activity", title: "Assessment Activity Log", description: "Full audit trail of submissions, assessments, feedback, and outcomes", icon: FileText, category: "Audit" },
-  { id: "qualification-stats", title: "Qualification Statistics", description: "Pass rates, average completion time, and enrolment numbers per qualification", icon: BarChart3, category: "Analytics" },
-  { id: "trainer-workload", title: "Trainer Workload Report", description: "Assigned learners, pending reviews, and assessment turnaround times", icon: Users, category: "Operations" },
-  { id: "evidence-log", title: "Evidence Submission Log", description: "Timestamped record of all learner evidence uploads for Ofsted/regulatory audit", icon: Calendar, category: "Audit" },
+  { id: "learner-progress", title: "Learner Progress Report", description: "Individual or cohort progress, unit completion, and assessment outcomes", icon: Users, category: "Progress", exportFn: "learnerProgress" },
+  { id: "enrolment-summary", title: "Enrolment Summary", description: "All enrolments with payment status, dates, and qualification breakdown", icon: GraduationCap, category: "Enrolment", exportFn: "enrolmentSummary" },
+  { id: "assessment-activity", title: "Assessment Activity Log", description: "Full audit trail of submissions, assessments, feedback, and outcomes", icon: FileText, category: "Audit", exportFn: "assessmentActivity" },
+  { id: "qualification-stats", title: "Qualification Statistics", description: "Pass rates, average completion time, and enrolment numbers per qualification", icon: BarChart3, category: "Analytics", exportFn: "qualificationStats" },
+  { id: "trainer-workload", title: "Trainer Workload Report", description: "Assigned learners, pending reviews, and assessment turnaround times", icon: Users, category: "Operations", exportFn: "trainerWorkload" },
+  { id: "evidence-log", title: "Evidence Submission Log", description: "Timestamped record of all learner evidence uploads for Ofsted/regulatory audit", icon: Calendar, category: "Audit", exportFn: "evidenceLog" },
 ];
 
 const Reports = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateRange, setDateRange] = useState("all-time");
+  const [loadingReport, setLoadingReport] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Import lazy queries
+  const [getLearnerProgress] = useLazyExportLearnerProgressReportQuery();
+  const [getEnrolmentSummary] = useLazyExportEnrolmentSummaryReportQuery();
+  const [getAssessmentActivity] = useLazyExportAssessmentActivityReportQuery();
+  const [getQualificationStats] = useLazyExportQualificationStatisticsReportQuery();
+  const [getTrainerWorkload] = useLazyExportTrainerWorkloadReportQuery();
+  const [getEvidenceLog] = useLazyExportEvidenceSubmissionLogReportQuery();
+
+  const exportMap: { [key: string]: any } = {
+    learnerProgress: getLearnerProgress,
+    enrolmentSummary: getEnrolmentSummary,
+    assessmentActivity: getAssessmentActivity,
+    qualificationStats: getQualificationStats,
+    trainerWorkload: getTrainerWorkload,
+    evidenceLog: getEvidenceLog,
+  };
 
   const filtered = reports.filter(r => categoryFilter === "all" || r.category === categoryFilter);
   const categories = [...new Set(reports.map(r => r.category))];
 
-  const handleExport = (report: ReportType, format: string) => {
-    toast({ title: `Exporting ${report.title}`, description: `Generating ${format.toUpperCase()} file... (demo)` });
+  const handleExport = async (report: ReportType, format: "csv" | "pdf") => {
+    if (!report.exportFn) {
+      toast({ title: "Error", description: "Export function not configured for this report", variant: "destructive" });
+      return;
+    }
+
+    setLoadingReport(`${report.id}-${format}`);
+    try {
+      const exportFn = exportMap[report.exportFn];
+      if (!exportFn) {
+        throw new Error("Export function not found");
+      }
+
+      const response = await exportFn({
+        format,
+        date_range: dateRange as any,
+      }).unwrap();
+
+      // Create blob URL and download
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement("a");
+      link.href = url;
+      
+      // Determine file extension and name
+      const fileExtension = format === "csv" ? "csv" : "pdf";
+      const reportName = report.id.replace(/-/g, "_");
+      link.setAttribute("download", `${reportName}.${fileExtension}`);
+      
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Success",
+        description: `${report.title} exported as ${format.toUpperCase()}`,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Error",
+        description: `Failed to export ${report.title}. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingReport(null);
+    }
   };
 
   return (
@@ -93,14 +165,33 @@ const Reports = () => {
                   </div>
                   <p className="text-xs text-muted-foreground mb-3">{report.description}</p>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => handleExport(report, "csv")}>
-                      <Download className="w-3 h-3 mr-1" /> CSV
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="text-xs h-8"
+                      disabled={loadingReport === `${report.id}-csv`}
+                      onClick={() => handleExport(report, "csv")}
+                    >
+                      {loadingReport === `${report.id}-csv` ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Download className="w-3 h-3 mr-1" />
+                      )}
+                      CSV
                     </Button>
-                    <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => handleExport(report, "pdf")}>
-                      <Download className="w-3 h-3 mr-1" /> PDF
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => handleExport(report, "xlsx")}>
-                      <Download className="w-3 h-3 mr-1" /> Excel
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="text-xs h-8"
+                      disabled={loadingReport === `${report.id}-pdf`}
+                      onClick={() => handleExport(report, "pdf")}
+                    >
+                      {loadingReport === `${report.id}-pdf` ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Download className="w-3 h-3 mr-1" />
+                      )}
+                      PDF
                     </Button>
                   </div>
                 </div>
