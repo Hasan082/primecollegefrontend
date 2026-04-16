@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { ClipboardCheck, CheckCircle2, AlertTriangle, ShieldAlert, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useGetIqaDashboardQuery } from "@/redux/apis/iqa/iqaApi";
+import {
+  getIqaWorkflowBadgeVariant,
+  getIqaWorkflowLabel,
+  getSubmissionOutcomeLabel,
+} from "@/lib/iqaStatus";
 
 const IQADashboard = () => {
   const { data, isLoading, isError } = useGetIqaDashboardQuery();
@@ -27,8 +32,8 @@ const IQADashboard = () => {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Pending Review", value: summary.pending_review, icon: ClipboardCheck, classes: "bg-amber-100 text-amber-600" },
-          { label: "IQA Approved", value: summary.approved, icon: CheckCircle2, classes: "bg-green-100 text-green-600" },
+          { label: "Awaiting IQA", value: summary.pending_review, icon: ClipboardCheck, classes: "bg-amber-100 text-amber-600" },
+          { label: "Signed Off", value: summary.approved, icon: CheckCircle2, classes: "bg-green-100 text-green-600" },
           { label: "Action Required", value: summary.action_required, icon: AlertTriangle, classes: "bg-orange-100 text-orange-600" },
           { label: "Escalated", value: summary.escalated, icon: ShieldAlert, classes: "bg-red-100 text-red-600" },
         ].map((item) => (
@@ -50,9 +55,9 @@ const IQADashboard = () => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Pending IQA Reviews</CardTitle>
+              <CardTitle className="text-base">Awaiting IQA</CardTitle>
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/iqa/sampling" className="text-xs">View All <ArrowRight className="w-3 h-3 ml-1" /></Link>
+                <Link to="/iqa/sampling" className="text-xs">Open Inbox <ArrowRight className="w-3 h-3 ml-1" /></Link>
               </Button>
             </div>
           </CardHeader>
@@ -64,14 +69,17 @@ const IQADashboard = () => {
                 <Link key={item.submission_id} to={`/iqa/review/${item.submission_id}`} className="block border rounded-lg p-3 hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium">{item.learner.name}</span>
-                    <Badge variant={item.status === "competent" ? "default" : "secondary"} className="text-xs">
-                      {item.status.replace(/_/g, " ")}
+                    <Badge
+                      variant={getIqaWorkflowBadgeVariant(getIqaWorkflowLabel(item.iqa_status))}
+                      className="text-xs"
+                    >
+                      {getIqaWorkflowLabel(item.iqa_status)}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{item.unit.unit_code}: {item.unit.title}</p>
                   <div className="flex items-center justify-between mt-1.5">
                     <span className="text-xs text-muted-foreground">Trainer: {item.trainer?.name || "Unassigned"}</span>
-                    <Badge variant="outline" className="text-xs">{item.sampling_reason}</Badge>
+                    <Badge variant="outline" className="text-xs">{getSubmissionOutcomeLabel(item.status)}</Badge>
                   </div>
                 </Link>
               ))

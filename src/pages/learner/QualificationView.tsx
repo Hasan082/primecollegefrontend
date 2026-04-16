@@ -10,13 +10,14 @@ import CourseEvaluationModal from "@/components/learner/CourseEvaluationModal";
 import ExtensionRequestModal from "@/components/learner/ExtensionRequestModal";
 import { useGetEnrolmentOverviewQuery } from "@/redux/apis/enrolmentApi";
 import type { EnrolmentOverviewUnit } from "@/types/enrollment.types";
+import { getLifecycleLabel } from "@/lib/iqaStatus";
 
 const statusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
   competent: { label: "Competent", color: "bg-green-600 text-white", icon: CheckCircle2 },
   completed: { label: "Competent", color: "bg-green-600 text-white", icon: CheckCircle2 },
   pending: { label: "Awaiting Assessment", color: "bg-amber-500 text-white", icon: Clock },
-  trainer_approved: { label: "Awaiting for IQA Assessment", color: "bg-blue-600 text-white", icon: ShieldCheck },
-  iqa_review: { label: "Awaiting for IQA Assessment", color: "bg-blue-600 text-white", icon: ShieldCheck },
+  trainer_approved: { label: "Completed", color: "bg-green-600 text-white", icon: CheckCircle2 },
+  iqa_review: { label: "Awaiting IQA", color: "bg-blue-600 text-white", icon: ShieldCheck },
   resubmit: { label: "Resubmission Required", color: "bg-orange-500 text-white", icon: AlertTriangle },
   not_competent: { label: "Not Yet Competent", color: "bg-orange-500 text-white", icon: AlertTriangle },
   in_progress: { label: "In Progress", color: "bg-primary text-white", icon: Clock },
@@ -60,7 +61,27 @@ const getUnitStatusKey = (unit: EnrolmentOverviewUnit): string => {
 
 const getUnitDisplayStatus = (unit: EnrolmentOverviewUnit) => {
   const statusKey = getUnitStatusKey(unit);
-  return statusConfig[statusKey] || statusConfig.not_started;
+  const display = statusConfig[statusKey] || statusConfig.not_started;
+  const lifecycleLabel = getLifecycleLabel(unit.display_status || statusKey);
+
+  if (lifecycleLabel === "Awaiting IQA") {
+    return statusConfig.iqa_review;
+  }
+  if (lifecycleLabel === "Completed" || lifecycleLabel === "Signed Off") {
+    return statusConfig.completed;
+  }
+  if (lifecycleLabel === "Awaiting Assessment") {
+    return statusConfig.pending;
+  }
+  if (lifecycleLabel === "Action Required") {
+    return {
+      label: "Resubmission Required",
+      color: "bg-orange-500 text-white",
+      icon: AlertTriangle,
+    };
+  }
+
+  return display;
 };
 
 const QualificationView = () => {

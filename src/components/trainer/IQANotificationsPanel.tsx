@@ -5,10 +5,30 @@ import {
   ShieldCheck,
   MinusCircle,
 } from "lucide-react";
-import { useGetTrainerNotificationsQuery } from "@/redux/apis/trainer/trainerReviewApi";
+import {
+  useGetTrainerNotificationsQuery,
+  type TrainerNotification,
+} from "@/redux/apis/trainer/trainerReviewApi";
+import { getIqaDecisionLabel } from "@/lib/iqaStatus";
 
-const IQANotificationsPanel = () => {
-  const { data, isLoading, isError } = useGetTrainerNotificationsQuery();
+interface IQANotificationsPanelProps {
+  notifications?: TrainerNotification[];
+  isLoading?: boolean;
+  isError?: boolean;
+}
+
+const IQANotificationsPanel = ({
+  notifications: notificationsProp,
+  isLoading: isLoadingProp,
+  isError: isErrorProp,
+}: IQANotificationsPanelProps) => {
+  const queryResult = useGetTrainerNotificationsQuery(undefined, {
+    skip: notificationsProp !== undefined || isLoadingProp !== undefined || isErrorProp !== undefined,
+  });
+
+  const isLoading = isLoadingProp ?? queryResult.isLoading;
+  const isError = isErrorProp ?? queryResult.isError;
+  const notifications = notificationsProp ?? queryResult.data?.data ?? [];
 
   if (isLoading) {
     return (
@@ -18,11 +38,9 @@ const IQANotificationsPanel = () => {
     );
   }
 
-  if (isError || !data?.data?.length) {
+  if (isError || notifications.length === 0) {
     return null;
   }
-
-  const notifications = data.data;
   const actionRequired = notifications.filter((item) =>
     ["changes_required", "referred_back"].includes(item.iqa_decision),
   );
@@ -30,19 +48,19 @@ const IQANotificationsPanel = () => {
   const typeConfig = {
     changes_required: {
       icon: AlertTriangle,
-      label: "IQA Action Required",
+      label: "Action Required",
       borderClass: "border-l-4 border-l-destructive",
       badgeClass: "bg-destructive text-destructive-foreground",
     },
     referred_back: {
       icon: AlertTriangle,
-      label: "Referred Back",
+      label: "Action Required",
       borderClass: "border-l-4 border-l-destructive",
       badgeClass: "bg-destructive text-destructive-foreground",
     },
     approved: {
       icon: ShieldCheck,
-      label: "IQA Approved",
+      label: "Signed Off",
       borderClass: "border-l-4 border-l-green-500",
       badgeClass: "bg-green-600 text-white",
     },
@@ -92,7 +110,9 @@ const IQANotificationsPanel = () => {
                     <span className="text-sm font-semibold text-foreground truncate">
                       {notification.unit.unit_code}: {notification.unit.title}
                     </span>
-                    <Badge className={`text-[10px] ${config.badgeClass}`}>{config.label}</Badge>
+                    <Badge className={`text-[10px] ${config.badgeClass}`}>
+                      {getIqaDecisionLabel(notification.iqa_decision) || config.label}
+                    </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {notification.learner.name} • {notification.qualification.title} •{" "}

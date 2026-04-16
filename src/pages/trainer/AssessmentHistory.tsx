@@ -14,6 +14,7 @@ import { FileText, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import TablePagination from "@/components/admin/TablePagination";
 import { useGetTrainerDashboardQuery } from "@/redux/apis/trainer/trainerReviewApi";
+import { getSubmissionOutcomeLabel, getSubmissionTypeLabel } from "@/lib/iqaStatus";
 
 const outcomeColors: Record<string, string> = {
   competent: "bg-green-600 text-white",
@@ -70,11 +71,11 @@ const AssessmentHistory = () => {
                     {record.unit.unit_code}: {record.unit.title}
                   </TableCell>
                   <TableCell className="text-sm capitalize">
-                    {record.submission_type.replace(/_/g, " ")}
+                    {getSubmissionTypeLabel(record.submission_type)}
                   </TableCell>
                   <TableCell>
                     <Badge className={outcomeColors[record.status] || "bg-muted text-muted-foreground"}>
-                      {record.status.replace(/_/g, " ")}
+                      {getSubmissionOutcomeLabel(record.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">

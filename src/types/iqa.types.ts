@@ -3,6 +3,7 @@ import type {
   LearnerEvidenceSubmission,
   LearnerEvidenceSubmissionListResponse,
   LearnerSubmissionActor,
+  LearnerWrittenAssignmentResponse,
   LearnerWrittenAssignmentSubmission,
   LearnerWrittenAssignmentSubmissionResponse,
 } from "@/types/enrollment.types";
@@ -63,6 +64,8 @@ export interface IQAEvidenceSubmissionReviewPayload {
 
 export type IQAWrittenAssignmentDetailResponse =
   LearnerWrittenAssignmentSubmissionResponse;
+
+export type IQAWrittenAssignmentResponse = LearnerWrittenAssignmentResponse;
 
 export interface IQAEvidenceSubmissionDetailResponse {
   success: boolean;
@@ -272,6 +275,64 @@ export interface IQAReviewQueueItem {
   outcome_set_at: string | null;
   iqa_status: string;
   sampling_reason: string;
+  has_open_admin_concern?: boolean;
+  admin_concern_status?: string | null;
+  admin_concern_raised_at?: string | null;
+  admin_concern_updated_at?: string | null;
+}
+
+export interface IQASubmissionHistoryItem {
+  id: string;
+  submission_number: number;
+  submission_type: string;
+  title: string;
+  status: string;
+  submitted_at: string;
+  outcome_set_at: string | null;
+  response_html?: string;
+  response_word_count?: number | null;
+  assessor_feedback: string;
+  iqa_decision: string | null;
+  iqa_review_notes: string;
+  iqa_reviewed_at: string | null;
+  assessor: LearnerSubmissionActor | null;
+  iqa_reviewer: LearnerSubmissionActor | null;
+}
+
+export interface IQASubmissionHistoryResponse {
+  success: boolean;
+  message: string;
+  data: {
+    enrolment_id: string;
+    unit: {
+      id: string;
+      title: string;
+      unit_code: string;
+    };
+    results: IQASubmissionHistoryItem[];
+  };
+}
+
+export interface IQABulkReviewPayload {
+  submission_ids: string[];
+  iqa_decision: "approved" | "changes_required" | "referred_back";
+  iqa_review_notes?: string;
+  iqa_sampled?: boolean;
+}
+
+export interface IQABulkReviewResponse {
+  success: boolean;
+  message: string;
+  data: {
+    processed: Array<{
+      submission_id: string;
+      iqa_decision: string;
+    }>;
+    failed: Array<{
+      submission_id: string;
+      reason: string;
+    }>;
+  };
 }
 
 export interface IQATrainerOverviewItem {
@@ -283,6 +344,49 @@ export interface IQATrainerOverviewItem {
   iqa_approvals: number;
   iqa_flags: number;
   avg_turnaround_days: number;
+}
+
+export interface TrainerPerformanceSummary {
+  trainer_count: number;
+  total_reviews: number;
+  total_approvals: number;
+  total_flags: number;
+  overall_approval_rate_percent: number;
+  overall_flag_rate_percent: number;
+  avg_turnaround_days: number;
+}
+
+export interface TrainerPerformanceItem {
+  trainer: {
+    id: string;
+    name: string;
+    email: string;
+    is_active: boolean;
+  } | null;
+  metrics: {
+    assessments: number;
+    iqa_approvals: number;
+    flags: number;
+    changes_required: number;
+    referred_back: number;
+    resub_rate_percent: number;
+    approval_rate_percent: number;
+    flag_rate_percent: number;
+    avg_turnaround_days: number;
+    avg_trainer_outcome_days: number;
+  };
+}
+
+export interface TrainerPerformanceResponse {
+  success: boolean;
+  message: string;
+  data: {
+    summary: TrainerPerformanceSummary;
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: TrainerPerformanceItem[];
+  };
 }
 
 export interface IQADashboardResponse {

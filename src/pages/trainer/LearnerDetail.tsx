@@ -22,13 +22,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetTrainerEnrolmentContentQuery } from "@/redux/apis/trainer/trainerReviewApi";
+import { getLifecycleLabel } from "@/lib/iqaStatus";
 
 const statusConfig: Record<string, { className: string; icon: typeof CheckCircle }> = {
   competent: { className: "bg-green-600 text-white", icon: CheckCircle },
   completed: { className: "bg-green-600 text-white", icon: CheckCircle },
   pending: { className: "bg-secondary text-secondary-foreground", icon: Clock },
-  trainer_approved: { className: "bg-secondary text-secondary-foreground", icon: Clock },
-  iqa_review: { className: "bg-secondary text-secondary-foreground", icon: Clock },
+  trainer_approved: { className: "bg-green-600 text-white", icon: CheckCircle },
+  iqa_review: { className: "bg-blue-600 text-white", icon: Clock },
   in_progress: { className: "bg-secondary text-secondary-foreground", icon: Clock },
   resubmit: { className: "bg-destructive text-destructive-foreground", icon: Clock },
   not_competent: { className: "bg-muted text-muted-foreground", icon: XCircle },
@@ -187,7 +188,9 @@ const LearnerDetail = () => {
                   <TableCell>
                     <Badge className={`${config.className} text-xs gap-1`}>
                       <Icon className="w-3 h-3" />
-                      {unit.progress?.competency_status || unit.progress?.status || "not_started"}
+                      {getLifecycleLabel(
+                        unit.progress?.competency_status || unit.progress?.status || "not_started",
+                      )}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">

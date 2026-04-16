@@ -32,17 +32,29 @@ import type {
   LearnerEvidenceSubmission,
   LearnerWrittenAssignmentSubmission,
 } from "@/types/enrollment.types";
+import { getLifecycleLabel } from "@/lib/iqaStatus";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   Competent: { label: "Competent", color: "bg-green-600 text-white" },
   Completed: { label: "Completed", color: "bg-green-600 text-white" },
   "Waiting for assessor review": { label: "Awaiting Assessment", color: "bg-amber-500 text-white" },
   Submitted: { label: "Submitted", color: "bg-amber-500 text-white" },
-  "Waiting for IQA review": { label: "Awaiting IQA Verification", color: "bg-blue-600 text-white" },
+  "Waiting for IQA review": { label: "Awaiting IQA", color: "bg-blue-600 text-white" },
   "Resubmission required": { label: "Resubmission Required", color: "bg-orange-500 text-white" },
   "Not yet competent": { label: "Not Yet Competent", color: "bg-orange-500 text-white" },
   "Not started": { label: "Not Started", color: "bg-muted text-muted-foreground" },
   "In progress": { label: "In Progress", color: "bg-primary text-white" },
+};
+
+const lifecycleStatusConfig: Record<string, { label: string; color: string }> = {
+  "Not Started": statusConfig["Not started"],
+  "In Progress": statusConfig["In progress"],
+  Submitted: statusConfig.Submitted,
+  "Awaiting Assessment": statusConfig["Waiting for assessor review"],
+  "Awaiting IQA": statusConfig["Waiting for IQA review"],
+  "Action Required": { label: "Resubmission Required", color: "bg-orange-500 text-white" },
+  "Signed Off": { label: "Signed Off", color: "bg-green-600 text-white" },
+  Completed: statusConfig.Completed,
 };
 
 const mapSubmissionStatus = (status?: string): SubmissionVersion["status"] => {
@@ -213,7 +225,11 @@ const UnitDetail = () => {
     );
   }
 
-  const status = statusConfig[unit.display_status] || statusConfig["Not started"];
+  const lifecycleLabel = getLifecycleLabel(unit.display_status);
+  const status =
+    lifecycleStatusConfig[lifecycleLabel] ||
+    statusConfig[unit.display_status] ||
+    statusConfig["Not started"];
   const isExpired = enrolment.access_expired;
 
   const evidenceSubmissions = evidenceResponse?.data?.submissions || [];

@@ -7,12 +7,16 @@ import type {
   ChecklistQualificationOption,
   ChecklistTemplateListResponse,
   IQAAssignedEnrolmentListResponse,
+  IQABulkReviewPayload,
+  IQABulkReviewResponse,
   IQADashboardResponse,
   IQAEnrolmentContentResponse,
   IQAEvidenceSubmissionDetailResponse,
   IQAEvidenceSubmissionReviewPayload,
   IQAEvidenceSubmissionReviewResponse,
   IQAReviewQueueResponse,
+  IQASubmissionHistoryResponse,
+  IQAWrittenAssignmentResponse,
   IQAWrittenAssignmentDetailResponse,
   IQAWrittenAssignmentReviewPayload,
   IQAWrittenAssignmentReviewResponse,
@@ -21,6 +25,7 @@ import type {
   SamplingPlanWritePayload,
   SubmissionAdminConcernCreatePayload,
   SubmissionAdminConcernResponse,
+  TrainerPerformanceResponse,
 } from "@/types/iqa.types";
 
 const iqaApi = api.injectEndpoints({
@@ -64,6 +69,30 @@ const iqaApi = api.injectEndpoints({
       }),
       providesTags: (_result, _error, enrolmentId) => [
         { type: "Enrolments", id: enrolmentId },
+      ],
+    }),
+    getIqaSubmissionHistory: builder.query<
+      IQASubmissionHistoryResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/iqa/${enrolmentId}/units/${unitId}/submission-history/`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: `IQA_HISTORY_${enrolmentId}_${unitId}` },
+      ],
+    }),
+    getIqaWrittenAssignment: builder.query<
+      IQAWrittenAssignmentResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/iqa/${enrolmentId}/units/${unitId}/written-assignment/`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: `IQA_WRITTEN_${enrolmentId}_${unitId}` },
       ],
     }),
     getIqaWrittenSubmissionDetail: builder.query<
@@ -128,6 +157,14 @@ const iqaApi = api.injectEndpoints({
         { type: "Enrolments", id: `EVIDENCE_SUBMISSION_${submissionId}` },
         "Enrolments",
       ],
+    }),
+    submitIqaBulkReview: builder.mutation<IQABulkReviewResponse, IQABulkReviewPayload>({
+      query: (body) => ({
+        url: "/api/enrolments/iqa/bulk-review/",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Enrolments"],
     }),
     raiseIqaEvidenceConcern: builder.mutation<
       SubmissionAdminConcernResponse,
@@ -228,6 +265,17 @@ const iqaApi = api.injectEndpoints({
       }),
       invalidatesTags: ["ChecklistTemplates"],
     }),
+    getTrainerPerformance: builder.query<
+      TrainerPerformanceResponse,
+      Record<string, unknown> | void
+    >({
+      query: (args) => ({
+        url: "/api/enrolments/iqa/trainer-performance/",
+        method: "GET",
+        params: cleanObject(args || {}),
+      }),
+      providesTags: ["Enrolments"],
+    }),
   }),
 });
 
@@ -236,11 +284,14 @@ export const {
   useGetIqaReviewQueueQuery,
   useGetIqaAssignedEnrolmentsQuery,
   useGetIqaEnrolmentContentQuery,
+  useGetIqaSubmissionHistoryQuery,
+  useGetIqaWrittenAssignmentQuery,
   useGetIqaWrittenSubmissionDetailQuery,
   useSubmitIqaWrittenReviewMutation,
   useRaiseIqaWrittenConcernMutation,
   useGetIqaEvidenceSubmissionDetailQuery,
   useSubmitIqaEvidenceReviewMutation,
+  useSubmitIqaBulkReviewMutation,
   useRaiseIqaEvidenceConcernMutation,
   useGetChecklistTemplatesForIqaQuery,
   useGetChecklistQualificationOptionsQuery,
@@ -250,6 +301,7 @@ export const {
   useGetSamplingPlansQuery,
   useCreateSamplingPlanMutation,
   useUpdateSamplingPlanMutation,
+  useGetTrainerPerformanceQuery,
 } = iqaApi;
 
 export default iqaApi;

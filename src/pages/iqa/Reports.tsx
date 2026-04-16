@@ -6,6 +6,7 @@ import { ArrowLeft, Download, BarChart3, Users, ClipboardCheck, GraduationCap, F
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useGetIqaDashboardQuery, useGetIqaReviewQueueQuery } from "@/redux/apis/iqa/iqaApi";
+import { getIqaWorkflowLabel } from "@/lib/iqaStatus";
 
 const reports = [
   { id: "trainer-quality", title: "Trainer Assessment Quality", description: "Live trainer approval and flagging summary", icon: Users, category: "Quality" },
@@ -15,17 +16,27 @@ const reports = [
   { id: "compliance-audit", title: "Compliance Audit Snapshot", description: "Current operational view for IQA monitoring", icon: BarChart3, category: "Audit" },
 ] as const;
 
+function downloadCsv(filename: string, rows: Array<Array<string | number>>) {
+  const csv = rows
+    .map((row) =>
+      row
+        .map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`)
+        .join(","),
+    )
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 const IQAReports = () => {
   const { toast } = useToast();
   const { data: dashboardData, isLoading: isLoadingDashboard, isError: isDashboardError } = useGetIqaDashboardQuery();
   const { data: queueData, isLoading: isLoadingQueue, isError: isQueueError } = useGetIqaReviewQueueQuery();
-
-  const handleExport = (title: string, format: string) => {
-    toast({
-      title: `Exporting ${title}`,
-      description: `${format.toUpperCase()} export is not implemented yet for this live report.`,
-    });
-  };
 
   if (isLoadingDashboard || isLoadingQueue) {
     return <div className="py-20 text-center text-muted-foreground">Loading IQA reports...</div>;
@@ -62,9 +73,10 @@ const IQAReports = () => {
       }
       acc[key].total += 1;
       acc[key].sampled += 1;
-      if (item.iqa_status === "IQA Approved") acc[key].approved += 1;
-      if (item.iqa_status === "Trainer Action Required" || item.iqa_status === "Escalated to Admin") acc[key].flagged += 1;
-      if (item.iqa_status === "Pending IQA Review") acc[key].pending += 1;
+      const workflowLabel = getIqaWorkflowLabel(item.iqa_status);
+      if (workflowLabel === "Signed Off") acc[key].approved += 1;
+      if (workflowLabel === "Action Required" || workflowLabel === "Escalated") acc[key].flagged += 1;
+      if (workflowLabel === "Awaiting IQA") acc[key].pending += 1;
       if (item.trainer?.name) acc[key].trainers.add(item.trainer.name);
       return acc;
     }, {}),
@@ -76,6 +88,95 @@ const IQAReports = () => {
 
   const totalAssessments = qualificationRows.reduce((sum, row) => sum + row.total, 0);
   const totalSampled = qualificationRows.reduce((sum, row) => sum + row.sampled, 0);
+  const approvalRate = totalAssessments > 0 ? Math.round((summary.approved / totalAssessments) * 100) : 0;
+  const actionRate = totalAssessments > 0 ? Math.round((summary.action_required / totalAssessments) * 100) : 0;
+  const escalatedRows = queue.filter((item) => getIqaWorkflowLabel(item.iqa_status) === "Escalated");
+  const pendingRows = queue.filter((item) => getIqaWorkflowLabel(item.iqa_status) === "Awaiting IQA");
+
+  const handleExport = (title: string, format: string) => {
+    if (format === "csv") {
+      downloadCsv("iqa-sampling-coverage.csv", [
+        ["Qualification", "Total", "Approved", "Flagged", "Pending", "Coverage %", "Trainers"],
+        ...qualificationRows.map((row) => [
+          row.qualification,
+          row.total,
+          row.approved,
+          row.flagged,
+          row.pending,
+          row.coveragePercent,
+          row.trainers.join("; "),
+        ]),
+      ]);
+      toast({
+        title: `Exported ${title}`,
+        description: "CSV file downloaded from live IQA report data.",
+      });
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=1024,height=768");
+    if (!printWindow) {
+      toast({
+        title: "Unable to open print window",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const rowsHtml = qualificationRows
+      .map(
+        (row) => `
+          <tr>
+            <td>${row.qualification}</td>
+            <td>${row.total}</td>
+            <td>${row.approved}</td>
+            <td>${row.flagged}</td>
+            <td>${row.pending}</td>
+            <td>${row.coveragePercent}%</td>
+            <td>${row.trainers.join(", ") || "—"}</td>
+          </tr>
+        `,
+      )
+      .join("");
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+            th, td { border: 1px solid #d4d4d8; padding: 8px; text-align: left; font-size: 12px; }
+            h1 { margin: 0 0 8px; }
+            .meta { margin-bottom: 16px; color: #52525b; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <div class="meta">
+            Generated from live IQA report data. Total queue items: ${totalAssessments}. Approval rate: ${approvalRate}%.
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Qualification</th>
+                <th>Total</th>
+                <th>Approved</th>
+                <th>Flagged</th>
+                <th>Pending</th>
+                <th>Coverage</th>
+                <th>Trainers</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
 
   return (
     <div className="space-y-6">
@@ -143,6 +244,29 @@ const IQAReports = () => {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="rounded-lg border p-3">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Coverage</p>
+              <p className="mt-1 text-xl font-bold text-foreground">
+                {totalAssessments > 0 ? Math.round((totalSampled / totalAssessments) * 100) : 0}%
+              </p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Approval Rate</p>
+              <p className="mt-1 text-xl font-bold text-foreground">{approvalRate}%</p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Action Rate</p>
+              <p className="mt-1 text-xl font-bold text-foreground">{actionRate}%</p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Outstanding Risk</p>
+              <p className="mt-1 text-xl font-bold text-foreground">
+                {summary.action_required + summary.escalated}
+              </p>
+            </div>
+          </div>
+
           <div>
             <h4 className="text-sm font-bold text-foreground mb-3">Sampling Coverage by Qualification</h4>
             <Table>
@@ -178,7 +302,79 @@ const IQAReports = () => {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <h4 className="text-sm font-bold text-foreground mb-3">Awaiting IQA Review</h4>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Learner</TableHead>
+                    <TableHead>Qualification</TableHead>
+                    <TableHead>Trainer</TableHead>
+                    <TableHead className="text-center">Submitted</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingRows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                        No pending IQA items.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    pendingRows.slice(0, 8).map((item) => (
+                      <TableRow key={item.submission_id}>
+                        <TableCell className="text-sm font-medium">{item.learner.name}</TableCell>
+                        <TableCell className="text-sm">{item.qualification.title}</TableCell>
+                        <TableCell className="text-sm">{item.trainer?.name || "Unassigned"}</TableCell>
+                        <TableCell className="text-center text-sm">
+                          {item.submitted_at ? new Date(item.submitted_at).toLocaleDateString() : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-bold text-foreground mb-3">Escalated Cases</h4>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Learner</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Qualification</TableHead>
+                    <TableHead className="text-center">Reviewed</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {escalatedRows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                        No escalated cases in the current live queue.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    escalatedRows.slice(0, 8).map((item) => (
+                      <TableRow key={item.submission_id}>
+                        <TableCell className="text-sm font-medium">{item.learner.name}</TableCell>
+                        <TableCell className="text-sm">
+                          {item.unit.unit_code}: {item.unit.title}
+                        </TableCell>
+                        <TableCell className="text-sm">{item.qualification.title}</TableCell>
+                        <TableCell className="text-center text-sm">
+                          {item.iqa_reviewed_at ? new Date(item.iqa_reviewed_at).toLocaleDateString() : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           <div>

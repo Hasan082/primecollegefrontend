@@ -359,8 +359,12 @@ export interface EnrolmentContent {
             competency_status?: string | null;
             started_at: string | null;
             completed_at: string | null;
+            quiz_attempts?: number;
             quiz_passed: boolean;
+            quiz_score?: number | null;
+            evidence_required?: boolean;
             evidence_met: boolean;
+            assignment_required?: boolean;
             assignment_met: boolean;
         } | null;
     }[];
