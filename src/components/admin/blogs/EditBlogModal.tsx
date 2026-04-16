@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  BlogDetail,
+  type BlogCategorySummary,
+  type BlogDetail,
   useCreateBlogCategoryMutation,
   useGetBlogCategoriesQuery,
   useGetBlogQuery,
@@ -69,10 +70,14 @@ const EditBlogModal = ({
     refetch: refetchCategories,
   } = useGetBlogCategoriesQuery({ page_size: 100 }, { skip: !isModalOpen });
 
-  const categories = useMemo(
-    () => categoriesResponse?.data ?? [],
-    [categoriesResponse?.data],
-  );
+  const categories = useMemo(() => {
+    const payload = categoriesResponse?.data as unknown;
+    if (Array.isArray(payload)) return payload as BlogCategorySummary[];
+    if (payload && typeof payload === "object" && Array.isArray((payload as { results?: unknown[] }).results)) {
+      return (payload as { results: BlogCategorySummary[] }).results ?? [];
+    }
+    return [];
+  }, [categoriesResponse?.data]);
 
   useEffect(() => {
     const blog = blogResponse?.data;
