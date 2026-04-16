@@ -163,6 +163,11 @@ const PageEditor = () => {
 
   const isHomePage = pageId === "home" || slug === "home";
   const isQualificationPage = pageType === "qualification_detail";
+  const showPublishedToggle =
+    !isHomePage &&
+    slug !== "about" &&
+    slug !== "contact" &&
+    !isQualificationPage;
   const fallbackBlocks = useMemo(
     () => getFallbackBlocksForPageType(pageType, slug),
     [pageType, slug],
@@ -178,6 +183,7 @@ const PageEditor = () => {
         previewPath={previewPath}
         isPublished={isPublished}
         setIsPublished={setIsPublished}
+        showPublishedToggle={showPublishedToggle}
         showPreview={showPreview}
         setShowPreview={setShowPreview}
         isSaving={isSaving}

@@ -11,6 +11,7 @@ interface PageEditorHeaderProps {
   previewPath: string;
   isPublished: boolean;
   setIsPublished: (v: boolean) => void;
+  showPublishedToggle: boolean;
   showPreview: boolean;
   setShowPreview: (v: boolean) => void;
   isSaving: boolean;
@@ -23,6 +24,7 @@ const PageEditorHeader = ({
   previewPath,
   isPublished,
   setIsPublished,
+  showPublishedToggle,
   showPreview,
   setShowPreview,
   isSaving,
@@ -50,16 +52,18 @@ const PageEditorHeader = ({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 mr-2">
-        <Label htmlFor="published-mode" className="text-xs font-medium">
-          Published
-        </Label>
-        <Switch
-          id="published-mode"
-          checked={isPublished}
-          onCheckedChange={setIsPublished}
-        />
-      </div>
+      {showPublishedToggle ? (
+        <div className="flex items-center gap-2 mr-2">
+          <Label htmlFor="published-mode" className="text-xs font-medium">
+            Published
+          </Label>
+          <Switch
+            id="published-mode"
+            checked={isPublished}
+            onCheckedChange={setIsPublished}
+          />
+        </div>
+      ) : null}
 
       <Button
         variant="outline"
