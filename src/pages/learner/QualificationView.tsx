@@ -180,69 +180,26 @@ const QualificationView = () => {
       <h2 className="text-xl font-bold text-primary mb-1">Qualification Units</h2>
       <p className="text-sm text-muted-foreground mb-6">Select a unit to access learning resources {!qualification.is_cpd && "and submit assessment evidence"}</p>
 
-      {allUnitsDone && (
-        <div className="space-y-4 mb-8">
-          {qualification.is_cpd && (
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <ShieldCheck className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-primary mb-1">Final Assessment</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    This CPD qualification requires a single final assessment.
-                  </p>
-                  <Button size="sm" className="gap-2" onClick={() => setShowAssessment(true)}>
-                    <ShieldCheck className="w-4 h-4" />
-                    Start Final Assessment
-                  </Button>
-                </div>
-              </div>
+      {allUnitsDone && qualification.is_cpd && (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <ShieldCheck className="w-6 h-6 text-primary" />
             </div>
-          )}
-
-          {requiresDeclaration && (
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <FileCheck className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-primary mb-1">Learner Declaration</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Please complete the learner declaration to finalize your qualification.
-                  </p>
-                  <Button size="sm" className="gap-2" onClick={() => setShowDeclaration(true)}>
-                    <FileCheck className="w-4 h-4" />
-                    Complete Declaration
-                  </Button>
-                </div>
-              </div>
+            <div className="flex-1">
+              <h3 className="text-base font-bold text-primary mb-1">Final Assessment</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                This CPD qualification requires a single final assessment.
+              </p>
+              <Button size="sm" className="gap-2" onClick={() => setShowAssessment(true)}>
+                <ShieldCheck className="w-4 h-4" />
+                Start Final Assessment
+              </Button>
             </div>
-          )}
-
-          {requiresEvaluation && (
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <ClipboardList className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-primary mb-1">Course Evaluation</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    We value your feedback! Please complete the course evaluation.
-                  </p>
-                  <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowEvaluation(true)}>
-                    <ClipboardList className="w-4 h-4" />
-                    Complete Evaluation
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
+
 
       {showAssessment && (
         <CPDFinalAssessmentModal
@@ -289,7 +246,28 @@ const QualificationView = () => {
         />
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-4 mb-6">
+        {requiresDeclaration && (
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center flex-shrink-0">
+                <FileCheck className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  Learner Declaration
+                  <span className="text-xs font-normal text-muted-foreground">— Required before qualification completion</span>
+                </h3>
+              </div>
+            </div>
+            <Button asChild variant="outline" size="sm" className="flex-shrink-0">
+              <Link to={`/learner/qualification/${id}/declaration`}>
+                View Declaration
+              </Link>
+            </Button>
+          </div>
+        )}
+
         {units.map((unit) => {
           const statusKey = getUnitStatusKey(unit);
           const cfg = getUnitDisplayStatus(unit);
@@ -344,7 +322,29 @@ const QualificationView = () => {
             </div>
           );
         })}
+
+        {requiresEvaluation && (
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-4 shadow-sm mt-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center flex-shrink-0">
+                <ClipboardList className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  Course Evaluation
+                  <span className="text-xs font-normal text-muted-foreground">— Complete after finishing the qualification</span>
+                </h3>
+              </div>
+            </div>
+            <Button asChild variant="outline" size="sm" className="flex-shrink-0">
+              <Link to={`/learner/qualification/${id}/evaluation`}>
+                View Evaluation
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
+
 
       <ExtensionRequestModal
         open={showExtension}

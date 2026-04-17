@@ -52,6 +52,8 @@ const MyQualifications = lazy(() => import("./pages/learner/MyQualifications"));
 const UnitDetail = lazy(() => import("./pages/learner/UnitDetail"));
 const Profile = lazy(() => import("./pages/learner/Profile"));
 const ChangePassword = lazy(() => import("./pages/learner/ChangePassword"));
+const LearnerDeclarationPage = lazy(() => import("./components/learner/LearnerDeclaration"));
+const CourseEvaluationPage = lazy(() => import("./components/learner/CourseEvaluation"));
 
 // trainer dashboard
 const TrainerDashboard = lazy(() => import("./pages/trainer/Dashboard"));
@@ -196,6 +198,14 @@ const App = () => {
                     <Route
                       path="qualification/:id"
                       element={<QualificationView />}
+                    />
+                    <Route
+                      path="qualification/:id/declaration"
+                      element={<LearnerDeclarationPage />}
+                    />
+                    <Route
+                      path="qualification/:id/evaluation"
+                      element={<CourseEvaluationPage />}
                     />
                     <Route
                       path="qualification/:qualificationId/unit/:unitId"

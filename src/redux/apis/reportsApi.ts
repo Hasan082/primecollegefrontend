@@ -14,7 +14,7 @@ export const reportsApi = api.injectEndpoints({
       query: (params) => ({
         url: "/api/enrolments/reports/learner-progress/export/",
         params,
-        responseType: 'blob',
+        responseHandler: (response) => response.blob(),
       }),
     }),
     
@@ -23,7 +23,7 @@ export const reportsApi = api.injectEndpoints({
       query: (params) => ({
         url: "/api/enrolments/reports/enrolment-summary/export/",
         params,
-        responseType: 'blob',
+        responseHandler: (response) => response.blob(),
       }),
     }),
     
@@ -32,7 +32,7 @@ export const reportsApi = api.injectEndpoints({
       query: (params) => ({
         url: "/api/enrolments/reports/assessment-activity/export/",
         params,
-        responseType: 'blob',
+        responseHandler: (response) => response.blob(),
       }),
     }),
     
@@ -41,7 +41,7 @@ export const reportsApi = api.injectEndpoints({
       query: (params) => ({
         url: "/api/enrolments/reports/qualification-statistics/export/",
         params,
-        responseType: 'blob',
+        responseHandler: (response) => response.blob(),
       }),
     }),
     
@@ -50,7 +50,7 @@ export const reportsApi = api.injectEndpoints({
       query: (params) => ({
         url: "/api/enrolments/reports/trainer-workload/export/",
         params,
-        responseType: 'blob',
+        responseHandler: (response) => response.blob(),
       }),
     }),
     
@@ -59,7 +59,7 @@ export const reportsApi = api.injectEndpoints({
       query: (params) => ({
         url: "/api/enrolments/reports/evidence-submission-log/export/",
         params,
-        responseType: 'blob',
+        responseHandler: (response) => response.blob(),
       }),
     }),
   }),

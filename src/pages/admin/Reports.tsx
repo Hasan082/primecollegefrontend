@@ -22,7 +22,7 @@ interface ReportType {
   description: string;
   icon: typeof FileText;
   category: string;
-  exportFn?: string;
+  exportFn: string;
 }
 
 const reports: ReportType[] = [
@@ -58,20 +58,15 @@ const Reports = () => {
   };
 
   const filtered = reports.filter(r => categoryFilter === "all" || r.category === categoryFilter);
-  const categories = [...new Set(reports.map(r => r.category))];
+  const categories = Array.from(new Set(reports.map(r => r.category)));
 
   const handleExport = async (report: ReportType, format: "csv" | "pdf") => {
-    if (!report.exportFn) {
-      toast({ title: "Error", description: "Export function not configured for this report", variant: "destructive" });
-      return;
-    }
+    const loadingKey = `${report.id}-${format}`;
+    setLoadingReport(loadingKey);
 
-    setLoadingReport(`${report.id}-${format}`);
     try {
       const exportFn = exportMap[report.exportFn];
-      if (!exportFn) {
-        throw new Error("Export function not found");
-      }
+      if (!exportFn) throw new Error("Export function not found");
 
       const response = await exportFn({
         format,
@@ -79,15 +74,15 @@ const Reports = () => {
       }).unwrap();
 
       // Create blob URL and download
-      const url = window.URL.createObjectURL(new Blob([response]));
+      const blob = response instanceof Blob ? response : new Blob([response]);
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      
-      // Determine file extension and name
-      const fileExtension = format === "csv" ? "csv" : "pdf";
+
       const reportName = report.id.replace(/-/g, "_");
-      link.setAttribute("download", `${reportName}.${fileExtension}`);
-      
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.setAttribute("download", `${reportName}_${timestamp}.${format}`);
+
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -165,11 +160,11 @@ const Reports = () => {
                   </div>
                   <p className="text-xs text-muted-foreground mb-3">{report.description}</p>
                   <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="text-xs h-8"
-                      disabled={loadingReport === `${report.id}-csv`}
+                      disabled={loadingReport !== null}
                       onClick={() => handleExport(report, "csv")}
                     >
                       {loadingReport === `${report.id}-csv` ? (
@@ -179,11 +174,11 @@ const Reports = () => {
                       )}
                       CSV
                     </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="text-xs h-8"
-                      disabled={loadingReport === `${report.id}-pdf`}
+                      disabled={loadingReport !== null}
                       onClick={() => handleExport(report, "pdf")}
                     >
                       {loadingReport === `${report.id}-pdf` ? (
