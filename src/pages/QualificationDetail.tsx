@@ -27,6 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import NotFound from "./NotFound";
 
 const formatMoney = (
   value: string | number | null | undefined,
@@ -257,6 +258,10 @@ const QualificationDetail = () => {
         </Link>
       </div>
     );
+  }
+
+  if (detailPagePublished === false) {
+    return <NotFound />;
   }
 
   const currentCartItem = {

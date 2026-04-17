@@ -336,7 +336,7 @@ const UnitDetail = () => {
               Evidence must demonstrate that you meet all unit criteria.
             </p>
           </div>
-
+          <ResourceSection resources={unit.resources} />
           {!qualification.is_cpd && (unit.has_quiz || unit.has_written_assignment) && (
             <div className="bg-card border border-border rounded-xl p-6">
               <h3 className="text-base font-bold text-primary mb-1">Assignments</h3>
@@ -381,10 +381,6 @@ const UnitDetail = () => {
                           isExpired ? (
                             <Button variant="outline" className="gap-2" onClick={() => setShowExtension(true)}>
                               <Lock className="w-4 h-4" /> Access Locked
-                            </Button>
-                          ) : !unit.quiz_summary.can_retake ? (
-                            <Button variant="outline" className="gap-2" disabled>
-                              <Clock className="w-4 h-4" /> Await Trainer Review
                             </Button>
                           ) : (
                             <Button onClick={() => setShowStrictQuiz(true)} className="gap-2">
@@ -507,7 +503,7 @@ const UnitDetail = () => {
             </div>
           )}
 
-          <ResourceSection resources={unit.resources} />
+
 
           {qualification.is_cpd && (
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-6 flex items-start gap-4">
