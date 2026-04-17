@@ -205,6 +205,8 @@ const UnitManagement = () => {
     }
   };
 
+
+  console.log({ latestEvidence: latestEvidence?.status })
   return (
     <div className="space-y-6">
       <Link
@@ -228,7 +230,7 @@ const UnitManagement = () => {
         </div>
       </Card>
 
-
+<ResourceSection resources={resourcesResponse?.data || []} />
 
       {unit.has_quiz && (
         <Card className="p-6">
@@ -383,7 +385,7 @@ const UnitManagement = () => {
               <div className="text-sm text-muted-foreground">
                 Word count: {latestWritten.response_word_count}
               </div>
-              {latestWritten.status === "submitted" ? (
+              {latestWritten?.status === "pending" ? (
                 <div className="space-y-3">
                   <div className="grid gap-2 md:grid-cols-3">
                     {outcomeOptions.map((option) => (
@@ -427,7 +429,7 @@ const UnitManagement = () => {
                 <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border/50">
                   <div className="flex items-center gap-2 mb-3">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <h4 className="font-bold text-sm">Assessor Feedback</h4>
+                    <h4 className="font-bold text-sm">Trainer Feedback</h4>
                   </div>
                   <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
                     {latestWritten.assessor_feedback || "No feedback provided."}
@@ -497,7 +499,7 @@ const UnitManagement = () => {
                   </div>
                 ))}
               </div>
-              {latestEvidence.status === "submitted" ? (
+              {latestEvidence?.status === "pending" ? (
                 <div className="space-y-3">
                   <div className="grid gap-2 md:grid-cols-3">
                     {outcomeOptions.map((option) => (
@@ -541,7 +543,7 @@ const UnitManagement = () => {
                 <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border/50">
                   <div className="flex items-center gap-2 mb-3">
                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                    <h4 className="font-bold text-sm">Assessor Feedback</h4>
+                    <h4 className="font-bold text-sm">Trainer Feedback</h4>
                   </div>
                   <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
                     {latestEvidence.assessor_feedback || "No feedback provided."}
@@ -577,7 +579,7 @@ const UnitManagement = () => {
         </Card>
       )}
 
-      <ResourceSection resources={resourcesResponse?.data || []} />
+      
     </div>
   );
 };

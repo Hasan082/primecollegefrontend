@@ -167,7 +167,7 @@ const AssignedLearners = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {learner?.email}
+                    {learner?.learner?.email}
                   </TableCell>
 
                   <TableCell>

@@ -275,6 +275,9 @@ const UnitDetail = () => {
     unit.quiz_summary.attempts_used > 0 &&
     unit.quiz_summary.can_retake === false;
 
+  console.log({ latestWrittenSubmission })
+
+
   return (
     <div>
       {showStrictQuiz && unitId && (
@@ -486,21 +489,22 @@ const UnitDetail = () => {
                                 No written assignment has been submitted for this unit yet.
                               </p>
                             )}
-                            {!latestWrittenSubmission && (
-                              <WrittenAssignmentForm
-                                enrolmentId={resolvedEnrolmentId}
-                                unitId={resolvedUnitId}
-                                title={writtenConfig?.title || unit.written_assignment_summary.title}
-                                minWords={writtenConfig?.min_words || unit.written_assignment_summary.min_words}
-                                maxWords={writtenConfig?.max_words || unit.written_assignment_summary.max_words}
-                                isLocked={isExpired}
-                                onSuccess={() => {
-                                  void refetchOverview();
-                                  void refetchUnit();
-                                  void refetchWritten();
-                                }}
-                              />
-                            )}
+                            {(!latestWrittenSubmission || latestWrittenSubmission?.status === "resubmit")
+                             && (
+                                <WrittenAssignmentForm
+                                  enrolmentId={resolvedEnrolmentId}
+                                  unitId={resolvedUnitId}
+                                  title={writtenConfig?.title || unit.written_assignment_summary.title}
+                                  minWords={writtenConfig?.min_words || unit.written_assignment_summary.min_words}
+                                  maxWords={writtenConfig?.max_words || unit.written_assignment_summary.max_words}
+                                  isLocked={isExpired}
+                                  onSuccess={() => {
+                                    void refetchOverview();
+                                    void refetchUnit();
+                                    void refetchWritten();
+                                  }}
+                                />
+                              )}
                           </>
                         )}
                       </div>

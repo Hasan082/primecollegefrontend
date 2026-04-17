@@ -344,7 +344,7 @@ const TrainerDashboard = () => {
                           <span className="text-sm text-muted-foreground">None</span>
                         )}
                       </TableCell>
-                      <TableCell>{learner?.email}</TableCell>
+                      <TableCell>{learner?.learner?.email}</TableCell>
                       <TableCell>
                         <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                           <Link to={`/trainer/learner/${learner.id}`}>
