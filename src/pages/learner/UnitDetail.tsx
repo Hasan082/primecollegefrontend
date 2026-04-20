@@ -275,9 +275,6 @@ const UnitDetail = () => {
     unit.quiz_summary.attempts_used > 0 &&
     unit.quiz_summary.can_retake === false;
 
-  console.log({ latestWrittenSubmission })
-
-
   return (
     <div>
       {showStrictQuiz && unitId && (

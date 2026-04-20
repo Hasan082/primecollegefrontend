@@ -58,7 +58,7 @@ const Reports = () => {
   };
 
   const filtered = reports.filter(r => categoryFilter === "all" || r.category === categoryFilter);
-  const categories = Array.from(new Set(reports.map(r => r.category)));
+  const categories = [...new Set(reports.map(r => r.category))];
 
   const handleExport = async (report: ReportType, format: "csv" | "pdf") => {
     const loadingKey = `${report.id}-${format}`;
@@ -66,7 +66,9 @@ const Reports = () => {
 
     try {
       const exportFn = exportMap[report.exportFn];
-      if (!exportFn) throw new Error("Export function not found");
+      if (!exportFn) {
+        throw new Error("Export function not found");
+      }
 
       const response = await exportFn({
         format,
@@ -82,7 +84,6 @@ const Reports = () => {
       const reportName = report.id.replace(/-/g, "_");
       const timestamp = new Date().toISOString().split('T')[0];
       link.setAttribute("download", `${reportName}_${timestamp}.${format}`);
-
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -164,7 +165,7 @@ const Reports = () => {
                       size="sm"
                       variant="outline"
                       className="text-xs h-8"
-                      disabled={loadingReport !== null}
+                      disabled={loadingReport === `${report.id}-csv`}
                       onClick={() => handleExport(report, "csv")}
                     >
                       {loadingReport === `${report.id}-csv` ? (
@@ -178,7 +179,7 @@ const Reports = () => {
                       size="sm"
                       variant="outline"
                       className="text-xs h-8"
-                      disabled={loadingReport !== null}
+                      disabled={loadingReport === `${report.id}-pdf`}
                       onClick={() => handleExport(report, "pdf")}
                     >
                       {loadingReport === `${report.id}-pdf` ? (
