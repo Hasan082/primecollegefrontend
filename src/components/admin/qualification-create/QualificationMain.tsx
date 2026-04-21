@@ -29,6 +29,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { appConfig } from "@/app.config";
 import { useToast } from "@/hooks/use-toast";
 import {
   useCreateQualificationMainMutation,
@@ -59,6 +60,63 @@ const withCacheBust = (url?: string | null) => {
   if (!url) return undefined;
   const separator = url.includes("?") ? "&" : "?";
   return `${url}${separator}t=${Date.now()}`;
+};
+
+const getCookie = (name: string) => {
+  const match = document.cookie.match(new RegExp(`(^|;\\s*)${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : undefined;
+};
+
+const getCsrfToken = () => getCookie("csrftoken");
+
+const normalizeSelectValue = (value: unknown) =>
+  typeof value === "string" ? value : "";
+
+const uploadFeaturedImage = async (file: File) => {
+  const csrfToken = getCsrfToken();
+  const presignResponse = await fetch(
+    `${appConfig.API_BASE_URL}/api/qualification/admin/uploads/presign-image/`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+      },
+      body: JSON.stringify({
+        file_name: file.name,
+        content_type: file.type,
+      }),
+    },
+  );
+
+  if (!presignResponse.ok) {
+    throw new Error("Failed to prepare image upload");
+  }
+
+  const presignPayload = await presignResponse.json();
+  const uploadData = presignPayload?.data;
+
+  if (!uploadData?.upload_url || !uploadData?.fields || !uploadData?.key) {
+    throw new Error("Invalid image upload configuration");
+  }
+
+  const uploadFormData = new FormData();
+  Object.entries(uploadData.fields).forEach(([key, value]) => {
+    uploadFormData.append(key, String(value));
+  });
+  uploadFormData.append("file", file);
+
+  const uploadResponse = await fetch(uploadData.upload_url, {
+    method: "POST",
+    body: uploadFormData,
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error("Failed to upload image to storage");
+  }
+
+  return uploadData.key as string;
 };
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
@@ -99,7 +157,7 @@ const qualificationMainSchema = z.object({
 
   featured_image: z
     .instanceof(File, { message: "Please upload a valid image file" })
-    .refine((f) => f.size <= 5 * 1024 * 1024, "Image must be under 5MB")
+    .refine((f) => f.size <= 10 * 1024 * 1024, "Image must be under 10MB")
     .refine(
       (f) => ["image/jpeg", "image/png", "image/webp"].includes(f.type),
       "Only JPG, PNG, or WEBP allowed",
@@ -183,6 +241,11 @@ const defaultValues: Partial<QualificationMainFormValues> = {
   short_description: "",
   excerpt: "",
   course_duration_text: "",
+  category: "",
+  level: "",
+  awarding_body: "",
+  qualification_type: "",
+  delivery_mode: "",
   qualification_code: "",
   total_units: 0,
   status: "draft",
@@ -259,7 +322,7 @@ const ImageUpload = ({ value, onChange, onClearExisting, existingUrl }: ImageUpl
         >
           <ImagePlus className="h-8 w-8" />
           <span className="text-sm font-medium">Click to upload image</span>
-          <span className="text-xs">PNG, JPG, WEBP up to 5MB</span>
+          <span className="text-xs">PNG, JPG, WEBP up to 10MB</span>
         </button>
       )}
       <input
@@ -325,30 +388,36 @@ const QualificationMain = () => {
   useEffect(() => {
     if (isEditMode && data?.data) {
       const { featured_image, ...rest } = data?.data as any;
-      // Keep the existing image URL for preview; don't put it in the File field
       setExistingImageUrl(withCacheBust(featured_image));
       setClearFeaturedImage(false);
-      form.reset({ ...rest, featured_image: null });
+      form.reset({
+        ...rest,
+        category: normalizeSelectValue(rest.category),
+        level: normalizeSelectValue(rest.level),
+        awarding_body: normalizeSelectValue(rest.awarding_body),
+        qualification_type: normalizeSelectValue(rest.qualification_type),
+        delivery_mode: normalizeSelectValue(rest.delivery_mode),
+        featured_image: null,
+      });
     }
   }, [isEditMode, data?.data, form]);
 
   // ── Build FormData ────────────────────────────────────────────────────────
-  const buildFormData = (values: QualificationMainFormValues): FormData => {
+  const buildFormData = async (values: QualificationMainFormValues): Promise<FormData> => {
     const fd = new FormData();
 
-    // Append the image file only when a new one was selected
     if (values.featured_image instanceof File) {
-      fd.append("featured_image", values.featured_image);
+      const featuredImageKey = await uploadFeaturedImage(values.featured_image);
+      fd.append("featured_image_key", featuredImageKey);
     }
     if (clearFeaturedImage) {
       fd.append("clear_featured_image", "true");
     }
 
-    // Append all other scalar fields
     const { featured_image, ...rest } = values;
 
     (Object.entries(rest) as [string, unknown][]).forEach(([key, val]) => {
-      if (val === undefined || val === null) return;
+      if (val === undefined || val === null || val === "") return;
       fd.append(key, String(val));
     });
 
@@ -357,7 +426,19 @@ const QualificationMain = () => {
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit = async (values: QualificationMainFormValues) => {
-    const formData = buildFormData(values);
+    let formData: FormData;
+
+    try {
+      formData = await buildFormData(values);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to upload featured image",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (isEditMode) {
       const [data, error] = await TryCatch(
@@ -517,7 +598,7 @@ const QualificationMain = () => {
                       )}
                     </span>
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
@@ -542,7 +623,7 @@ const QualificationMain = () => {
                 <FormItem>
                   <FormLabel>Category</FormLabel>
 
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
@@ -569,7 +650,7 @@ const QualificationMain = () => {
                 <FormItem>
                   <FormLabel>Awarding Body</FormLabel>
 
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select awarding body" />
@@ -596,7 +677,7 @@ const QualificationMain = () => {
                 <FormItem>
                   <FormLabel>Level</FormLabel>
 
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select level" />
@@ -623,7 +704,7 @@ const QualificationMain = () => {
                 <FormItem>
                   <FormLabel>Qualification Type</FormLabel>
 
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -650,7 +731,7 @@ const QualificationMain = () => {
                 <FormItem>
                   <FormLabel>Delivery Mode</FormLabel>
 
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select delivery mode" />
