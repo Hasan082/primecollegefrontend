@@ -29,7 +29,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { appConfig } from "@/app.config";
 import { useToast } from "@/hooks/use-toast";
 import {
   useCreateQualificationMainMutation,
@@ -62,62 +61,8 @@ const withCacheBust = (url?: string | null) => {
   return `${url}${separator}t=${Date.now()}`;
 };
 
-const getCookie = (name: string) => {
-  const match = document.cookie.match(new RegExp(`(^|;\\s*)${name}=([^;]+)`));
-  return match ? decodeURIComponent(match[2]) : undefined;
-};
-
-const getCsrfToken = () => getCookie("csrftoken");
-
 const normalizeSelectValue = (value: unknown) =>
   typeof value === "string" ? value : "";
-
-const uploadFeaturedImage = async (file: File) => {
-  const csrfToken = getCsrfToken();
-  const presignResponse = await fetch(
-    `${appConfig.API_BASE_URL}/api/qualification/admin/uploads/presign-image/`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
-      },
-      body: JSON.stringify({
-        file_name: file.name,
-        content_type: file.type,
-      }),
-    },
-  );
-
-  if (!presignResponse.ok) {
-    throw new Error("Failed to prepare image upload");
-  }
-
-  const presignPayload = await presignResponse.json();
-  const uploadData = presignPayload?.data;
-
-  if (!uploadData?.upload_url || !uploadData?.fields || !uploadData?.key) {
-    throw new Error("Invalid image upload configuration");
-  }
-
-  const uploadFormData = new FormData();
-  Object.entries(uploadData.fields).forEach(([key, value]) => {
-    uploadFormData.append(key, String(value));
-  });
-  uploadFormData.append("file", file);
-
-  const uploadResponse = await fetch(uploadData.upload_url, {
-    method: "POST",
-    body: uploadFormData,
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error("Failed to upload image to storage");
-  }
-
-  return uploadData.key as string;
-};
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -403,12 +348,11 @@ const QualificationMain = () => {
   }, [isEditMode, data?.data, form]);
 
   // ── Build FormData ────────────────────────────────────────────────────────
-  const buildFormData = async (values: QualificationMainFormValues): Promise<FormData> => {
+  const buildFormData = (values: QualificationMainFormValues): FormData => {
     const fd = new FormData();
 
     if (values.featured_image instanceof File) {
-      const featuredImageKey = await uploadFeaturedImage(values.featured_image);
-      fd.append("featured_image_key", featuredImageKey);
+      fd.append("featured_image", values.featured_image);
     }
     if (clearFeaturedImage) {
       fd.append("clear_featured_image", "true");
@@ -426,19 +370,7 @@ const QualificationMain = () => {
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit = async (values: QualificationMainFormValues) => {
-    let formData: FormData;
-
-    try {
-      formData = await buildFormData(values);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to upload featured image",
-        variant: "destructive",
-      });
-      return;
-    }
+    const formData = buildFormData(values);
 
     if (isEditMode) {
       const [data, error] = await TryCatch(
