@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   useCreateQualificationMainMutation,
   useGetQualificationMainQuery,
+  usePresignQualificationImageUploadMutation,
   useUpdateQualificationMainMutation,
 } from "@/redux/apis/qualification/qualificationMainApi";
 import { handleResponse } from "@/utils/handleResponse";
@@ -63,6 +64,17 @@ const withCacheBust = (url?: string | null) => {
 
 const normalizeSelectValue = (value: unknown) =>
   typeof value === "string" ? value : "";
+
+type QualificationPayload = Omit<QualificationMainFormValues, "featured_image"> & {
+  featured_image_key?: string;
+  clear_featured_image?: boolean;
+};
+
+type PresignResponse = {
+  key: string;
+  upload_url: string;
+  fields: Record<string, string>;
+};
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -288,6 +300,7 @@ const QualificationMain = () => {
   const { toast } = useToast();
   const isEditMode = Boolean(qualificationId);
   const [createQualificationMain] = useCreateQualificationMainMutation();
+  const [presignQualificationImageUpload] = usePresignQualificationImageUploadMutation();
   const [updateQualificationMain] = useUpdateQualificationMainMutation();
 
   const { data: awardingBodiesData } = useGetAwardingBodiesQuery(null);
@@ -347,36 +360,58 @@ const QualificationMain = () => {
     }
   }, [isEditMode, data?.data, form]);
 
-  // ── Build FormData ────────────────────────────────────────────────────────
-  const buildFormData = (values: QualificationMainFormValues): FormData => {
-    const fd = new FormData();
+  const uploadFeaturedImage = async (file: File): Promise<string> => {
+    const presignResult = await presignQualificationImageUpload({
+      file_name: file.name,
+      content_type: file.type,
+    }).unwrap();
 
-    if (values.featured_image instanceof File) {
-      fd.append("featured_image", values.featured_image);
-    }
-    if (clearFeaturedImage) {
-      fd.append("clear_featured_image", "true");
-    }
+    const presign = presignResult?.data as PresignResponse;
+    const formData = new FormData();
 
-    const { featured_image, ...rest } = values;
+    Object.entries(presign.fields).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+    formData.append("file", file);
 
-    (Object.entries(rest) as [string, unknown][]).forEach(([key, val]) => {
-      if (val === undefined || val === null || val === "") return;
-      fd.append(key, String(val));
+    const uploadResponse = await fetch(presign.upload_url, {
+      method: "POST",
+      body: formData,
     });
 
-    return fd;
+    if (!uploadResponse.ok) {
+      throw new Error("Direct image upload to S3 failed.");
+    }
+
+    return presign.key;
+  };
+
+  const buildPayload = async (
+    values: QualificationMainFormValues,
+  ): Promise<QualificationPayload> => {
+    const payload: QualificationPayload = { ...values };
+    delete (payload as { featured_image?: File | null }).featured_image;
+
+    if (clearFeaturedImage) {
+      payload.clear_featured_image = true;
+    }
+
+    if (values.featured_image instanceof File) {
+      payload.featured_image_key = await uploadFeaturedImage(values.featured_image);
+    }
+
+    return payload;
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit = async (values: QualificationMainFormValues) => {
-    const formData = buildFormData(values);
+    const payload = await buildPayload(values);
 
     if (isEditMode) {
       const [data, error] = await TryCatch(
         updateQualificationMain({
           id: qualificationId,
-          payload: formData,
+          payload,
         }).unwrap(),
       );
 
@@ -400,7 +435,7 @@ const QualificationMain = () => {
       });
     } else {
       const [data, error] = await TryCatch(
-        createQualificationMain(formData).unwrap(),
+        createQualificationMain(payload).unwrap(),
       );
 
       const result = handleResponse({

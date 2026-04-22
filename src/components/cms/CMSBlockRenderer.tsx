@@ -11,6 +11,7 @@ import CTASection from "@/components/CTASection";
 import LogoCarousel from "@/components/LogoCarousel";
 import QualificationSlider from "@/components/QualificationSlider";
 import QualificationCard from "@/components/QualificationCard";
+import { sanitizeRichHtml } from "@/utils/sanitizeRichHtml";
 import {
   Accordion,
   AccordionContent,
@@ -57,7 +58,10 @@ const pageLabelMap: Record<string, string> = {
 const renderRichText = (content?: string, className = "") => {
   if (!content) return null;
   return (
-    <div className={className} dangerouslySetInnerHTML={{ __html: content }} />
+    <div
+      className={className}
+      dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(content) }}
+    />
   );
 };
 
