@@ -8,12 +8,13 @@ interface SortableChildItemProps {
   id: string;
   label: string;
   href?: string;
+  short_description?: string;
   is_active?: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-const SortableChildItem = ({ id, label, href, is_active = true, onEdit, onDelete }: SortableChildItemProps) => {
+const SortableChildItem = ({ id, label, href, short_description, is_active = true, onEdit, onDelete }: SortableChildItemProps) => {
   const {
     attributes,
     listeners,
@@ -45,12 +46,17 @@ const SortableChildItem = ({ id, label, href, is_active = true, onEdit, onDelete
       </button>
       
       <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-        <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">
-          <span className="text-sm font-medium truncate">{label}</span>
-          <span className="text-xs text-muted-foreground truncate">{href}</span>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium truncate">{label}</span>
+            <span className="text-xs text-muted-foreground truncate opacity-60">({href})</span>
+          </div>
+          {short_description && (
+            <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{short_description}</p>
+          )}
         </div>
         {!is_active && (
-          <Badge variant="destructive" className="text-[10px] h-4">Inactive</Badge>
+          <Badge variant="destructive" className="text-[10px] h-4 shrink-0">Inactive</Badge>
         )}
       </div>
       

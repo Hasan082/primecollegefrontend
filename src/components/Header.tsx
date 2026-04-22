@@ -5,14 +5,17 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronRight,
   User,
   LogOut,
   LayoutDashboard,
+  BookOpen,
 } from "lucide-react";
 import logo from "@/assets/prime-logo-white-notext.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { appConfig } from "@/app.config";
 import { useGetNavbarPublicQuery } from "@/redux/apis/navbarApi";
+import { Button } from "./ui/button";
 
 const TOP_BAR_HEIGHT = 36;
 const HEADER_HEIGHT_FULL = 80;
@@ -121,17 +124,20 @@ const Header = () => {
                       <ChevronDown className="w-3 h-3" />
                     </button>
                     {openDropdown === item.label && (
-                      <div className="absolute top-full left-0 bg-popover border border-border rounded-lg shadow-lg py-2 w-44 z-50">
-                        {activeChildren.map((child: any) => (
-                          <Link
-                            key={child.label}
-                            to={child.href}
-                            className="block px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary"
-                            onClick={() => setOpenDropdown(null)}
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
+                      <div className="absolute top-full left-0 pt-1 w-56 z-50">
+                        <div className="bg-[#042F5C] border border-white/10 rounded shadow-2xl py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {activeChildren.map((child: any) => (
+                            <Link
+                              key={child.label}
+                              to={child.href}
+                              className="group flex items-center justify-between px-4 py-2.5 text-[13px] font-medium text-white/90 hover:bg-white/5 hover:text-secondary transition-all"
+                              onClick={() => setOpenDropdown(null)}
+                            >
+                              <span>{child.label}</span>
+
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -241,8 +247,8 @@ const Header = () => {
 
       {/* Mega Menu Panel */}
       {openMega && (
-        <div className="hidden lg:block bg-popover border-t border-border shadow-lg">
-          <div className="container mx-auto p-6">
+        <div className="container mx-auto hidden lg:block bg-[#042F5C] text-white border-t border-white/10 shadow-2xl">
+          <div className=" p-10">
             {allNavItems
               .filter(
                 (item: any) => item.is_mega_menu && item.label === openMega,
@@ -253,19 +259,37 @@ const Header = () => {
                   .sort(sortByOrder);
                 return (
                   <div key={item.label}>
-                    <h4 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-wider">
-                      {item.label} Qualifications
-                    </h4>
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-10">
                       {activeChildren.map((q: any) => (
-                        <Link
-                          key={q.label}
-                          to={q.href}
-                          className="text-sm text-foreground hover:text-primary py-2 px-3 rounded hover:bg-muted block"
-                          onClick={() => setOpenMega(null)}
-                        >
-                          {q.label}
-                        </Link>
+                        <div key={q.label} className="flex flex-col h-full">
+                          <div className="mb-3 flex-1">
+                            <div className="flex items-center gap-2 mb-3">
+
+                              <h5 className="text-sm font-bold text-[#e5e7eb] flex items-center gap-1">
+                                {q.label}
+
+                              </h5>
+                            </div>
+                            {q.short_description ? (
+                              <p className="text-xs text-[#d1d5db] leading-relaxed line-clamp-3 mb-4">
+                                {q.short_description}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-[#d1d5db] leading-relaxed line-clamp-3 mb-4 opacity-0">
+                                Placeholder description for layout consistency...
+                              </p>
+                            )}
+                          </div>
+                          <Link
+                            to={q.href}
+                            className="w-fit"
+                            onClick={() => setOpenMega(null)}
+                          >
+                            <Button className="bg-secondary hover:bg-secondary/90 text-primary text-[10px] font-bold h-7 px-4 rounded-sm border-none transition-colors">
+                              Read more
+                            </Button>
+                          </Link >
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -273,115 +297,129 @@ const Header = () => {
               })}
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="lg:hidden bg-primary border-t border-primary-foreground/20 px-4 pb-4">
-          {allNavItems.map((item: any) => {
-            const activeChildren = (item.children || [])
-              .filter((child: any) => child.is_active)
-              .sort(sortByOrder);
+      {
+        mobileOpen && (
+          <div className="lg:hidden bg-primary border-t border-primary-foreground/20 px-4 pb-4">
+            {allNavItems.map((item: any) => {
+              const activeChildren = (item.children || [])
+                .filter((child: any) => child.is_active)
+                .sort(sortByOrder);
 
-            // Dropdown
-            if (item.is_dropdown) {
-              return (
-                <div key={item.label}>
-                  <button
-                    className="flex items-center justify-between w-full text-primary-foreground py-2 text-sm font-medium"
-                    onClick={() =>
-                      setMobileExpanded(
-                        mobileExpanded === item.label ? null : item.label,
-                      )
-                    }
-                  >
-                    <Link
-                      to={item.href || "/"}
-                      onClick={() => setMobileOpen(false)}
-                      className="text-primary-foreground"
+              // Dropdown
+              if (item.is_dropdown) {
+                return (
+                  <div key={item.label}>
+                    <button
+                      className="flex items-center justify-between w-full text-primary-foreground py-2 text-sm font-medium"
+                      onClick={() =>
+                        setMobileExpanded(
+                          mobileExpanded === item.label ? null : item.label,
+                        )
+                      }
+                    >
+                      <Link
+                        to={item.href || "/"}
+                        onClick={() => setMobileOpen(false)}
+                        className="text-primary-foreground"
+                      >
+                        {item.label}
+                      </Link>
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform ${mobileExpanded === item.label ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {mobileExpanded === item.label && (
+                      <div className="pl-4  pb-2">
+                        {activeChildren.map((child: any) => (
+                          <Link
+                            key={child.label}
+                            to={child.href}
+                            className="block text-primary-foreground/80 py-1 text-sm"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              // Mega menu
+              if (item.is_mega_menu) {
+                return (
+                  <div key={item.label}>
+                    <button
+                      className="flex items-center justify-between w-full text-primary-foreground py-2 text-sm font-medium"
+                      onClick={() =>
+                        setMobileExpanded(
+                          mobileExpanded === item.label ? null : item.label,
+                        )
+                      }
                     >
                       {item.label}
-                    </Link>
-                    <ChevronDown
-                      className={`w-3 h-3 transition-transform ${mobileExpanded === item.label ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {mobileExpanded === item.label && (
-                    <div className="pl-4 pb-2">
-                      {activeChildren.map((child: any) => (
-                        <Link
-                          key={child.label}
-                          to={child.href}
-                          className="block text-primary-foreground/80 py-1 text-sm"
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            }
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform ${mobileExpanded === item.label ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {mobileExpanded === item.label && (
+                      <div className="pl-4 pb-4 space-y-3 mt-2">
+                        {activeChildren.map((q: any) => (
+                          <div key={q.label} className="border-l-2 border-secondary/30 pl-3 py-1">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-primary-foreground font-semibold text-sm">{q.label}</span>
+                              {q.short_description && (
+                                <span className="text-primary-foreground/60 text-[10px] leading-tight line-clamp-2">
+                                  {q.short_description}
+                                </span>
+                              )}
+                              <Link
+                                to={q.href}
+                                className="mt-2"
+                                onClick={() => setMobileOpen(false)}
+                              >
+                                <Button size="sm" className="h-7 text-[10px] bg-secondary text-secondary-foreground hover:bg-secondary/90">
+                                  View Detail
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
 
-            // Mega menu
-            if (item.is_mega_menu) {
+              // Simple link
               return (
-                <div key={item.label}>
-                  <button
-                    className="flex items-center justify-between w-full text-primary-foreground py-2 text-sm font-medium"
-                    onClick={() =>
-                      setMobileExpanded(
-                        mobileExpanded === item.label ? null : item.label,
-                      )
-                    }
-                  >
-                    {item.label}
-                    <ChevronDown
-                      className={`w-3 h-3 transition-transform ${mobileExpanded === item.label ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {mobileExpanded === item.label && (
-                    <div className="pl-4 pb-2">
-                      {activeChildren.map((q: any) => (
-                        <Link
-                          key={q.label}
-                          to={q.href}
-                          className="block text-primary-foreground/80 py-1 text-sm"
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {q.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className="block text-primary-foreground py-2 text-sm font-medium"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.label}
+                </Link>
               );
-            }
+            })}
 
-            // Simple link
-            return (
-              <Link
-                key={item.label}
-                to={item.href}
-                className="block text-primary-foreground py-2 text-sm font-medium"
-                onClick={() => setMobileOpen(false)}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-
-          <Link
-            to="/login"
-            className="block mt-2 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded text-center"
-            onClick={() => setMobileOpen(false)}
-          >
-            Login
-          </Link>
-        </div>
-      )}
-    </div>
+            <Link
+              to="/login"
+              className="block mt-2 bg-secondary text-secondary-foreground px-5 py-2 text-sm font-semibold rounded text-center"
+              onClick={() => setMobileOpen(false)}
+            >
+              Login
+            </Link>
+          </div>
+        )
+      }
+    </div >
   );
 };
 

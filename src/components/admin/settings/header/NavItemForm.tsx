@@ -48,6 +48,7 @@ const NavItemForm = ({
   const [formData, setFormData] = useState<NavLinkItem>({
     label: "",
     href: "",
+    short_description: "",
     order: 0,
     is_active: true,
     is_dropdown: false,
@@ -55,7 +56,7 @@ const NavItemForm = ({
     children: [],
   });
 
-  const [newChild, setNewChild] = useState({ label: "", href: "", is_active: true });
+  const [newChild, setNewChild] = useState({ label: "", href: "", short_description: "", is_active: true });
   const [editingChildIndex, setEditingChildIndex] = useState<number | null>(null);
 
   const sensors = useSensors(
@@ -75,6 +76,7 @@ const NavItemForm = ({
       setFormData({
         label: "",
         href: "",
+        short_description: "",
         order: 0,
         is_active: true,
         is_dropdown: false,
@@ -95,14 +97,19 @@ const NavItemForm = ({
       }
       return { ...prev, children };
     });
-    setNewChild({ label: "", href: "", is_active: true });
+    setNewChild({ label: "", href: "", short_description: "", is_active: true });
     setEditingChildIndex(null);
   };
 
   const handleEditChild = (index: number) => {
     const child = formData.children?.[index];
     if (child) {
-      setNewChild({ label: child.label, href: child.href || "", is_active: child.is_active });
+      setNewChild({ 
+        label: child.label, 
+        href: child.href || "", 
+        short_description: child.short_description || "",
+        is_active: child.is_active 
+      });
       setEditingChildIndex(index);
     }
   };
@@ -164,6 +171,15 @@ const NavItemForm = ({
               placeholder="e.g. /about"
             />
           </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label htmlFor="short_description">Short Description</Label>
+            <Input
+              id="short_description"
+              value={formData.short_description}
+              onChange={(e) => setFormData((p) => ({ ...p, short_description: e.target.value }))}
+              placeholder="Brief description of this menu item..."
+            />
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg">
@@ -215,6 +231,7 @@ const NavItemForm = ({
                         id={`child-${idx}`}
                         label={child.label}
                         href={child.href}
+                        short_description={child.short_description}
                         is_active={child.is_active}
                         onEdit={() => handleEditChild(idx)}
                         onDelete={() => removeChild(idx)}
@@ -228,12 +245,12 @@ const NavItemForm = ({
               {editingChildIndex !== null && (
                 <div className="absolute -top-3 left-4 bg-background px-2 text-[10px] font-bold text-primary flex items-center gap-1">
                   Editing Child #{editingChildIndex + 1}
-                  <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => { setEditingChildIndex(null); setNewChild({ label: "", href: "", is_active: true }); }}>
+                  <Button variant="ghost" size="icon" className="h-4 w-4" onClick={() => { setEditingChildIndex(null); setNewChild({ label: "", href: "", short_description: "", is_active: true }); }}>
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
               )}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-1">
                 <Label className="text-xs">Child Label</Label>
                 <Input
                   value={newChild.label}
@@ -242,7 +259,7 @@ const NavItemForm = ({
                   placeholder="e.g. History"
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-1">
                 <div className="flex items-center justify-between mb-1">
                   <Label className="text-xs">Child Path</Label>
                   <div className="flex items-center gap-2">
@@ -255,12 +272,21 @@ const NavItemForm = ({
                     />
                   </div>
                 </div>
+                <Input
+                  value={newChild.href}
+                  onChange={(e) => setNewChild((p) => ({ ...p, href: e.target.value }))}
+                  className="h-9 flex-1"
+                  placeholder="e.g. /history"
+                />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-xs">Short Description</Label>
                 <div className="flex gap-2">
                   <Input
-                    value={newChild.href}
-                    onChange={(e) => setNewChild((p) => ({ ...p, href: e.target.value }))}
+                    value={newChild.short_description}
+                    onChange={(e) => setNewChild((p) => ({ ...p, short_description: e.target.value }))}
                     className="h-9 flex-1"
-                    placeholder="e.g. /history"
+                    placeholder="Brief description for mega menu..."
                   />
                   <Button size="sm" className="h-9 px-3 shrink-0" variant={editingChildIndex !== null ? "default" : "secondary"} onClick={handleAddChild}>
                     {editingChildIndex !== null ? "Update" : "Add"}

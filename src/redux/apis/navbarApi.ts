@@ -3,6 +3,7 @@ import { api } from "../api";
 export interface NavLinkItem {
   label: string;
   href?: string;
+  short_description?: string;
   order: number;
   is_active: boolean;
   is_dropdown?: boolean;
