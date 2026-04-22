@@ -124,17 +124,20 @@ const Header = () => {
                       <ChevronDown className="w-3 h-3" />
                     </button>
                     {openDropdown === item.label && (
-                      <div className="absolute top-full left-0 bg-popover border border-border rounded-lg shadow-lg py-2 w-44 z-50">
-                        {activeChildren.map((child: any) => (
-                          <Link
-                            key={child.label}
-                            to={child.href}
-                            className="block px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-primary"
-                            onClick={() => setOpenDropdown(null)}
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
+                      <div className="absolute top-full left-0 pt-1 w-56 z-50">
+                        <div className="bg-[#042F5C] border border-white/10 rounded shadow-2xl py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                          {activeChildren.map((child: any) => (
+                            <Link
+                              key={child.label}
+                              to={child.href}
+                              className="group flex items-center justify-between px-4 py-2.5 text-[13px] font-medium text-white/90 hover:bg-white/5 hover:text-secondary transition-all"
+                              onClick={() => setOpenDropdown(null)}
+                            >
+                              <span>{child.label}</span>
+
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -330,7 +333,7 @@ const Header = () => {
                       />
                     </button>
                     {mobileExpanded === item.label && (
-                      <div className="pl-4 pb-2">
+                      <div className="pl-4  pb-2">
                         {activeChildren.map((child: any) => (
                           <Link
                             key={child.label}
