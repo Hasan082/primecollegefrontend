@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck, ClipboardList, Lock, CalendarPlus } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck, ClipboardList, Lock, CalendarPlus, User, Mail } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import CPDFinalAssessmentModal from "@/components/learner/CPDFinalAssessmentModal";
@@ -129,6 +129,9 @@ const QualificationView = () => {
   const requiresDeclaration = qualification.requires_learner_declaration !== false;
   const requiresEvaluation = qualification.requires_course_evaluation !== false;
 
+  const isStaffMissing = !enrolment.trainer || !enrolment.iqa;
+  const isLocked = isExpired || isStaffMissing;
+
   return (
     <div>
       <Link to="/learner/qualifications" className="inline-flex items-center gap-2 text-primary hover:underline mb-6 text-sm font-medium">
@@ -153,7 +156,77 @@ const QualificationView = () => {
           </span>
         </div>
         <Progress value={pct} className="h-3" />
+
+        <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+              <User className="w-3 h-3 text-primary" /> Assigned Trainer
+            </h4>
+            {enrolment.trainer ? (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground leading-none mb-1">{enrolment.trainer.name}</p>
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <Mail className="w-3 h-3" /> {enrolment.trainer.email}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 text-muted-foreground/60">
+                <div className="w-10 h-10 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center">
+                  <User className="w-5 h-5" />
+                </div>
+                <p className="text-xs italic">Awaiting Assignment</p>
+              </div>
+            )}
+          </div>
+          <div>
+            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+              <ShieldCheck className="w-3 h-3 text-blue-500" /> Internal Quality Assurer (IQA)
+            </h4>
+            {enrolment.iqa ? (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+                  <User className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground leading-none mb-1">{enrolment.iqa.name}</p>
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                    <Mail className="w-3 h-3" /> {enrolment.iqa.email}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 text-muted-foreground/60">
+                <div className="w-10 h-10 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center">
+                  <User className="w-5 h-5" />
+                </div>
+                <p className="text-xs italic">Awaiting Assignment</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {isStaffMissing && !isExpired && (
+        <div className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20">
+              <Lock className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-foreground leading-none mb-2">Staff Assignment Pending</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Your qualification access is currently restricted because a Trainer or IQA has not yet been assigned to your enrolment.
+                Unit actions will be automatically unlocked once both staff members are assigned.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isExpired && (
         <div className="mb-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
@@ -221,7 +294,7 @@ const QualificationView = () => {
 
       {showDeclaration && (
         <LearnerDeclarationModal
-          enrolmentId={id || ""}
+          enrolmentId={enrolment?.id || ""}
           isOpen={showDeclaration}
           onClose={() => setShowDeclaration(false)}
           onSuccess={() => {
@@ -260,11 +333,18 @@ const QualificationView = () => {
                 </h3>
               </div>
             </div>
-            <Button asChild variant="outline" size="sm" className="flex-shrink-0">
-              <Link to={`/learner/qualification/${id}/declaration`}>
-                View Declaration
-              </Link>
-            </Button>
+            {isLocked ? (
+              <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => isExpired ? setShowExtension(true) : null}>
+                <Lock className="h-4 w-4" />
+                {isExpired ? "Access Locked" : "Staff Pending"}
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm" className="flex-shrink-0">
+                <Link to={`/learner/qualification/${id}/declaration`}>
+                  View Declaration
+                </Link>
+              </Button>
+            )}
           </div>
         )}
 
@@ -277,19 +357,18 @@ const QualificationView = () => {
             <div key={unit.id} className="bg-card border border-border rounded-xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                    statusKey === "competent" || statusKey === "completed"
-                      ? "text-green-600"
-                      : statusKey === "pending"
+                  <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${statusKey === "competent" || statusKey === "completed"
+                    ? "text-green-600"
+                    : statusKey === "pending"
                       ? "text-amber-500"
                       : statusKey === "trainer_approved" || statusKey === "iqa_review"
-                      ? "text-blue-600"
-                      : statusKey === "resubmit" || statusKey === "not_competent"
-                      ? "text-orange-500"
-                      : statusKey === "in_progress"
-                      ? "text-primary"
-                      : "text-muted-foreground"
-                  }`} />
+                        ? "text-blue-600"
+                        : statusKey === "resubmit" || statusKey === "not_competent"
+                          ? "text-orange-500"
+                          : statusKey === "in_progress"
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                    }`} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-semibold text-foreground">
@@ -306,10 +385,10 @@ const QualificationView = () => {
                     )}
                   </div>
                 </div>
-                {isExpired ? (
-                  <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => setShowExtension(true)}>
+                {isLocked ? (
+                  <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => isExpired ? setShowExtension(true) : null}>
                     <Lock className="h-4 w-4" />
-                    Access Locked
+                    {isExpired ? "Access Locked" : "Staff Pending"}
                   </Button>
                 ) : (
                   <Button asChild size="sm" className="flex-shrink-0">
@@ -323,7 +402,7 @@ const QualificationView = () => {
           );
         })}
 
-        {requiresEvaluation && (
+        {requiresEvaluation && pct === 100 && (
           <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-4 shadow-sm mt-2">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center flex-shrink-0">
@@ -336,11 +415,18 @@ const QualificationView = () => {
                 </h3>
               </div>
             </div>
-            <Button asChild variant="outline" size="sm" className="flex-shrink-0">
-              <Link to={`/learner/qualification/${id}/evaluation`}>
-                View Evaluation
-              </Link>
-            </Button>
+            {isLocked ? (
+              <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => isExpired ? setShowExtension(true) : null}>
+                <Lock className="h-4 w-4" />
+                {isExpired ? "Access Locked" : "Staff Pending"}
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm" className="flex-shrink-0">
+                <Link to={`/learner/qualification/${id}/evaluation`}>
+                  View Evaluation
+                </Link>
+              </Button>
+            )}
           </div>
         )}
       </div>

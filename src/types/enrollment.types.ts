@@ -221,6 +221,18 @@ export interface EnrolmentOverviewResponse {
         status: string;
         access_expires_at: string | null;
         access_expired: boolean;
+        trainer?: {
+            id: string;
+            name: string;
+            email: string;
+            role: string;
+        } | null;
+        iqa?: {
+            id: string;
+            name: string;
+            email: string;
+            role: string;
+        } | null;
         qualification: {
             id: string;
             title: string;

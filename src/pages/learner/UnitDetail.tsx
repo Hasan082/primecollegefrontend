@@ -120,6 +120,7 @@ const buildEvidenceHistory = (submissions: LearnerEvidenceSubmission[]): Submiss
       files: submission.evidence_items.map((item) => ({
         name: item.title || fileNameFromUrl(item.file, "Evidence file"),
         size: "",
+        url: item.file,
       })),
       description:
         submission.evidence_items

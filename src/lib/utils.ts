@@ -22,9 +22,9 @@ export function formatPrice(price: string | number | null | undefined, currencyC
   const symbol = symbols[code] || code;
 
   // Use a space between symbol and amount for better readability in some currencies or if it's a code
-  const spacing = symbols[code] ? "" : " ";
 
-  return `${symbol}${spacing}${amount.toLocaleString(undefined, {
+
+  return `${symbol}${amount.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
