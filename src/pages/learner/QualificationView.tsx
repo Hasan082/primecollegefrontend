@@ -126,8 +126,8 @@ const QualificationView = () => {
   const allUnitsDone = total > 0 && completed === total;
   const isCpd = qualification.is_cpd;
   const isExpired = enrolment.access_expired;
-  const requiresDeclaration = qualification.requires_learner_declaration !== false;
-  const requiresEvaluation = qualification.requires_course_evaluation !== false;
+  const requiresDeclaration = qualification.requires_learner_declaration === true;
+  const requiresEvaluation = qualification.requires_course_evaluation === true;
 
   const isStaffMissing = !enrolment.trainer || !enrolment.iqa;
   const isLocked = isExpired || isStaffMissing;

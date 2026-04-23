@@ -184,7 +184,6 @@ const CourseEvaluationEditor = ({
         await updateTemplate({
           qualificationId,
           payload: {
-            qualification: qualificationId,
             title: template.title,
             description: template.description,
             questions: template.questions,
@@ -197,7 +196,6 @@ const CourseEvaluationEditor = ({
         await createTemplate({
           qualificationId,
           payload: {
-            qualification: qualificationId,
             title: template.title,
             description: template.description,
             questions: template.questions,
@@ -229,7 +227,11 @@ const CourseEvaluationEditor = ({
     );
   }
 
-  const isNotFoundError = (error as any)?.status === 404;
+  const isNotFoundError =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 404;
 
   if (error && !isNotFoundError) {
     return (

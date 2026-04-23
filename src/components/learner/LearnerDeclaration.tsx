@@ -43,63 +43,12 @@ interface DeclarationSubmission {
     typed_full_name: string;
 }
 
-const TEMPLATE_STORAGE_KEY = "admin_declaration_templates";
-const SUBMISSION_STORAGE_KEY = "learner_declaration_submissions";
-
-const DEMO_TEMPLATE: DeclarationTemplate = {
-    id: "demo-declaration",
-    qualification: "",
-    title: "Learner Declaration",
-    body_text: "By completing this declaration, you confirm that all work submitted as part of this qualification is your own and has been completed in accordance with the assessment guidelines provided.",
-    checkbox_items: [
-        { key: "own_work", label: "I confirm that all evidence submitted is my own work and has not been plagiarised." },
-        { key: "understand_criteria", label: "I understand the assessment criteria and have met all requirements." },
-        { key: "accurate_info", label: "All information provided is accurate and truthful to the best of my knowledge." },
-        { key: "terms", label: "I agree to the terms and conditions of this qualification programme." },
-    ],
-    version: 1,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-};
-
-const loadTemplate = (qualificationId: string): DeclarationTemplate => {
-    try {
-        const saved = localStorage.getItem(TEMPLATE_STORAGE_KEY);
-        if (saved) {
-            const all = JSON.parse(saved);
-            if (all[qualificationId]) return all[qualificationId];
-        }
-    } catch { }
-    return { ...DEMO_TEMPLATE, qualification: qualificationId };
-};
-
-const loadSubmission = (enrolmentId: string): DeclarationSubmission | null => {
-    try {
-        const saved = localStorage.getItem(SUBMISSION_STORAGE_KEY);
-        if (saved) {
-            const all = JSON.parse(saved);
-            return all[enrolmentId] || null;
-        }
-    } catch { }
-    return null;
-};
-
-const saveSubmission = (enrolmentId: string, submission: DeclarationSubmission) => {
-    try {
-        const saved = localStorage.getItem(SUBMISSION_STORAGE_KEY);
-        const all = saved ? JSON.parse(saved) : {};
-        all[enrolmentId] = submission;
-        localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(all));
-    } catch { }
-};
-
 const LearnerDeclaration = () => {
     const { id: enrolmentId } = useParams();
     const { toast } = useToast();
 
     // Changed: Using real API hooks
-    const { data: apiResponse, isLoading, refetch } = useGetLearnerDeclarationQuery(enrolmentId || "");
+    const { data: apiResponse, isLoading, refetch, error } = useGetLearnerDeclarationQuery(enrolmentId || "");
     const [submitDeclaration, { isLoading: isSubmitting }] = useSubmitLearnerDeclarationMutation();
 
     const [acceptedItems, setAcceptedItems] = useState<string[]>([]);
@@ -107,6 +56,11 @@ const LearnerDeclaration = () => {
 
     const template = apiResponse?.data?.template;
     const submission = apiResponse?.data?.submission;
+    const isNotFoundError =
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        error.status === 404;
 
     useEffect(() => {
         if (submission) {
@@ -127,7 +81,9 @@ const LearnerDeclaration = () => {
     if (!template) {
         return (
             <div className="text-center py-20">
-                <p className="text-muted-foreground">No declaration template found.</p>
+                <p className="text-muted-foreground">
+                    {isNotFoundError ? "This declaration has not been configured yet." : "Unable to load the declaration right now."}
+                </p>
                 <Link to={`/learner/qualification/${enrolmentId}`} className="text-primary hover:underline mt-2 inline-block">
                     Back to Qualification
                 </Link>
@@ -159,10 +115,20 @@ const LearnerDeclaration = () => {
             
             toast({ title: "Declaration submitted successfully" });
             refetch();
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const message =
+                typeof err === "object" &&
+                err !== null &&
+                "data" in err &&
+                typeof err.data === "object" &&
+                err.data !== null &&
+                "message" in err.data &&
+                typeof err.data.message === "string"
+                    ? err.data.message
+                    : "An error occurred";
             toast({
                 title: "Submission Failed",
-                description: err.data?.message || "An error occurred",
+                description: message,
                 variant: "destructive",
             });
         }

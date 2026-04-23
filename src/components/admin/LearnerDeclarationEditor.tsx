@@ -143,7 +143,6 @@ const LearnerDeclarationEditor = ({
         await updateTemplate({
           qualificationId,
           payload: {
-            qualification: qualificationId,
             title: template.title,
             body_text: template.body_text,
             checkbox_items: template.checkbox_items,
@@ -156,7 +155,6 @@ const LearnerDeclarationEditor = ({
         await createTemplate({
           qualificationId,
           payload: {
-            qualification: qualificationId,
             title: template.title,
             body_text: template.body_text,
             checkbox_items: template.checkbox_items,
@@ -188,7 +186,11 @@ const LearnerDeclarationEditor = ({
     );
   }
 
-  const isNotFoundError = (error as any)?.status === 404;
+  const isNotFoundError =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 404;
 
   if (error && !isNotFoundError) {
     return (

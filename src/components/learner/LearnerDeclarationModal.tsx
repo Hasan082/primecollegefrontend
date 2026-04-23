@@ -31,7 +31,7 @@ const LearnerDeclarationModal = ({
   onSuccess,
 }: LearnerDeclarationModalProps) => {
   const { toast } = useToast();
-  const { data: apiResponse, isLoading } = useGetLearnerDeclarationQuery(enrolmentId, { skip: !isOpen });
+  const { data: apiResponse, isLoading, error } = useGetLearnerDeclarationQuery(enrolmentId, { skip: !isOpen });
   const [submitDeclaration, { isLoading: isSubmitting }] = useSubmitLearnerDeclarationMutation();
 
   const [acceptedItems, setAcceptedItems] = useState<string[]>([]);
@@ -39,6 +39,11 @@ const LearnerDeclarationModal = ({
 
   const template = apiResponse?.data?.template;
   const submission = apiResponse?.data?.submission;
+  const isNotFoundError =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 404;
 
   useEffect(() => {
     if (submission) {
@@ -78,10 +83,20 @@ const LearnerDeclarationModal = ({
       }).unwrap();
       toast({ title: "Declaration Submitted Successfully" });
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        typeof err === "object" &&
+        err !== null &&
+        "data" in err &&
+        typeof err.data === "object" &&
+        err.data !== null &&
+        "message" in err.data &&
+        typeof err.data.message === "string"
+          ? err.data.message
+          : "An error occurred during submission.";
       toast({
         title: "Submission Failed",
-        description: err.data?.message || "An error occurred during submission.",
+        description: message,
         variant: "destructive",
       });
     }
@@ -104,6 +119,26 @@ const LearnerDeclarationModal = ({
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Loading declaration...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!isLoading && error && !isNotFoundError) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Unable to Load Declaration</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              The declaration could not be loaded right now.
+            </p>
+            <Button variant="outline" className="w-full" onClick={onClose}>
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

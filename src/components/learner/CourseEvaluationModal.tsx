@@ -32,13 +32,18 @@ const CourseEvaluationModal = ({
   onSuccess,
 }: CourseEvaluationModalProps) => {
   const { toast } = useToast();
-  const { data: apiResponse, isLoading, refetch } = useGetLearnerEvaluationQuery(enrolmentId, { skip: !isOpen });
+  const { data: apiResponse, isLoading, refetch, error } = useGetLearnerEvaluationQuery(enrolmentId, { skip: !isOpen });
   const [submitEvaluation, { isLoading: isSubmitting }] = useSubmitLearnerEvaluationMutation();
 
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, string | number>>({});
   
   const template = apiResponse?.data?.template;
   const submission = apiResponse?.data?.submission;
+  const isNotFoundError =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 404;
 
   useEffect(() => {
     if (submission) {
@@ -82,10 +87,20 @@ const CourseEvaluationModal = ({
       toast({ title: "Evaluation Submitted Successfully" });
       onSuccess?.();
       refetch();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message =
+        typeof err === "object" &&
+        err !== null &&
+        "data" in err &&
+        typeof err.data === "object" &&
+        err.data !== null &&
+        "message" in err.data &&
+        typeof err.data.message === "string"
+          ? err.data.message
+          : "An error occurred during submission.";
       toast({
         title: "Submission Failed",
-        description: err.data?.message || "An error occurred during submission.",
+        description: message,
         variant: "destructive",
       });
     }
@@ -101,6 +116,26 @@ const CourseEvaluationModal = ({
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Loading evaluation...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!isLoading && error && !isNotFoundError) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Unable to Load Evaluation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              The course evaluation could not be loaded right now.
+            </p>
+            <Button variant="outline" className="w-full" onClick={onClose}>
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
