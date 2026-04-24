@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, FileText, Loader2, ShieldAlert, Image as ImageIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Loader2,
+  ShieldAlert,
+  Image as ImageIcon,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +40,7 @@ import {
   useSubmitIqaEvidenceReviewMutation,
   useSubmitIqaWrittenReviewMutation,
 } from "@/redux/apis/iqa/iqaApi";
+import ResourceSection from "@/components/shared/ResourceSection";
 
 const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"];
 
@@ -190,16 +197,21 @@ const AssessmentReview = () => {
   const latestOpenConcern = adminConcerns[0] || null;
   const currentUnit = useMemo(
     () =>
-      enrolmentContentData?.data?.units?.find((unit) => unit.id === queueItem?.unit.id) || null,
+      enrolmentContentData?.data?.units?.find(
+        (unit) => unit.id === queueItem?.unit.id,
+      ) || null,
     [enrolmentContentData?.data?.units, queueItem?.unit.id],
   );
-  const writtenAssignmentSubmissions = writtenAssignmentData?.data?.submissions || [];
+  const writtenAssignmentSubmissions =
+    writtenAssignmentData?.data?.submissions || [];
   const writtenAttempts = useMemo(
-    () => submissionHistory.filter((item) => item.submission_type === "written"),
+    () =>
+      submissionHistory.filter((item) => item.submission_type === "written"),
     [submissionHistory],
   );
   const evidenceAttempts = useMemo(
-    () => submissionHistory.filter((item) => item.submission_type === "evidence"),
+    () =>
+      submissionHistory.filter((item) => item.submission_type === "evidence"),
     [submissionHistory],
   );
   const latestWrittenAttempt = writtenAttempts[0] || null;
@@ -208,7 +220,8 @@ const AssessmentReview = () => {
     () =>
       [...writtenAssignmentSubmissions].sort(
         (left, right) =>
-          new Date(right.submitted_at).getTime() - new Date(left.submitted_at).getTime(),
+          new Date(right.submitted_at).getTime() -
+          new Date(left.submitted_at).getTime(),
       )[0] || null,
     [writtenAssignmentSubmissions],
   );
@@ -306,6 +319,8 @@ const AssessmentReview = () => {
     );
   }
 
+  console.log("currentUnit item:", currentUnit);
+
   return (
     <div className="space-y-6">
       <Button variant="outline" size="sm" asChild>
@@ -323,7 +338,9 @@ const AssessmentReview = () => {
           </p>
         </div>
         <Badge
-          variant={getIqaWorkflowBadgeVariant(getIqaWorkflowLabel(queueItem.iqa_status))}
+          variant={getIqaWorkflowBadgeVariant(
+            getIqaWorkflowLabel(queueItem.iqa_status),
+          )}
         >
           {getIqaWorkflowLabel(queueItem.iqa_status)}
         </Badge>
@@ -356,7 +373,9 @@ const AssessmentReview = () => {
           </p>
           {queueItem.has_open_admin_concern ? (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-              <p className="font-medium text-destructive">Admin Escalation Active</p>
+              <p className="font-medium text-destructive">
+                Admin Escalation Active
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Status: {getLifecycleLabel(queueItem.admin_concern_status)}.
                 Raised{" "}
@@ -381,10 +400,16 @@ const AssessmentReview = () => {
                 <div>
                   <p className="text-sm font-semibold">Quiz</p>
                   <p className="text-xs text-muted-foreground">
-                    {currentUnit.has_quiz ? "Required for this unit" : "Not required"}
+                    {currentUnit.has_quiz
+                      ? "Required for this unit"
+                      : "Not required"}
                   </p>
                 </div>
-                <Badge variant={currentUnit.progress?.quiz_passed ? "default" : "outline"}>
+                <Badge
+                  variant={
+                    currentUnit.progress?.quiz_passed ? "default" : "outline"
+                  }
+                >
                   {currentUnit.has_quiz
                     ? currentUnit.progress?.quiz_passed
                       ? "Completed"
@@ -410,10 +435,16 @@ const AssessmentReview = () => {
                 <div>
                   <p className="text-sm font-semibold">Written Assignment</p>
                   <p className="text-xs text-muted-foreground">
-                    {currentUnit.has_written_assignment ? "Required for this unit" : "Not required"}
+                    {currentUnit.has_written_assignment
+                      ? "Required for this unit"
+                      : "Not required"}
                   </p>
                 </div>
-                <Badge variant={currentUnit.progress?.assignment_met ? "default" : "outline"}>
+                <Badge
+                  variant={
+                    currentUnit.progress?.assignment_met ? "default" : "outline"
+                  }
+                >
                   {currentUnit.has_written_assignment
                     ? currentUnit.progress?.assignment_met
                       ? "Completed"
@@ -439,10 +470,16 @@ const AssessmentReview = () => {
                 <div>
                   <p className="text-sm font-semibold">Evidence Portfolio</p>
                   <p className="text-xs text-muted-foreground">
-                    {currentUnit.requires_evidence ? "Required for this unit" : "Not required"}
+                    {currentUnit.requires_evidence
+                      ? "Required for this unit"
+                      : "Not required"}
                   </p>
                 </div>
-                <Badge variant={currentUnit.progress?.evidence_met ? "default" : "outline"}>
+                <Badge
+                  variant={
+                    currentUnit.progress?.evidence_met ? "default" : "outline"
+                  }
+                >
                   {currentUnit.requires_evidence
                     ? currentUnit.progress?.evidence_met
                       ? "Completed"
@@ -464,6 +501,10 @@ const AssessmentReview = () => {
             </div>
           </CardContent>
         </Card>
+      ) : null}
+
+      {currentUnit?.resources && currentUnit.resources.length > 0 ? (
+        <ResourceSection resources={currentUnit.resources} />
       ) : null}
 
       {isWritten && writtenSubmission && (
@@ -509,7 +550,8 @@ const AssessmentReview = () => {
             </div>
             <p className="text-sm text-muted-foreground">
               {evidenceSubmission.evidence_items.length} evidence file
-              {evidenceSubmission.evidence_items.length !== 1 ? "s" : ""} attached.
+              {evidenceSubmission.evidence_items.length !== 1 ? "s" : ""}{" "}
+              attached.
             </p>
           </CardContent>
         </Card>
@@ -528,10 +570,15 @@ const AssessmentReview = () => {
                 Attempt {latestWrittenSubmissionForUnit.submission_number}
               </Badge>
               <Badge variant="outline">
-                {getSubmissionOutcomeLabel(latestWrittenSubmissionForUnit.status)}
+                {getSubmissionOutcomeLabel(
+                  latestWrittenSubmissionForUnit.status,
+                )}
               </Badge>
               <span>
-                Submitted {new Date(latestWrittenSubmissionForUnit.submitted_at).toLocaleString()}
+                Submitted{" "}
+                {new Date(
+                  latestWrittenSubmissionForUnit.submitted_at,
+                ).toLocaleString()}
               </span>
             </div>
             <div
@@ -543,7 +590,8 @@ const AssessmentReview = () => {
               }}
             />
             <div className="text-sm text-muted-foreground">
-              Word count: {latestWrittenSubmissionForUnit.response_word_count ?? 0}
+              Word count:{" "}
+              {latestWrittenSubmissionForUnit.response_word_count ?? 0}
             </div>
             <div className="rounded-lg border bg-muted/30 p-4 text-sm">
               <p className="font-medium text-foreground">Trainer Feedback</p>
@@ -575,10 +623,14 @@ const AssessmentReview = () => {
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold">{event.label}</p>
                   <Badge variant="outline">
-                    {event.value ? new Date(event.value).toLocaleString() : "Pending"}
+                    {event.value
+                      ? new Date(event.value).toLocaleString()
+                      : "Pending"}
                   </Badge>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{event.description}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {event.description}
+                </p>
               </div>
             ))}
           </CardContent>
@@ -597,8 +649,12 @@ const AssessmentReview = () => {
                       key={criterion.code}
                       className="rounded-lg border p-3 text-sm"
                     >
-                      <p className="font-semibold text-foreground">{criterion.code}</p>
-                      <p className="text-muted-foreground">{criterion.description}</p>
+                      <p className="font-semibold text-foreground">
+                        {criterion.code}
+                      </p>
+                      <p className="text-muted-foreground">
+                        {criterion.description}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -612,7 +668,8 @@ const AssessmentReview = () => {
                 <div className="rounded-lg border p-3">
                   <p className="font-semibold">Assignment Title</p>
                   <p className="text-muted-foreground">
-                    {writtenSubmission.assignment_snapshot?.title || writtenSubmission.title}
+                    {writtenSubmission.assignment_snapshot?.title ||
+                      writtenSubmission.title}
                   </p>
                 </div>
                 <div className="rounded-lg border p-3">
@@ -624,7 +681,9 @@ const AssessmentReview = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No criteria metadata available.</p>
+              <p className="text-sm text-muted-foreground">
+                No criteria metadata available.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -647,14 +706,18 @@ const AssessmentReview = () => {
                     <div className="flex w-full flex-wrap items-center justify-between gap-3 pr-4 text-left">
                       <div>
                         <p className="text-sm font-semibold">
-                          Attempt {historyItem.submission_number} · {getSubmissionTypeLabel(historyItem.submission_type)}
+                          Attempt {historyItem.submission_number} ·{" "}
+                          {getSubmissionTypeLabel(historyItem.submission_type)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Submitted {new Date(historyItem.submitted_at).toLocaleString()}
+                          Submitted{" "}
+                          {new Date(historyItem.submitted_at).toLocaleString()}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">{getSubmissionOutcomeLabel(historyItem.status)}</Badge>
+                        <Badge variant="outline">
+                          {getSubmissionOutcomeLabel(historyItem.status)}
+                        </Badge>
                         {historyItem.iqa_decision ? (
                           <Badge variant="secondary">
                             {getIqaDecisionLabel(historyItem.iqa_decision)}
@@ -667,11 +730,15 @@ const AssessmentReview = () => {
                     <div className="grid gap-3 lg:grid-cols-2">
                       {historyItem.submission_type === "written" ? (
                         <div className="rounded-lg border p-3 text-sm lg:col-span-2">
-                          <p className="font-medium text-foreground">Learner Submission</p>
+                          <p className="font-medium text-foreground">
+                            Learner Submission
+                          </p>
                           <div
                             className="prose prose-sm mt-2 max-w-none text-foreground"
                             dangerouslySetInnerHTML={{
-                              __html: historyItem.response_html || "<p>No written response recorded.</p>",
+                              __html:
+                                historyItem.response_html ||
+                                "<p>No written response recorded.</p>",
                             }}
                           />
                           <p className="mt-2 text-xs text-muted-foreground">
@@ -680,15 +747,19 @@ const AssessmentReview = () => {
                         </div>
                       ) : null}
                       <div className="rounded-lg bg-muted/30 p-3 text-sm">
-                        <p className="font-medium text-foreground">Trainer Feedback</p>
+                        <p className="font-medium text-foreground">
+                          Trainer Feedback
+                        </p>
                         <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
-                          {historyItem.assessor_feedback || "No trainer feedback recorded."}
+                          {historyItem.assessor_feedback ||
+                            "No trainer feedback recorded."}
                         </p>
                       </div>
                       <div className="rounded-lg bg-muted/30 p-3 text-sm">
                         <p className="font-medium text-foreground">IQA Notes</p>
                         <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
-                          {historyItem.iqa_review_notes || "No IQA notes recorded."}
+                          {historyItem.iqa_review_notes ||
+                            "No IQA notes recorded."}
                         </p>
                       </div>
                     </div>
@@ -700,16 +771,22 @@ const AssessmentReview = () => {
                         </p>
                       </div>
                       <div className="rounded-lg border p-3 text-sm">
-                        <p className="font-medium text-foreground">IQA Reviewer</p>
+                        <p className="font-medium text-foreground">
+                          IQA Reviewer
+                        </p>
                         <p className="mt-1 text-muted-foreground">
                           {historyItem.iqa_reviewer?.name || "Not recorded"}
                         </p>
                       </div>
                       <div className="rounded-lg border p-3 text-sm">
-                        <p className="font-medium text-foreground">Reviewed At</p>
+                        <p className="font-medium text-foreground">
+                          Reviewed At
+                        </p>
                         <p className="mt-1 text-muted-foreground">
                           {historyItem.iqa_reviewed_at
-                            ? new Date(historyItem.iqa_reviewed_at).toLocaleString()
+                            ? new Date(
+                                historyItem.iqa_reviewed_at,
+                              ).toLocaleString()
                             : "Pending"}
                         </p>
                       </div>
@@ -732,9 +809,13 @@ const AssessmentReview = () => {
               <div key={item.id} className="rounded-lg border p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-foreground">{item.title}</p>
+                    <p className="font-semibold text-foreground">
+                      {item.title}
+                    </p>
                     {item.description ? (
-                      <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {item.description}
+                      </p>
                     ) : null}
                   </div>
                   <a
@@ -773,7 +854,11 @@ const AssessmentReview = () => {
                 {item.criteria.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {item.criteria.map((criterion) => (
-                      <Badge key={criterion.id} variant="outline" className="text-xs">
+                      <Badge
+                        key={criterion.id}
+                        variant="outline"
+                        className="text-xs"
+                      >
                         {criterion.code}
                       </Badge>
                     ))}
@@ -861,7 +946,9 @@ const AssessmentReview = () => {
           <CardContent className="space-y-4">
             {latestOpenConcern ? (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
-                <p className="font-semibold text-destructive">Latest Escalation State</p>
+                <p className="font-semibold text-destructive">
+                  Latest Escalation State
+                </p>
                 <p className="mt-2 text-muted-foreground">
                   Current status: {getLifecycleLabel(latestOpenConcern.status)}.
                 </p>
@@ -873,7 +960,10 @@ const AssessmentReview = () => {
               </div>
             ) : null}
             {adminConcerns.map((concern: any) => (
-              <div key={concern.id} className="rounded-lg border p-4 space-y-2 text-sm">
+              <div
+                key={concern.id}
+                className="rounded-lg border p-4 space-y-2 text-sm"
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <strong>Status:</strong>
                   <Badge variant="outline">
@@ -884,7 +974,8 @@ const AssessmentReview = () => {
                   <strong>Concern:</strong> {concern.concern_note}
                 </p>
                 <p>
-                  <strong>Raised By:</strong> {concern.raised_by?.name || "Unknown"}
+                  <strong>Raised By:</strong>{" "}
+                  {concern.raised_by?.name || "Unknown"}
                 </p>
                 <p>
                   <strong>Raised At:</strong>{" "}
@@ -894,7 +985,8 @@ const AssessmentReview = () => {
                 </p>
                 {concern.admin_response_note ? (
                   <p className="whitespace-pre-wrap">
-                    <strong>Admin Response:</strong> {concern.admin_response_note}
+                    <strong>Admin Response:</strong>{" "}
+                    {concern.admin_response_note}
                   </p>
                 ) : null}
               </div>

@@ -202,7 +202,7 @@ const UnitDetail = () => {
   } = useGetLearnerWrittenAssignmentQuery(
     { enrolmentId: resolvedEnrolmentId, unitId: resolvedUnitId },
     {
-      skip: !resolvedEnrolmentId || !resolvedUnitId || !unit?.has_written_assignment,
+      skip: !resolvedEnrolmentId || !resolvedUnitId || !unit?.written_assignment_summary?.enabled,
     }
   );
 
@@ -271,6 +271,7 @@ const UnitDetail = () => {
       ? evidenceRequirements
       : ["Standard unit criteria implementation evidence"];
   const evidenceSetupMissing = Boolean(unit.requires_evidence && !isLoadingEvidence && (evidenceError || !evidenceConfig));
+  const hasWrittenAssignmentEnabled = Boolean(unit.written_assignment_summary.enabled);
   const isQuizAwaitingTrainerReview =
     !unit.quiz_summary.passed &&
     unit.quiz_summary.attempts_used > 0 &&
@@ -342,7 +343,7 @@ const UnitDetail = () => {
             </p>
           </div>
           <ResourceSection resources={unit.resources} />
-          {!qualification.is_cpd && (unit.has_quiz || unit.has_written_assignment) && (
+          {!qualification.is_cpd && (unit.has_quiz || hasWrittenAssignmentEnabled) && (
             <div className="bg-card border border-border rounded-xl p-6">
               <h3 className="text-base font-bold text-primary mb-1">Assignments</h3>
               <p className="text-sm text-muted-foreground mb-5">
@@ -406,7 +407,7 @@ const UnitDetail = () => {
                   </div>
                 )}
 
-                {unit.has_written_assignment && (
+                {hasWrittenAssignmentEnabled && (
                   <div className="border border-border rounded-xl overflow-hidden">
                     <button
                       onClick={() => setActiveAssignment(activeAssignment === "written" ? null : "written")}
@@ -596,7 +597,7 @@ const UnitDetail = () => {
                     <span className="text-sm text-foreground">Quiz passed</span>
                   </div>
                 )}
-                {unit.has_written_assignment && (
+                {hasWrittenAssignmentEnabled && (
                   <div className="flex items-center gap-2">
                     {writtenSubmitted ? (
                       <CheckCircle2 className="w-4 h-4 text-green-600" />

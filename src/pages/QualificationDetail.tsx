@@ -260,7 +260,7 @@ const QualificationDetail = () => {
     );
   }
 
-  if (detailPagePublished === false) {
+  if (detailPagePublished !== true) {
     return <NotFound />;
   }
 
@@ -316,7 +316,9 @@ const QualificationDetail = () => {
           ? {
             ...block,
             data: {
-              ...(block.data as any),
+              ...(typeof block.data === "object" && block.data !== null
+                ? block.data
+                : {}),
               items: blogItems,
             },
           }
@@ -324,7 +326,7 @@ const QualificationDetail = () => {
       )
     : [];
 
-  const hasCmsBody = detailPagePublished !== false && bodyBlocks.length > 0;
+  const hasCmsBody = detailPagePublished === true && bodyBlocks.length > 0;
   const alreadyInCart = isInCart(qualification.slug);
 
   return (

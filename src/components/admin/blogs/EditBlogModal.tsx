@@ -20,6 +20,7 @@ import {
   useGetBlogQuery,
   usePatchBlogMutation,
 } from "@/redux/apis/blogs/blogApi";
+import { getBlogErrorMessage } from "@/components/admin/blogs/blogErrorMessage";
 import { sanitizeRichHtml } from "@/utils/sanitizeRichHtml";
 
 interface EditBlogModalProps {
@@ -176,10 +177,13 @@ const EditBlogModal = ({
         description: "Your changes have been saved successfully.",
       });
       closeModal();
-    } catch {
+    } catch (error) {
       toast({
         title: "Unable to update blog",
-        description: "Please review the form and try again.",
+        description: getBlogErrorMessage(
+          error,
+          "Please review the form and try again.",
+        ),
         variant: "destructive",
       });
     }

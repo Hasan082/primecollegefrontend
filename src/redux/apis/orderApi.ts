@@ -32,6 +32,7 @@ export interface CheckoutOnlineResponse {
       discount_total: string;
       grand_total: string;
       currency: string;
+      currency_symbol: string;
       items: Array<{
         id: string;
         qualification: string;
@@ -128,12 +129,13 @@ export interface PublicOrderStatusResponse {
     status: string;
     status_label: string;
     status_view: "pending" | "processing" | "paid" | "failed" | "cancelled" | "refunded";
-    status_message: string;
-    is_terminal: boolean;
-    poll_recommended_seconds: number | null;
-    payment_method: string;
-    currency: string;
-    grand_total: string;
+      status_message: string;
+      is_terminal: boolean;
+      poll_recommended_seconds: number | null;
+      payment_method: string;
+      currency: string;
+      currency_symbol: string;
+      grand_total: string;
     paid_at: string | null;
     items: Array<{
       qualification_id: string;

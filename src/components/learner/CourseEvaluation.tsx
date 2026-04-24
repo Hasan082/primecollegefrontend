@@ -46,58 +46,6 @@ interface EvaluationSubmission {
     answers: Record<string, string | number>;
 }
 
-const TEMPLATE_STORAGE_KEY = "admin_evaluation_templates";
-const SUBMISSION_STORAGE_KEY = "learner_evaluation_submissions";
-
-const DEMO_TEMPLATE: EvaluationTemplate = {
-    id: "demo-evaluation",
-    qualification: "",
-    title: "Course Evaluation",
-    description: "Thank you for completing this qualification. Please take a moment to provide your feedback. Your responses help us improve the quality of our programmes.",
-    questions: [
-        { key: "overall_rating", label: "How would you rate the course overall?", type: "rating", required: true },
-        { key: "content_quality", label: "How would you rate the quality of the learning materials?", type: "rating", required: true },
-        { key: "platform_experience", label: "How would you rate your experience using the platform?", type: "rating", required: true },
-        { key: "would_recommend", label: "Would you recommend this course to others?", type: "single_choice", required: true, options: ["Yes", "No", "Maybe"] },
-        { key: "final_comments", label: "Any additional comments or suggestions?", type: "textarea", required: false, placeholder: "Share your thoughts..." },
-    ],
-    version: 1,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-};
-
-const loadTemplate = (qualificationId: string): EvaluationTemplate => {
-    try {
-        const saved = localStorage.getItem(TEMPLATE_STORAGE_KEY);
-        if (saved) {
-            const all = JSON.parse(saved);
-            if (all[qualificationId]) return all[qualificationId];
-        }
-    } catch { }
-    return { ...DEMO_TEMPLATE, qualification: qualificationId };
-};
-
-const loadSubmission = (enrolmentId: string): EvaluationSubmission | null => {
-    try {
-        const saved = localStorage.getItem(SUBMISSION_STORAGE_KEY);
-        if (saved) {
-            const all = JSON.parse(saved);
-            return all[enrolmentId] || null;
-        }
-    } catch { }
-    return null;
-};
-
-const saveSubmission = (enrolmentId: string, submission: EvaluationSubmission) => {
-    try {
-        const saved = localStorage.getItem(SUBMISSION_STORAGE_KEY);
-        const all = saved ? JSON.parse(saved) : {};
-        all[enrolmentId] = submission;
-        localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(all));
-    } catch { }
-};
-
 const StarRating = ({
     value,
     onChange,
@@ -133,13 +81,18 @@ const CourseEvaluation = () => {
     const { toast } = useToast();
 
     // Changed: Using real API hooks
-    const { data: apiResponse, isLoading, refetch } = useGetLearnerEvaluationQuery(enrolmentId || "");
+    const { data: apiResponse, isLoading, refetch, error } = useGetLearnerEvaluationQuery(enrolmentId || "");
     const [submitEvaluation, { isLoading: isSubmitting }] = useSubmitLearnerEvaluationMutation();
 
-    const [answers, setAnswers] = useState<Record<string, any>>({});
+    const [answers, setAnswers] = useState<Record<string, string | number>>({});
 
     const template = apiResponse?.data?.template;
     const submission = apiResponse?.data?.submission;
+    const isNotFoundError =
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        error.status === 404;
 
     useEffect(() => {
         if (submission) {
@@ -159,7 +112,9 @@ const CourseEvaluation = () => {
     if (!template) {
         return (
             <div className="text-center py-20">
-                <p className="text-muted-foreground">No course evaluation template found.</p>
+                <p className="text-muted-foreground">
+                    {isNotFoundError ? "This course evaluation has not been configured yet." : "Unable to load the course evaluation right now."}
+                </p>
                 <Link to={`/learner/qualification/${enrolmentId}`} className="text-primary hover:underline mt-2 inline-block">
                     Back to Qualification
                 </Link>
@@ -167,7 +122,7 @@ const CourseEvaluation = () => {
         );
     }
 
-    const setAnswer = (key: string, value: any) => {
+    const setAnswer = (key: string, value: string | number) => {
         if (submission) return;
         setAnswers((prev) => ({ ...prev, [key]: value }));
     };
@@ -189,10 +144,20 @@ const CourseEvaluation = () => {
             
             toast({ title: "Course evaluation submitted successfully" });
             refetch();
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const message =
+                typeof err === "object" &&
+                err !== null &&
+                "data" in err &&
+                typeof err.data === "object" &&
+                err.data !== null &&
+                "message" in err.data &&
+                typeof err.data.message === "string"
+                    ? err.data.message
+                    : "An error occurred";
             toast({
                 title: "Submission Failed",
-                description: err.data?.message || "An error occurred",
+                description: message,
                 variant: "destructive",
             });
         }

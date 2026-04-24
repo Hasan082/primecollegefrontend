@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   useCreateQualificationMainMutation,
   useGetQualificationMainQuery,
+  usePresignQualificationImageUploadMutation,
   useUpdateQualificationMainMutation,
 } from "@/redux/apis/qualification/qualificationMainApi";
 import { handleResponse } from "@/utils/handleResponse";
@@ -73,6 +74,17 @@ const normalizeSelectValue = (value: unknown) =>
 type QualificationMainDraft = {
   values: QualificationMainFormValues;
   clearFeaturedImage: boolean;
+}
+
+type QualificationPayload = Omit<QualificationMainFormValues, "featured_image"> & {
+  featured_image_key?: string;
+  clear_featured_image?: boolean;
+};
+
+type PresignResponse = {
+  key: string;
+  upload_url: string;
+  fields: Record<string, string>;
 };
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
@@ -166,29 +178,29 @@ const STATUS_OPTIONS: {
   label: string;
   color: string;
 }[] = [
-  { value: "draft", label: "Draft", color: "bg-yellow-100 text-yellow-800" },
-  { value: "active", label: "Active", color: "bg-green-100 text-green-800" },
-  { value: "inactive", label: "Inactive", color: "bg-red-100 text-red-800" },
-  { value: "archived", label: "Archived", color: "bg-gray-100 text-gray-700" },
-];
+    { value: "draft", label: "Draft", color: "bg-yellow-100 text-yellow-800" },
+    { value: "active", label: "Active", color: "bg-green-100 text-green-800" },
+    { value: "inactive", label: "Inactive", color: "bg-red-100 text-red-800" },
+    { value: "archived", label: "Archived", color: "bg-gray-100 text-gray-700" },
+  ];
 const BOOLEAN_FIELDS: {
   name: "is_session" | "is_active";
   label: string;
   description: string;
 }[] = [
-  {
-    name: "is_session",
-    label: "Session-based",
-    description:
-      "Enable if this qualification is delivered through scheduled sessions",
-  },
-  {
-    name: "is_active",
-    label: "Active",
-    description:
-      "Inactive qualifications are hidden from learners and enrolment",
-  },
-];
+    {
+      name: "is_session",
+      label: "Session-based",
+      description:
+        "Enable if this qualification is delivered through scheduled sessions",
+    },
+    {
+      name: "is_active",
+      label: "Active",
+      description:
+        "Inactive qualifications are hidden from learners and enrolment",
+    },
+  ];
 
 const defaultValues: Partial<QualificationMainFormValues> = {
   title: "",
@@ -299,6 +311,7 @@ const QualificationMain = () => {
   const { toast } = useToast();
   const isEditMode = Boolean(qualificationId);
   const [createQualificationMain] = useCreateQualificationMainMutation();
+  const [presignQualificationImageUpload] = usePresignQualificationImageUploadMutation();
   const [updateQualificationMain] = useUpdateQualificationMainMutation();
 
   const { data: awardingBodiesData } = useGetAwardingBodiesQuery(null);
@@ -414,36 +427,58 @@ const QualificationMain = () => {
     });
   }, [clearFeaturedImage, draftKey, form]);
 
-  // ── Build FormData ────────────────────────────────────────────────────────
-  const buildFormData = (values: QualificationMainFormValues): FormData => {
-    const fd = new FormData();
+  const uploadFeaturedImage = async (file: File): Promise<string> => {
+    const presignResult = await presignQualificationImageUpload({
+      file_name: file.name,
+      content_type: file.type,
+    }).unwrap();
 
-    if (values.featured_image instanceof File) {
-      fd.append("featured_image", values.featured_image);
-    }
-    if (clearFeaturedImage) {
-      fd.append("clear_featured_image", "true");
-    }
+    const presign = presignResult?.data as PresignResponse;
+    const formData = new FormData();
 
-    const { featured_image, ...rest } = values;
+    Object.entries(presign.fields).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+    formData.append("file", file);
 
-    (Object.entries(rest) as [string, unknown][]).forEach(([key, val]) => {
-      if (val === undefined || val === null || val === "") return;
-      fd.append(key, String(val));
+    const uploadResponse = await fetch(presign.upload_url, {
+      method: "POST",
+      body: formData,
     });
 
-    return fd;
+    if (!uploadResponse.ok) {
+      throw new Error("Direct image upload to S3 failed.");
+    }
+
+    return presign.key;
+  };
+
+  const buildPayload = async (
+    values: QualificationMainFormValues,
+  ): Promise<QualificationPayload> => {
+    const payload: QualificationPayload = { ...values };
+    delete (payload as { featured_image?: File | null }).featured_image;
+
+    if (clearFeaturedImage) {
+      payload.clear_featured_image = true;
+    }
+
+    if (values.featured_image instanceof File) {
+      payload.featured_image_key = await uploadFeaturedImage(values.featured_image);
+    }
+
+    return payload;
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit = async (values: QualificationMainFormValues) => {
-    const formData = buildFormData(values);
+    const payload = await buildPayload(values);
 
     if (isEditMode) {
       const [data, error] = await TryCatch(
         updateQualificationMain({
           id: qualificationId,
-          payload: formData,
+          payload,
         }).unwrap(),
       );
 
@@ -468,7 +503,7 @@ const QualificationMain = () => {
       });
     } else {
       const [data, error] = await TryCatch(
-        createQualificationMain(formData).unwrap(),
+        createQualificationMain(payload).unwrap(),
       );
 
       const result = handleResponse({

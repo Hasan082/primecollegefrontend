@@ -17,6 +17,7 @@ import {
   useCreateBlogMutation,
   useGetBlogCategoriesQuery,
 } from "@/redux/apis/blogs/blogApi";
+import { getBlogErrorMessage } from "@/components/admin/blogs/blogErrorMessage";
 import { sanitizeRichHtml } from "@/utils/sanitizeRichHtml";
 
 interface CreateBlogModalProps {
@@ -138,10 +139,13 @@ const CreateBlogModal = ({ isModalOpen, closeModal }: CreateBlogModalProps) => {
         description: "The new blog post has been added successfully.",
       });
       closeModal();
-    } catch {
+    } catch (error) {
       toast({
         title: "Unable to create blog",
-        description: "Please review the form and try again.",
+        description: getBlogErrorMessage(
+          error,
+          "Please review the form and try again.",
+        ),
         variant: "destructive",
       });
     }

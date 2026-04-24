@@ -2,6 +2,13 @@ import { api } from "../../api";
 
 const qualificationMainApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    presignQualificationImageUpload: builder.mutation({
+      query: (payload) => ({
+        url: "/api/qualification/admin/uploads/presign-image/",
+        method: "POST",
+        body: payload,
+      }),
+    }),
     createQualificationMain: builder.mutation({
       query: (payload) => ({
         url: "/api/qualification/admin/",
@@ -37,6 +44,7 @@ const qualificationMainApi = api.injectEndpoints({
 });
 
 export const {
+  usePresignQualificationImageUploadMutation,
   useCreateQualificationMainMutation,
   useUpdateQualificationMainMutation,
   useGetQualificationMainQuery,

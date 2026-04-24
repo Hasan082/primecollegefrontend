@@ -55,7 +55,11 @@ export const sanitizeRichHtml = (input: string) => {
   if (!input.trim()) return "";
   if (typeof window === "undefined") return input;
 
-  return DOMPurify.sanitize(input, {
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = input;
+  const decoded = textarea.value;
+
+  return DOMPurify.sanitize(decoded, {
     ALLOWED_TAGS: [...ALLOWED_TAGS],
     ALLOWED_ATTR: [...ALLOWED_ATTR],
   });
