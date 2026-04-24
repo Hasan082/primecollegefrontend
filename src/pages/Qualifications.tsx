@@ -7,6 +7,8 @@ import QualificationCard from "@/components/QualificationCard";
 import Section from "@/components/Section";
 import { useGetQualificationsQuery } from "@/redux/apis/qualificationApi";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useGetLevelsQuery } from "@/redux/apis/qualification/qualificationSupportApi";
+import { useGetCategoriesQuery } from "@/redux/apis/qualification/qualificationSupportApi";
 
 const Qualifications = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,8 +24,9 @@ const Qualifications = () => {
   };
 
   const hasActiveFilters = Boolean(
-    filters.search || filters.category || filters.level || filters.ordering || filters.delivery_mode,
+    filters.search || filters.category || filters.level || filters.ordering || filters.delivery_mode
   );
+
 
   const resetFilters = () => {
     setSearchParams({});
@@ -31,34 +34,14 @@ const Qualifications = () => {
   };
 
   const { data, isLoading, isFetching } = useGetQualificationsQuery(filters);
-  const { data: allQualifications } = useGetQualificationsQuery();
+  const { data: categoriesData } = useGetCategoriesQuery({});
+  const { data: levelsData} = useGetLevelsQuery({});
+
+  const categories = categoriesData?.data|| [];
+  const levels = levelsData?.data || [];
+
 
   const results = data?.data?.results ?? [];
-  const optionSource = allQualifications?.data?.results ?? results;
-
-  const categories = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          optionSource
-            .filter((item) => item.category?.slug)
-            .map((item) => [item.category!.slug!, item.category!]),
-        ).values(),
-      ),
-    [optionSource],
-  );
-
-  const levels = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          optionSource
-            .filter((item) => item.level?.slug)
-            .map((item) => [item.level!.slug!, item.level!]),
-        ).values(),
-      ),
-    [optionSource],
-  );
 
 
 

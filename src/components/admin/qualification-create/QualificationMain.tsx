@@ -87,6 +87,8 @@ type PresignResponse = {
   fields: Record<string, string>;
 };
 
+
+
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
 const qualificationMainSchema = z.object({

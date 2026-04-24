@@ -24,9 +24,19 @@ const getRefreshToken = () => getCookie("refresh");
 const baseQuery = fetchBaseQuery({
   baseUrl: appConfig.API_BASE_URL,
   credentials: "include",
-  prepareHeaders: (headers) => {
+  prepareHeaders: (headers, { type, forced, endpoint, extra, getState, arg }) => {
+    void type;
+    void forced;
+    void endpoint;
+    void extra;
+    void getState;
+    const method =
+      typeof arg === "string"
+        ? "GET"
+        : (arg?.method || "GET").toUpperCase();
+    const needsCsrf = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
     const csrfToken = getCsrfToken();
-    if (csrfToken) {
+    if (needsCsrf && csrfToken) {
       headers.set("X-CSRFToken", csrfToken);
     }
     return headers;
