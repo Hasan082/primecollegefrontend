@@ -88,6 +88,9 @@ const TrainerManagement = lazy(() => import("./pages/admin/TrainerManagement"));
 const ProgressMonitoring = lazy(
   () => import("./pages/admin/ProgressMonitoring"),
 );
+const SubmissionConcerns = lazy(
+  () => import("./pages/admin/SubmissionConcerns"),
+);
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const PageManagement = lazy(() => import("./pages/admin/PageManagement"));
 const PageEditor = lazy(() => import("./pages/admin/PageEditor"));
@@ -248,6 +251,10 @@ const App = () => {
                       element={<ExtensionPlanManagement />}
                     />
                     <Route path="progress" element={<ProgressMonitoring />} />
+                    <Route
+                      path="submission-concerns"
+                      element={<SubmissionConcerns />}
+                    />
                     <Route path="reports" element={<Reports />} />
                     <Route
                       path="question-bank"

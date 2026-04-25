@@ -15,6 +15,7 @@ interface EvidenceUploadFormProps {
   unitId: string;
   onSuccess?: () => void;
   isLocked?: boolean;
+  mode?: "initial" | "resubmission";
 }
 
 const ALLOWED_EVIDENCE_EXTENSIONS = new Set([
@@ -73,7 +74,14 @@ const getExtension = (fileName: string) => {
   return index >= 0 ? fileName.slice(index).toLowerCase() : "";
 };
 
-const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLocked }: EvidenceUploadFormProps) => {
+const EvidenceUploadForm = ({
+  requirements,
+  enrolmentId,
+  unitId,
+  onSuccess,
+  isLocked,
+  mode = "initial",
+}: EvidenceUploadFormProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [description, setDescription] = useState("");
   const [linkedCriteria, setLinkedCriteria] = useState<string[]>([]);
@@ -158,8 +166,11 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
       setDeclarationChecked(false);
 
       toast({
-        title: "Evidence Submitted",
-        description: "Your evidence has been uploaded and submitted for assessment.",
+        title: mode === "resubmission" ? "Revised Evidence Submitted" : "Evidence Submitted",
+        description:
+          mode === "resubmission"
+            ? "Your revised evidence has been uploaded and resubmitted for assessment."
+            : "Your evidence has been uploaded and submitted for assessment.",
       });
 
       if (onSuccess) onSuccess();
@@ -181,8 +192,14 @@ const EvidenceUploadForm = ({ requirements, enrolmentId, unitId, onSuccess, isLo
 
   return (
     <div className="bg-card border border-border rounded-xl p-6">
-      <h3 className="text-base font-bold text-primary mb-1">Upload Evidence</h3>
-      <p className="text-sm text-muted-foreground mb-5">Upload your completed evidence with a description and link to assessment criteria</p>
+      <h3 className="text-base font-bold text-primary mb-1">
+        {mode === "resubmission" ? "Upload Revised Evidence" : "Upload Evidence"}
+      </h3>
+      <p className="text-sm text-muted-foreground mb-5">
+        {mode === "resubmission"
+          ? "Upload your revised evidence with an updated description and linked assessment criteria."
+          : "Upload your completed evidence with a description and link to assessment criteria"}
+      </p>
 
       <div className="space-y-4">
         <div>

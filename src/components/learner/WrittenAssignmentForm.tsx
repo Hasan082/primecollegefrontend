@@ -16,6 +16,7 @@ interface WrittenAssignmentFormProps {
   maxWords?: number;
   onSuccess?: () => void;
   isLocked?: boolean;
+  mode?: "initial" | "resubmission";
 }
 
 const stripHtml = (value: string) =>
@@ -32,6 +33,7 @@ const WrittenAssignmentForm = ({
   maxWords,
   onSuccess,
   isLocked,
+  mode = "initial",
 }: WrittenAssignmentFormProps) => {
   const [responseHtml, setResponseHtml] = useState("");
   const [declarationChecked, setDeclarationChecked] = useState(false);
@@ -72,8 +74,11 @@ const WrittenAssignmentForm = ({
       setResponseHtml("");
       setDeclarationChecked(false);
       toast({
-        title: "Written Assignment Submitted",
-        description: `${title || "Assignment"} has been submitted for assessment.`,
+        title: mode === "resubmission" ? "Revised Assignment Submitted" : "Written Assignment Submitted",
+        description:
+          mode === "resubmission"
+            ? `${title || "Assignment"} has been resubmitted for assessment.`
+            : `${title || "Assignment"} has been submitted for assessment.`,
       });
       onSuccess?.();
     } catch (err: any) {
@@ -133,7 +138,11 @@ const WrittenAssignmentForm = ({
       <div className="flex justify-end">
         <Button onClick={handleSubmit} disabled={isSubmitting || !declarationChecked} className="gap-2">
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FilePenLine className="w-4 h-4" />}
-          {isSubmitting ? "Submitting..." : "Submit Written Assignment"}
+          {isSubmitting
+            ? "Submitting..."
+            : mode === "resubmission"
+              ? "Submit Revised Assignment"
+              : "Submit Written Assignment"}
         </Button>
       </div>
     </div>

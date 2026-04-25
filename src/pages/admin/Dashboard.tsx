@@ -246,7 +246,7 @@ const AdminDashboard = () => {
                 <p className="text-xs text-muted-foreground">Flagged by Internal Quality Assurer for compliance review</p>
               </div>
             </div>
-            <Link to="/admin/reports" className="text-sm text-primary hover:underline font-medium">Review →</Link>
+            <Link to="/admin/submission-concerns?status=open" className="text-sm text-primary hover:underline font-medium">Review →</Link>
           </CardContent>
         </Card>
       )}

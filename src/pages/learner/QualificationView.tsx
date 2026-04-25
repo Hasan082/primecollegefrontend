@@ -62,6 +62,11 @@ const getUnitStatusKey = (unit: EnrolmentOverviewUnit): string => {
 const getUnitDisplayStatus = (unit: EnrolmentOverviewUnit) => {
   const statusKey = getUnitStatusKey(unit);
   const display = statusConfig[statusKey] || statusConfig.not_started;
+
+  if (statusKey === "resubmit" || statusKey === "not_competent") {
+    return display;
+  }
+
   const lifecycleLabel = getLifecycleLabel(unit.display_status || statusKey);
 
   if (lifecycleLabel === "Awaiting IQA") {
@@ -74,11 +79,7 @@ const getUnitDisplayStatus = (unit: EnrolmentOverviewUnit) => {
     return statusConfig.pending;
   }
   if (lifecycleLabel === "Action Required") {
-    return {
-      label: "Resubmission Required",
-      color: "bg-orange-500 text-white",
-      icon: AlertTriangle,
-    };
+    return display;
   }
 
   return display;

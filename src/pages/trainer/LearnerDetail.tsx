@@ -22,7 +22,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetTrainerEnrolmentContentQuery } from "@/redux/apis/trainer/trainerReviewApi";
-import { getLifecycleLabel } from "@/lib/iqaStatus";
 
 const statusConfig: Record<string, { className: string; icon: typeof CheckCircle }> = {
   competent: { className: "bg-green-600 text-white", icon: CheckCircle },
@@ -37,13 +36,46 @@ const statusConfig: Record<string, { className: string; icon: typeof CheckCircle
 };
 
 function getUnitBadge(unit: {
+  has_quiz: boolean;
+  has_written_assignment: boolean;
+  requires_evidence: boolean;
   progress: { status: string; competency_status?: string | null } | null;
 }) {
   const key =
     unit.progress?.competency_status ||
     unit.progress?.status ||
     "not_started";
-  return statusConfig[key] || statusConfig.not_started;
+
+  if (key === "pending") {
+    return { ...statusConfig.pending, label: "Awaiting Assessment" };
+  }
+  if (key === "iqa_review") {
+    return { ...statusConfig.iqa_review, label: "Awaiting IQA" };
+  }
+  if (key === "resubmit") {
+    return { ...statusConfig.resubmit, label: "Resubmission Required" };
+  }
+  if (key === "not_competent") {
+    return {
+      className: "bg-orange-500 text-white",
+      icon: XCircle,
+      label: "Not Yet Competent",
+    };
+  }
+  if (key === "trainer_approved") {
+    return { ...statusConfig.trainer_approved, label: "Completed" };
+  }
+  if (key === "competent" || key === "completed") {
+    return { ...statusConfig.completed, label: "Competent" };
+  }
+  if (key === "in_progress") {
+    return { ...statusConfig.in_progress, label: "In Progress" };
+  }
+  if (key === "not_started") {
+    return { ...statusConfig.not_started, label: "Not Started" };
+  }
+
+  return { ...(statusConfig[key] || statusConfig.not_started), label: "Not Started" };
 }
 
 function getOverallProgress(units: Array<{ progress: { status: string } | null }>) {
@@ -177,6 +209,10 @@ const LearnerDetail = () => {
             {enrolment.units.map((unit) => {
               const config = getUnitBadge(unit);
               const Icon = config.icon;
+              const actionLabel =
+                unit.has_quiz || unit.has_written_assignment || unit.requires_evidence
+                  ? "Manage"
+                  : "View";
               return (
                 <TableRow
                   key={unit.id}
@@ -188,9 +224,7 @@ const LearnerDetail = () => {
                   <TableCell>
                     <Badge className={`${config.className} text-xs gap-1`}>
                       <Icon className="w-3 h-3" />
-                      {getLifecycleLabel(
-                        unit.progress?.competency_status || unit.progress?.status || "not_started",
-                      )}
+                      {config.label}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm">
@@ -204,7 +238,7 @@ const LearnerDetail = () => {
                       className="text-primary hover:underline text-xs font-medium"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      Manage
+                      {actionLabel}
                     </Link>
                   </TableCell>
                 </TableRow>

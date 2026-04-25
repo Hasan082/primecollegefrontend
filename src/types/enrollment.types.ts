@@ -55,6 +55,21 @@ export interface LearnerWrittenAssignmentSnapshot {
     max_words: number;
 }
 
+export interface LearnerSubmissionUiFlags {
+    has_trainer_outcome?: boolean;
+    has_iqa_review?: boolean;
+    has_open_admin_concern?: boolean;
+    can_submit_iqa_review?: boolean;
+    can_raise_admin_concern?: boolean;
+    hide_iqa_review_form?: boolean;
+    hide_admin_concern_form?: boolean;
+    is_latest_submission?: boolean;
+    resubmission_required?: boolean;
+    resubmission_source?: string;
+    resubmission_message?: string;
+    can_create_resubmission?: boolean;
+}
+
 export interface LearnerWrittenAssignmentSubmission {
     id: string;
     submission_number: number;
@@ -79,6 +94,7 @@ export interface LearnerWrittenAssignmentSubmission {
     iqa_review_notes: string;
     iqa_decision: string | null;
     iqa_reviewed_at: string | null;
+    ui_flags?: LearnerSubmissionUiFlags;
 }
 
 export interface LearnerWrittenAssignmentResponse {
@@ -148,6 +164,7 @@ export interface LearnerEvidenceSubmission {
     iqa_review_notes: string;
     iqa_decision: string | null;
     iqa_reviewed_at: string | null;
+    ui_flags?: LearnerSubmissionUiFlags;
     evidence_items: LearnerEvidenceItem[];
 }
 

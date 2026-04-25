@@ -39,6 +39,7 @@ const assessmentNavItems = [
 ];
 
 const toolsNavItems = [
+  { title: "Submission Concerns", url: "/admin/submission-concerns", icon: Shield },
   { title: "Reports", url: "/admin/reports", icon: FileText },
   { title: "EQA Export", url: "/admin/eqa-export", icon: Download },
   { title: "Page Builder", url: "/admin/pages", icon: Blocks },

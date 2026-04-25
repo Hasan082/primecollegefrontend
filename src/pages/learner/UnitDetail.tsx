@@ -34,6 +34,8 @@ import type {
 } from "@/types/enrollment.types";
 import { getLifecycleLabel } from "@/lib/iqaStatus";
 
+type LearnerSubmission = LearnerEvidenceSubmission | LearnerWrittenAssignmentSubmission;
+
 const statusConfig: Record<string, { label: string; color: string }> = {
   Competent: { label: "Competent", color: "bg-green-600 text-white" },
   Completed: { label: "Completed", color: "bg-green-600 text-white" },
@@ -52,9 +54,85 @@ const lifecycleStatusConfig: Record<string, { label: string; color: string }> = 
   Submitted: statusConfig.Submitted,
   "Awaiting Assessment": statusConfig["Waiting for assessor review"],
   "Awaiting IQA": statusConfig["Waiting for IQA review"],
-  "Action Required": { label: "Resubmission Required", color: "bg-orange-500 text-white" },
+  "Action Required": statusConfig["Resubmission required"],
   "Signed Off": { label: "Signed Off", color: "bg-green-600 text-white" },
   Completed: statusConfig.Completed,
+};
+
+const getSubmissionActionState = (submission?: LearnerSubmission) => {
+  if (!submission) return null;
+
+  if (submission.iqa_decision === "changes_required") {
+    return {
+      label: "IQA Changes Required",
+      color: "bg-orange-500 text-white",
+      message:
+        submission.ui_flags?.resubmission_message ||
+        submission.iqa_review_notes ||
+        "IQA requested changes. Update the work and submit again.",
+    };
+  }
+
+  if (submission.iqa_decision === "referred_back") {
+    return {
+      label: "IQA Referred Back",
+      color: "bg-orange-500 text-white",
+      message:
+        submission.ui_flags?.resubmission_message ||
+        submission.iqa_review_notes ||
+        "IQA referred this back. Improve the work and submit again.",
+    };
+  }
+
+  if (submission.status === "resubmit") {
+    return {
+      label: "Resubmission Required",
+      color: "bg-orange-500 text-white",
+      message:
+        submission.ui_flags?.resubmission_message ||
+        submission.assessor_feedback ||
+        "Your trainer requested changes before this unit can be signed off.",
+    };
+  }
+
+  if (submission.status === "not_competent") {
+    return {
+      label: "Not Yet Competent",
+      color: "bg-orange-500 text-white",
+      message:
+        submission.ui_flags?.resubmission_message ||
+        submission.assessor_feedback ||
+        "This submission is not yet competent. Improve the work and submit again.",
+    };
+  }
+
+  return null;
+};
+
+const canCreateResubmission = (submission?: LearnerSubmission) =>
+  Boolean(
+    submission &&
+      submission.ui_flags?.resubmission_required &&
+      submission.ui_flags?.is_latest_submission &&
+      submission.ui_flags?.can_create_resubmission
+  );
+
+const getUnitStatusPresentation = (
+  displayStatus?: string | null,
+  latestSubmission?: LearnerSubmission,
+) => {
+  const submissionAction = getSubmissionActionState(latestSubmission);
+  if (submissionAction) {
+    return submissionAction;
+  }
+
+  const normalizedDisplay = (displayStatus || "").trim();
+  if (statusConfig[normalizedDisplay]) {
+    return statusConfig[normalizedDisplay];
+  }
+
+  const lifecycleLabel = getLifecycleLabel(normalizedDisplay);
+  return lifecycleStatusConfig[lifecycleLabel] || statusConfig["Not started"];
 };
 
 const mapSubmissionStatus = (status?: string): SubmissionVersion["status"] => {
@@ -226,11 +304,6 @@ const UnitDetail = () => {
     );
   }
 
-  const lifecycleLabel = getLifecycleLabel(unit.display_status);
-  const status =
-    lifecycleStatusConfig[lifecycleLabel] ||
-    statusConfig[unit.display_status] ||
-    statusConfig["Not started"];
   const isExpired = enrolment.access_expired;
 
   const evidenceSubmissions = evidenceResponse?.data?.submissions || [];
@@ -264,6 +337,14 @@ const UnitDetail = () => {
         getDateValue((b as LearnerEvidenceSubmission | LearnerWrittenAssignmentSubmission).submitted_at) -
         getDateValue((a as LearnerEvidenceSubmission | LearnerWrittenAssignmentSubmission).submitted_at)
     )[0] as LearnerEvidenceSubmission | LearnerWrittenAssignmentSubmission | undefined;
+  const writtenActionState = getSubmissionActionState(latestWrittenSubmission);
+  const evidenceActionState = getSubmissionActionState(latestEvidenceSubmission);
+  const latestActionState = getSubmissionActionState(latestAssessmentSubmission);
+  const canSubmitWrittenAssignment =
+    !latestWrittenSubmission || canCreateResubmission(latestWrittenSubmission);
+  const canSubmitEvidence =
+    !latestEvidenceSubmission || canCreateResubmission(latestEvidenceSubmission);
+  const status = getUnitStatusPresentation(unit.display_status, latestAssessmentSubmission);
 
   const evidenceRequirements = normalizeCriteriaList(evidenceConfig?.required_criteria);
   const evidenceRequirementList =
@@ -342,6 +423,20 @@ const UnitDetail = () => {
               Evidence must demonstrate that you meet all unit criteria.
             </p>
           </div>
+
+          {latestActionState && !qualification.is_cpd && (
+            <div className="rounded-2xl border border-orange-500/25 bg-orange-500/5 p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/10">
+                  <AlertTriangle className="h-4 w-4 text-orange-600" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-foreground">{latestActionState.label}</p>
+                  <p className="text-sm text-muted-foreground">{latestActionState.message}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <ResourceSection resources={unit.resources} />
           {!qualification.is_cpd && (unit.has_quiz || hasWrittenAssignmentEnabled) && (
             <div className="bg-card border border-border rounded-xl p-6">
@@ -427,23 +522,21 @@ const UnitDetail = () => {
                         </p>
                       </div>
                       <span className={`text-xs font-bold px-2.5 py-1 rounded ${latestWrittenSubmission
-                        ? latestWrittenSubmission.status === "competent"
-                          ? statusConfig["Competent"].color
-                          : latestWrittenSubmission.status === "under_review"
-                            ? statusConfig["Waiting for assessor review"].color
-                            : latestWrittenSubmission.status === "resubmit"
-                              ? statusConfig["Resubmission required"].color
-                              : statusConfig.Submitted.color
+                        ? (writtenActionState?.color ||
+                          (latestWrittenSubmission.status === "competent"
+                            ? statusConfig["Competent"].color
+                            : latestWrittenSubmission.status === "under_review"
+                              ? statusConfig["Waiting for assessor review"].color
+                              : statusConfig.Submitted.color))
                         : "bg-muted text-muted-foreground"
                         }`}>
                         {latestWrittenSubmission
-                          ? latestWrittenSubmission.status === "competent"
-                            ? statusConfig["Competent"].label
-                            : latestWrittenSubmission.status === "under_review"
-                              ? statusConfig["Waiting for assessor review"].label
-                              : latestWrittenSubmission.status === "resubmit"
-                                ? statusConfig["Resubmission required"].label
-                                : statusConfig.Submitted.label
+                          ? (writtenActionState?.label ||
+                            (latestWrittenSubmission.status === "competent"
+                              ? statusConfig["Competent"].label
+                              : latestWrittenSubmission.status === "under_review"
+                                ? statusConfig["Waiting for assessor review"].label
+                                : statusConfig.Submitted.label))
                           : "Not Started"}
                       </span>
                     </button>
@@ -488,8 +581,12 @@ const UnitDetail = () => {
                                 No written assignment has been submitted for this unit yet.
                               </p>
                             )}
-                            {(!latestWrittenSubmission || latestWrittenSubmission?.status === "resubmit")
-                             && (
+                            {writtenActionState && (
+                              <div className="rounded-lg border border-orange-500/20 bg-orange-500/5 p-4 text-sm text-muted-foreground">
+                                {writtenActionState.message}
+                              </div>
+                            )}
+                            {canSubmitWrittenAssignment && (
                                 <WrittenAssignmentForm
                                   enrolmentId={resolvedEnrolmentId}
                                   unitId={resolvedUnitId}
@@ -497,6 +594,7 @@ const UnitDetail = () => {
                                   minWords={writtenConfig?.min_words || unit.written_assignment_summary.min_words}
                                   maxWords={writtenConfig?.max_words || unit.written_assignment_summary.max_words}
                                   isLocked={isExpired}
+                                  mode={latestWrittenSubmission ? "resubmission" : "initial"}
                                   onSuccess={() => {
                                     void refetchOverview();
                                     void refetchUnit();
@@ -532,11 +630,12 @@ const UnitDetail = () => {
             </div>
           )}
 
-          {!latestEvidenceSubmission && !isExpired && !qualification.is_cpd && unit.requires_evidence && !evidenceSetupMissing && (
+          {canSubmitEvidence && !isExpired && !qualification.is_cpd && unit.requires_evidence && !evidenceSetupMissing && (
             <EvidenceUploadForm
               requirements={evidenceRequirementList}
               enrolmentId={resolvedEnrolmentId}
               unitId={resolvedUnitId}
+              mode={latestEvidenceSubmission ? "resubmission" : "initial"}
               onSuccess={() => {
                 void refetchOverview();
                 void refetchUnit();
@@ -579,6 +678,12 @@ const UnitDetail = () => {
               title="Evidence Submission History"
               subtitle="Review your uploaded evidence, assessment outcomes, and trainer feedback."
             />
+          )}
+
+          {evidenceActionState && !canSubmitEvidence && (
+            <div className="rounded-lg border border-orange-500/20 bg-orange-500/5 p-4 text-sm text-muted-foreground">
+              {evidenceActionState.message}
+            </div>
           )}
         </div>
 

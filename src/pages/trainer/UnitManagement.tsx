@@ -19,6 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useGetUnitAttemptsQuery } from "@/redux/apis/quiz/quizApi";
+import type {
+  LearnerEvidenceSubmission,
+  LearnerWrittenAssignmentSubmission,
+} from "@/types/enrollment.types";
 import {
   useGetTrainerEnrolmentContentQuery,
   useGetTrainerEvidenceSubmissionsQuery,
@@ -29,6 +33,7 @@ import {
 } from "@/redux/apis/trainer/trainerReviewApi";
 
 type TrainerOutcome = "competent" | "resubmit" | "not_competent";
+type TrainerSubmission = LearnerWrittenAssignmentSubmission | LearnerEvidenceSubmission;
 
 const outcomeOptions: Array<{
   value: TrainerOutcome;
@@ -45,6 +50,48 @@ function getBand(score?: number) {
   if (score >= 85) return "high";
   if (score >= 70) return "good";
   return "satisfactory";
+}
+
+function getTrainerActionNotice(submission?: TrainerSubmission) {
+  if (!submission) return null;
+
+  if (submission.iqa_decision === "changes_required") {
+    return {
+      title: "IQA Requested Changes",
+      description:
+        submission.iqa_review_notes ||
+        "IQA sent this submission back. The learner must revise and resubmit before you can reassess it.",
+    };
+  }
+
+  if (submission.iqa_decision === "referred_back") {
+    return {
+      title: "IQA Referred Back",
+      description:
+        submission.iqa_review_notes ||
+        "IQA referred this submission back. The learner must improve the work and resubmit before you can reassess it.",
+    };
+  }
+
+  if (submission.status === "resubmit") {
+    return {
+      title: "Awaiting Learner Resubmission",
+      description:
+        submission.assessor_feedback ||
+        "You requested a resubmission. There is no new trainer action until the learner submits revised work.",
+    };
+  }
+
+  if (submission.status === "not_competent") {
+    return {
+      title: "Awaiting Learner Improvement",
+      description:
+        submission.assessor_feedback ||
+        "This submission was marked not yet competent. The learner must improve the work and submit again.",
+    };
+  }
+
+  return null;
 }
 
 function SubmissionReviewCard({
@@ -146,6 +193,8 @@ const UnitManagement = () => {
 
   const latestWritten = writtenResponse?.data.submissions?.[0];
   const latestEvidence = evidenceResponse?.data.submissions?.[0];
+  const latestActionNotice =
+    getTrainerActionNotice(latestWritten) || getTrainerActionNotice(latestEvidence);
 
   const handleWrittenReview = async () => {
     if (!latestWritten || !writtenOutcome || !writtenFeedback.trim()) {
@@ -229,6 +278,20 @@ const UnitManagement = () => {
           </div>
         </div>
       </Card>
+
+      {latestActionNotice && (
+        <Card className="p-6 border-orange-500/20 bg-orange-500/5">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-orange-500/10 p-2.5">
+              <AlertCircle className="w-4 h-4 text-orange-600" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-foreground">{latestActionNotice.title}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{latestActionNotice.description}</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
 <ResourceSection resources={resourcesResponse?.data || []} />
 
