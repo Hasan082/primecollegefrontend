@@ -278,6 +278,8 @@ const iqaApi = api.injectEndpoints({
         url: "/api/iqa/sampling-config/",
         method: "GET",
       }),
+      transformResponse: (response: { data: IQASamplingConfig }) =>
+        response.data ?? (response as unknown as IQASamplingConfig),
       providesTags: ["Enrolments"],
     }),
     updateIqaSamplingConfig: builder.mutation<
@@ -289,6 +291,8 @@ const iqaApi = api.injectEndpoints({
         method: "PATCH",
         body,
       }),
+      transformResponse: (response: { data: IQASamplingConfig }) =>
+        response.data ?? (response as unknown as IQASamplingConfig),
       invalidatesTags: ["Enrolments"],
     }),
     getCourseSamplingPlans: builder.query<
@@ -300,6 +304,8 @@ const iqaApi = api.injectEndpoints({
         method: "GET",
         params: cleanObject(args || {}),
       }),
+      transformResponse: (response: { data: CourseSamplingPlanItem[] } | CourseSamplingPlanItem[]) =>
+        Array.isArray(response) ? response : (response.data ?? []),
       providesTags: ["Enrolments"],
     }),
     createCourseSamplingPlan: builder.mutation<
@@ -311,6 +317,8 @@ const iqaApi = api.injectEndpoints({
         method: "POST",
         body,
       }),
+      transformResponse: (response: { data: CourseSamplingPlanItem } | CourseSamplingPlanItem) =>
+        (response as { data: CourseSamplingPlanItem }).data ?? (response as CourseSamplingPlanItem),
       invalidatesTags: ["Enrolments"],
     }),
     updateCourseSamplingPlan: builder.mutation<
@@ -322,6 +330,8 @@ const iqaApi = api.injectEndpoints({
         method: "PATCH",
         body,
       }),
+      transformResponse: (response: { data: CourseSamplingPlanItem } | CourseSamplingPlanItem) =>
+        (response as { data: CourseSamplingPlanItem }).data ?? (response as CourseSamplingPlanItem),
       invalidatesTags: ["Enrolments"],
     }),
     getIqaSamples: builder.query<
