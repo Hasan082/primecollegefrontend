@@ -158,59 +158,58 @@ const Blog = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading
                   ? Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                    <div
-                      key={`blog-skeleton-${index}`}
-                      className="bg-card border border-border rounded-xl overflow-hidden"
-                    >
-                      <div className="aspect-[16/9] animate-pulse bg-muted/40" />
-                      <div className="p-5 space-y-3">
-                        <div className="h-4 w-28 animate-pulse rounded bg-muted/40" />
-                        <div className="h-5 w-5/6 animate-pulse rounded bg-muted/40" />
-                        <div className="h-4 w-full animate-pulse rounded bg-muted/40" />
-                        <div className="h-4 w-2/3 animate-pulse rounded bg-muted/40" />
+                      <div
+                        key={`blog-skeleton-${index}`}
+                        className="bg-card border border-border rounded-xl overflow-hidden"
+                      >
+                        <div className="aspect-[16/9] animate-pulse bg-muted/40" />
+                        <div className="p-5 space-y-3">
+                          <div className="h-4 w-28 animate-pulse rounded bg-muted/40" />
+                          <div className="h-5 w-5/6 animate-pulse rounded bg-muted/40" />
+                          <div className="h-4 w-full animate-pulse rounded bg-muted/40" />
+                          <div className="h-4 w-2/3 animate-pulse rounded bg-muted/40" />
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
                   : blogs.map((blog) => (
-                    <Link
-                      key={blog.id}
-                      to={`/blogs/${blog.blog_slug}`}
-                      className="bg-card border border-border rounded-xl overflow-hidden group flex h-full flex-col"
-                    >
-                      <div className="aspect-[16/9] overflow-hidden">
-                        <img
-                          src={
-                            blog.feature_image?.sources?.card ||
-                            blog.feature_image?.src ||
-                            heroClassroom
-                          }
-                          srcSet={blog.feature_image?.srcset}
-                          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                          alt={blog.blog_title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <div className="p-5 flex flex-1 flex-col">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
-                            {blog.category_name}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(blog.created_at).toLocaleDateString()}
+                      <Link
+                        key={blog.id}
+                        to={`/blogs/${blog.blog_slug}`}
+                        className="bg-card border border-border rounded-xl overflow-hidden group flex h-full flex-col"
+                      >
+                        <div className="aspect-[16/9] overflow-hidden">
+                          <img
+                            src={
+                              blog.feature_image?.sources?.card ||
+                              blog.feature_image?.src
+                            }
+                            srcSet={blog.feature_image?.srcset}
+                            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                            alt={blog.blog_title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="p-5 flex flex-1 flex-col">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
+                              {blog.category_name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(blog.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <h3 className="text-base font-semibold text-foreground leading-snug mb-2 line-clamp-2 min-h-[44px] group-hover:text-primary transition-colors">
+                            {blog.blog_title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                            {blog.blog_excerpt}
+                          </p>
+                          <span className="mt-auto text-sm font-semibold text-primary">
+                            Read More →
                           </span>
                         </div>
-                        <h3 className="text-base font-semibold text-foreground leading-snug mb-2 line-clamp-2 min-h-[44px] group-hover:text-primary transition-colors">
-                          {blog.blog_title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                          {blog.blog_excerpt}
-                        </p>
-                        <span className="mt-auto text-sm font-semibold text-primary">
-                          Read More →
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    ))}
               </div>
 
               <div className="mt-8">

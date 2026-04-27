@@ -10,7 +10,7 @@ import {
 } from "@/redux/apis/blogs/blogApi";
 import { sanitizeRichHtml } from "@/utils/sanitizeRichHtml";
 
-import heroClassroom from "@/assets/hero-classroom.jpg";
+// import heroClassroom from "@/assets/hero-classroom.jpg";
 
 const BlogDetail = () => {
   const { slug = "" } = useParams<{ slug: string }>();
@@ -46,7 +46,8 @@ const BlogDetail = () => {
     : categoriesPayload &&
         typeof categoriesPayload === "object" &&
         Array.isArray((categoriesPayload as { results?: unknown[] }).results)
-      ? ((categoriesPayload as { results: BlogCategorySummary[] }).results ?? [])
+      ? ((categoriesPayload as { results: BlogCategorySummary[] }).results ??
+        [])
       : [];
   const relatedPosts = (relatedBlogsResponse?.data?.results ?? []).filter(
     (item) => item.id !== blog?.id,
@@ -108,8 +109,7 @@ const BlogDetail = () => {
                 <img
                   src={
                     blog.feature_image?.sources?.desktop ||
-                    blog.feature_image?.src ||
-                    heroClassroom
+                    blog.feature_image?.src
                   }
                   srcSet={blog.feature_image?.srcset}
                   sizes="(min-width: 1024px) 66vw, 100vw"
@@ -176,9 +176,12 @@ const BlogDetail = () => {
 
             <aside className="space-y-8 lg:col-span-1">
               <div className="rounded-2xl border border-border bg-card p-6">
-                <h3 className="text-lg font-bold text-foreground">Ready to Start?</h3>
+                <h3 className="text-lg font-bold text-foreground">
+                  Ready to Start?
+                </h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Explore our qualifications and take the next step in your career.
+                  Explore our qualifications and take the next step in your
+                  career.
                 </p>
                 <Link
                   to="/qualifications"
@@ -236,8 +239,7 @@ const BlogDetail = () => {
                           <img
                             src={
                               related.feature_image?.sources?.card ||
-                              related.feature_image?.src ||
-                              heroClassroom
+                              related.feature_image?.src
                             }
                             srcSet={related.feature_image?.srcset}
                             sizes="320px"

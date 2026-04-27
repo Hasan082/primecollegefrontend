@@ -1,9 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSubmitContactFormMutation } from "@/redux/apis/contactApi";
 import { Image } from "@/components/Image";
-import { Users, Award, CheckCircle, Clock, Target, GraduationCap } from "lucide-react";
+import {
+  Users,
+  Award,
+  CheckCircle,
+  Clock,
+  Target,
+  GraduationCap,
+} from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import HeroSlider from "@/components/HeroSlider";
 import Section from "@/components/Section";
@@ -96,7 +104,11 @@ const renderHero = (block: ContentBlock, pageSlug?: string) => {
 
   return (
     <div className="relative h-[400px] overflow-hidden">
-      <Image image={imageSrc} alt={d.title} className="w-full h-full object-cover" />
+      <Image
+        image={imageSrc}
+        alt={d.title}
+        className="w-full h-full object-cover"
+      />
       <div className="absolute inset-0 bg-foreground/70" />
       <div className="absolute inset-0 flex items-center justify-center text-center px-4">
         <div>
@@ -152,14 +164,21 @@ const renderPopularQualifications = (block: ContentBlock) => {
                 title={item.title || "Qualification"}
                 category={item.category || null}
                 level={item.level || null}
-                duration={item.duration || item.qualification_type || "Qualification"}
+                duration={
+                  item.duration || item.qualification_type || "Qualification"
+                }
                 price={
                   item.price ||
                   (item.current_price
                     ? `${item.currency || "£"}${item.current_price}`
                     : "Contact us")
                 }
-                description={item.description || item.short_description || item.blog_excerpt || ""}
+                description={
+                  item.description ||
+                  item.short_description ||
+                  item.blog_excerpt ||
+                  ""
+                }
                 imageUrl={
                   resolveCmsImage(
                     item.image ||
@@ -257,7 +276,10 @@ const renderQualificationWhy = (block: ContentBlock) => {
             </h2>
             {paragraphs.length > 0 ? (
               paragraphs.map((paragraph: string, index: number) => (
-                <p key={index} className="text-muted-foreground leading-relaxed mb-4">
+                <p
+                  key={index}
+                  className="text-muted-foreground leading-relaxed mb-4"
+                >
                   {paragraph}
                 </p>
               ))
@@ -386,7 +408,9 @@ const renderQualificationFaq = (block: ContentBlock) => {
           {items.map((faq: any, index: number) => (
             <AccordionItem key={faq.question || index} value={`faq-${index}`}>
               <AccordionTrigger className="py-5 text-left no-underline hover:no-underline">
-                <span className="font-medium text-foreground pr-4">{faq.question}</span>
+                <span className="font-medium text-foreground pr-4">
+                  {faq.question}
+                </span>
               </AccordionTrigger>
               <AccordionContent>
                 <div
@@ -417,7 +441,9 @@ const renderQualificationCards = (block: ContentBlock) => {
             items.map((item: any, index: number) => (
               <Link
                 key={item.slug || item.title || index}
-                to={item.slug ? `/qualifications/${item.slug}` : "/qualifications"}
+                to={
+                  item.slug ? `/qualifications/${item.slug}` : "/qualifications"
+                }
                 className="group relative rounded-lg overflow-hidden block h-[220px]"
               >
                 <img
@@ -431,7 +457,9 @@ const renderQualificationCards = (block: ContentBlock) => {
                     {item.title}
                   </h3>
                   <span className="text-xs text-primary-foreground/70 mt-1 block">
-                    {[item.level, item.duration || item.qualification_type].filter(Boolean).join(" · ")}
+                    {[item.level, item.duration || item.qualification_type]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 </div>
               </Link>
@@ -479,11 +507,19 @@ const renderQualificationHero = (block: ContentBlock) => {
     <div className="relative h-[300px] overflow-hidden bg-primary/10 border-b border-border flex items-center justify-center">
       <div className="text-center">
         <GraduationCap className="w-12 h-12 text-primary mx-auto mb-4" />
-        <h1 className="text-3xl font-bold text-foreground mb-2">Qualification Header</h1>
-        <p className="text-muted-foreground italic">Dynamic Qualification Content</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          Qualification Header
+        </h1>
+        <p className="text-muted-foreground italic">
+          Dynamic Qualification Content
+        </p>
         <div className="mt-4 flex gap-2 justify-center">
-          <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-xs font-bold uppercase">Dynamic Category</span>
-          <span className="px-3 py-1 bg-secondary/20 text-secondary-foreground rounded-full text-xs font-bold uppercase">Level X</span>
+          <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-xs font-bold uppercase">
+            Dynamic Category
+          </span>
+          <span className="px-3 py-1 bg-secondary/20 text-secondary-foreground rounded-full text-xs font-bold uppercase">
+            Level X
+          </span>
         </div>
       </div>
     </div>
@@ -500,7 +536,7 @@ const ContactFormBlock = ({ d }: { d: any }) => {
   const [submitContactForm, { isLoading }] = useSubmitContactFormMutation();
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const fieldName = e.target.name === "name" ? "full_name" : e.target.name;
     setFormData({ ...formData, [fieldName]: e.target.value });
@@ -521,7 +557,8 @@ const ContactFormBlock = ({ d }: { d: any }) => {
       });
     } catch (err: any) {
       toast.error("Error", {
-        description: err?.data?.message || "Failed to send message. Please try again.",
+        description:
+          err?.data?.message || "Failed to send message. Please try again.",
       });
     }
   };
@@ -571,7 +608,13 @@ const ContactFormBlock = ({ d }: { d: any }) => {
                       name={field.name}
                       required={field.required}
                       rows={4}
-                      value={formData[(field.name === "name" ? "full_name" : field.name) as keyof typeof formData] || ""}
+                      value={
+                        formData[
+                          (field.name === "name"
+                            ? "full_name"
+                            : field.name) as keyof typeof formData
+                        ] || ""
+                      }
                       onChange={handleChange}
                       className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -580,7 +623,13 @@ const ContactFormBlock = ({ d }: { d: any }) => {
                       type={field.type}
                       name={field.name}
                       required={field.required}
-                      value={formData[(field.name === "name" ? "full_name" : field.name) as keyof typeof formData] || ""}
+                      value={
+                        formData[
+                          (field.name === "name"
+                            ? "full_name"
+                            : field.name) as keyof typeof formData
+                        ] || ""
+                      }
                       onChange={handleChange}
                       className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
@@ -730,29 +779,36 @@ export const CMSBlockRenderer = ({
         </section>
       );
     case "faq":
-      if (block.label === "Frequently Asked Questions" || block.label === "FAQs") {
+      if (
+        block.label === "Frequently Asked Questions" ||
+        block.label === "FAQs"
+      ) {
         return renderQualificationFaq(block);
       }
       return (
         <Section title={d.title || "FAQs"}>
           <div className="max-w-4xl mx-auto">
-            <Accordion type="single" collapsible className="border-t border-border">
-            {Array.isArray(d.items) &&
-              d.items.map((item: any, i: number) => (
-                <AccordionItem key={i} value={`faq-${i}`}>
-                  <AccordionTrigger className="py-5 text-left no-underline hover:no-underline">
-                    <span className="font-semibold text-foreground pr-4">
-                      {item.question}
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div
-                      className="text-sm text-muted-foreground leading-7"
-                      dangerouslySetInnerHTML={{ __html: item.answer }}
-                    />
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
+            <Accordion
+              type="single"
+              collapsible
+              className="border-t border-border"
+            >
+              {Array.isArray(d.items) &&
+                d.items.map((item: any, i: number) => (
+                  <AccordionItem key={i} value={`faq-${i}`}>
+                    <AccordionTrigger className="py-5 text-left no-underline hover:no-underline">
+                      <span className="font-semibold text-foreground pr-4">
+                        {item.question}
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div
+                        className="text-sm text-muted-foreground leading-7"
+                        dangerouslySetInnerHTML={{ __html: item.answer }}
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
             </Accordion>
           </div>
         </Section>
@@ -885,11 +941,11 @@ export const CMSBlockRenderer = ({
                     >
                       <Link to={`/qualifications/${slug}`}>
                         <div className="aspect-[4/3] overflow-hidden rounded-t-xl m-2">
-                        <Image
-                          image={resolveCmsImage(item.image) || heroClassroom}
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                          <Image
+                            image={resolveCmsImage(item.image) || heroClassroom}
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
                         </div>
                       </Link>
                       <div className="px-4 pb-5 flex flex-col flex-1">
@@ -1038,7 +1094,7 @@ export const CMSBlockRenderer = ({
                     >
                       <div className="aspect-[16/9] overflow-hidden">
                         <Image
-                          image={resolveCmsImage(item.image) || heroClassroom}
+                          image={resolveCmsImage(item.image)}
                           srcSet={item.image_srcset}
                           sizes="(min-width: 768px) 33vw, 100vw"
                           alt={item.title}
