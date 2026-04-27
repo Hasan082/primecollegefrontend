@@ -403,7 +403,7 @@ const QualificationView = () => {
           );
         })}
 
-        {requiresEvaluation && pct === 100 && (
+        {requiresEvaluation  ? (
           <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-4 shadow-sm mt-2">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center flex-shrink-0">
@@ -416,10 +416,10 @@ const QualificationView = () => {
                 </h3>
               </div>
             </div>
-            {isLocked ? (
+            {isLocked || pct !== 100 ? (
               <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => isExpired ? setShowExtension(true) : null}>
                 <Lock className="h-4 w-4" />
-                {isExpired ? "Access Locked" : "Staff Pending"}
+                {isExpired ? "Access Locked" : pct !== 100 ? "Not Complete Yet" : "Staff Pending"}
               </Button>
             ) : (
               <Button asChild variant="outline" size="sm" className="flex-shrink-0">
@@ -428,8 +428,8 @@ const QualificationView = () => {
                 </Link>
               </Button>
             )}
-          </div>
-        )}
+          </div> 
+        ) : null}
       </div>
 
 
