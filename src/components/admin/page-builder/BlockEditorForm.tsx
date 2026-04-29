@@ -28,7 +28,6 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ContentBlock, TextAlignment, BlockStyle } from "@/types/pageBuilder";
 import { normalizeQualificationSliderData } from "@/utils/pageBuilder";
 import RichTextEditor from "./RichTextEditor";
-import BlockStylePanel from "./BlockStylePanel";
 import ItemListEditor from "./ItemListEditor";
 
 // Refactored Fields
@@ -103,7 +102,6 @@ const SortableQualificationRow = ({
 const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEditorFormProps) => {
   const [local, setLocal] = useState<Record<string, unknown>>(block.data as Record<string, unknown>);
   const [alignment, setAlignment] = useState<TextAlignment>(block.alignment || "center");
-  const [blockStyle, setBlockStyle] = useState<BlockStyle>(block.style || {});
   const [blockLabel, setBlockLabel] = useState(block.label);
   const [isUploading, _setIsUploading] = useState(false);
   const [qualificationSelectOpen, setQualificationSelectOpen] = useState(false);
@@ -134,7 +132,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
             show_count: Math.max(1, Number(local.show_count) || 4),
           }
         : local;
-    onSave(nextLocal, { alignment, style: blockStyle, label: blockLabel });
+    onSave(nextLocal, { alignment, label: blockLabel });
     onClose();
   };
 
@@ -543,7 +541,6 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
         </div>
       )}
 
-      <BlockStylePanel style={blockStyle} onChange={setBlockStyle} />
 
       <div className="flex justify-end gap-2 pt-2 border-t">
         <Button variant="outline" onClick={onClose} disabled={isUploading}>Cancel</Button>
