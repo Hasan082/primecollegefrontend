@@ -277,7 +277,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
                     imagePosition={local.imagePosition as string} onPositionChange={(v) => update("imagePosition", v)} />
       )}
 
-      {Array.isArray(local.items) && !["qualification_slider", "popular-qualifications"].includes(block.type) && (
+      {Array.isArray(local.items) && !["qualification_slider", "popular-qualifications", "blog"].includes(block.type) && (
         <ItemListEditor blockType={block.type} items={local.items} onChange={(items: any) => update("items", items)} onImageUpload={onImageUpload} isUploading={isUploading} />
       )}
 

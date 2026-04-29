@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSubmitContactFormMutation } from "@/redux/apis/contactApi";
+import { useGetBlogsQuery } from "@/redux/apis/blogs/blogApi";
 import { Image } from "@/components/Image";
 import {
   Users,
@@ -650,6 +651,75 @@ const ContactFormBlock = ({ d }: { d: any }) => {
   );
 };
 
+const BlogBlock = ({ d }: { d: any }) => {
+  const { data: blogsResponse, isLoading } = useGetBlogsQuery({
+    page_size: 3,
+    is_active: true,
+  });
+  const blogs = blogsResponse?.data?.results || [];
+
+  if (isLoading)
+    return (
+      <Section title={d.title || "Latest Blogs"}>
+        <div className="text-center py-12 text-muted-foreground animate-pulse">
+          Loading latest blogs...
+        </div>
+      </Section>
+    );
+
+  if (blogs.length === 0) return null;
+
+  return (
+    <Section title={d.title || "Latest Blogs"}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {blogs.map((blog: any) => (
+          <Link
+            key={blog.id}
+            to={`/blogs/${blog.blog_slug}`}
+            className="bg-card border border-border rounded-xl overflow-hidden group flex h-full flex-col"
+          >
+            <div className="aspect-[16/9] overflow-hidden">
+              <Image
+                image={blog.feature_image?.src}
+                srcSet={blog.feature_image?.srcset}
+                sizes="(min-width: 768px) 33vw, 100vw"
+                alt={blog.blog_title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            <div className="flex flex-1 flex-col p-5">
+              <div className="flex items-center gap-3 mb-3">
+                {blog.category_name ? (
+                  <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
+                    {blog.category_name}
+                  </span>
+                ) : null}
+                <span className="text-xs text-muted-foreground">
+                  {new Date(blog.created_at).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+              <h3 className="text-base font-semibold text-foreground leading-snug mb-2 group-hover:text-primary transition-colors">
+                {blog.blog_title}
+              </h3>
+              <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                {blog.blog_excerpt}
+              </p>
+              <span className="mt-auto text-sm font-semibold text-primary">
+                Read More →
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </Section>
+  );
+};
+
+
 export const CMSBlockRenderer = ({
   block,
   pageSlug,
@@ -1073,105 +1143,7 @@ export const CMSBlockRenderer = ({
         </section>
       );
     case "blog":
-      if (pageSlug === "home") {
-        // Original home page blog styling: entire card is a Link with hover-scale image
-        return (
-          <Section title={d.title || "Latest Blogs"}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {Array.isArray(d.items) &&
-                d.items.map((item: any, i: number) => {
-                  const blogSlug =
-                    item.slug ||
-                    item.title
-                      ?.toLowerCase()
-                      .replace(/[^a-z0-9]+/g, "-")
-                      .replace(/(^-|-$)/g, "");
-                  return (
-                    <Link
-                      key={blogSlug || i}
-                      to={`/blogs/${blogSlug}`}
-                      className="bg-card border border-border rounded-xl overflow-hidden group flex h-full flex-col"
-                    >
-                      <div className="aspect-[16/9] overflow-hidden">
-                        <Image
-                          image={resolveCmsImage(item.image)}
-                          srcSet={item.image_srcset}
-                          sizes="(min-width: 768px) 33vw, 100vw"
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <div className="flex flex-1 flex-col p-5">
-                        <div className="flex items-center gap-3 mb-3">
-                          {item.category ? (
-                            <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
-                              {item.category}
-                            </span>
-                          ) : null}
-                          {item.date ? (
-                            <span className="text-xs text-muted-foreground">
-                              {item.date}
-                            </span>
-                          ) : null}
-                        </div>
-                        <h3 className="text-base font-semibold text-foreground leading-snug mb-2">
-                          {item.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                          {item.blog_excerpt}
-                        </p>
-                        <span className="mt-auto text-sm font-semibold text-primary">
-                          Read More →
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
-            </div>
-          </Section>
-        );
-      }
-      return (
-        <Section title={d.title || "Latest Blogs"}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Array.isArray(d.items) &&
-              d.items.map((item: any, i: number) => (
-                <article
-                  key={item.slug || i}
-                  className="bg-card border border-border rounded-xl overflow-hidden"
-                >
-                  {item.image ? (
-                    <Image
-                      image={resolveCmsImage(item.image) as any}
-                      alt={item.title}
-                      className="w-full h-48 object-cover"
-                    />
-                  ) : null}
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-                      {item.category ? <span>{item.category}</span> : null}
-                      {item.date ? <span>{item.date}</span> : null}
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {item.blog_excerpt}
-                    </p>
-                    {item.slug ? (
-                      <Link
-                        to={`/blogs/${item.slug}`}
-                        className="text-sm font-semibold text-primary hover:underline"
-                      >
-                        Read More
-                      </Link>
-                    ) : null}
-                  </div>
-                </article>
-              ))}
-          </div>
-        </Section>
-      );
+      return <BlogBlock d={d} />;
     case "why-us":
       if (pageSlug === "home") {
         // Original home page why-us: large round bg-primary circles, centered layout, 3-col grid
