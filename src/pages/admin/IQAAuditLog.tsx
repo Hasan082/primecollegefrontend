@@ -32,7 +32,7 @@ import TablePagination from "@/components/admin/TablePagination";
 const ITEMS_PER_PAGE = 25;
 
 const EVENT_TYPES = [
-  { value: "", label: "All Events" },
+  { value: "all_events", label: "All Events" },
   { value: "unit_signoff_created", label: "Unit Sign-Off Created" },
   { value: "iqa_sampling_decision", label: "Sampling Decision" },
   { value: "iqa_review_started", label: "IQA Review Started" },
@@ -53,7 +53,7 @@ const eventBadgeVariant = (
 
 const IQAAuditLog = () => {
   const [page, setPage] = useState(1);
-  const [eventTypeFilter, setEventTypeFilter] = useState("");
+  const [eventTypeFilter, setEventTypeFilter] = useState("all_events");
   const [enrolmentFilter, setEnrolmentFilter] = useState("");
   const [entityTypeFilter, setEntityTypeFilter] = useState("");
   const [entityIdFilter, setEntityIdFilter] = useState("");
@@ -76,7 +76,7 @@ const IQAAuditLog = () => {
   const handleApply = () => {
     setPage(1);
     setAppliedFilters({
-      event_type: eventTypeFilter,
+      event_type: eventTypeFilter === "all_events" ? "" : eventTypeFilter,
       enrolment: enrolmentFilter.trim(),
       entity_type: entityTypeFilter.trim(),
       entity_id: entityIdFilter.trim(),
@@ -84,7 +84,7 @@ const IQAAuditLog = () => {
   };
 
   const handleClear = () => {
-    setEventTypeFilter("");
+    setEventTypeFilter("all_events");
     setEnrolmentFilter("");
     setEntityTypeFilter("");
     setEntityIdFilter("");
