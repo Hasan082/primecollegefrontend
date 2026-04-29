@@ -31,7 +31,6 @@ import RichTextEditor from "./RichTextEditor";
 import ItemListEditor from "./ItemListEditor";
 
 // Refactored Fields
-import AlignmentToggle from "./fields/AlignmentToggle";
 import Field from "./fields/Field";
 import ImageField from "./fields/ImageField";
 import CTABackgroundEditor from "./fields/CTABackgroundEditor";
@@ -101,7 +100,6 @@ const SortableQualificationRow = ({
 
 const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEditorFormProps) => {
   const [local, setLocal] = useState<Record<string, unknown>>(block.data as Record<string, unknown>);
-  const [alignment, setAlignment] = useState<TextAlignment>(block.alignment || "center");
   const [blockLabel, setBlockLabel] = useState(block.label);
   const [isUploading, _setIsUploading] = useState(false);
   const [qualificationSelectOpen, setQualificationSelectOpen] = useState(false);
@@ -132,7 +130,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
             show_count: Math.max(1, Number(local.show_count) || 4),
           }
         : local;
-    onSave(nextLocal, { alignment, label: blockLabel });
+    onSave(nextLocal, { label: blockLabel });
     onClose();
   };
 
@@ -190,7 +188,6 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
     (qualification) => !selectedQualificationIds.includes(qualification.id),
   );
 
-  const showGlobalAlignment = block.type !== "text";
 
   return (
     <div className="space-y-4 py-2">
@@ -208,16 +205,9 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
       )}
 
       {((typeof local.title === "string" && block.type !== "qualification_slider") || typeof local.headline === "string") && (
-        <div className="flex items-end gap-3">
-          <div className="flex-1">
-            <Field label={typeof local.title === "string" ? "Title / Headline" : "Headline"} 
-                   value={(local.title || local.headline) as string} 
-                   onChange={(v) => update(typeof local.title === "string" ? "title" : "headline", v)} />
-          </div>
-          {block.type === "text" ? (
-             <AlignmentToggle value={(local.alignment as TextAlignment) || "center"} onChange={(v) => update("alignment", v)} />
-          ) : (showGlobalAlignment && <AlignmentToggle value={alignment} onChange={setAlignment} />)}
-        </div>
+        <Field label={typeof local.title === "string" ? "Title / Headline" : "Headline"} 
+               value={(local.title || local.headline) as string} 
+               onChange={(v) => update(typeof local.title === "string" ? "title" : "headline", v)} />
       )}
 
       {typeof local.subtitle === "string" && <Field label="Subtitle" value={local.subtitle as string} onChange={(v) => update("subtitle", v)} />}
