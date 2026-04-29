@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
     useGetUnitResourcesQuery,
+    usePresignUnitResourceUploadMutation,
     useCreateUnitResourceMutation,
     useDeleteUnitResourceMutation,
     UnitRow,
@@ -45,38 +46,68 @@ export const UnitExpandedContent = ({
 }) => {
     const { toast } = useToast();
     const { data: resources, isLoading: isLoadingResources } = useGetUnitResourcesQuery(unit.id);
-    const [createResource, { isLoading: isUploading }] = useCreateUnitResourceMutation();
+    const [presignResourceUpload, { isLoading: isPresigning }] = usePresignUnitResourceUploadMutation();
+    const [createResource, { isLoading: isCreatingResource }] = useCreateUnitResourceMutation();
     const [deleteResource] = useDeleteUnitResourceMutation();
 
     // CPD config data (fetched always for CPD units so we can show a preview)
     const { data: cpdConfig } = useGetUnitCpdConfigQuery(unit.id, { skip: !isCpd });
     const hasCpdConfig = !!cpdConfig?.id;
+    const isUploading = isPresigning || isCreatingResource;
 
     // CPD state
     const [cpdOpen, setCpdOpen] = useState(false);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
+    const uploadResourceFile = async (file: File): Promise<string> => {
+        const presign = await presignResourceUpload({
+            file_name: file.name,
+            content_type: file.type || "application/octet-stream",
+        }).unwrap();
 
-        const formData = new FormData();
-        if (files.length === 1) {
-            formData.append("file", files[0]);
-            formData.append("resource_type", mapFileToResourceType(files[0].name));
-        } else {
-            Array.from(files).forEach(file => {
-                formData.append("files", file);
-            });
-            formData.append("resource_type", "other");
+        const uploadFormData = new FormData();
+        Object.entries(presign.data.fields).forEach(([key, value]) => {
+            uploadFormData.append(key, value);
+        });
+        uploadFormData.append("file", file);
+
+        const uploadResponse = await fetch(presign.data.upload_url, {
+            method: "POST",
+            body: uploadFormData,
+        });
+
+        if (!uploadResponse.ok) {
+            throw new Error("Direct resource upload to S3 failed.");
         }
 
+        return presign.data.file_key;
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
         try {
-            await createResource({
-                unitId: unit.id,
-                qualificationId,
-                payload: formData
-            }).unwrap();
-            toast({ title: "Resource uploaded successfully" });
+            for (const file of files) {
+                const fileKey = await uploadResourceFile(file);
+                await createResource({
+                    unitId: unit.id,
+                    qualificationId,
+                    payload: {
+                        title: file.name,
+                        description: "",
+                        resource_type: mapFileToResourceType(file.name),
+                        file_key: fileKey,
+                        estimated_minutes: 0,
+                        is_downloadable: true,
+                        is_required: false,
+                        is_active: true,
+                    }
+                }).unwrap();
+            }
+
+            toast({
+                title: files.length === 1 ? "Resource uploaded successfully" : "Resources uploaded successfully"
+            });
         } catch (err) {
             toast({ title: "Upload failed", variant: "destructive" });
         }

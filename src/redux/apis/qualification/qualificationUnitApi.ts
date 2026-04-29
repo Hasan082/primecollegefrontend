@@ -41,6 +41,7 @@ export interface UnitResource {
   description: string;
   resource_type: string;
   file: string;
+  file_key?: string;
   external_url: string;
   estimated_minutes: number;
   is_downloadable: boolean;
@@ -53,6 +54,18 @@ export interface UnitResource {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface UnitResourcePresignResponse {
+  file: string;
+  file_key: string;
+  data: {
+    file: string;
+    file_key: string;
+    key: string;
+    upload_url: string;
+    fields: Record<string, string>;
+  };
 }
 
 export interface UnitCpdConfig {
@@ -144,6 +157,14 @@ const qualificationUnitApi = api.injectEndpoints({
           : [{ type: "UnitResources", id: `LIST-${unitId}` }],
     }),
 
+    presignUnitResourceUpload: builder.mutation<UnitResourcePresignResponse, { file_name: string; content_type: string }>({
+      query: (payload) => ({
+        url: "/api/qualification/admin/uploads/presign-resource/",
+        method: "POST",
+        body: payload,
+      }),
+    }),
+
     createUnitResource: builder.mutation<UnitResource | UnitResource[], { unitId: string; qualificationId: string; payload: FormData | Partial<UnitResource> }>({
       query: ({ unitId, payload }) => ({
         url: `/api/qualification/admin/units/${unitId}/resources/`,
@@ -220,6 +241,7 @@ export const {
   useUpdateUnitMutation,
   useDeleteUnitMutation,
   useGetUnitResourcesQuery,
+  usePresignUnitResourceUploadMutation,
   useCreateUnitResourceMutation,
   useUpdateUnitResourceMutation,
   useDeleteUnitResourceMutation,

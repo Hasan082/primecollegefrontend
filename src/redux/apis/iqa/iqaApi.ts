@@ -41,6 +41,53 @@ import type {
   UnitSignOffListResponse,
 } from "@/types/iqa.types";
 
+type QaDashboardApiResponse =
+  | Partial<QaDashboardData>
+  | { data?: Partial<QaDashboardData> | null }
+  | null
+  | undefined;
+
+const defaultQaDashboardData: QaDashboardData = {
+  queue: {
+    pending: 0,
+    in_progress: 0,
+    escalated: 0,
+  },
+  this_month: {
+    approved: 0,
+    action_required: 0,
+    escalated: 0,
+  },
+  totals: {
+    sampled: 0,
+    not_sampled: 0,
+  },
+};
+
+const normalizeQaDashboardData = (
+  response: QaDashboardApiResponse,
+): QaDashboardData => {
+  const payload =
+    response && "data" in response && response.data
+      ? response.data
+      : (response as Partial<QaDashboardData> | null | undefined);
+
+  return {
+    queue: {
+      ...defaultQaDashboardData.queue,
+      ...payload?.queue,
+    },
+    this_month: {
+      ...defaultQaDashboardData.this_month,
+      ...payload?.this_month,
+    },
+    totals: {
+      ...defaultQaDashboardData.totals,
+      ...payload?.totals,
+    },
+  };
+};
+
 const iqaApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getIqaDashboard: builder.query<IQADashboardResponse, void>({
@@ -413,6 +460,7 @@ const iqaApi = api.injectEndpoints({
 
     getQaDashboard: builder.query<QaDashboardData, void>({
       query: () => ({ url: "/api/iqa/dashboard/", method: "GET" }),
+      transformResponse: normalizeQaDashboardData,
       providesTags: ["Enrolments"],
     }),
 

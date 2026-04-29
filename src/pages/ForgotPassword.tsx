@@ -4,28 +4,36 @@ import { ArrowLeft, ArrowRight, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useForgotPasswordMutation } from "@/redux/apis/authApi";
 import logo from "@/assets/prime-logo-white-notext.png";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
       toast({ title: "Please enter your email address", variant: "destructive" });
       return;
     }
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
+      await forgotPassword({ email: normalizedEmail }).unwrap();
       setEmail("");
       toast({
         title: "Reset Link Sent",
         description: "Please check your email for further instructions to reset your password.",
       });
-    }, 1200);
+    } catch (err) {
+      toast({
+        title: "Unable to send reset link",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -69,10 +77,10 @@ const ForgotPassword = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="w-full bg-secondary text-secondary-foreground h-11 rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
-              {loading ? "Sending..." : "Send Reset Link"}
+              {isLoading ? "Sending..." : "Send Reset Link"}
             </button>
           </form>
         </div>
