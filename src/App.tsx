@@ -32,6 +32,7 @@ const Recruitment = lazy(() => import("./pages/Recruitment"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Login = lazy(() => import("./pages/Login"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ForgotPasswordReset = lazy(() => import("./pages/ForgotPasswordReset"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const CheckoutSuccess = lazy(() => import("./pages/checkout/CheckoutSuccess"));
 const CheckoutCancel = lazy(() => import("./pages/checkout/CheckoutCancel"));
@@ -82,6 +83,7 @@ const QualificationManagement = lazy(
 const QualificationCreateOrEdit = lazy(
   () => import("./pages/admin/QualificationCreateOrEdit"),
 );
+const UpsellManagement = lazy(() => import("./pages/admin/UpsellManagement"));
 
 const LearnerManagement = lazy(() => import("./pages/admin/LearnerManagement"));
 const TrainerManagement = lazy(() => import("./pages/admin/TrainerManagement"));
@@ -184,6 +186,10 @@ const App = () => {
                   <Route path="/login" element={<Login />} />
                   <Route path="/staff-login" element={<StaffLogin />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route
+                    path="/forgot-password/reset"
+                    element={<ForgotPasswordReset />}
+                  />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route
                     path="/checkout/success"
@@ -241,6 +247,7 @@ const App = () => {
                       path="qualifications/:qualificationId"
                       element={<AdminQualificationDetail />}
                     />
+                    <Route path="upsells" element={<UpsellManagement />} />
 
                     <Route
                       path="qualifications/:qualificationId/final-assessment"

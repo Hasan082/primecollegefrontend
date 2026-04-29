@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +9,7 @@ import logo from "@/assets/prime-logo-white-notext.png";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
 
@@ -23,10 +24,7 @@ const ForgotPassword = () => {
     try {
       await forgotPassword({ email: normalizedEmail }).unwrap();
       setEmail("");
-      toast({
-        title: "Reset Link Sent",
-        description: "Please check your email for further instructions to reset your password.",
-      });
+      setIsSubmitted(true);
     } catch (err) {
       toast({
         title: "Unable to send reset link",
@@ -35,6 +33,48 @@ const ForgotPassword = () => {
       });
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="w-full max-w-lg text-center">
+          <Link to="/" className="inline-flex items-center gap-3 mb-8">
+            <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center p-0.5">
+              <img src={logo} alt="The Prime College" className="w-full h-full object-contain" />
+            </div>
+            <span className="text-xl font-bold text-foreground">The Prime College</span>
+          </Link>
+
+          <div className="bg-card border border-border rounded-2xl p-8 sm:p-10 shadow-sm">
+            <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="w-9 h-9 text-green-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Check Your Email</h1>
+            <p className="text-muted-foreground text-sm mt-3">
+              If an account exists for that email address, password reset instructions have been sent.
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-3 mt-8">
+              <button
+                type="button"
+                onClick={() => setIsSubmitted(false)}
+                className="inline-flex items-center justify-center gap-2 h-11 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+              >
+                Send Another Link
+              </button>
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center gap-2 h-11 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-primary-foreground hover:bg-primary hover:border-primary transition-colors"
+              >
+                Back to Login
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">

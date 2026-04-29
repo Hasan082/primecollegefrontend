@@ -18,7 +18,7 @@ interface UpsellModalProps {
 const UpsellModal = ({ currentItem, recommendations, onClose }: UpsellModalProps) => {
   const navigate = useNavigate();
   const { addItem, removeItem, isInCart, items, totalPrice } = useCart();
-  const selectedUpsell = recommendations.find((course) => isInCart(course.slug));
+  const selectedUpsells = recommendations.filter((course) => isInCart(course.slug));
   const primaryRecommendation = recommendations[0];
   const bannerSavings =
     primaryRecommendation && Number(primaryRecommendation.discount_percent) > 0
@@ -26,8 +26,11 @@ const UpsellModal = ({ currentItem, recommendations, onClose }: UpsellModalProps
       : primaryRecommendation
         ? `Save ${formatMoney(primaryRecommendation.bundle_discount_total, primaryRecommendation.currency)}`
         : "Save on bundled courses";
-  const projectedSubtotal = selectedUpsell ? Number(selectedUpsell.bundle_original_price) : totalPrice;
-  const projectedDiscount = selectedUpsell ? Number(selectedUpsell.bundle_discount_total) : 0;
+  const projectedSubtotal = totalPrice;
+  const projectedDiscount = selectedUpsells.reduce(
+    (sum, course) => sum + Number(course.bundle_discount_total || 0),
+    0,
+  );
   const finalTotal = projectedSubtotal - projectedDiscount;
 
   const handleProceed = () => {
@@ -36,11 +39,8 @@ const UpsellModal = ({ currentItem, recommendations, onClose }: UpsellModalProps
   };
 
   const toggleCourse = (course: QualificationUpsellItem) => {
-    recommendations.forEach((recommendedCourse) => {
-      if (recommendedCourse.slug !== course.slug && isInCart(recommendedCourse.slug)) {
-        removeItem(recommendedCourse.slug);
-      }
-    });
+    const inCart = isInCart(course.slug);
+    if (!inCart && selectedUpsells.length >= 2) return;
 
     const cartItem: CartItem = {
       id: course.id,
@@ -67,7 +67,7 @@ const UpsellModal = ({ currentItem, recommendations, onClose }: UpsellModalProps
       priceValue: Number(course.current_price || 0),
     };
 
-    if (isInCart(course.slug)) {
+    if (inCart) {
       removeItem(course.slug);
     } else {
       addItem(cartItem);
@@ -128,31 +128,41 @@ const UpsellModal = ({ currentItem, recommendations, onClose }: UpsellModalProps
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Recommended For You</p>
             <span className="text-xs bg-secondary/15 text-secondary-foreground px-2 py-0.5 rounded font-medium">
-              + Add to unlock the discount
+              Select up to 2
             </span>
           </div>
           <div className="space-y-3">
             {recommendations.map((course) => {
               const inCart = isInCart(course.slug);
+              const disabledByLimit = !inCart && selectedUpsells.length >= 2;
               const savedAmount = Number(course.bundle_discount_total || 0);
               return (
                 <div
                   key={course.slug}
-                  className={`flex items-center justify-between rounded p-4 cursor-pointer transition-all ${
+                  className={`flex items-center justify-between rounded p-4 transition-all ${
                     inCart
                       ? "bg-secondary/10 border-2 border-secondary/40 shadow-sm"
+                      : disabledByLimit
+                        ? "cursor-not-allowed bg-muted/40 border border-border opacity-60"
                       : "bg-card border border-border hover:border-secondary/30 hover:shadow-sm"
                   }`}
-                  onClick={() => toggleCourse(course)}
+                  onClick={() => {
+                    if (!disabledByLimit) toggleCourse(course);
+                  }}
                 >
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold text-foreground">{course.title}</h3>
                     {course.message ? (
                       <p className="mt-1 text-xs text-muted-foreground">{course.message}</p>
                     ) : null}
-                    {!inCart && (
+                    {!inCart && !disabledByLimit && (
                       <p className="text-xs text-secondary-foreground mt-1.5 font-medium">
                         Add & save {formatMoney(savedAmount, course.currency)} on your combined order
+                      </p>
+                    )}
+                    {disabledByLimit && (
+                      <p className="text-xs text-muted-foreground mt-1.5 font-medium">
+                        Remove another upsell to add this course
                       </p>
                     )}
                   </div>
@@ -181,10 +191,10 @@ const UpsellModal = ({ currentItem, recommendations, onClose }: UpsellModalProps
 
         {/* Summary Footer */}
         <div className="p-6">
-          {selectedUpsell && (
+          {selectedUpsells.length > 0 && (
             <div className="bg-secondary/10 border border-secondary/20 rounded p-3 mb-4 text-center">
               <p className="text-sm font-semibold text-secondary-foreground">
-                Bundle Discount Applied — Save {formatMoney(projectedDiscount, selectedUpsell.currency)}.
+                Bundle Discount Applied — Save {formatMoney(projectedDiscount, currentItem.currency)}.
               </p>
             </div>
           )}
@@ -194,10 +204,10 @@ const UpsellModal = ({ currentItem, recommendations, onClose }: UpsellModalProps
               <span className="text-muted-foreground">{items.length} course{items.length !== 1 ? "s" : ""}</span>
               <span className="text-foreground">{formatMoney(projectedSubtotal, currentItem.currency)}</span>
             </div>
-            {selectedUpsell && (
+            {selectedUpsells.length > 0 && (
               <div className="flex justify-between text-secondary-foreground">
                 <span>Bundle Discount</span>
-                <span>-{formatMoney(projectedDiscount, selectedUpsell.currency)}</span>
+                <span>-{formatMoney(projectedDiscount, currentItem.currency)}</span>
               </div>
             )}
             <div className="flex justify-between font-bold text-base pt-2 border-t border-border">

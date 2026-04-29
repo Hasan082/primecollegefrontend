@@ -121,6 +121,17 @@ export interface QualificationUpsellResponse {
   data: QualificationUpsellItem[];
 }
 
+type QualificationUpsellApiResponse =
+  | QualificationUpsellItem[]
+  | {
+      data?: QualificationUpsellItem[];
+    };
+
+const normalizeQualificationUpsells = (
+  response: QualificationUpsellApiResponse,
+): QualificationUpsellItem[] =>
+  Array.isArray(response) ? response : response?.data || [];
+
 const qualificationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getQualifications: builder.query<
@@ -153,11 +164,16 @@ const qualificationApi = api.injectEndpoints({
       ],
       keepUnusedDataFor: 30,
     }),
-    getUpSales: builder.query<QualificationUpsellResponse, string>({
+    getUpSales: builder.query<QualificationUpsellItem[], string>({
       query: (slug) => ({
         url: `/api/qualification/${slug}/upsells/`,
         method: "GET",
       }),
+      transformResponse: normalizeQualificationUpsells,
+      providesTags: (_result, _error, slug) => [
+        { type: "QualificationUpsells" as const, id: "LIST" },
+        { type: "QualificationUpsells" as const, id: slug },
+      ],
       keepUnusedDataFor: 30,
     }),
   }),

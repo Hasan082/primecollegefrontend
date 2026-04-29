@@ -77,7 +77,7 @@ const QualificationDetail = () => {
   const { data, isLoading } = useGetQualificationDetailQuery(slug, {
     skip: !slug,
   });
-  const { data: upsellResponse } = useGetUpSalesQuery(slug, { skip: !slug });
+  const { data: upsellItems = [] } = useGetUpSalesQuery(slug, { skip: !slug });
   const { data: blogsResponse, isLoading: isBlogsLoading } = useGetBlogsQuery({
     page_size: 3,
   });
@@ -300,7 +300,7 @@ const QualificationDetail = () => {
 
     addItem(currentCartItem);
 
-    if ((upsellResponse?.data?.length || 0) > 0) {
+    if (upsellItems.length > 0) {
       setShowUpsell(true);
       return;
     }
@@ -498,10 +498,10 @@ const QualificationDetail = () => {
         />
       ) : null}
 
-      {showUpsell && upsellResponse?.data?.length ? (
+      {showUpsell && upsellItems.length ? (
         <UpsellModal
           currentItem={currentCartItem}
-          recommendations={upsellResponse.data as QualificationUpsellItem[]}
+          recommendations={upsellItems as QualificationUpsellItem[]}
           onClose={() => setShowUpsell(false)}
         />
       ) : null}

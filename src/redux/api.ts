@@ -98,6 +98,7 @@ export const api = createApi({
     "Pages",
     "Qualifications",
     "QualificationPrices",
+    "QualificationUpsells",
     "SessionLocations",
     "SessionLocationDates",
     "QualificationUnits",
