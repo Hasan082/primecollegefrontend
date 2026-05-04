@@ -364,7 +364,7 @@ const TrainerPerformance = () => {
                 </div>
               ) : null}
 
-              {detail.recent_reviews.results.length > 0 ? (
+              {detail?.recent_reviews?.results?.length > 0 ? (
                 <div>
                   <h3 className="text-sm font-medium mb-2">
                     Recent Reviews ({detail.recent_reviews.count})
