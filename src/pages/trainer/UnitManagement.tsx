@@ -504,22 +504,7 @@ const UnitManagement = () => {
                   <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
                     {latestWritten.assessor_feedback || "No feedback provided."}
                   </p>
-                  {(latestWritten.assessor_score !== null || latestWritten.assessor_band) && (
-                    <div className="mt-4 pt-4 border-t flex flex-wrap gap-4">
-                      {latestWritten.assessor_score !== null && (
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Score</p>
-                          <p className="text-sm font-bold">{latestWritten.assessor_score} / {latestWritten.assessor_score_max || 100}</p>
-                        </div>
-                      )}
-                      {latestWritten.assessor_band && (
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Band</p>
-                          <Badge variant="outline" className="mt-0.5 capitalize">{latestWritten.assessor_band}</Badge>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                 
                 </div>
               )}
             </div>
@@ -620,12 +605,7 @@ const UnitManagement = () => {
                   </p>
                   {(latestEvidence.assessor_score !== null || latestEvidence.assessor_band) && (
                     <div className="mt-4 pt-4 border-t flex flex-wrap gap-4">
-                      {latestEvidence.assessor_score !== null && (
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Score</p>
-                          <p className="text-sm font-bold">{latestEvidence.assessor_score} / {latestEvidence.assessor_score_max || 100}</p>
-                        </div>
-                      )}
+                     
                       {latestEvidence.assessor_band && (
                         <div>
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Band</p>
