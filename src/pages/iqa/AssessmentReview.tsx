@@ -327,6 +327,7 @@ const AssessmentReview = () => {
       }
 
       const enrolmentId = sample.enrolment_id || queueItem?.enrolment_id || "";
+      const submissionId = sample.trigger_submission?.id;
       if (enrolmentId) {
         for (const template of applicableTemplates) {
           const responses = checklistResponses[template.id] || {};
@@ -334,6 +335,7 @@ const AssessmentReview = () => {
             await createChecklistCompletion({
               template_id: template.id,
               enrolment_id: enrolmentId,
+              submission_id: submissionId,
               responses,
               summary_comment: checklistSummaries[template.id] || "",
             }).unwrap();
@@ -347,6 +349,7 @@ const AssessmentReview = () => {
           decision,
           comments: notes.trim(),
           action_type: decision === "action_required" ? actionType : "",
+          affected_criteria: decision === "action_required" ? [] : undefined,
         },
       }).unwrap();
 

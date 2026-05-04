@@ -124,6 +124,7 @@ export interface ChecklistCompletionListResponse {
 export interface ChecklistCompletionCreatePayload {
   template_id: string;
   enrolment_id: string;
+  submission_id?: string;
   responses: Record<string, string>;
   summary_comment?: string;
 }
