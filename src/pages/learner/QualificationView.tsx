@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck, ClipboardList, Lock, CalendarPlus, User, Mail, MapPin, Calendar, Building2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, AlertTriangle, Circle, ShieldCheck, Loader2, FileCheck, ClipboardList, Lock, CalendarPlus, User, Mail, MapPin, Calendar } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import CPDFinalAssessmentModal from "@/components/learner/CPDFinalAssessmentModal";
 import LearnerDeclarationModal from "@/components/learner/LearnerDeclarationModal";
 import CourseEvaluationModal from "@/components/learner/CourseEvaluationModal";
 import ExtensionRequestModal from "@/components/learner/ExtensionRequestModal";
+import { CertificateDownloadButton } from "@/components/learner/CertificateDownloadButton";
 import { useGetEnrolmentOverviewQuery } from "@/redux/apis/enrolmentApi";
 import type { EnrolmentOverviewUnit } from "@/types/enrollment.types";
 import { getLifecycleLabel } from "@/lib/iqaStatus";
@@ -152,69 +153,73 @@ const QualificationView = () => {
         </div>
         <p className="text-sm text-muted-foreground mb-4">Qualification Code: {qualification.code}</p>
 
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">Overall Progress</span>
-          <span className="text-sm font-semibold text-primary">
-            {completed} of {total} Units Complete ({pct}%)
-          </span>
-        </div>
-        <Progress value={pct} className="h-3" />
+        {!isSession && (
+          <>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Overall Progress</span>
+              <span className="text-sm font-semibold text-primary">
+                {completed} of {total} Units Complete ({pct}%)
+              </span>
+            </div>
+            <Progress value={pct} className="h-3" />
 
-        <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
-              <User className="w-3 h-3 text-primary" /> Assigned Trainer
-            </h4>
-            {enrolment.trainer ? (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center">
-                  <User className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground leading-none mb-1">{enrolment.trainer.name}</p>
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                    <Mail className="w-3 h-3" /> {enrolment.trainer.email}
-                  </p>
-                </div>
+            <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <User className="w-3 h-3 text-primary" /> Assigned Trainer
+                </h4>
+                {enrolment.trainer ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground leading-none mb-1">{enrolment.trainer.name}</p>
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                        <Mail className="w-3 h-3" /> {enrolment.trainer.email}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 text-muted-foreground/60">
+                    <div className="w-10 h-10 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center">
+                      <User className="w-5 h-5" />
+                    </div>
+                    <p className="text-xs italic">Awaiting Assignment</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center gap-3 text-muted-foreground/60">
-                <div className="w-10 h-10 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center">
-                  <User className="w-5 h-5" />
-                </div>
-                <p className="text-xs italic">Awaiting Assignment</p>
+              <div>
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <ShieldCheck className="w-3 h-3 text-blue-500" /> Internal Quality Assurer (IQA)
+                </h4>
+                {enrolment.iqa ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground leading-none mb-1">{enrolment.iqa.name}</p>
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                        <Mail className="w-3 h-3" /> {enrolment.iqa.email}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 text-muted-foreground/60">
+                    <div className="w-10 h-10 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center">
+                      <User className="w-5 h-5" />
+                    </div>
+                    <p className="text-xs italic">Awaiting Assignment</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div>
-            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
-              <ShieldCheck className="w-3 h-3 text-blue-500" /> Internal Quality Assurer (IQA)
-            </h4>
-            {enrolment.iqa ? (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
-                  <User className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground leading-none mb-1">{enrolment.iqa.name}</p>
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                    <Mail className="w-3 h-3" /> {enrolment.iqa.email}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 text-muted-foreground/60">
-                <div className="w-10 h-10 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center">
-                  <User className="w-5 h-5" />
-                </div>
-                <p className="text-xs italic">Awaiting Assignment</p>
-              </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
-      {isStaffMissing && !isExpired && (
+      {!isSession && isStaffMissing && !isExpired && (
         <div className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 shadow-sm">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20">
@@ -231,7 +236,7 @@ const QualificationView = () => {
         </div>
       )}
 
-      {isExpired && (
+      {!isSession && isExpired && (
         <div className="mb-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-4">
@@ -254,29 +259,19 @@ const QualificationView = () => {
       )}
 
       {/* ── Session info card (only for session-based qualifications) ── */}
-      {isSession && session && (
+      {isSession && (
         <div className="bg-card border border-border rounded-xl p-6 mb-8 shadow-sm">
-          <h2 className="text-base font-bold text-primary mb-4 flex items-center gap-2">
-            <Calendar className="w-4 h-4" /> Session Details
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Calendar className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Session Title</p>
-                <p className="font-medium text-foreground">{session.title}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <CalendarPlus className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Date</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Purchase Date</p>
                 <p className="font-medium text-foreground">
-                  {new Date(session.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                  {enrolment.enrolled_at
+                    ? new Date(enrolment.enrolled_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+                    : "—"}
                 </p>
               </div>
             </div>
@@ -286,25 +281,12 @@ const QualificationView = () => {
               </div>
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Location</p>
-                <p className="font-medium text-foreground capitalize">{session.location}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Building2 className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Venue Address</p>
-                <p className="font-medium text-foreground">{session.venue_address}</p>
+                <p className="font-medium text-foreground capitalize">
+                  {session?.location ?? "—"}
+                </p>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {isSession && !session && (
-        <div className="bg-muted/40 border border-border rounded-xl p-6 mb-8 text-center text-muted-foreground text-sm">
-          No session details available yet. Please check back later.
         </div>
       )}
 
@@ -491,6 +473,12 @@ const QualificationView = () => {
           </div> 
         ) : null}
       </div>
+
+      {isCpd && id && (
+        <div className="mt-4">
+          <CertificateDownloadButton enrolmentId={id} />
+        </div>
+      )}
         </>
       )}
 

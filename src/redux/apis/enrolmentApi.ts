@@ -248,6 +248,42 @@ const enrolmentApi = api.injectEndpoints({
         { type: "Enrolments", id: `UNIT_${unitId}` },
       ],
     }),
+    getCertificateProgress: builder.query<
+      {
+        issues_certificate: boolean;
+        can_download: boolean;
+        certificate_issued?: boolean;
+        all_units_completed?: boolean;
+        units_completed_count?: number;
+        total_units?: number;
+        final_assessment_passed?: boolean;
+        learner_declaration_signed?: boolean;
+        course_evaluation_submitted?: boolean;
+        blockers: { code: string; message: string }[];
+      },
+      string
+    >({
+      query: (enrolmentId) => ({
+        url: `/api/enrolments/me/${enrolmentId}/certificate/progress/`,
+        method: "GET",
+      }),
+      providesTags: (_r, _e, id) => [{ type: "CertificateProgress", id }],
+    }),
+    getCertificateDownload: builder.query<
+      {
+        certificate_number: string;
+        issued_at: string;
+        download_url: string;
+        qualification_title: string;
+        cpd_hours: string | null;
+      },
+      string
+    >({
+      query: (enrolmentId) => ({
+        url: `/api/enrolments/me/${enrolmentId}/certificate/download/`,
+        method: "GET",
+      }),
+    }),
     getEnrollmentAdminProgress: builder.query({
       query: (args) => {
         const filteredParams = cleanObject(args);
@@ -277,4 +313,6 @@ export const {
   useGetLearnerExtensionOrderStatusQuery,
   useSubmitEvidenceMutation,
   useGetEnrollmentAdminProgressQuery,
+  useGetCertificateProgressQuery,
+  useGetCertificateDownloadQuery,
 } = enrolmentApi;
