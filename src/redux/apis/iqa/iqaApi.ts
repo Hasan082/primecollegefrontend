@@ -396,6 +396,8 @@ const iqaApi = api.injectEndpoints({
         method: "GET",
         params: cleanObject(args || {}),
       }),
+      transformResponse: (response: { data: UnitIQASampleListResponse } | UnitIQASampleListResponse) =>
+        (response as { data: UnitIQASampleListResponse }).data ?? (response as UnitIQASampleListResponse),
       providesTags: ["Enrolments"],
     }),
     getIqaSampleDetail: builder.query<UnitIQASampleItem, string>({
@@ -403,6 +405,8 @@ const iqaApi = api.injectEndpoints({
         url: `/api/iqa/samples/${sampleId}/`,
         method: "GET",
       }),
+      transformResponse: (response: { data: UnitIQASampleItem } | UnitIQASampleItem) =>
+        (response as { data: UnitIQASampleItem }).data ?? (response as UnitIQASampleItem),
       providesTags: (_result, _error, sampleId) => [
         { type: "Enrolments", id: `IQA_SAMPLE_${sampleId}` },
       ],

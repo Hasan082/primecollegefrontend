@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -135,19 +135,20 @@ function SubmissionReviewCard({
 
 const UnitManagement = () => {
   const { learnerId: enrolmentId, unitCode: unitId } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const { data: contentResponse, isLoading: isLoadingContent, isError: isContentError } =
     useGetTrainerEnrolmentContentQuery(enrolmentId!, { skip: !enrolmentId });
   const unit = contentResponse?.data.units.find((item) => item.id === unitId);
 
-  const { data: writtenResponse, isLoading: isLoadingWritten } =
+  const { data: writtenResponse, isLoading: isLoadingWritten, refetch: refetchWritten } =
     useGetTrainerWrittenAssignmentQuery(
       { enrolmentId: enrolmentId!, unitId: unitId! },
       { skip: !enrolmentId || !unitId || !unit?.has_written_assignment },
     );
 
-  const { data: evidenceResponse, isLoading: isLoadingEvidence } =
+  const { data: evidenceResponse, isLoading: isLoadingEvidence, refetch: refetchEvidence } =
     useGetTrainerEvidenceSubmissionsQuery(
       { enrolmentId: enrolmentId!, unitId: unitId! },
       { skip: !enrolmentId || !unitId || !unit?.requires_evidence },
@@ -220,8 +221,11 @@ const UnitManagement = () => {
       toast({ title: "Written assignment review submitted" });
       setWrittenOutcome("");
       setWrittenFeedback("");
-    } catch {
-      toast({ title: "Failed to submit written review", variant: "destructive" });
+      refetchWritten();
+      navigate(`/trainer/learner/${enrolmentId}`);
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || error?.data?.detail || error?.error || "Failed to submit written review";
+      toast({ title: errorMessage, variant: "destructive" });
     }
   };
 
@@ -249,8 +253,11 @@ const UnitManagement = () => {
       toast({ title: "Evidence review submitted" });
       setEvidenceOutcome("");
       setEvidenceFeedback("");
-    } catch {
-      toast({ title: "Failed to submit evidence review", variant: "destructive" });
+      refetchEvidence();
+      navigate(`/trainer/learner/${enrolmentId}`);
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || error?.data?.detail || error?.error || "Failed to submit evidence review";
+      toast({ title: errorMessage, variant: "destructive" });
     }
   };
 

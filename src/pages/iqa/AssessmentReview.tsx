@@ -131,13 +131,13 @@ const AssessmentReview = () => {
   const sample = useMemo(() => {
     if (sampleDetail) return sampleDetail;
     return (samplesResponse?.results || []).find(
-      (item) => item.id === id || item.trigger_submission.id === id,
+      (item) => item.id === id || item.trigger_submission?.id === id,
     ) || null;
   }, [sampleDetail, samplesResponse?.results, id]);
 
   const { data: queueData, isLoading: isLoadingQueue } = useGetIqaReviewQueueQuery();
   const queueItem = useMemo(() => {
-    const submissionId = sample?.trigger_submission.id || id;
+    const submissionId = sample?.trigger_submission?.id || id;
     const matched = queueData?.data?.results?.find(
       (item) => item.sample_id === id || item.submission_id === id || item.submission_id === submissionId,
     );
@@ -163,29 +163,29 @@ const AssessmentReview = () => {
 
     return {
       sample_id: sample.id,
-      submission_id: sample.trigger_submission.id,
-      enrolment_id: "",
-      submission_type: sample.trigger_submission.submission_type,
-      learner: sample.learner,
-      trainer: sample.trainer,
-      qualification: sample.qualification,
+      submission_id: sample.trigger_submission?.id || "",
+      enrolment_id: sample.enrolment_id || "",
+      submission_type: sample.trigger_submission?.submission_type || "",
+      learner: sample.learner || { id: "", name: "Unknown" },
+      trainer: sample.trainer || { id: "", name: "Unassigned" },
+      qualification: sample.qualification || { id: "", title: "N/A" },
       unit: {
-        id: sample.unit.id,
-        unit_code: sample.unit.code,
-        title: sample.unit.title,
+        id: sample.unit?.id || "",
+        unit_code: sample.unit?.code || "",
+        title: sample.unit?.title || "",
       },
-      status: sample.trigger_submission.status,
+      status: sample.trigger_submission?.status || "",
       iqa_decision: sample.review_status === "approved" ? "approved" : sample.review_status === "trainer_review" ? "referred_back" : null,
       iqa_reviewed_at: sample.reviewed_at,
-      submitted_at: sample.trigger_submission.submitted_at,
-      outcome_set_at: sample.trigger_submission.outcome_set_at,
+      submitted_at: sample.trigger_submission?.submitted_at || "",
+      outcome_set_at: sample.trigger_submission?.outcome_set_at || "",
       iqa_status: workflowStatus,
       sampling_reason: sample.sampling_reason,
       has_open_admin_concern: false,
     };
   }, [id, queueData?.data?.results, sample]);
 
-  const submissionType = sample?.trigger_submission.submission_type || queueItem?.submission_type;
+  const submissionType = sample?.trigger_submission?.submission_type || queueItem?.submission_type;
   const isWritten = submissionType === "written";
   const isEvidence = submissionType === "evidence";
   const { data: historyData } = useGetIqaSubmissionHistoryQuery(
@@ -214,12 +214,12 @@ const AssessmentReview = () => {
   );
 
   const { data: writtenData, isLoading: isLoadingWritten } =
-    useGetIqaWrittenSubmissionDetailQuery(sample?.trigger_submission.id || "", {
-      skip: !sample?.trigger_submission.id || !isWritten,
+    useGetIqaWrittenSubmissionDetailQuery(sample?.trigger_submission?.id || "", {
+      skip: !sample?.trigger_submission?.id || !isWritten,
     });
   const { data: evidenceData, isLoading: isLoadingEvidence } =
-    useGetIqaEvidenceSubmissionDetailQuery(sample?.trigger_submission.id || "", {
-      skip: !sample?.trigger_submission.id || !isEvidence,
+    useGetIqaEvidenceSubmissionDetailQuery(sample?.trigger_submission?.id || "", {
+      skip: !sample?.trigger_submission?.id || !isEvidence,
     });
   const { data: feedbackData } = useGetSampleFeedbackQuery(id || "", {
     skip: !id || !["action_required", "trainer_review"].includes(sample?.review_status ?? ""),
@@ -227,7 +227,7 @@ const AssessmentReview = () => {
   const feedbackItems = feedbackData?.results || [];
 
   const { data: checklistData } = useGetChecklistTemplatesForIqaQuery(
-    sample ? { qualification_id: sample.qualification.id, is_active: "true" } : undefined,
+    sample ? { qualification_id: sample?.qualification?.id, is_active: "true" } : undefined,
     { skip: !sample },
   );
   const applicableTemplates = useMemo(() => {
@@ -358,7 +358,7 @@ const AssessmentReview = () => {
   };
 
   const handleRaiseConcern = async () => {
-    if (!sample?.trigger_submission.id || !concernNote.trim()) {
+    if (!sample?.trigger_submission?.id || !concernNote.trim()) {
       toast({ title: "Concern note is required", variant: "destructive" });
       return;
     }
@@ -366,12 +366,12 @@ const AssessmentReview = () => {
     try {
       if (isWritten) {
         await raiseWrittenConcern({
-          submissionId: sample.trigger_submission.id,
+          submissionId: sample.trigger_submission?.id || "",
           body: { concern_note: concernNote.trim() },
         }).unwrap();
       } else if (isEvidence) {
         await raiseEvidenceConcern({
-          submissionId: sample.trigger_submission.id,
+          submissionId: sample.trigger_submission?.id || "",
           body: { concern_note: concernNote.trim() },
         }).unwrap();
       } else {
@@ -424,8 +424,8 @@ const AssessmentReview = () => {
         <div>
           <h1 className="text-2xl font-bold">IQA Assessment Review</h1>
           <p className="text-sm text-muted-foreground">
-            {queueItem.qualification.title} · {queueItem.unit.unit_code}:{" "}
-            {queueItem.unit.title}
+            {queueItem.qualification?.title} · {queueItem.unit?.unit_code}:{" "}
+            {queueItem.unit?.title}
           </p>
         </div>
         {(() => {
@@ -445,14 +445,14 @@ const AssessmentReview = () => {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p>
-            <strong>Learner:</strong> {queueItem.learner.name}
+            <strong>Learner:</strong> {queueItem.learner?.name}
           </p>
           <p>
             <strong>Trainer:</strong> {queueItem.trainer?.name || "Unassigned"}
           </p>
           <p>
             <strong>Submission Type:</strong>{" "}
-            {getSubmissionTypeLabel(sample?.trigger_submission.submission_type)}
+            {getSubmissionTypeLabel(sample?.trigger_submission?.submission_type)}
           </p>
           <p>
             <strong>Trainer Outcome:</strong>{" "}
