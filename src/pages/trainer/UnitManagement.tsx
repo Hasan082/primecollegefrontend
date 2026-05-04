@@ -455,7 +455,21 @@ const UnitManagement = () => {
               <div className="text-sm text-muted-foreground">
                 Word count: {latestWritten.response_word_count}
               </div>
-              {latestWritten?.status === "pending" ? (
+              {(latestWritten?.iqa_decision === "referred_back") && (
+                <div className="mt-4 p-4 rounded-xl bg-red-50/60 border border-red-200 flex items-start gap-3">
+                  <div className="rounded-full bg-red-100 p-2 shrink-0">
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-red-700">IQA Referred Back — Recheck Required</p>
+                    <p className="text-sm text-red-600/80 mt-0.5">
+                      {latestWritten.iqa_review_notes ||
+                        "IQA has referred this written assignment back to you for rechecking. Please review the submission and the IQA notes before reassessing."}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {(latestWritten?.status === "pending" || latestWritten?.iqa_decision === "referred_back") ? (
                 <div className="space-y-3">
                   <div className="grid gap-2 md:grid-cols-3">
                     {outcomeOptions.map((option) => (
@@ -554,7 +568,21 @@ const UnitManagement = () => {
                   </div>
                 ))}
               </div>
-              {latestEvidence?.status === "pending" ? (
+              {(latestEvidence?.iqa_decision === "referred_back") && (
+                <div className="mt-4 p-4 rounded-xl bg-red-50/60 border border-red-200 flex items-start gap-3">
+                  <div className="rounded-full bg-red-100 p-2 shrink-0">
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-red-700">IQA Referred Back — Recheck Required</p>
+                    <p className="text-sm text-red-600/80 mt-0.5">
+                      {latestEvidence.iqa_review_notes ||
+                        "IQA has referred this evidence portfolio back to you for rechecking. Please review the evidence items and the IQA notes before reassessing."}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {(latestEvidence?.status === "pending" || latestEvidence?.iqa_decision === "referred_back") ? (
                 <div className="space-y-3">
                   <div className="grid gap-2 md:grid-cols-3">
                     {outcomeOptions.map((option) => (
