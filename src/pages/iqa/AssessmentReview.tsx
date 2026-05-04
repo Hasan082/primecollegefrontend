@@ -516,12 +516,6 @@ const AssessmentReview = () => {
               {currentUnit.has_quiz ? (
                 <div className="mt-3 space-y-1 text-sm text-muted-foreground">
                   <p>Attempts: {currentUnit.progress?.quiz_attempts ?? 0}</p>
-                  <p>
-                    Score:{" "}
-                    {currentUnit.progress?.quiz_score != null
-                      ? `${currentUnit.progress.quiz_score}%`
-                      : "Not available"}
-                  </p>
                 </div>
               ) : null}
             </div>
