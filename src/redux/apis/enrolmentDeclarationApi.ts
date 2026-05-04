@@ -141,7 +141,10 @@ export const enrolmentDeclarationApi = api.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: (result, error, { enrolmentId }) => [{ type: "LearnerDeclaration", id: enrolmentId }],
+      invalidatesTags: (result, error, { enrolmentId }) => [
+        { type: "LearnerDeclaration", id: enrolmentId },
+        { type: "CertificateProgress", id: enrolmentId },
+      ],
     }),
 
     // Evaluation Endpoints
@@ -182,7 +185,10 @@ export const enrolmentDeclarationApi = api.injectEndpoints({
         method: "POST",
         body: payload,
       }),
-      invalidatesTags: (result, error, { enrolmentId }) => [{ type: "CourseEvaluationSubmission", id: enrolmentId }],
+      invalidatesTags: (result, error, { enrolmentId }) => [
+        { type: "CourseEvaluationSubmission", id: enrolmentId },
+        { type: "CertificateProgress", id: enrolmentId },
+      ],
     }),
   }),
 });

@@ -236,6 +236,7 @@ export interface EnrolmentOverviewResponse {
     data: {
         id: string;
         status: string;
+        enrolled_at: string;
         access_expires_at: string | null;
         access_expired: boolean;
         trainer?: {
