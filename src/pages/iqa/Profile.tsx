@@ -1,4 +1,4 @@
-import { UserCircle, Mail, Phone, MapPin, Save, Camera, Briefcase, GraduationCap, Calendar, Link as LinkIcon, FileText } from "lucide-react";
+import { UserCircle, Mail, Phone, MapPin, Save, Camera, Briefcase, GraduationCap, Calendar, Link as LinkIcon, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import {
   useGetMeQuery,
   usePresignProfilePictureMutation,
   useUpdateMeMutation,
+  UpdateMeRequest,
 } from "@/redux/apis/authApi";
 import { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -41,6 +42,12 @@ const Profile = () => {
 
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [clearProfilePicture, setClearProfilePicture] = useState(false);
+
+  const formatDateForInput = (dateStr: string | null | undefined) => {
+    if (!dateStr) return "";
+    return dateStr.split("T")[0];
+  };
 
   useEffect(() => {
     if (userData?.data?.user) {
@@ -53,13 +60,13 @@ const Profile = () => {
         phone: user.phone || "",
         address: user.address || "",
         bio: user.bio || "",
-        date_of_birth: user.date_of_birth || "",
+        date_of_birth: formatDateForInput(user.date_of_birth),
         staff_profile: {
           staff_role: user.staff_profile?.staff_role || "",
           qualification_held: user.staff_profile?.qualification_held || "",
           specialisms: user.staff_profile?.specialisms || "",
           centre_registration_number: user.staff_profile?.centre_registration_number || "",
-          standardisation_last_attended: user.staff_profile?.standardisation_last_attended || "",
+          standardisation_last_attended: formatDateForInput(user.staff_profile?.standardisation_last_attended),
           cpd_record_url: user.staff_profile?.cpd_record_url || "",
         },
       });
@@ -74,35 +81,64 @@ const Profile = () => {
     if (file) {
       setProfilePicture(file);
       setPreviewUrl(URL.createObjectURL(file));
+      setClearProfilePicture(false);
+    }
+  };
+
+  const handleRemovePicture = () => {
+    setProfilePicture(null);
+    setPreviewUrl(null);
+    setClearProfilePicture(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
   const handleSave = async () => {
     try {
       let profilePictureKey: string | null = null;
+
       if (profilePicture) {
         const presign = await presignProfilePicture({
           file_name: profilePicture.name,
           content_type: profilePicture.type || "application/octet-stream",
         }).unwrap();
-        profilePictureKey = await uploadFileToS3(presign, profilePicture);
+        profilePictureKey = await uploadFileToS3(presign.data, profilePicture);
       }
 
-      const payload: Record<string, unknown> = {
+      const payload: UpdateMeRequest = {
         first_name: form.first_name,
         middle_name: form.middle_name,
         last_name: form.last_name,
         phone: form.phone,
         bio: form.bio,
-        date_of_birth: form.date_of_birth,
-        staff_profile: form.staff_profile,
+        date_of_birth: form.date_of_birth || undefined,
+        staff_profile: {
+          qualification_held: form.staff_profile.qualification_held,
+          specialisms: form.staff_profile.specialisms,
+          centre_registration_number: form.staff_profile.centre_registration_number,
+          standardisation_last_attended: form.staff_profile.standardisation_last_attended || undefined,
+          cpd_record_url: form.staff_profile.cpd_record_url,
+        },
+        profile_picture_key: profilePictureKey || undefined,
+        clear_profile_picture: clearProfilePicture,
       };
-      if (profilePictureKey) {
-        payload.profile_picture_key = profilePictureKey;
+
+      // Filter out empty strings to avoid validation errors
+      const filteredPayload = Object.fromEntries(
+        Object.entries(payload).filter(([_, v]) => v !== "")
+      );
+
+      // Also clean staff_profile
+      if (filteredPayload.staff_profile) {
+        filteredPayload.staff_profile = Object.fromEntries(
+          Object.entries(filteredPayload.staff_profile).filter(([_, v]) => v !== "")
+        );
       }
 
-      await updateMe(payload).unwrap();
+      await updateMe(filteredPayload as UpdateMeRequest).unwrap();
       setProfilePicture(null);
+      setClearProfilePicture(false);
       toast({ title: "Profile Updated", description: "Your profile has been saved successfully." });
     } catch {
       toast({ title: "Update Failed", description: "Failed to update profile.", variant: "destructive" });
@@ -126,12 +162,24 @@ const Profile = () => {
                 <UserCircle className="w-12 h-12 text-primary" />
               </AvatarFallback>
             </Avatar>
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
-            >
-              <Camera className="w-4 h-4" />
-            </button>
+            <div className="absolute -bottom-2 right-0 flex gap-1">
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+                title="Change Photo"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+              {previewUrl && (
+                <button 
+                  onClick={handleRemovePicture}
+                  className="p-2 bg-destructive text-destructive-foreground rounded-full shadow-lg hover:bg-destructive/90 transition-colors"
+                  title="Remove Photo"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
             <input 
               ref={fileInputRef}
               type="file"

@@ -269,7 +269,7 @@ const enrolmentApi = api.injectEndpoints({
       }),
       providesTags: (_r, _e, id) => [{ type: "CertificateProgress", id }],
     }),
-    getCertificateDownload: builder.query<
+    downloadCertificate: builder.mutation<
       {
         certificate_number: string;
         issued_at: string;
@@ -279,6 +279,8 @@ const enrolmentApi = api.injectEndpoints({
       },
       string
     >({
+      // Intentionally a mutation so the ephemeral pre-signed S3 URL is
+      // always freshly generated on each click and never served from cache.
       query: (enrolmentId) => ({
         url: `/api/enrolments/me/${enrolmentId}/certificate/download/`,
         method: "GET",
@@ -314,5 +316,5 @@ export const {
   useSubmitEvidenceMutation,
   useGetEnrollmentAdminProgressQuery,
   useGetCertificateProgressQuery,
-  useGetCertificateDownloadQuery,
+  useDownloadCertificateMutation,
 } = enrolmentApi;
