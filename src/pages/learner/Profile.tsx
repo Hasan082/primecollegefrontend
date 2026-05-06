@@ -115,9 +115,13 @@ const Profile = () => {
       setProfilePicture(null);
       setClearProfilePicture(false);
       toast({ title: "Profile Updated", description: "Your profile has been saved successfully." });
-    } catch (error) {
-      console.log({error})
-      toast({ title: "Update Failed", description: "Failed to update profile.", variant: "destructive" });
+    } catch (error: any) {
+      const errorMessage = error?.data?.message || "Failed to update profile.";
+      toast({ 
+        title: "Update Failed", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     }
   };
 
