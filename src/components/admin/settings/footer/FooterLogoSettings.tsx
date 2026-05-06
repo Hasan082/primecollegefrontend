@@ -69,7 +69,7 @@ const FooterLogoSettings = ({ logo, altText, onUpdate }: FooterLogoSettingsProps
           >
             {preview ? (
               <div className="relative group/preview animate-in fade-in zoom-in-95 duration-300">
-                <div className="bg-white p-4 rounded-xl shadow-inner border border-border/50">
+                <div className="bg-primary p-4 rounded-xl shadow-inner border border-white/10">
                   <Image
                     image={preview}
                     alt="Footer Logo preview"
