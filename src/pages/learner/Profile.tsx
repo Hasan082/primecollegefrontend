@@ -29,7 +29,6 @@ const Profile = () => {
     last_name: "",
     email: "",
     phone: "",
-    address: "",
     bio: "",
     date_of_birth: "",
   });
@@ -53,7 +52,6 @@ const Profile = () => {
         last_name: user.last_name || "",
         email: user.email || "",
         phone: user.phone || "",
-        address: user.address || "",
         bio: user.bio || "",
         date_of_birth: formatDateForInput(user.date_of_birth),
       }));
@@ -102,7 +100,6 @@ const Profile = () => {
         date_of_birth: form.date_of_birth || undefined,
         profile_picture_key: profilePictureKey || undefined,
         clear_profile_picture: clearProfilePicture,
-        address: form.address,
       };
 
       // Filter out empty strings to avoid validation errors
@@ -215,10 +212,6 @@ const Profile = () => {
                     onChange={(date) => setForm({ ...form, date_of_birth: date ? format(date, "yyyy-MM-dd") : "" })}
                     className="mt-1.5"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="mt-1.5" />
                 </div>
               </div>
 
