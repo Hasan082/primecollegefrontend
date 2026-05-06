@@ -13,6 +13,8 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uploadFileToS3 } from "@/lib/s3Upload";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format, parseISO, isValid } from "date-fns";
 
 const Profile = () => {
   const { toast } = useToast();
@@ -204,7 +206,11 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="date_of_birth">Date of Birth</Label>
-                  <Input id="date_of_birth" type="date" value={form.date_of_birth} onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })} className="mt-1.5" />
+                  <DatePicker 
+                    date={form.date_of_birth && isValid(parseISO(form.date_of_birth)) ? parseISO(form.date_of_birth) : undefined}
+                    onChange={(date) => setForm({ ...form, date_of_birth: date ? format(date, "yyyy-MM-dd") : "" })}
+                    className="mt-1.5"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="address">Address</Label>
