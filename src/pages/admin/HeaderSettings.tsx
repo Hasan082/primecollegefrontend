@@ -7,18 +7,24 @@ import {
   useGetNavbarPublicQuery,
   useUpdateNavbarSettingsMutation,
   useCreateNavbarSettingsMutation,
+  usePresignHeaderLogoMutation,
   NavbarSettings,
   NavLinkItem,
+  UpdateNavbarRequest,
 } from "@/redux/apis/navbarApi";
 import HeaderLogoSettings from "@/components/admin/settings/header/HeaderLogoSettings";
 import NavigationList from "@/components/admin/settings/header/NavigationList";
 import NavItemForm from "@/components/admin/settings/header/NavItemForm";
+import { uploadFileToS3 } from "@/lib/s3Upload";
 
 const HeaderSettings = () => {
   const { toast } = useToast();
   const { data: navbarResponse, isLoading, isError } = useGetNavbarPublicQuery();
   const [updateNavbar, { isLoading: isUpdating }] = useUpdateNavbarSettingsMutation();
   const [createNavbar, { isLoading: isCreating }] = useCreateNavbarSettingsMutation();
+  const [presignHeaderLogo] = usePresignHeaderLogoMutation();
+
+  const [clearHeaderLogo, setClearHeaderLogo] = useState(false);
 
   const [settings, setSettings] = useState<{
     id?: string;
@@ -50,6 +56,11 @@ const HeaderSettings = () => {
 
   const handleUpdateLogo = (field: string, value: string | File | null) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
+    if (field === "header_logo" && value === null) {
+      setClearHeaderLogo(true);
+    } else if (field === "header_logo" && value !== null) {
+      setClearHeaderLogo(false);
+    }
   };
 
   const handleReorder = (newItems: NavLinkItem[]) => {
@@ -81,30 +92,32 @@ const HeaderSettings = () => {
 
   const handleSaveAll = async () => {
     try {
-      const formData = new FormData();
-      if (settings.id) formData.append("id", settings.id);
-      
-      // Append logo only if it is a File (new upload) or if we want to send the existing path
+      let headerLogoKey: string | null = null;
+
       if (settings.header_logo instanceof File) {
-        formData.append("header_logo", settings.header_logo);
-      } else if (typeof settings.header_logo === "string") {
-        // If it's a string, it's the existing path. 
-        // Some backends might not need this if patching, but we'll include it for completeness.
-        formData.append("header_logo", settings.header_logo);
+        const presign = await presignHeaderLogo({
+          file_name: settings.header_logo.name,
+          content_type: settings.header_logo.type || "application/octet-stream",
+        }).unwrap();
+        headerLogoKey = await uploadFileToS3(presign.data, settings.header_logo);
       }
-      
-      formData.append("header_logo_alt_text", settings.header_logo_alt_text);
-      formData.append("is_active", String(settings.is_active));
-      
-      // Stringify complex objects for FormData
-      formData.append("dynamicNavLinks", JSON.stringify(settings.dynamicNavLinks));
+
+      const payload: UpdateNavbarRequest = {
+        id: settings.id,
+        header_logo_alt_text: settings.header_logo_alt_text,
+        is_active: settings.is_active,
+        dynamicNavLinks: settings.dynamicNavLinks,
+        header_logo_key: headerLogoKey || undefined,
+        clear_header_logo: clearHeaderLogo,
+      };
 
       if (settings.id) {
-        await updateNavbar(formData).unwrap();
+        await updateNavbar(payload).unwrap();
       } else {
-        await createNavbar(formData).unwrap();
+        await createNavbar(payload as any).unwrap();
       }
 
+      setClearHeaderLogo(false);
       toast({ title: "Header settings saved successfully!" });
     } catch (error) {
       toast({

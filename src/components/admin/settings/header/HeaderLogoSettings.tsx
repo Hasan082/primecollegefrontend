@@ -1,93 +1,116 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ImageIcon, X } from "lucide-react";
+import { ImageIcon, X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Image } from "@/components/Image";
 
 interface HeaderLogoSettingsProps {
-  logo: string | File | null;
+  logo: any; // Accept string, File, or structured object
   altText: string;
   onUpdate: (field: string, value: string | File | null) => void;
 }
 
 const HeaderLogoSettings = ({ logo, altText, onUpdate }: HeaderLogoSettingsProps) => {
-  const [preview, setPreview] = useState<string | null>(
-    typeof logo === "string" ? (logo.startsWith("http") || logo.startsWith("/") ? logo : null) : null
-  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<any>(null);
+
+  useEffect(() => {
+    if (!logo) {
+      setPreview(null);
+      return;
+    }
+
+    if (logo instanceof File) {
+      setPreview(URL.createObjectURL(logo));
+    } else {
+      // It's a string or a structured object
+      setPreview(logo);
+    }
+  }, [logo]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       onUpdate("header_logo", file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
   const removeLogo = () => {
     onUpdate("header_logo", null);
     setPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Logo Settings</CardTitle>
+    <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm overflow-hidden">
+      <CardHeader className="pb-3 border-b border-border/50 bg-muted/10">
+        <CardTitle className="text-lg font-bold flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+            <ImageIcon className="h-4 w-4" />
+          </div>
+          Header Logo
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="p-6 space-y-6">
         <div className="grid gap-4">
-          <Label>Logo Image</Label>
+          <Label className="text-sm font-semibold text-foreground/70">Logo Image</Label>
           
-          <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 bg-muted/20 relative group transition-colors hover:bg-muted/30">
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-10 bg-muted/20 relative group transition-all duration-300 hover:bg-muted/30 hover:border-primary/50 cursor-pointer overflow-hidden"
+          >
             {preview ? (
-              <div className="relative max-w-full">
-                <img
-                  src={preview}
-                  alt="Logo preview"
-                  className="max-h-32 object-contain rounded shadow-sm"
-                />
+              <div className="relative group/preview animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-white p-4 rounded-xl shadow-inner border border-border/50">
+                  <Image
+                    image={preview}
+                    alt="Logo preview"
+                    className="max-h-32 w-auto object-contain rounded-lg"
+                  />
+                </div>
                 <Button
                   variant="destructive"
                   size="icon"
-                  className="h-6 w-6 absolute -top-2 -right-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-8 w-8 absolute -top-3 -right-3 rounded-full shadow-xl opacity-0 group-hover/preview:opacity-100 transition-all duration-200 scale-90 group-hover/preview:scale-100"
                   onClick={(e) => { e.stopPropagation(); removeLogo(); }}
+                  type="button"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
-              <div className="text-center space-y-2 pointer-events-none">
-                <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                  <ImageIcon className="h-5 w-5 text-muted-foreground" />
+              <div className="text-center space-y-4">
+                <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner transition-transform group-hover:scale-110 duration-300">
+                  <Upload className="h-8 w-8" />
                 </div>
-                <div className="text-xs text-muted-foreground font-medium">
-                  Click to upload or drag logo image
+                <div className="space-y-1">
+                  <p className="text-base font-bold text-foreground">Click to upload logo</p>
+                  <p className="text-xs text-muted-foreground font-medium">SVG, PNG, JPG (max. 2MB)</p>
                 </div>
               </div>
             )}
-            <Input
+            <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
-              className="absolute inset-0 opacity-0 cursor-pointer"
+              className="hidden"
               onChange={handleFileChange}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground italic">
-            Recommended size: 200x60px. Supports PNG, JPG, SVG.
-          </p>
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="header_logo_alt_text">Alt Text</Label>
+          <Label htmlFor="header_logo_alt_text" className="text-sm font-bold text-foreground/70">Alt Text</Label>
           <Input
             id="header_logo_alt_text"
             placeholder="e.g. Prime College"
             value={altText}
             onChange={(e) => onUpdate("header_logo_alt_text", e.target.value)}
+            className="bg-background/50 h-11 border-border/50 focus:border-primary/50 transition-all"
           />
         </div>
       </CardContent>

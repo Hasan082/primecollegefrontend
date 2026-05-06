@@ -6,15 +6,18 @@ import { useToast } from "@/hooks/use-toast";
 import {
   useGetFooterPublicQuery,
   useUpdateFooterSettingsMutation,
+  usePresignFooterLogoMutation,
   FooterSettings as IFooterSettings,
   LinkGroup,
   SocialLink,
+  UpdateFooterRequest,
 } from "@/redux/apis/footerApi";
 import FooterLogoSettings from "@/components/admin/settings/footer/FooterLogoSettings";
 import BasicInfoSettings from "@/components/admin/settings/footer/BasicInfoSettings";
 import LinkGroupManager from "@/components/admin/settings/footer/LinkGroupManager";
 import LinkGroupForm from "@/components/admin/settings/footer/LinkGroupForm";
 import SocialLinksManager from "@/components/admin/settings/footer/SocialLinksManager";
+import { uploadFileToS3 } from "@/lib/s3Upload";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -27,6 +30,9 @@ const FooterSettings = () => {
   const { toast } = useToast();
   const { data: footerResponse, isLoading, refetch } = useGetFooterPublicQuery();
   const [updateFooter, { isLoading: isUpdating }] = useUpdateFooterSettingsMutation();
+  const [presignFooterLogo] = usePresignFooterLogoMutation();
+
+  const [clearFooterLogo, setClearFooterLogo] = useState(false);
 
   const [settings, setSettings] = useState<IFooterSettings>({
     footer_logo: null,
@@ -58,6 +64,11 @@ const FooterSettings = () => {
 
   const handleUpdateField = (field: string, value: any) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
+    if (field === "footer_logo" && value === null) {
+      setClearFooterLogo(true);
+    } else if (field === "footer_logo" && value !== null) {
+      setClearFooterLogo(false);
+    }
   };
 
   const handleReorderGroups = (newGroups: LinkGroup[]) => {
@@ -117,39 +128,30 @@ const FooterSettings = () => {
 
   const handleSaveAll = async () => {
     try {
-      const isNewLogo = settings.footer_logo instanceof File;
-      let payload: any;
+      let footerLogoKey: string | null = null;
 
-      if (isNewLogo) {
-        // Use FormData if there is a new file to upload
-        const formData = new FormData();
-        if (settings.id) formData.append("id", settings.id);
-        formData.append("footer_logo", settings.footer_logo as File);
-        formData.append("footer_logo_alt_text", settings.footer_logo_alt_text);
-        formData.append("description", settings.description);
-        formData.append("address", settings.address);
-        formData.append("email", settings.email);
-        formData.append("phone", settings.phone);
-        formData.append("copyright_name", settings.copyright_name);
-        formData.append("copyright_year", String(settings.copyright_year));
-        
-        // Complex objects must be stringified in FormData
-        formData.append("link_groups", JSON.stringify(settings.link_groups));
-        formData.append("social_links", JSON.stringify(settings.social_links));
-        payload = formData;
-      } else {
-        // Use plain JSON object if no new file is being uploaded
-        payload = {
-          ...settings,
-          // Ensure numbers are numbers
-          copyright_year: Number(settings.copyright_year),
-          // Backend might expect these even if they haven't changed
-          link_groups: settings.link_groups,
-          social_links: settings.social_links,
-        };
+      if (settings.footer_logo instanceof File) {
+        const presign = await presignFooterLogo({
+          file_name: settings.footer_logo.name,
+          content_type: settings.footer_logo.type || "application/octet-stream",
+        }).unwrap();
+        footerLogoKey = await uploadFileToS3(presign.data, settings.footer_logo);
+      }
+
+      const payload: UpdateFooterRequest = {
+        ...settings,
+        copyright_year: Number(settings.copyright_year),
+        footer_logo_key: footerLogoKey || undefined,
+        clear_footer_logo: clearFooterLogo,
+      };
+
+      // Remove the file object from payload to avoid issues with JSON serialization
+      if (payload.footer_logo instanceof File) {
+        delete payload.footer_logo;
       }
 
       await updateFooter(payload).unwrap();
+      setClearFooterLogo(false);
       toast({ 
         title: "Success",
         description: "Footer settings saved successfully!",

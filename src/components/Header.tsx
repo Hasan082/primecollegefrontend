@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { appConfig } from "@/app.config";
 import { useGetNavbarPublicQuery } from "@/redux/apis/navbarApi";
 import { Button } from "./ui/button";
+import { Image } from "./Image";
 
 const TOP_BAR_HEIGHT = 36;
 const HEADER_HEIGHT_FULL = 80;
@@ -31,7 +32,7 @@ const Header = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [openProfile, setOpenProfile] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const { data } = useGetNavbarPublicQuery(null);
+  const { data: navbarResponse } = useGetNavbarPublicQuery(null);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -40,7 +41,9 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navItems = data?.data?.dynamicNavLinks || [];
+  const navItems = navbarResponse?.data?.dynamicNavLinks || [];
+  const headerLogo = navbarResponse?.data?.header_logo;
+  const headerLogoAlt = navbarResponse?.data?.header_logo_alt_text;
 
   const sortByOrder = (a: any, b: any) => (a?.order ?? 0) - (b?.order ?? 0);
 
@@ -67,11 +70,19 @@ const Header = () => {
         <div className="container mx-auto flex items-center justify-between h-full px-4 py-2">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <img
-              src={logo}
-              alt="Prime College"
-              className={`transition-all duration-300 w-auto ${scrolled ? "h-10" : "h-16"}`}
-            />
+            {headerLogo ? (
+              <Image
+                image={headerLogo}
+                alt={headerLogoAlt || "Prime College"}
+                className={`transition-all duration-300 w-auto ${scrolled ? "h-10" : "h-16"}`}
+              />
+            ) : (
+              <img
+                src={logo}
+                alt="Prime College"
+                className={`transition-all duration-300 w-auto ${scrolled ? "h-10" : "h-16"}`}
+              />
+            )}
           </Link>
 
           {/* Desktop Nav */}

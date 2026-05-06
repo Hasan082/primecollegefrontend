@@ -122,6 +122,7 @@ const Profile = () => {
         },
         profile_picture_key: profilePictureKey || undefined,
         clear_profile_picture: clearProfilePicture,
+        address: form.address,
       };
 
       // Filter out empty strings to avoid validation errors
@@ -236,6 +237,11 @@ const Profile = () => {
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea id="bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} className="mt-1.5" placeholder="Short description about yourself..." />
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="mt-1.5" placeholder="Your full address..." />
               </div>
             </div>
           </section>
