@@ -141,6 +141,20 @@ export interface EvidenceSubmissionJsonPayload {
   file_keys: string[];
 }
 
+export interface CpdUnitCompleteResponse {
+  success: boolean;
+  message: string;
+  data: {
+    status: string;
+    competency_status?: string | null;
+    started_at: string | null;
+    completed_at: string | null;
+    time_spent_seconds: number;
+    min_time_met: boolean;
+    is_locked: boolean;
+  };
+}
+
 const enrolmentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getLearnerDashboard: builder.query<LearnerDashboardResponse, void>({
@@ -175,6 +189,21 @@ const enrolmentApi = api.injectEndpoints({
       providesTags: (result, error, { enrolmentId, unitId }) => [
         { type: "Enrolments", id: enrolmentId },
         { type: "Enrolments", id: `UNIT_${unitId}` },
+      ],
+    }),
+    markCpdUnitComplete: builder.mutation<
+      CpdUnitCompleteResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/cpd-complete/`,
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: (_result, _error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: enrolmentId },
+        { type: "Enrolments", id: `UNIT_${unitId}` },
+        { type: "CertificateProgress", id: enrolmentId },
       ],
     }),
     getEnrolmentContent: builder.query<EnrolmentContentResponse, string>({
@@ -337,6 +366,7 @@ export const {
   useGetEnrolmentsQuery,
   useGetEnrolmentOverviewQuery,
   useGetLearnerUnitOverviewQuery,
+  useMarkCpdUnitCompleteMutation,
   useGetEnrolmentContentQuery,
   useGetLearnerWrittenAssignmentQuery,
   useSubmitWrittenAssignmentMutation,

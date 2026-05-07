@@ -29,7 +29,7 @@ const mainNavItems = [
     icon: FolderTree,
   },
   { title: "IQA Inbox", url: "/iqa/sampling", icon: ClipboardCheck },
-  { title: "Checklists", url: "/iqa/checklists", icon: ClipboardList },
+  { title: "My Verifications", url: "/iqa/checklists", icon: ClipboardList },
   { title: "Trainer Performance", url: "/iqa/trainers", icon: Users },
   { title: "Reports", url: "/iqa/reports", icon: BarChart3 },
 ];

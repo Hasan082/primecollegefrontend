@@ -226,6 +226,7 @@ export interface EnrolmentOverviewUnit {
     unit_code: string;
     description: string;
     order: number;
+    cpd_estimated_minutes: number;
     display_status: string;
     progress: EnrolmentOverviewUnitProgress | null;
 }
@@ -348,6 +349,7 @@ export interface LearnerUnitOverviewResponse {
         has_quiz: boolean;
         has_written_assignment: boolean;
         requires_evidence: boolean;
+        cpd_estimated_minutes: number;
         display_status: string;
         progress: EnrolmentOverviewUnitProgress | null;
         resources: LearnerUnitOverviewResource[];
@@ -391,6 +393,7 @@ export interface EnrolmentContent {
         has_quiz: boolean;
         has_written_assignment: boolean;
         requires_evidence: boolean;
+        cpd_estimated_minutes: number;
         resources: any[];
         progress: {
             status: string;
