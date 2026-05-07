@@ -172,9 +172,10 @@ const TrainerManagement = () => {
                         <h3 className="font-semibold">{t.full_name}</h3>
                         <p className="text-sm text-muted-foreground">{t.email}</p>
                         <div className="flex gap-1.5 mt-1">
-                          {t.specialisms.map((s) => (
-                            <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
-                          ))}
+                          {Array.isArray(t.specialisms) &&
+                            t.specialisms.map((s) => (
+                              <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
+                            ))}
                         </div>
                       </div>
                     </div>
