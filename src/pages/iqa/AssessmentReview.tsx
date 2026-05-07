@@ -321,6 +321,32 @@ const AssessmentReview = () => {
       return;
     }
 
+    if (decision === "approved") {
+      if (applicableTemplates.length === 0) {
+        toast({
+          title: "No checklist configured",
+          description:
+            "A verification checklist must be set up by admin for this qualification before approval.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const incompleteTemplate = applicableTemplates.find((template) => {
+        const responses = checklistResponses[template.id] || {};
+        return template.items
+          .filter((item) => item.is_active)
+          .some((item) => !responses[item.id]);
+      });
+      if (incompleteTemplate) {
+        toast({
+          title: "Complete the checklist before approval",
+          description: `All items in "${incompleteTemplate.title}" must be answered.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     try {
       if (sample.review_status === "pending") {
         await startSampleReview(sample.id).unwrap();
@@ -1025,12 +1051,23 @@ const AssessmentReview = () => {
         </Card>
       )}
 
-      {!uiFlags?.hide_iqa_review_form && applicableTemplates.length > 0 && (
+      {!uiFlags?.hide_iqa_review_form && (
         <Card>
           <CardHeader>
             <CardTitle>IQA Checklists</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {applicableTemplates.length === 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-medium">No verification checklist configured</p>
+                  <p className="mt-1">
+                    Admin has not set up a checklist for this qualification. Approval is blocked until a checklist is added — please contact admin or refer this submission back to the trainer.
+                  </p>
+                </div>
+              </div>
+            )}
             {applicableTemplates.map((template) => (
               <div key={template.id} className="space-y-3">
                 <p className="text-sm font-semibold">

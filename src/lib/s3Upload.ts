@@ -13,6 +13,7 @@ export async function uploadFileToS3(
   Object.entries(presign.fields).forEach(([key, value]) => {
     formData.append(key, value);
   });
+  formData.append("Content-Type", file.type);
   formData.append("file", file);
 
   const response = await fetch(presign.upload_url, {

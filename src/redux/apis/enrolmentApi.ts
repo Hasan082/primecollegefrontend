@@ -120,6 +120,27 @@ export interface LearnerExtensionOrderStatusResponse {
   data: LearnerExtensionOrder;
 }
 
+export interface EvidenceFilePresignResponse {
+  success: boolean;
+  message: string;
+  file_key: string;
+  data: {
+    file_key: string;
+    key: string;
+    upload_url: string;
+    fields: Record<string, string>;
+    max_file_size_mb: number;
+  };
+}
+
+export interface EvidenceSubmissionJsonPayload {
+  title?: string;
+  description: string;
+  declaration_signed: boolean;
+  criteria_ids: string[];
+  file_keys: string[];
+}
+
 const enrolmentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getLearnerDashboard: builder.query<LearnerDashboardResponse, void>({
@@ -237,7 +258,17 @@ const enrolmentApi = api.injectEndpoints({
         { type: "Enrolments", id: `EXT_ORDER_${orderId}` },
       ],
     }),
-    submitEvidence: builder.mutation<EvidenceSubmissionResponse, { enrolmentId: string; unitId: string; body: FormData }>({
+    presignEvidenceFile: builder.mutation<
+      EvidenceFilePresignResponse,
+      { enrolmentId: string; unitId: string; file_name: string; content_type: string }
+    >({
+      query: ({ enrolmentId, unitId, file_name, content_type }) => ({
+        url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/evidence-submissions/presign/`,
+        method: "POST",
+        body: { file_name, content_type },
+      }),
+    }),
+    submitEvidence: builder.mutation<EvidenceSubmissionResponse, { enrolmentId: string; unitId: string; body: FormData | EvidenceSubmissionJsonPayload }>({
       query: ({ enrolmentId, unitId, body }) => ({
         url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/evidence-submissions/`,
         method: "POST",
@@ -310,6 +341,7 @@ export const {
   useGetLearnerWrittenAssignmentQuery,
   useSubmitWrittenAssignmentMutation,
   useGetLearnerEvidenceSubmissionsQuery,
+  usePresignEvidenceFileMutation,
   useGetLearnerExtensionPlansQuery,
   useCreateLearnerExtensionOrderMutation,
   useGetLearnerExtensionOrderStatusQuery,

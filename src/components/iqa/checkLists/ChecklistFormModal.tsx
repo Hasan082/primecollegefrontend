@@ -123,13 +123,13 @@ const ChecklistFormModal = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Unit *</Label>
+            <Label className="text-xs">Scope</Label>
             <Select value={unitId} onValueChange={onUnitChange}>
               <SelectTrigger className={errors.unit ? "border-destructive" : ""}>
-                <SelectValue placeholder="Select unit" />
+                <SelectValue placeholder="Select scope" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__qual__">Select Unit</SelectItem>
+                <SelectItem value="__qual__">All units (qualification-level)</SelectItem>
                 {unitOptions.map((unit) => (
                   <SelectItem key={unit.id ?? unit.code} value={unit.id ?? unit.code ?? ""}>
                     {unit.unit_code
@@ -139,6 +139,9 @@ const ChecklistFormModal = ({
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Qualification-level checklists are reused across every unit. Pick a unit only when you need a unit-specific override.
+            </p>
             {errors.unit && <p className="text-xs text-destructive">{errors.unit}</p>}
           </div>
 
