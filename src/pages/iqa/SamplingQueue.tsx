@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Eye } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  Eye,
+  Inbox,
+  ShieldAlert,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import {
   useGetIqaAssignedEnrolmentsQuery,
@@ -223,19 +232,78 @@ const SamplingQueue = () => {
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {[
-          ["needs_attention", "Needs Attention", scopeCounts.needsAttention],
-          ["escalated", "Escalated", scopeCounts.escalated],
-          ["resolved", "Resolved", scopeCounts.resolved],
-          ["all", "All Items", scopeCounts.all],
-        ].map(([value, label, count]) => (
-          <Card key={String(value)} className={scope === value ? "border-primary" : undefined}>
-            <CardContent className="p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-              <p className="mt-1 text-2xl font-semibold">{count}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {(
+          [
+            {
+              value: "needs_attention",
+              label: "Needs Attention",
+              count: scopeCounts.needsAttention,
+              icon: AlertTriangle,
+              tone: "bg-amber-50 border-amber-200 text-amber-700",
+              iconBg: "bg-amber-100 text-amber-600",
+              activeRing: "ring-amber-400",
+            },
+            {
+              value: "escalated",
+              label: "Escalated",
+              count: scopeCounts.escalated,
+              icon: ShieldAlert,
+              tone: "bg-rose-50 border-rose-200 text-rose-700",
+              iconBg: "bg-rose-100 text-rose-600",
+              activeRing: "ring-rose-400",
+            },
+            {
+              value: "resolved",
+              label: "Resolved",
+              count: scopeCounts.resolved,
+              icon: CheckCircle2,
+              tone: "bg-emerald-50 border-emerald-200 text-emerald-700",
+              iconBg: "bg-emerald-100 text-emerald-600",
+              activeRing: "ring-emerald-400",
+            },
+            {
+              value: "all",
+              label: "All Items",
+              count: scopeCounts.all,
+              icon: Inbox,
+              tone: "bg-sky-50 border-sky-200 text-sky-700",
+              iconBg: "bg-sky-100 text-sky-600",
+              activeRing: "ring-sky-400",
+            },
+          ] as const
+        ).map((card) => {
+          const Icon = card.icon;
+          const isActive = scope === card.value;
+          return (
+            <button
+              key={card.value}
+              type="button"
+              onClick={() => setScope(card.value)}
+              className={cn(
+                "rounded-lg border p-4 text-left transition shadow-sm hover:shadow-md hover:-translate-y-0.5",
+                card.tone,
+                isActive && `ring-2 ring-offset-2 ${card.activeRing}`,
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-wide">
+                  {card.label}
+                </p>
+                <span
+                  className={cn(
+                    "rounded-full p-1.5 inline-flex items-center justify-center",
+                    card.iconBg,
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                </span>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-foreground">
+                {card.count}
+              </p>
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -275,11 +343,16 @@ const SamplingQueue = () => {
       </div>
 
       {canBulkReview ? (
-        <Card>
+        <Card className="border-primary/20 bg-primary/[0.03]">
           <CardContent className="p-4 space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm font-medium">
-                Bulk Review{selectedSampleIds.length > 0 ? ` (${selectedSampleIds.length} selected)` : ""}
+              <p className="text-sm font-medium flex items-center gap-2">
+                Bulk Review
+                {selectedSampleIds.length > 0 && (
+                  <Badge variant="default" className="text-[10px]">
+                    {selectedSampleIds.length} selected
+                  </Badge>
+                )}
               </p>
               <Select value={bulkDecision} onValueChange={(value) => setBulkDecision(value as typeof bulkDecision)}>
                 <SelectTrigger className="w-[220px]">
@@ -311,11 +384,16 @@ const SamplingQueue = () => {
               <TableRow>
                 {canBulkReview ? (
                   <TableHead className="w-10">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       aria-label="Select all current samples"
-                      checked={selectableEntries.length > 0 && selectedSampleIds.length === selectableEntries.length}
-                      onChange={(event) => toggleAllCurrent(event.target.checked)}
+                      disabled={selectableEntries.length === 0}
+                      checked={
+                        selectableEntries.length > 0 &&
+                        selectedSampleIds.length === selectableEntries.length
+                      }
+                      onCheckedChange={(checked) =>
+                        toggleAllCurrent(checked === true)
+                      }
                     />
                   </TableHead>
                 ) : null}
@@ -352,12 +430,18 @@ const SamplingQueue = () => {
                     <TableRow key={item.id}>
                       {canBulkReview ? (
                         <TableCell>
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             aria-label={`Select ${item.learner.name}`}
-                            disabled={!(item.review_status === "pending" || item.review_status === "in_progress")}
+                            disabled={
+                              !(
+                                item.review_status === "pending" ||
+                                item.review_status === "in_progress"
+                              )
+                            }
                             checked={selectedSampleIds.includes(item.id)}
-                            onChange={(event) => toggleSample(item.id, event.target.checked)}
+                            onCheckedChange={(checked) =>
+                              toggleSample(item.id, checked === true)
+                            }
                           />
                         </TableCell>
                       ) : null}

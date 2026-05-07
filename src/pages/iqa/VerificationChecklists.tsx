@@ -58,34 +58,44 @@ const VerificationChecklists = () => {
 
   const qualificationOptions = useMemo(() => {
     const map = new Map<string, string>();
-    templates.forEach((t) => {
-      if (t.qualification_id && !map.has(t.qualification_id)) {
-        map.set(t.qualification_id, t.qualification_title || t.qualification_id);
-      }
-    });
-    return Array.from(map.entries()).map(([id, title]) => ({ id, title }));
+    templates
+      .filter((t) => t.is_active)
+      .forEach((t) => {
+        if (t.qualification_id && !map.has(t.qualification_id)) {
+          map.set(t.qualification_id, t.qualification_title || t.qualification_id);
+        }
+      });
+    return Array.from(map.entries())
+      .map(([id, title]) => ({ id, title }))
+      .sort((a, b) => a.title.localeCompare(b.title));
   }, [templates]);
 
   const filteredCompletions = useMemo(() => {
     const fromTs = fromDate ? new Date(fromDate).getTime() : null;
     const toTs = toDate ? new Date(toDate).getTime() + 86_400_000 - 1 : null;
-    return completions.filter((completion) => {
-      const template = templateById.get(completion.template.id);
-      if (qualFilter !== "all") {
-        if (!template || template.qualification_id !== qualFilter) {
-          return false;
+    return completions
+      .filter((completion) => {
+        const template = templateById.get(completion.template.id);
+        if (qualFilter !== "all") {
+          if (!template || template.qualification_id !== qualFilter) {
+            return false;
+          }
         }
-      }
-      if (decisionFilter !== "all") {
-        if (impliedDecision(completion.responses) !== decisionFilter) {
-          return false;
+        if (decisionFilter !== "all") {
+          if (impliedDecision(completion.responses) !== decisionFilter) {
+            return false;
+          }
         }
-      }
-      const completedTs = new Date(completion.completed_at).getTime();
-      if (fromTs !== null && completedTs < fromTs) return false;
-      if (toTs !== null && completedTs > toTs) return false;
-      return true;
-    });
+        const completedTs = new Date(completion.completed_at).getTime();
+        if (fromTs !== null && completedTs < fromTs) return false;
+        if (toTs !== null && completedTs > toTs) return false;
+        return true;
+      })
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime(),
+      );
   }, [completions, templateById, qualFilter, decisionFilter, fromDate, toDate]);
 
   const totals = useMemo(() => {
@@ -236,11 +246,15 @@ const VerificationChecklists = () => {
           {filteredCompletions.map((completion) => {
             const template = templateById.get(completion.template.id);
             const decision = impliedDecision(completion.responses);
-            const total = Object.keys(completion.responses).length;
-            const failed = Object.values(completion.responses).filter(
-              (v) => v === "no" || v === "not_met",
-            ).length;
-            const passed = total - failed - Object.values(completion.responses).filter((v) => v === "na").length;
+            const values = Object.values(completion.responses);
+            const total = values.length;
+            let failed = 0;
+            let na = 0;
+            for (const v of values) {
+              if (v === "no" || v === "not_met") failed += 1;
+              else if (v === "na") na += 1;
+            }
+            const passed = total - failed - na;
 
             return (
               <Card key={completion.id}>
@@ -250,19 +264,19 @@ const VerificationChecklists = () => {
                       <p className="text-sm font-semibold">
                         {completion.template.title}
                       </p>
-                      {template ? (
-                        <Badge
-                          variant={template.unit_id ? "secondary" : "outline"}
-                          className="text-[10px]"
-                        >
-                          {template.unit_title
+                      <Badge
+                        variant={template?.unit_id ? "secondary" : "outline"}
+                        className="text-[10px]"
+                      >
+                        {template
+                          ? template.unit_title
                             ? `Unit: ${template.unit_title}`
-                            : "Qualification-level"}
-                        </Badge>
-                      ) : null}
+                            : "Qualification-level"
+                          : "Template archived"}
+                      </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {template?.qualification_title || "—"} ·{" "}
+                      {template?.qualification_title || "Qualification info unavailable"} ·{" "}
                       {new Date(completion.completed_at).toLocaleString("en-GB")} ·{" "}
                       by {completion.iqa_reviewer.name}
                     </p>
