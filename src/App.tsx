@@ -168,7 +168,7 @@ const App = () => {
   }, [data?.data]);
 
   useEffect(() => {
-    const minTimer = new Promise((res) => setTimeout(res, 2000));
+    const minTimer = new Promise((res) => setTimeout(res, 400));
     const contentLoaded = new Promise((res) => {
       if (document.readyState === "complete") return res(true);
       window.addEventListener("load", () => res(true), { once: true });
