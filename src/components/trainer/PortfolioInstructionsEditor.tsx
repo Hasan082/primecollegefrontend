@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
-import { FileText, Save, Plus, X, Info } from "lucide-react";
+import { FileText, Save, Plus, X, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useUpdatePortfolioConfigMutation } from "@/redux/apis/quiz/quizApi";
+import { useUpdatePortfolioConfigMutation, useGetPortfolioConfigQuery } from "@/redux/apis/quiz/quizApi";
 
 const portfolioConfigSchema = z.object({
   instructions: z.string().trim().min(1, "Instructions for Learners is required"),
@@ -71,7 +71,7 @@ const FILE_TYPE_OPTIONS = [
 
 const DEFAULT_CONFIG: PortfolioConfigForm = {
   instructions: "",
-  acceptedFileTypes: [],
+  acceptedFileTypes: ["pdf", "doc", "docx", "jpg", "jpeg", "png"],
   maxFilesPerSubmission: 1,
   maxFileSizeMB: 2,
   requireCriteriaLinking: true,
@@ -83,7 +83,6 @@ const DEFAULT_CONFIG: PortfolioConfigForm = {
 
 type FormErrors = Partial<Record<keyof PortfolioConfigForm, string>>;
 
-// TODO: need to work here if data is already created
 const PortfolioInstructionsEditor = ({
   unitId,
   unitCode,
@@ -92,6 +91,7 @@ const PortfolioInstructionsEditor = ({
   initialData,
 }: Props) => {
   const { toast } = useToast();
+  const { data: portfolioData, isLoading: isFetching } = useGetPortfolioConfigQuery(unitId);
   const [updatePortfolioConfig, { isLoading }] = useUpdatePortfolioConfigMutation();
 
   const [config, setConfig] = useState<PortfolioConfigForm>({
@@ -101,6 +101,34 @@ const PortfolioInstructionsEditor = ({
     exampleEvidence: initialData?.exampleEvidence ?? DEFAULT_CONFIG.exampleEvidence,
     requiredCriteria: initialData?.requiredCriteria ?? DEFAULT_CONFIG.requiredCriteria,
   });
+
+  useEffect(() => {
+    if (portfolioData) {
+      const safeSplit = (val: any): string[] => {
+        if (Array.isArray(val)) return val.map(String).filter(Boolean);
+        if (typeof val === "string") return val.split(",").map((s: string) => s.trim()).filter(Boolean);
+        return [];
+      };
+
+      // Strip leading dots to normalise backend values like ".pdf" → "pdf"
+      const normalise = (types: string[]) => types.map((t) => t.replace(/^\./, "").toLowerCase());
+
+      const parsedFileTypes = normalise(safeSplit(portfolioData.accepted_file_types));
+
+      setConfig({
+        instructions: portfolioData.instructions || "",
+        acceptedFileTypes: parsedFileTypes.length > 0 ? parsedFileTypes : DEFAULT_CONFIG.acceptedFileTypes,
+        maxFilesPerSubmission: portfolioData.max_files_per_submission || 1,
+        maxFileSizeMB: portfolioData.max_file_size_mb || 2,
+        requireCriteriaLinking: portfolioData.require_criteria_linking ?? true,
+        requireEvidenceDescription: portfolioData.require_evidence_description ?? true,
+        exampleEvidence: safeSplit(portfolioData.example_evidence),
+        requiredCriteria: safeSplit(portfolioData.required_criteria),
+        isActive: portfolioData.is_active ?? true,
+      });
+      setHasChanges(false);
+    }
+  }, [portfolioData]);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [hasChanges, setHasChanges] = useState(false);
@@ -200,7 +228,7 @@ const PortfolioInstructionsEditor = ({
       require_criteria_linking: config.requireCriteriaLinking,
       require_evidence_description: config.requireEvidenceDescription,
       example_evidence: config.exampleEvidence.join(", "),
-      required_criteria: config.requiredCriteria.join(", "),
+      required_criteria: config.requiredCriteria.join(","),
       is_active: config.isActive,
     };
   };
@@ -215,6 +243,7 @@ const PortfolioInstructionsEditor = ({
       await updatePortfolioConfig({
         unitId,
         payload,
+        isAlreadyConfigured: !!portfolioData?.id,
       }).unwrap();
 
       setHasChanges(false);
@@ -238,7 +267,12 @@ const PortfolioInstructionsEditor = ({
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col relative">
+      {isFetching && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-[1px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
       <ScrollArea className="max-h-[70vh]">
         <div className="space-y-6 px-6 py-6">
           <div className="space-y-1.5">

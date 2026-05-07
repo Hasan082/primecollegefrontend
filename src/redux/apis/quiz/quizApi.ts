@@ -296,13 +296,25 @@ const quizApi = api.injectEndpoints({
         { type: "QualificationUnits", id: `LIST` },
       ],
     }),
-    updatePortfolioConfig: builder.mutation<any, { unitId: string; payload: any }>({
-      query: ({ unitId, payload }) => ({
+    getPortfolioConfig: builder.query<any, string>({
+      query: (unitId) => ({
         url: `/api/quizzes/units/${unitId}/portfolio-config/`,
-        method: "POST",
+        method: "GET",
+      }),
+      transformResponse: (response: QuizResponse<any>) => response.data,
+      providesTags: (_result, _error, unitId) => [{ type: "Quizzes", id: `PORTFOLIO_${unitId}` }],
+    }),
+
+    updatePortfolioConfig: builder.mutation<any, { unitId: string; payload: any; isAlreadyConfigured?: boolean }>({
+      query: ({ unitId, payload, isAlreadyConfigured }) => ({
+        url: `/api/quizzes/units/${unitId}/portfolio-config/`,
+        method: isAlreadyConfigured ? "PATCH" : "POST",
         body: payload,
       }),
-      invalidatesTags: (_result, _error, { unitId }) => [{ type: "QualificationUnits", id: unitId }],
+      invalidatesTags: (_result, _error, { unitId }) => [
+        { type: "QualificationUnits", id: unitId },
+        { type: "Quizzes", id: `PORTFOLIO_${unitId}` }
+      ],
     }),
 
     getQuestions: builder.query<Question[], string>({
@@ -582,6 +594,7 @@ export const {
   useGetQuestionBankQualificationGuardQuery,
   useGetQuestionBankUnitsQuery,
   useGetQuizConfigQuery,
+  useGetPortfolioConfigQuery,
   useUpdateQuizConfigMutation,
   useUpdatePortfolioConfigMutation,
   useGetQuestionsQuery,
