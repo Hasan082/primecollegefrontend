@@ -37,7 +37,7 @@ const TrainerDetailModal = ({ trainer, open, onOpenChange }: Props) => {
 
   if (!trainer) return null;
 
-  const assignedLearners = trainer.assigned_learners;
+  const assignedLearners = Array.isArray(trainer.assigned_learners) ? trainer.assigned_learners : [];
   const completedAssessments = assignedLearners.filter(
     (e) => e.progress.progress_percent === 100
   ).length;
@@ -49,7 +49,7 @@ const TrainerDetailModal = ({ trainer, open, onOpenChange }: Props) => {
       middle_name: trainer.middle_name || "",
       last_name: trainer.last_name,
       email: trainer.email,
-      specialisms: [...trainer.specialisms],
+      specialisms: [...(trainer.specialisms || [])],
       status: trainer.status,
     });
     setIsEditing(true);
@@ -247,7 +247,7 @@ const TrainerDetailModal = ({ trainer, open, onOpenChange }: Props) => {
                       <GraduationCap className="w-4 h-4 text-muted-foreground" /> Specialisms
                     </h4>
                     <div className="flex gap-2 flex-wrap">
-                      {trainer.specialisms.length > 0 ? (
+                      {Array.isArray(trainer.specialisms) && trainer.specialisms.length > 0 ? (
                         trainer.specialisms.map((s) => (
                           <Badge key={s} variant="outline">{s}</Badge>
                         ))

@@ -212,7 +212,7 @@ const TrainerManagement = () => {
                     </div>
                   </div>
 
-                  {t.assigned_learners.length > 0 && (
+                  {Array.isArray(t.assigned_learners) && t.assigned_learners.length > 0 && (
                     <div className="mt-4 border-t pt-3">
                       <button
                         onClick={() => toggleExpand(t.id)}

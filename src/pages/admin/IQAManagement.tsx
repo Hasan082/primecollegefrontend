@@ -172,7 +172,7 @@ const IQAManagement = () => {
                         <h3 className="font-semibold">{iqa.full_name}</h3>
                         <p className="text-sm text-muted-foreground">{iqa.email}</p>
                         <div className="flex gap-1.5 mt-1">
-                          {iqa.specialisms.map((s) => (
+                          {Array.isArray(iqa.specialisms) && iqa.specialisms.map((s) => (
                             <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
                           ))}
                         </div>
@@ -211,7 +211,7 @@ const IQAManagement = () => {
                     </div>
                   </div>
 
-                  {iqa.assigned_learners.length > 0 && (
+                  {Array.isArray(iqa.assigned_learners) && iqa.assigned_learners.length > 0 && (
                     <div className="mt-4 border-t pt-3">
                       <button
                         onClick={() => toggleExpand(iqa.id)}
