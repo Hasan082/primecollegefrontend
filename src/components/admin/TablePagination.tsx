@@ -35,14 +35,15 @@ const TablePagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }
           <form onSubmit={handleGoToPage} className="flex items-center gap-2 border-l border-border pl-4">
             <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Go to page:</span>
             <Input 
-              type="number" 
-              min={1} 
-              max={totalPages} 
+              type="text"
               className="w-16 h-8 text-center" 
               value={inputPage}
               onChange={(e) => setInputPage(e.target.value)}
               placeholder="#"
             />
+            <Button type="submit" size="sm" className="h-8 px-3">
+              Go
+            </Button>
           </form>
         )}
       </div>
