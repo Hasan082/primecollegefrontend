@@ -138,16 +138,19 @@ const FooterSettings = () => {
         footerLogoKey = await uploadFileToS3(presign.data, settings.footer_logo);
       }
 
+      // Destructure to exclude footer_logo from the base settings
+      const { footer_logo, ...restSettings } = settings;
+
       const payload: UpdateFooterRequest = {
-        ...settings,
+        ...restSettings,
         copyright_year: Number(settings.copyright_year),
         footer_logo_key: footerLogoKey || undefined,
         clear_footer_logo: clearFooterLogo,
       };
 
-      // Remove the file object from payload to avoid issues with JSON serialization
-      if (payload.footer_logo instanceof File) {
-        delete payload.footer_logo;
+      // Ensure footer_logo is not in the payload as it's handled via S3 key
+      if ("footer_logo" in payload) {
+        delete (payload as any).footer_logo;
       }
 
       await updateFooter(payload).unwrap();
