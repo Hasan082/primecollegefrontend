@@ -27,12 +27,14 @@ import {
   useGetLearnerEvidenceSubmissionsQuery,
   useGetLearnerUnitOverviewQuery,
   useGetLearnerWrittenAssignmentQuery,
+  useMarkCpdUnitCompleteMutation,
 } from "@/redux/apis/enrolmentApi";
 import type {
   LearnerEvidenceSubmission,
   LearnerWrittenAssignmentSubmission,
 } from "@/types/enrollment.types";
 import { getLifecycleLabel } from "@/lib/iqaStatus";
+import { useToast } from "@/hooks/use-toast";
 
 type LearnerSubmission = LearnerEvidenceSubmission | LearnerWrittenAssignmentSubmission;
 
@@ -243,6 +245,8 @@ const UnitDetail = () => {
   const [activeAssignment, setActiveAssignment] = useState<string | null>(null);
   const [showStrictQuiz, setShowStrictQuiz] = useState(false);
   const [showExtension, setShowExtension] = useState(false);
+  const { toast } = useToast();
+  const [markCpdUnitComplete, { isLoading: isMarkingCpdComplete }] = useMarkCpdUnitCompleteMutation();
 
   const { data: enrolmentResponse, isLoading: isLoadingOverview, error: overviewError, refetch: refetchOverview } =
     useGetEnrolmentOverviewQuery(qualificationId || "", {
@@ -353,6 +357,8 @@ const UnitDetail = () => {
       : ["Standard unit criteria implementation evidence"];
   const evidenceSetupMissing = Boolean(unit.requires_evidence && !isLoadingEvidence && (evidenceError || !evidenceConfig));
   const hasWrittenAssignmentEnabled = Boolean(unit.written_assignment_summary.enabled);
+  const isCpdUnitComplete = qualification.is_cpd && unit.progress?.status === "completed";
+  const cpdRequiredMinutes = unit.cpd_estimated_minutes || 0;
   const isQuizAwaitingTrainerReview =
     !unit.quiz_summary.passed &&
     unit.quiz_summary.attempts_used > 0 &&
@@ -623,9 +629,53 @@ const UnitDetail = () => {
                 <h4 className="text-sm font-bold text-primary mb-1">CPD Qualification</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   This is a CPD-enabled qualification. Unit-level assessments and portfolio evidence are not required.
-                  Please complete the learning resources for each unit, followed by the <strong>Final Assessment</strong>
-                  available on the qualification overview page.
+                  Complete the learning resources, confirm this unit, then take the <strong>Final Assessment</strong>
+                  after every unit is complete.
                 </p>
+                <div className="mt-4 rounded-lg border border-primary/20 bg-background/70 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Required learning time</p>
+                      <p className="text-sm text-muted-foreground">{cpdRequiredMinutes} minutes</p>
+                    </div>
+                    {isCpdUnitComplete ? (
+                      <div className="inline-flex items-center gap-2 text-sm font-semibold text-green-600">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Unit Completed
+                      </div>
+                    ) : (
+                      <Button
+                        className="gap-2"
+                        disabled={isExpired || isMarkingCpdComplete}
+                        onClick={async () => {
+                          if (!resolvedEnrolmentId || !resolvedUnitId) return;
+                          try {
+                            await markCpdUnitComplete({
+                              enrolmentId: resolvedEnrolmentId,
+                              unitId: resolvedUnitId,
+                            }).unwrap();
+                            toast({ title: "Unit completed", description: "Your CPD unit progress has been updated." });
+                            void refetchOverview();
+                            void refetchUnit();
+                          } catch {
+                            toast({
+                              title: "Could not complete unit",
+                              description: "Please try again or contact support if the problem continues.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        {isMarkingCpdComplete ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-4 w-4" />
+                        )}
+                        Mark Unit Complete
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -776,6 +826,15 @@ const UnitDetail = () => {
                     <p className="text-sm font-semibold text-primary">
                       {formatDate(latestAssessmentSubmission.submitted_at)}
                     </p>
+                  </div>
+                </>
+              )}
+              {qualification.is_cpd && (
+                <>
+                  <hr className="border-border" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Required Time</p>
+                    <p className="text-sm font-semibold text-primary">{cpdRequiredMinutes} minutes</p>
                   </div>
                 </>
               )}

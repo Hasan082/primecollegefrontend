@@ -305,11 +305,11 @@ const QualificationView = () => {
             <div className="flex-1">
               <h3 className="text-base font-bold text-primary mb-1">Final Assessment</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                This CPD qualification requires a single final assessment.
+                This CPD qualification requires every unit to be completed before the final assessment.
               </p>
-              <Button size="sm" className="gap-2" onClick={() => setShowAssessment(true)}>
+              <Button size="sm" className="gap-2" disabled={!allUnitsDone || isLocked} onClick={() => setShowAssessment(true)}>
                 <ShieldCheck className="w-4 h-4" />
-                Start Final Assessment
+                {allUnitsDone ? "Start Final Assessment" : "Complete All Units First"}
               </Button>
             </div>
           </div>
@@ -424,7 +424,14 @@ const QualificationView = () => {
                       )}
                     </div>
                     {unit.progress?.completed_at && (
-                      <p className="text-xs text-muted-foreground">Assessed: {new Date(unit.progress.completed_at).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {qualification.is_cpd ? "Completed" : "Assessed"}: {new Date(unit.progress.completed_at).toLocaleDateString()}
+                      </p>
+                    )}
+                    {qualification.is_cpd && (
+                      <p className="text-xs text-muted-foreground">
+                        Required time: {unit.cpd_estimated_minutes || 0} minutes
+                      </p>
                     )}
                   </div>
                 </div>

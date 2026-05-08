@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import {
   ArrowLeft,
   ClipboardList,
+  Copy,
   Eye,
   MoreHorizontal,
   Pencil,
@@ -53,6 +54,7 @@ const ChecklistBuilder = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [duplicateSource, setDuplicateSource] = useState<any | null>(null);
 
   const [editOpen, setEditOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<any | null>(null);
@@ -96,6 +98,11 @@ const ChecklistBuilder = () => {
   const openView = (template: any) => {
     setViewingTemplate(template);
     setViewOpen(true);
+  };
+
+  const startDuplicate = (template: any) => {
+    setDuplicateSource(template);
+    setCreateOpen(true);
   };
 
   return (
@@ -213,12 +220,15 @@ const ChecklistBuilder = () => {
                           </Button>
                         </DropdownMenuTrigger>
 
-                        <DropdownMenuContent align="end" className="w-32">
+                        <DropdownMenuContent align="end" className="w-36">
                           <DropdownMenuItem onClick={() => openView(template)}>
                             <Eye className="mr-2 h-4 w-4" /> View
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => startEdit(template)}>
                             <Pencil className="mr-2 h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => startDuplicate(template)}>
+                            <Copy className="mr-2 h-4 w-4" /> Duplicate
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -238,7 +248,14 @@ const ChecklistBuilder = () => {
         </Card>
       )}
 
-      <CreateChecklistModal open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateChecklistModal
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open) setDuplicateSource(null);
+        }}
+        duplicateFrom={duplicateSource}
+      />
 
       <ChecklistViewModal
         open={viewOpen}

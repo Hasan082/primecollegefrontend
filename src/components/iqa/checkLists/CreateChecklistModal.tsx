@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   useCreateChecklistTemplateMutation,
@@ -6,6 +6,7 @@ import {
   useGetUnitOptionsByQualificationQuery,
 } from "@/redux/apis/qualification/qualificationApi";
 import {
+  type AdminChecklistTemplate,
   type CheckResponseType,
   type ChecklistItem,
 } from "@/lib/checklists";
@@ -35,12 +36,14 @@ type CreateChecklistModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  duplicateFrom?: AdminChecklistTemplate | null;
 };
 
 const CreateChecklistModal = ({
   open,
   onOpenChange,
   onSuccess,
+  duplicateFrom,
 }: CreateChecklistModalProps) => {
   const { toast } = useToast();
   const [qualificationId, setQualificationId] = useState("");
@@ -75,6 +78,23 @@ const CreateChecklistModal = ({
     setErrors({});
   };
 
+  useEffect(() => {
+    if (open && duplicateFrom) {
+      setQualificationId(duplicateFrom.qualificationId);
+      setUnitId(duplicateFrom.unitId ?? "__qual__");
+      setStatus(duplicateFrom.isActive ? "active" : "inactive");
+      setTitle(`${duplicateFrom.title} (Copy)`);
+      setItems(
+        duplicateFrom.items.map((item, index) => ({
+          id: `ci-${Date.now()}-${index}`,
+          label: item.label,
+          responseType: item.responseType,
+        })),
+      );
+      setErrors({});
+    }
+  }, [open, duplicateFrom]);
+
   const handleOpenChange = (nextOpen: boolean) => {
     onOpenChange(nextOpen);
     if (!nextOpen) {
@@ -86,7 +106,6 @@ const CreateChecklistModal = ({
     const nextErrors: FormErrors = {};
 
     if (!qualificationId) nextErrors.qualification = "Qualification is required";
-    if (!unitId || unitId === "__qual__") nextErrors.unit = "Unit is required";
     if (!title.trim()) nextErrors.title = "Title is required";
     if (items.length === 0) nextErrors.items = "At least one item is required";
 

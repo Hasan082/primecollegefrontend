@@ -120,6 +120,41 @@ export interface LearnerExtensionOrderStatusResponse {
   data: LearnerExtensionOrder;
 }
 
+export interface EvidenceFilePresignResponse {
+  success: boolean;
+  message: string;
+  file_key: string;
+  data: {
+    file_key: string;
+    key: string;
+    upload_url: string;
+    fields: Record<string, string>;
+    max_file_size_mb: number;
+  };
+}
+
+export interface EvidenceSubmissionJsonPayload {
+  title?: string;
+  description: string;
+  declaration_signed: boolean;
+  criteria_ids: string[];
+  file_keys: string[];
+}
+
+export interface CpdUnitCompleteResponse {
+  success: boolean;
+  message: string;
+  data: {
+    status: string;
+    competency_status?: string | null;
+    started_at: string | null;
+    completed_at: string | null;
+    time_spent_seconds: number;
+    min_time_met: boolean;
+    is_locked: boolean;
+  };
+}
+
 const enrolmentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getLearnerDashboard: builder.query<LearnerDashboardResponse, void>({
@@ -154,6 +189,21 @@ const enrolmentApi = api.injectEndpoints({
       providesTags: (result, error, { enrolmentId, unitId }) => [
         { type: "Enrolments", id: enrolmentId },
         { type: "Enrolments", id: `UNIT_${unitId}` },
+      ],
+    }),
+    markCpdUnitComplete: builder.mutation<
+      CpdUnitCompleteResponse,
+      { enrolmentId: string; unitId: string }
+    >({
+      query: ({ enrolmentId, unitId }) => ({
+        url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/cpd-complete/`,
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: (_result, _error, { enrolmentId, unitId }) => [
+        { type: "Enrolments", id: enrolmentId },
+        { type: "Enrolments", id: `UNIT_${unitId}` },
+        { type: "CertificateProgress", id: enrolmentId },
       ],
     }),
     getEnrolmentContent: builder.query<EnrolmentContentResponse, string>({
@@ -237,7 +287,17 @@ const enrolmentApi = api.injectEndpoints({
         { type: "Enrolments", id: `EXT_ORDER_${orderId}` },
       ],
     }),
-    submitEvidence: builder.mutation<EvidenceSubmissionResponse, { enrolmentId: string; unitId: string; body: FormData }>({
+    presignEvidenceFile: builder.mutation<
+      EvidenceFilePresignResponse,
+      { enrolmentId: string; unitId: string; file_name: string; content_type: string }
+    >({
+      query: ({ enrolmentId, unitId, file_name, content_type }) => ({
+        url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/evidence-submissions/presign/`,
+        method: "POST",
+        body: { file_name, content_type },
+      }),
+    }),
+    submitEvidence: builder.mutation<EvidenceSubmissionResponse, { enrolmentId: string; unitId: string; body: FormData | EvidenceSubmissionJsonPayload }>({
       query: ({ enrolmentId, unitId, body }) => ({
         url: `/api/enrolments/me/${enrolmentId}/units/${unitId}/evidence-submissions/`,
         method: "POST",
@@ -306,10 +366,12 @@ export const {
   useGetEnrolmentsQuery,
   useGetEnrolmentOverviewQuery,
   useGetLearnerUnitOverviewQuery,
+  useMarkCpdUnitCompleteMutation,
   useGetEnrolmentContentQuery,
   useGetLearnerWrittenAssignmentQuery,
   useSubmitWrittenAssignmentMutation,
   useGetLearnerEvidenceSubmissionsQuery,
+  usePresignEvidenceFileMutation,
   useGetLearnerExtensionPlansQuery,
   useCreateLearnerExtensionOrderMutation,
   useGetLearnerExtensionOrderStatusQuery,

@@ -20,6 +20,8 @@ import {
   ArrowLeft,
   ArchiveRestore,
   Settings2,
+  AlertTriangle,
+  ClipboardList,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import QualificationQuickView from "@/components/admin/QualificationQuickView";
@@ -35,7 +37,16 @@ import { useToast } from "@/hooks/use-toast";
 import TablePagination from "@/components/admin/TablePagination";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { useGetQualificationsAdminQuery } from "@/redux/apis/qualification/qualificationApi";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  useGetChecklistTemplatesQuery,
+  useGetQualificationsAdminQuery,
+} from "@/redux/apis/qualification/qualificationApi";
 import { useUpdateQualificationMainMutation } from "@/redux/apis/qualification/qualificationMainApi";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -64,6 +75,10 @@ const QualificationManagement = () => {
   const [viewOpen, setViewOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: qualificationsData } = useGetQualificationsAdminQuery({});
+  const { data: checklistTemplatesData } = useGetChecklistTemplatesQuery({
+    page_size: 500,
+    is_active: "true",
+  });
   const [updateQualification] = useUpdateQualificationMainMutation();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -88,6 +103,26 @@ const QualificationManagement = () => {
         is_cpd: q.is_cpd,
       })) || [],
     [qualificationsData?.data?.results],
+  );
+
+  const qualificationsWithChecklists = useMemo(() => {
+    const ids = new Set<string>();
+    const results = (checklistTemplatesData?.data?.results || []) as Array<{
+      qualification_id?: string;
+    }>;
+    results.forEach((r) => {
+      if (r.qualification_id) ids.add(r.qualification_id);
+    });
+    return ids;
+  }, [checklistTemplatesData?.data?.results]);
+
+  const missingChecklistCount = useMemo(
+    () =>
+      qualifications.filter(
+        (q) =>
+          q.status !== "archived" && !qualificationsWithChecklists.has(q.id),
+      ).length,
+    [qualifications, qualificationsWithChecklists],
   );
 
   const filtered = qualifications.filter((q) => {
@@ -167,6 +202,32 @@ const QualificationManagement = () => {
         </Link>
       </div>
 
+      {missingChecklistCount > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 flex items-start gap-3">
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-medium">
+              {missingChecklistCount} qualification
+              {missingChecklistCount === 1 ? "" : "s"} missing IQA checklist
+            </p>
+            <p className="mt-1">
+              IQAs cannot approve assessments without a verification checklist.
+              Set one up for each qualification.
+            </p>
+          </div>
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="border-amber-300 bg-white hover:bg-amber-100"
+          >
+            <Link to="/admin/checklists">
+              <ClipboardList className="w-4 h-4 mr-1" /> Manage Checklists
+            </Link>
+          </Button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -212,7 +273,34 @@ const QualificationManagement = () => {
                   <TableRow key={q.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium text-sm">{q.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{q.title}</p>
+                          {q.status !== "archived" &&
+                            !qualificationsWithChecklists.has(q.id) && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Link
+                                      to="/admin/checklists"
+                                      className="inline-flex"
+                                    >
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] border-amber-300 bg-amber-50 text-amber-700 gap-1"
+                                      >
+                                        <AlertTriangle className="w-3 h-3" />
+                                        No Checklist
+                                      </Badge>
+                                    </Link>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    IQAs cannot approve assessments without a
+                                    checklist. Click to set one up.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {q.awarding_body} • {q.total_units} units • {q.is_cpd && (
                             <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold uppercase tracking-wider">

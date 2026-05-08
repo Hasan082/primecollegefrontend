@@ -93,7 +93,6 @@ const EditChecklistModal = ({
     const nextErrors: FormErrors = {};
 
     if (!qualificationId) nextErrors.qualification = "Qualification is required";
-    if (!unitId || unitId === "__qual__") nextErrors.unit = "Unit is required";
     if (!title.trim()) nextErrors.title = "Title is required";
     if (items.length === 0) nextErrors.items = "At least one item is required";
 

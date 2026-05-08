@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { generateEvidenceNumber } from "@/lib/evidenceNumbering";
-import { useSubmitEvidenceMutation } from "@/redux/apis/enrolmentApi";
+import { uploadFileToS3 } from "@/lib/s3Upload";
+import { usePresignEvidenceFileMutation, useSubmitEvidenceMutation } from "@/redux/apis/enrolmentApi";
 
 interface EvidenceUploadFormProps {
   requirements: string[] | string | Record<string, unknown> | null | undefined;
@@ -90,7 +90,9 @@ const EvidenceUploadForm = ({
   const { toast } = useToast();
   const normalizedRequirements = normalizeRequirements(requirements);
 
+  const [presignEvidenceFile, { isLoading: isPresigning }] = usePresignEvidenceFileMutation();
   const [submitEvidence, { isLoading: isSubmitting }] = useSubmitEvidenceMutation();
+  const isSaving = isPresigning || isSubmitting;
 
   if (isLocked) {
     return (
@@ -153,12 +155,37 @@ const EvidenceUploadForm = ({
     }
 
     try {
-      const formData = new FormData();
-      formData.append("description", description);
-      linkedCriteria.forEach((criterion) => formData.append("criteria_ids", criterion));
-      files.forEach((file) => formData.append("files", file));
+      const fileKeys: string[] = [];
 
-      await submitEvidence({ enrolmentId, unitId, body: formData }).unwrap();
+      for (const file of files) {
+        const presignResponse = await presignEvidenceFile({
+          enrolmentId,
+          unitId,
+          file_name: file.name,
+          content_type: file.type || "application/octet-stream",
+        }).unwrap();
+
+        const fileKey = await uploadFileToS3(
+          {
+            upload_url: presignResponse.data.upload_url,
+            fields: presignResponse.data.fields,
+            key: presignResponse.data.key || presignResponse.data.file_key || presignResponse.file_key,
+          },
+          file,
+        );
+        fileKeys.push(fileKey);
+      }
+
+      await submitEvidence({
+        enrolmentId,
+        unitId,
+        body: {
+          description,
+          criteria_ids: linkedCriteria,
+          declaration_signed: declarationChecked,
+          file_keys: fileKeys,
+        },
+      }).unwrap();
 
       setFiles([]);
       setDescription("");
@@ -216,7 +243,7 @@ const EvidenceUploadForm = ({
               <span className="text-muted-foreground">or drag and drop</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              PDF, Word, Excel, PowerPoint, image, audio, or video files (max. 10MB)
+              PDF, Word, Excel, PowerPoint, image, audio, or video files
             </p>
           </div>
           <input
@@ -322,9 +349,9 @@ const EvidenceUploadForm = ({
               </div>
             )}
           </div>
-          <Button onClick={handleSubmit} disabled={!declarationChecked || isSubmitting} className="gap-2">
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            {isSubmitting ? "Submitting..." : "Submit Evidence"}
+          <Button onClick={handleSubmit} disabled={!declarationChecked || isSaving} className="gap-2">
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {isSaving ? "Uploading..." : "Submit Evidence"}
           </Button>
         </div>
       </div>

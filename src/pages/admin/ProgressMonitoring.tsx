@@ -207,7 +207,11 @@ const ProgressMonitoring = () => {
                     </TableCell>
 
                     <TableCell>
-                      {l.risk_status === "at_risk" ? (
+                      {l.progress.progress_percent >= 100 ? (
+                        <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Completed
+                        </Badge>
+                      ) : l.risk_status === "at_risk" ? (
                         <Badge variant="destructive" className="text-xs">
                           At Risk
                         </Badge>
