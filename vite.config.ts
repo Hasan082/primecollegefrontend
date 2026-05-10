@@ -12,6 +12,13 @@ export default defineConfig(({ mode }) => {
       hmr: {
         overlay: false,
       },
+      proxy: {
+        "/api": {
+          target: "https://primecollegeapi.primeacademy.org",
+          changeOrigin: true,
+          secure: true,
+        },
+      },
     },
     plugins: [react(), mode === "development" && componentTagger()].filter(
       Boolean,
