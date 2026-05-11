@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import type { BlockType } from "@/types/pageBuilder";
+import RichTextEditor from "./RichTextEditor";
 
 import {
   DndContext,
@@ -103,11 +103,11 @@ const SortableItem = ({
           {fields.map((f) => (
             <div key={f.key}>
               <Label className="text-[10px] text-muted-foreground uppercase tracking-tight">{f.label}</Label>
-              {f.type === "textarea" ? (
-                <Textarea value={item[f.key] || ""} onChange={(e) => onUpdate(f.key, e.target.value)} placeholder={f.placeholder} className="mt-1 text-sm min-h-[70px]" />
-              ) : (
-                <Input value={item[f.key] || ""} onChange={(e) => onUpdate(f.key, e.target.value)} placeholder={f.placeholder} className="mt-1 h-8 text-sm" />
-              )}
+              <RichTextEditor 
+                value={item[f.key] || ""} 
+                onChange={(v) => onUpdate(f.key, v)} 
+                placeholder={f.placeholder} 
+              />
             </div>
           ))}
         </div>

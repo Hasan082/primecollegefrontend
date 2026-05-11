@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import { useSubmitContactFormMutation } from "@/redux/apis/contactApi";
 import { useGetBlogsQuery } from "@/redux/apis/blogs/blogApi";
 import { Image } from "@/components/Image";
@@ -65,15 +66,17 @@ const pageLabelMap: Record<string, string> = {
   contact: "Contact Us",
 };
 
-const renderRichText = (content?: string, className = "") => {
+const renderRichText = (content?: string, className = "", key?: any) => {
   if (!content) return null;
   return (
     <div
+      key={key}
       className={className}
       dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(content) }}
     />
   );
 };
+
 
 const renderHero = (block: ContentBlock, pageSlug?: string) => {
   const d = block.data as any;
@@ -113,22 +116,28 @@ const renderHero = (block: ContentBlock, pageSlug?: string) => {
       <div className="absolute inset-0 bg-foreground/70" />
       <div className="absolute inset-0 flex items-center justify-center text-center px-4">
         <div>
-          <h1 className="text-4xl md:text-5xl font-bold text-background">
-            {d.title}
-          </h1>
-          {d.subtitle ? (
-            <p className="mt-4 text-background/80 max-w-2xl mx-auto text-lg">
-              {d.subtitle}
-            </p>
-          ) : null}
-          {d.ctaLabel ? (
-            <Link
-              to={d.ctaHref || "/qualifications"}
-              className="inline-block mt-6 bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
-            >
-              {d.ctaLabel}
-            </Link>
-          ) : null}
+          {d.title && renderRichText(d.title, "text-4xl md:text-5xl font-bold text-background")}
+          {d.subtitle ? renderRichText(d.subtitle, "mt-4 text-background/80 max-w-2xl mx-auto text-lg") : null}
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            {Array.isArray(d.ctas) && d.ctas.length > 0 ? (
+              d.ctas.map((cta: any, i: number) => (
+                <Link
+                  key={i}
+                  to={cta.href || "/qualifications"}
+                  className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
+                >
+                  {cta.label}
+                </Link>
+              ))
+            ) : d.ctaLabel ? (
+              <Link
+                to={d.ctaHref || "/qualifications"}
+                className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 text-sm"
+              >
+                {d.ctaLabel}
+              </Link>
+            ) : null}
+          </div>
         </div>
       </div>
       {breadcrumbLabel ? (
@@ -146,7 +155,8 @@ const renderPopularQualifications = (block: ContentBlock) => {
   const visibleItems = items.slice(0, Math.max(1, Number(d.show_count) || 4));
 
   return (
-    <Section title={d.title || "Popular Qualifications"}>
+    <Section title="">
+      {d.title && renderRichText(d.title, "text-3xl font-bold mb-8 text-center")}
       {visibleItems.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           {visibleItems.map((item: any, i: number) => {
@@ -230,14 +240,26 @@ const renderPricing = (block: ContentBlock) => {
                   {d.price || "Contact us"}
                 </p>
               </div>
-              {d.ctaLabel ? (
-                <Link
-                  to={d.ctaHref || "/contact"}
-                  className="inline-flex rounded bg-secondary px-5 py-2.5 text-sm font-semibold text-secondary-foreground hover:opacity-90"
-                >
-                  {d.ctaLabel}
-                </Link>
-              ) : null}
+              <div className="flex flex-wrap items-center gap-4">
+                {Array.isArray(d.ctas) && d.ctas.length > 0 ? (
+                  d.ctas.map((cta: any, i: number) => (
+                    <Link
+                      key={i}
+                      to={cta.href || "/contact"}
+                      className="inline-flex rounded bg-secondary px-5 py-2.5 text-sm font-semibold text-secondary-foreground hover:opacity-90"
+                    >
+                      {cta.label}
+                    </Link>
+                  ))
+                ) : d.ctaLabel ? (
+                  <Link
+                    to={d.ctaHref || "/contact"}
+                    className="inline-flex rounded bg-secondary px-5 py-2.5 text-sm font-semibold text-secondary-foreground hover:opacity-90"
+                  >
+                    {d.ctaLabel}
+                  </Link>
+                ) : null}
+              </div>
             </div>
           </div>
 
@@ -414,10 +436,7 @@ const renderQualificationFaq = (block: ContentBlock) => {
                 </span>
               </AccordionTrigger>
               <AccordionContent>
-                <div
-                  className="text-muted-foreground leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: faq.answer }}
-                />
+                  {renderRichText(faq.answer, "text-muted-foreground leading-relaxed")}
               </AccordionContent>
             </AccordionItem>
           ))}
@@ -742,10 +761,11 @@ export const CMSBlockRenderer = ({
       return renderHero(block, pageSlug);
     case "text":
       return (
-        <Section title={d.title || ""}>
+        <Section title="">
+          {d.title && renderRichText(d.title, "text-2xl font-bold mb-4")}
           {d.content ? (
             <div className="mx-auto max-w-3xl text-center text-muted-foreground leading-relaxed">
-              <div dangerouslySetInnerHTML={{ __html: d.content }} />
+              {renderRichText(d.content)}
             </div>
           ) : null}
         </Section>
@@ -786,24 +806,32 @@ export const CMSBlockRenderer = ({
             <div
               className={`bg-card rounded-xl p-8 border border-border ${d.imagePosition === "right" ? "order-1" : "order-2"}`}
             >
-              <h2 className="text-2xl font-bold text-foreground mb-6">
-                {d.headline}
-              </h2>
+              {d.headline && renderRichText(d.headline, "text-2xl font-bold text-foreground mb-6")}
               <div className="space-y-4 text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none">
                 {Array.isArray(d.paragraphs) && d.paragraphs.length > 0
-                  ? d.paragraphs.map((p: string, i: number) => (
-                      <div key={i} dangerouslySetInnerHTML={{ __html: p }} />
-                    ))
+                  ? d.paragraphs.map((p: string, i: number) => renderRichText(p, "", i))
                   : renderRichText(d.description)}
               </div>
-              {d.ctaLabel ? (
-                <Link
-                  to={d.ctaHref || "/about"}
-                  className="mt-6 inline-block bg-secondary text-secondary-foreground px-6 py-2 rounded text-sm font-semibold hover:opacity-90"
-                >
-                  {d.ctaLabel}
-                </Link>
-              ) : null}
+              <div className="flex flex-wrap gap-4 mt-6">
+                {Array.isArray(d.ctas) && d.ctas.length > 0 ? (
+                  d.ctas.map((cta: any, i: number) => (
+                    <Link
+                      key={i}
+                      to={cta.href || "/about"}
+                      className="inline-block bg-secondary text-secondary-foreground px-6 py-2 rounded text-sm font-semibold hover:opacity-90"
+                    >
+                      {cta.label}
+                    </Link>
+                  ))
+                ) : d.ctaLabel ? (
+                  <Link
+                    to={d.ctaHref || "/about"}
+                    className="inline-block bg-secondary text-secondary-foreground px-6 py-2 rounded text-sm font-semibold hover:opacity-90"
+                  >
+                    {d.ctaLabel}
+                  </Link>
+                ) : null}
+              </div>
             </div>
           </div>
         </section>
@@ -817,32 +845,33 @@ export const CMSBlockRenderer = ({
         >
           <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2
-                className={`text-3xl md:text-4xl font-bold leading-snug ${pageSlug === "home" ? "text-primary-foreground mb-6" : "text-foreground"}`}
-              >
-                {d.headline}
-              </h2>
-              {d.ctaLabel ? (
-                <Link
-                  to={d.ctaHref || "/about"}
-                  className={`${pageSlug === "home" ? "mt-0" : "mt-6"} inline-block px-6 py-3 rounded text-sm font-semibold hover:opacity-90 bg-secondary text-secondary-foreground`}
-                >
-                  {d.ctaLabel}
-                </Link>
-              ) : null}
+              {d.headline && renderRichText(d.headline, `text-3xl md:text-4xl font-bold leading-snug ${pageSlug === "home" ? "text-primary-foreground mb-6" : "text-foreground mb-6"}`)}
+              <div className="flex flex-wrap gap-4">
+                {Array.isArray(d.ctas) && d.ctas.length > 0 ? (
+                  d.ctas.map((cta: any, i: number) => (
+                    <Link
+                      key={i}
+                      to={cta.href || "/about"}
+                      className={`${pageSlug === "home" ? "mt-0" : "mt-0"} inline-block px-6 py-3 rounded text-sm font-semibold hover:opacity-90 bg-secondary text-secondary-foreground`}
+                    >
+                      {cta.label}
+                    </Link>
+                  ))
+                ) : d.ctaLabel ? (
+                  <Link
+                    to={d.ctaHref || "/about"}
+                    className={`${pageSlug === "home" ? "mt-0" : "mt-6"} inline-block px-6 py-3 rounded text-sm font-semibold hover:opacity-90 bg-secondary text-secondary-foreground`}
+                  >
+                    {d.ctaLabel}
+                  </Link>
+                ) : null}
+              </div>
             </div>
             <div
               className={`space-y-4 ${pageSlug === "home" ? "text-primary-foreground/80" : "text-muted-foreground"}`}
             >
               {Array.isArray(d.paragraphs) && d.paragraphs.length > 0
-                ? d.paragraphs.map((p: string, i: number) => (
-                    <div
-                      key={i}
-                      className="leading-relaxed prose prose-sm max-w-none"
-                    >
-                      {renderRichText(p)}
-                    </div>
-                  ))
+                ? d.paragraphs.map((p: string, i: number) => renderRichText(p, "leading-relaxed prose prose-sm max-w-none", i))
                 : renderRichText(d.description)}
             </div>
           </div>
@@ -856,7 +885,8 @@ export const CMSBlockRenderer = ({
         return renderQualificationFaq(block);
       }
       return (
-        <Section title={d.title || "FAQs"}>
+        <Section title="">
+          {d.title && renderRichText(d.title, "text-3xl font-bold mb-8 text-center")}
           <div className="max-w-4xl mx-auto">
             <Accordion
               type="single"
@@ -868,14 +898,11 @@ export const CMSBlockRenderer = ({
                   <AccordionItem key={i} value={`faq-${i}`}>
                     <AccordionTrigger className="py-5 text-left no-underline hover:no-underline">
                       <span className="font-semibold text-foreground pr-4">
-                        {item.question}
+                        {renderRichText(item.question)}
                       </span>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div
-                        className="text-sm text-muted-foreground leading-7"
-                        dangerouslySetInnerHTML={{ __html: item.answer }}
-                      />
+                        {renderRichText(item.answer, "text-sm text-muted-foreground leading-7")}
                     </AccordionContent>
                   </AccordionItem>
                 ))}
@@ -887,15 +914,10 @@ export const CMSBlockRenderer = ({
       return (
         <section className="bg-primary py-16 px-4">
           <div className="container mx-auto text-center">
-            <h2 className="text-3xl font-bold text-primary-foreground mb-4">
-              {d.title}
-            </h2>
-            {d.content ? (
-              <div
-                className="text-primary-foreground/80 max-w-3xl mx-auto mb-12 prose prose-sm prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: d.content }}
-              />
-            ) : null}
+            {d.title && renderRichText(d.title, "text-3xl font-bold text-primary-foreground mb-4")}
+            {d.content ? 
+                renderRichText(d.content, "text-primary-foreground/80 max-w-3xl mx-auto mb-12 prose prose-sm prose-invert max-w-none")
+             : null}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {Array.isArray(d.items) &&
                 d.items.map((item: any) => (
@@ -904,12 +926,12 @@ export const CMSBlockRenderer = ({
                       {item.value}
                     </div>
                     <div className="text-lg font-semibold text-secondary mb-2">
-                      {item.title}
+                      {renderRichText(item.title)}
                     </div>
                     {item.description ? (
-                      <p className="text-primary-foreground/70 text-sm max-w-xs mx-auto">
-                        {item.description}
-                      </p>
+                      <div className="text-primary-foreground/70 text-sm max-w-xs mx-auto">
+                        {renderRichText(item.description)}
+                      </div>
                     ) : null}
                   </div>
                 ))}
@@ -924,43 +946,66 @@ export const CMSBlockRenderer = ({
       if (block.label === "More Than One Qualification") {
         return renderQualificationFinalCta(block);
       }
+
       // Render dynamically from block data on all pages; fall back to CTASection if no data.
-      return d.bgImage || d.title || d.content ? (
-        <section className="relative py-20 px-4 overflow-hidden bg-primary text-primary-foreground text-center">
-          {d.bgImage ? (
-            <Image
-              image={resolveCmsImage(d.bgImage) as any}
-              className="absolute inset-0 w-full h-full object-cover opacity-20"
-              alt=""
-            />
-          ) : null}
+      const bgMode = d.bgMode || "color";
+      const bgColor = d.bgColor || "#0c2d6b";
+      const bgImage = d.bgImage;
+      const overlayColor = d.overlayColor || "rgba(0,0,0,0.5)";
+
+      return d.bgImage || d.title || d.content || d.ctaLabel || (Array.isArray(d.ctas) && d.ctas.length > 0) ? (
+        <section className="relative py-20 px-4 overflow-hidden text-white text-center">
+          {bgMode === "image" && bgImage ? (
+            <div className="absolute inset-0">
+              <Image
+                image={resolveCmsImage(bgImage) as any}
+                className="w-full h-full object-cover"
+                alt=""
+              />
+              <div className="absolute inset-0" style={{ backgroundColor: overlayColor }} />
+            </div>
+          ) : (
+            <div className="absolute inset-0" style={{ backgroundColor: bgColor }} />
+          )}
+
           <div className="relative z-10 max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4">{d.title}</h2>
+            {d.title && renderRichText(d.title, "text-3xl font-bold mb-4")}
             {d.content ? (
-              <div className="text-primary-foreground/80 mb-8 max-w-xl mx-auto leading-relaxed prose prose-sm prose-invert max-w-none">
+              <div className="text-white/80 mb-8 max-w-xl mx-auto leading-relaxed prose prose-sm prose-invert max-w-none">
                 {renderRichText(d.content)}
               </div>
             ) : null}
-            {d.ctaLabel ? (
-              <Link
-                to={d.ctaHref || "/qualifications"}
-                className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 transition shadow-lg"
-              >
-                {d.ctaLabel}
-              </Link>
-            ) : null}
+            <div className="flex flex-wrap justify-center gap-4">
+              {Array.isArray(d.ctas) && d.ctas.length > 0 ? (
+                d.ctas.map((cta: any, i: number) => (
+                  <Link
+                    key={i}
+                    to={cta.href || "/qualifications"}
+                    className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 transition shadow-lg"
+                  >
+                    {cta.label}
+                  </Link>
+                ))
+              ) : d.ctaLabel ? (
+                <Link
+                  to={d.ctaHref || "/qualifications"}
+                  className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 transition shadow-lg"
+                >
+                  {d.ctaLabel}
+                </Link>
+              ) : null}
+            </div>
           </div>
         </section>
       ) : (
         <CTASection />
       );
+
     case "logos":
       return Array.isArray(d.items) && d.items.length > 0 ? (
         <section className="bg-muted py-16 px-4">
           <div className="container mx-auto text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground">
-              {d.title || "Our Partners"}
-            </h2>
+            {d.title && renderRichText(d.title, "text-3xl font-bold text-foreground")}
           </div>
           <div className="container mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 items-center">
             {d.items.map((item: any, i: number) => (
@@ -993,7 +1038,8 @@ export const CMSBlockRenderer = ({
       if (pageSlug === "home") {
         // Original home page styling: rounded top image with m-2 padding & hover-scale
         return (
-          <Section title={d.title || "Featured Qualifications"}>
+          <Section title="">
+          {d.title && renderRichText(d.title, "text-3xl font-bold mb-8 text-center")}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array.isArray(d.items) &&
                 d.items.map((item: any, i: number) => {
@@ -1032,7 +1078,7 @@ export const CMSBlockRenderer = ({
                         </div>
                         <Link to={`/qualifications/${slug}`}>
                           <h3 className="text-sm font-semibold text-foreground leading-snug mb-3 hover:text-primary">
-                            {item.title}
+                            {renderRichText(item.title)}
                           </h3>
                         </Link>
                         {item.price ? (
@@ -1149,16 +1195,11 @@ export const CMSBlockRenderer = ({
         return (
           <section className="bg-muted py-16 px-4">
             <div className="container mx-auto text-center">
-              <h2 className="text-3xl font-bold text-foreground mb-2">
-                {d.title}
-              </h2>
+              {d.title && renderRichText(d.title, "text-3xl font-bold text-foreground mb-2")}
               <div className="w-12 h-1 bg-secondary mx-auto mb-8" />
-              {d.content && (
-                <div
-                  className="max-w-3xl mx-auto mb-12 text-muted-foreground leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: d.content }}
-                />
-              )}
+              {d.content && 
+                renderRichText(d.content, "max-w-3xl mx-auto mb-12 text-muted-foreground leading-relaxed prose prose-sm max-w-none")
+              }
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-8">
                 {Array.isArray(d.items) &&
                   d.items.map((item: any) => {
@@ -1192,11 +1233,13 @@ export const CMSBlockRenderer = ({
                           )}
                         </div>
                         <h3 className="text-xl font-bold text-foreground mb-3">
-                          {item.title}
+                          {renderRichText(item.title)}
                         </h3>
-                        <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                          {item.description}
-                        </p>
+                        {item.description && (
+                          <div className="text-muted-foreground text-sm max-w-xs mx-auto">
+                            {renderRichText(item.description)}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1208,15 +1251,10 @@ export const CMSBlockRenderer = ({
       return (
         <section className="bg-muted py-16 px-4">
           <div className="container mx-auto text-center">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
-              {d.title}
-            </h2>
-            {d.content ? (
-              <div
-                className="text-muted-foreground max-w-2xl mx-auto mb-12 prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: d.content }}
-              />
-            ) : null}
+            {d.title && renderRichText(d.title, "text-3xl font-bold text-foreground mb-4")}
+            {d.content ? 
+                renderRichText(d.content, "text-muted-foreground max-w-2xl mx-auto mb-12 prose prose-sm max-w-none")
+             : null}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {Array.isArray(d.items) &&
                 d.items.map((item: any) => {

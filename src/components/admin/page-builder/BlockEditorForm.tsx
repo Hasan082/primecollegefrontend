@@ -21,6 +21,7 @@ import { useUploadCMSImageMutation } from "@/redux/apis/pageBuilderApi";
 import { useGetQualificationSliderOptionsQuery } from "@/redux/apis/qualification/qualificationApi";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,6 +35,7 @@ import ItemListEditor from "./ItemListEditor";
 import Field from "./fields/Field";
 import ImageField from "./fields/ImageField";
 import CTABackgroundEditor from "./fields/CTABackgroundEditor";
+import MultiCTAEditor from "./fields/MultiCTAEditor";
 
 interface BlockEditorFormProps {
   block: ContentBlock;
@@ -194,7 +196,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
     <div className="space-y-4 py-2">
       <div>
         <Label className="text-[10px] text-muted-foreground uppercase">Internal Label</Label>
-        <Field label="" value={blockLabel} onChange={setBlockLabel} />
+        <Input value={blockLabel || ""} onChange={(e) => setBlockLabel(e.target.value)} className="h-8 text-sm" />
       </div>
 
       {block.type === "image" && (
@@ -206,12 +208,21 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
       )}
 
       {((typeof local.title === "string" && block.type !== "qualification_slider") || typeof local.headline === "string") && (
-        <Field label={typeof local.title === "string" ? "Title / Headline" : "Headline"} 
-               value={(local.title || local.headline) as string} 
-               onChange={(v) => update(typeof local.title === "string" ? "title" : "headline", v)} />
+        <div>
+          <Label>{typeof local.title === "string" ? "Title / Headline" : "Headline"}</Label>
+          <RichTextEditor 
+            value={(local.title || local.headline) as string} 
+            onChange={(v) => update(typeof local.title === "string" ? "title" : "headline", v)} 
+          />
+        </div>
       )}
 
-      {typeof local.subtitle === "string" && <Field label="Subtitle" value={local.subtitle as string} onChange={(v) => update("subtitle", v)} />}
+      {typeof local.subtitle === "string" && (
+        <div>
+          <Label>Subtitle</Label>
+          <RichTextEditor value={local.subtitle as string} onChange={(v) => update("subtitle", v)} />
+        </div>
+      )}
       
       {typeof local.content === "string" && block.type !== "image-text" && (
         <div><Label>Main Content</Label><RichTextEditor value={local.content as string} onChange={(v) => update("content", v)} /></div>
@@ -226,9 +237,12 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
       )}
 
       {typeof local.ctaLabel === "string" && (
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="CTA Label" value={local.ctaLabel as string} onChange={(v) => update("ctaLabel", v)} />
-          <Field label="CTA Href" value={local.ctaHref as string} onChange={(v) => update("ctaHref", v)} />
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Legacy CTA Label" value={local.ctaLabel as string} onChange={(v) => update("ctaLabel", v)} />
+            <Field label="Legacy CTA Href" value={local.ctaHref as string} onChange={(v) => update("ctaHref", v)} />
+          </div>
+          <MultiCTAEditor ctas={(local.ctas as any[]) || []} onChange={(v) => update("ctas", v)} />
         </div>
       )}
 
@@ -256,10 +270,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
               className="mt-1 min-h-[120px]"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="CTA Label" value={(local.ctaLabel as string) || ""} onChange={(v) => update("ctaLabel", v)} />
-            <Field label="CTA Href" value={(local.ctaHref as string) || ""} onChange={(v) => update("ctaHref", v)} />
-          </div>
+          <MultiCTAEditor ctas={(local.ctas as any[]) || []} onChange={(v) => update("ctas", v)} />
         </div>
       )}
 
@@ -293,10 +304,10 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
       {block.type === "contact-form" && (
         <div className="space-y-4 border-t pt-4">
           <Label className="text-sm font-bold">Contact Details</Label>
-          <Field label="Address" value={local.address as string} onChange={(v) => update("address", v)} />
-          <Field label="Email" value={local.email as string} onChange={(v) => update("email", v)} />
-          <Field label="Phone" value={local.phone as string} onChange={(v) => update("phone", v)} />
-          <Field label="Office Hours" value={local.hours as string} onChange={(v) => update("hours", v)} />
+          <div><Label>Address</Label><RichTextEditor value={local.address as string} onChange={(v) => update("address", v)} /></div>
+          <div><Label>Email</Label><RichTextEditor value={local.email as string} onChange={(v) => update("email", v)} /></div>
+          <div><Label>Phone</Label><RichTextEditor value={local.phone as string} onChange={(v) => update("phone", v)} /></div>
+          <div><Label>Office Hours</Label><RichTextEditor value={local.hours as string} onChange={(v) => update("hours", v)} /></div>
         </div>
       )}
 

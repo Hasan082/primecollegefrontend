@@ -104,6 +104,7 @@ export interface ImageTextBlock extends BlockBase {
     imagePosition?: "left" | "right";
     ctaLabel?: string;
     ctaHref?: string;
+    ctas?: Array<{ label: string; href: string }>;
     description?: string;
   };
 }
@@ -151,6 +152,7 @@ export interface CTABlock extends BlockBase {
     content?: string;
     ctaLabel?: string;
     ctaHref?: string;
+    ctas?: Array<{ label: string; href: string }>;
     bgMode?: "color" | "image";
     bgColor?: string;
     bgImage?: string;
@@ -224,6 +226,7 @@ export interface PricingBlock extends BlockBase {
     features?: string[];
     ctaLabel?: string;
     ctaHref?: string;
+    ctas?: Array<{ label: string; href: string }>;
   };
 }
 
@@ -234,6 +237,7 @@ export interface AboutSplitBlock extends BlockBase {
     paragraphs: string[];
     ctaLabel?: string;
     ctaHref?: string;
+    ctas?: Array<{ label: string; href: string }>;
     description?: string;
   };
 }
