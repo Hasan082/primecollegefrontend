@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, FileText, X, Link2, ShieldCheck, Loader2 } from "lucide-react";
+import { Upload, FileText, X, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -86,13 +86,14 @@ const EvidenceUploadForm = ({
   const [description, setDescription] = useState("");
   const [linkedCriteria, setLinkedCriteria] = useState<string[]>([]);
   const [declarationChecked, setDeclarationChecked] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const normalizedRequirements = normalizeRequirements(requirements);
 
   const [presignEvidenceFile, { isLoading: isPresigning }] = usePresignEvidenceFileMutation();
   const [submitEvidence, { isLoading: isSubmitting }] = useSubmitEvidenceMutation();
-  const isSaving = isPresigning || isSubmitting;
+  const isSaving = isPresigning || isSubmitting || uploadProgress !== null;
 
   if (isLocked) {
     return (
@@ -157,7 +158,10 @@ const EvidenceUploadForm = ({
     try {
       const fileKeys: string[] = [];
 
-      for (const file of files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadProgress({ current: i + 1, total: files.length });
+
         const presignResponse = await presignEvidenceFile({
           enrolmentId,
           unitId,
@@ -175,6 +179,8 @@ const EvidenceUploadForm = ({
         );
         fileKeys.push(fileKey);
       }
+
+      setUploadProgress(null);
 
       await submitEvidence({
         enrolmentId,
@@ -202,7 +208,9 @@ const EvidenceUploadForm = ({
 
       if (onSuccess) onSuccess();
     } catch (err: any) {
+      setUploadProgress(null);
       const description =
+        err?.message ||
         err?.data?.files ||
         err?.data?.criteria_ids ||
         err?.data?.description ||
@@ -212,7 +220,7 @@ const EvidenceUploadForm = ({
       toast({
         title: "Submission failed",
         description: Array.isArray(description) ? description[0] : description,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -351,7 +359,13 @@ const EvidenceUploadForm = ({
           </div>
           <Button onClick={handleSubmit} disabled={!declarationChecked || isSaving} className="gap-2">
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            {isSaving ? "Uploading..." : "Submit Evidence"}
+            {uploadProgress
+              ? `Uploading file ${uploadProgress.current} of ${uploadProgress.total}...`
+              : isSubmitting
+              ? "Submitting..."
+              : isSaving
+              ? "Uploading..."
+              : "Submit Evidence"}
           </Button>
         </div>
       </div>
