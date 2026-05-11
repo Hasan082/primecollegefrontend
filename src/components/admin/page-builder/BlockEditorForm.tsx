@@ -122,7 +122,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
     const nextLocal =
       block.type === "qualification_slider"
         ? normalizeQualificationSliderData(local)
-        : block.type === "popular-qualifications"
+        : ["popular-qualifications", "related-qualifications"].includes(block.type)
         ? {
             ...local,
             selection_mode: (local.selection_mode as string) === "manual" ? "manual" : "latest",
@@ -293,7 +293,7 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
                     imagePosition={local.imagePosition as string} onPositionChange={(v) => update("imagePosition", v)} />
       )}
 
-      {Array.isArray(local.items) && !["qualification_slider", "popular-qualifications", "blog"].includes(block.type) && (
+      {Array.isArray(local.items) && !["qualification_slider", "popular-qualifications", "related-qualifications", "blog"].includes(block.type) && (
         <ItemListEditor blockType={block.type} items={local.items} onChange={(items: any) => update("items", items)} onImageUpload={onImageUpload} isUploading={isUploading} />
       )}
 
@@ -466,9 +466,9 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
         </div>
       )}
 
-      {block.type === "popular-qualifications" && (
+      {(block.type === "popular-qualifications" || block.type === "related-qualifications") && (
         <div className="space-y-4 border-t pt-4">
-          <Label className="text-sm font-bold">Popular Qualifications Configuration</Label>
+          <Label className="text-sm font-bold">{block.type === "popular-qualifications" ? "Popular" : "Related"} Qualifications Configuration</Label>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-[10px] text-muted-foreground uppercase">Selection Mode</Label>

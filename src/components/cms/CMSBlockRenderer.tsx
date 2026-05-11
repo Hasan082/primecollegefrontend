@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useSubmitContactFormMutation } from "@/redux/apis/contactApi";
 import { useGetBlogsQuery } from "@/redux/apis/blogs/blogApi";
+import { useGetQualificationsQuery } from "@/redux/apis/qualificationApi";
 import { Image } from "@/components/Image";
 import {
   Users,
@@ -211,6 +212,86 @@ const renderPopularQualifications = (block: ContentBlock) => {
   );
 };
 
+
+const RelatedQualificationsSection = ({ block }: { block: ContentBlock }) => {
+  const d = block.data as any;
+  const isLatest = d.selection_mode === "latest";
+  
+  // Only fetch if selection mode is latest OR if we have no items
+  const shouldFetch = isLatest && (!Array.isArray(d.items) || d.items.length === 0);
+  
+  const { data: latestData, isLoading } = useGetQualificationsQuery(
+    { page_size: d.show_count || 3 },
+    { skip: !shouldFetch }
+  );
+
+  const rawItems = Array.isArray(d.items) && d.items.length > 0 
+    ? d.items 
+    : (latestData?.data?.results || []);
+    
+  const visibleItems = rawItems.slice(0, Math.max(1, Number(d.show_count) || 3));
+
+  if (isLoading && shouldFetch) {
+    return (
+      <Section title="">
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <Section title="">
+      {d.title && renderRichText(d.title, "text-3xl font-bold mb-8 text-center")}
+      {visibleItems.length > 0 ? (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 max-w-7xl mx-auto px-4">
+          {visibleItems.map((item: any, i: number) => {
+            const title = item.title || "";
+            const level = item.level 
+              ? (typeof item.level === 'object' ? `(Level ${item.level.name})` : `(Level ${item.level})`) 
+              : "";
+            const slug = item.slug || item.blog_slug || "";
+            const image = resolveCmsImage(
+              item.featured_image?.original || 
+              item.featured_image?.card || 
+              item.featured_image || 
+              item.image || 
+              ""
+            );
+
+            return (
+              <Link
+                key={i}
+                to={`/qualifications/${slug}`}
+                className="group relative h-[250px] overflow-hidden rounded-xl shadow-md block"
+              >
+                <Image
+                  image={image as any}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  alt={title}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6 w-full text-white">
+                  <h3 className="font-bold text-lg leading-tight mb-1">
+                    {title} {level}
+                  </h3>
+                  <div className="text-xs text-white/70 font-medium">
+                    Level {typeof item.level === 'object' ? item.level.name : item.level} • {item.course_duration || item.duration || "Flexible"}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-muted-foreground italic">
+          No related qualifications found.
+        </div>
+      )}
+    </Section>
+  );
+};
 
 const renderPricing = (block: ContentBlock) => {
   const d = block.data as any;
@@ -1385,6 +1466,8 @@ export const CMSBlockRenderer = ({
           </div>
         </section>
       ) : null;
+    case "related-qualifications":
+      return <RelatedQualificationsSection block={block} />;
     default:
       return null;
   }

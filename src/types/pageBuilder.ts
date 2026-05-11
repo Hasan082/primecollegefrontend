@@ -21,7 +21,8 @@ export type BlockType =
   | "contact-form"
   | "map"
   | "qualification_slider"
-  | "custom";
+  | "custom"
+  | "related-qualifications";
 
 export type TextAlignment = "left" | "center" | "right";
 export type CmsPageCategory = "static" | "blog_post" | "qualification_detail" | "general";
@@ -323,6 +324,17 @@ export interface CustomBlock extends BlockBase {
   };
 }
 
+export interface RelatedQualificationsBlock extends BlockBase {
+  type: "related-qualifications";
+  data: {
+    title: string;
+    selection_mode: "manual" | "latest";
+    qualification_ids?: string[];
+    show_count: number;
+    items: Array<Record<string, unknown>>;
+  };
+}
+
 export type ContentBlock =
   | HeroBlock
   | QualificationHeroBlock
@@ -448,6 +460,7 @@ export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   map: "Google Map",
   qualification_slider: "Qualification Slider",
   custom: "Custom HTML",
+  "related-qualifications": "Related Qualifications",
 };
 
 export const getDefaultBlockData = (type: BlockType): ContentBlock => {
@@ -651,6 +664,18 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       data: {
         title: "Custom Section",
         html: `<div class="bg-primary/5 p-8 rounded-2xl border border-primary/10 text-center">\n  <h2 class="text-2xl font-bold text-primary mb-4">Custom Tailwind Content</h2>\n  <p class="text-muted-foreground">You can add any HTML here using Tailwind CSS classes.</p>\n</div>`,
+      },
+    }),
+    "related-qualifications": () => ({
+      id,
+      type: "related-qualifications",
+      label,
+      data: {
+        title: "Related Qualifications",
+        selection_mode: "latest",
+        qualification_ids: [],
+        show_count: 3,
+        items: [],
       },
     }),
   };
