@@ -320,6 +320,22 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
         </div>
       )}
 
+      {block.type === "custom" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Custom HTML (Tailwind Supported)</Label>
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-[11px] leading-relaxed text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
+            <p className="font-bold mb-1 italic">Use Tailwind for design section</p>
+           
+          </div>
+          <Textarea 
+            value={local.html as string} 
+            onChange={(e) => update("html", e.target.value)} 
+            placeholder="<div class='...'>...</div>"
+            className="font-mono text-xs min-h-[250px]"
+          />
+        </div>
+      )}
+
       {block.type === "cta" && <CTABackgroundEditor local={local} update={update} onImageUpload={onImageUpload} isUploading={isUploading} />}
 
       {block.type === "qualification_slider" && (

@@ -211,6 +211,7 @@ const renderPopularQualifications = (block: ContentBlock) => {
   );
 };
 
+
 const renderPricing = (block: ContentBlock) => {
   const d = block.data as any;
   const features = Array.isArray(d.features) ? d.features.filter(Boolean) : [];
@@ -1376,6 +1377,14 @@ export const CMSBlockRenderer = ({
     }
     case "qualification_hero":
       return renderQualificationHero(block);
+    case "custom":
+      return d.html ? (
+        <section className="py-16 px-4 overflow-hidden">
+          <div className="container mx-auto">
+            {renderRichText(d.html)}
+          </div>
+        </section>
+      ) : null;
     default:
       return null;
   }

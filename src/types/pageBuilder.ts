@@ -20,7 +20,8 @@ export type BlockType =
   | "features"
   | "contact-form"
   | "map"
-  | "qualification_slider";
+  | "qualification_slider"
+  | "custom";
 
 export type TextAlignment = "left" | "center" | "right";
 export type CmsPageCategory = "static" | "blog_post" | "qualification_detail" | "general";
@@ -314,6 +315,14 @@ export interface QualificationSliderBlock extends BlockBase {
   };
 }
 
+export interface CustomBlock extends BlockBase {
+  type: "custom";
+  data: {
+    html: string;
+    title?: string;
+  };
+}
+
 export type ContentBlock =
   | HeroBlock
   | QualificationHeroBlock
@@ -438,6 +447,7 @@ export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   "contact-form": "Contact Form",
   map: "Google Map",
   qualification_slider: "Qualification Slider",
+  custom: "Custom HTML",
 };
 
 export const getDefaultBlockData = (type: BlockType): ContentBlock => {
@@ -632,6 +642,15 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
         autoplay: true,
         delay_ms: 5000,
         items: [],
+      },
+    }),
+    custom: () => ({
+      id,
+      type: "custom",
+      label,
+      data: {
+        title: "Custom Section",
+        html: `<div class="bg-primary/5 p-8 rounded-2xl border border-primary/10 text-center">\n  <h2 class="text-2xl font-bold text-primary mb-4">Custom Tailwind Content</h2>\n  <p class="text-muted-foreground">You can add any HTML here using Tailwind CSS classes.</p>\n</div>`,
       },
     }),
   };
