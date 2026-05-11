@@ -261,6 +261,7 @@ export interface EnrolmentOverviewResponse {
             code?: string;
             requires_learner_declaration?: boolean;
             requires_course_evaluation?: boolean;
+            instructions?: string;
         };
         session?: {
             id: string;
@@ -383,6 +384,7 @@ export interface EnrolmentContent {
         code?: string;
         requires_learner_declaration?: boolean;
         requires_course_evaluation?: boolean;
+        instructions?: string;
     };
     units: {
         id: string;

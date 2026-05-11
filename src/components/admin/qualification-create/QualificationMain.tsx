@@ -51,6 +51,7 @@ import {
   useGetLevelsQuery,
   useGetTypesQuery,
 } from "@/redux/apis/qualification/qualificationSupportApi";
+import RichTextEditor from "../page-builder/RichTextEditor";
 
 // ─── Slug helper ──────────────────────────────────────────────────────────────
 
@@ -105,6 +106,11 @@ const qualificationMainSchema = z.object({
       /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/,
       "Slug may only contain lowercase letters, numbers, hyphens, and underscores",
     ),
+
+  instructions: z
+    .string()
+    .max(2000, "Instructions must be under 2000 characters")
+    .optional(),
   category: z
     .string({ required_error: "Category is required" })
     .uuid("Invalid category ID"),
@@ -207,6 +213,7 @@ const BOOLEAN_FIELDS: {
 const defaultValues: Partial<QualificationMainFormValues> = {
   title: "",
   slug: "",
+  instructions: "",
   featured_image: null,
   short_description: "",
   excerpt: "",
@@ -593,6 +600,29 @@ const QualificationMain = () => {
                     </FormControl>
                     <FormDescription>
                       Auto-generated from the title. Only update this if a specific URL slug is required.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Instructions – full width */}
+            <div className="md:col-span-2">
+              <FormField
+                control={form.control}
+                name="instructions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instructions</FormLabel>
+                    <FormControl>
+                      <RichTextEditor
+                        placeholder="Enter any specific instructions for this qualification…"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Optional instructions for learners.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

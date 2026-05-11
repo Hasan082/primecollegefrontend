@@ -420,6 +420,21 @@ const UnitDetail = () => {
               <span className={`text-xs font-bold px-2.5 py-1 rounded flex-shrink-0 ${status.color}`}>{status.label}</span>
             </div>
             <p className="text-sm text-muted-foreground mb-5">{qualification.title}</p>
+            
+            {qualification.instructions && (
+              <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-4 w-1 bg-primary rounded-full" />
+                  <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                    Qualification Instructions
+                  </h4>
+                </div>
+                <div 
+                  className="prose prose-sm max-w-none text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: qualification.instructions }}
+                />
+              </div>
+            )}
 
             <h3 className="text-base font-bold text-primary mb-2">Unit Overview</h3>
             <p className="text-sm text-muted-foreground mb-4">{unit.description}</p>

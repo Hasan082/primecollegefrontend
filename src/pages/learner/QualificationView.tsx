@@ -155,13 +155,22 @@ const QualificationView = () => {
 
         {!isSession && (
           <>
+            {qualification.instructions && (
+              <div className="mb-6 p-5 rounded-xl bg-primary/5 border border-primary/10">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-4 w-1 bg-primary rounded-full" />
+                  <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                    Qualification Instructions
+                  </h4>
+                </div>
+                <div 
+                  className="prose prose-sm max-w-none text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: qualification.instructions }}
+                />
+              </div>
+            )}
+
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Overall Progress</span>
-              <span className="text-sm font-semibold text-primary">
-                {completed} of {total} Units Complete ({pct}%)
-              </span>
-            </div>
-            <Progress value={pct} className="h-3" />
 
             <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -287,6 +296,20 @@ const QualificationView = () => {
               </div>
             </div>
           </div>
+          {qualification.instructions && (
+            <div className="mt-6 p-5 rounded-xl bg-primary/5 border border-primary/10">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-4 w-1 bg-primary rounded-full" />
+                <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                  Qualification Instructions
+                </h4>
+              </div>
+              <div 
+                className="prose prose-sm max-w-none text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: qualification.instructions }}
+              />
+            </div>
+          )}
         </div>
       )}
 
