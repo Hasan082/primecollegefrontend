@@ -40,6 +40,7 @@ interface BlockEditorFormProps {
   onSave: (data: Record<string, unknown>, meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string }) => void;
   onClose: () => void;
   onUploadingChange?: (isUploading: boolean) => void;
+  isGenericStaticPage?: boolean;
 }
 
 interface QualificationOption {
@@ -98,7 +99,7 @@ const SortableQualificationRow = ({
   );
 };
 
-const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEditorFormProps) => {
+const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericStaticPage }: BlockEditorFormProps) => {
   const [local, setLocal] = useState<Record<string, unknown>>(block.data as Record<string, unknown>);
   const [blockLabel, setBlockLabel] = useState(block.label);
   const [isUploading, _setIsUploading] = useState(false);
@@ -259,6 +260,20 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange }: BlockEdi
             <Field label="CTA Label" value={(local.ctaLabel as string) || ""} onChange={(v) => update("ctaLabel", v)} />
             <Field label="CTA Href" value={(local.ctaHref as string) || ""} onChange={(v) => update("ctaHref", v)} />
           </div>
+        </div>
+      )}
+
+      {block.type === "hero" && isGenericStaticPage && (
+        <div className="space-y-3 border-t pt-4">
+          <Label className="text-sm font-bold">Hero Banner Configuration</Label>
+          <p className="text-[11px] text-muted-foreground -mt-1">
+            This banner appears at the top of the page. Upload a background image and configure the overlay text.
+          </p>
+          <ImageField
+            value={local.image}
+            onChange={(f) => onImageUpload(f, "image")}
+            isUploading={isUploading}
+          />
         </div>
       )}
 

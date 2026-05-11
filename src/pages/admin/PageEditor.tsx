@@ -158,6 +158,9 @@ const PageEditor = () => {
 
   const isHomePage = pageId === "home" || slug === "home";
   const isQualificationPage = pageType === "qualification_detail";
+  const CORE_SLUGS = ["home", "about", "contact"];
+  const isGenericStaticPage =
+    pageType === "static" && !CORE_SLUGS.includes(slug);
   const showPublishedToggle =
     !isHomePage &&
     slug !== "about" &&
@@ -209,6 +212,7 @@ const PageEditor = () => {
         setIsUploading={setIsUploading}
         onSave={handleBlockSave}
         onClose={() => setEditBlock(null)}
+        isGenericStaticPage={isGenericStaticPage}
       />
     </div>
   );

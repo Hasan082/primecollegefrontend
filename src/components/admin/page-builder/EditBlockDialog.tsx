@@ -18,6 +18,7 @@ interface EditBlockDialogProps {
     meta: { alignment?: TextAlignment; style?: BlockStyle; label?: string }
   ) => void;
   onClose: () => void;
+  isGenericStaticPage?: boolean;
 }
 
 const EditBlockDialog = ({
@@ -27,6 +28,7 @@ const EditBlockDialog = ({
   setIsUploading,
   onSave,
   onClose,
+  isGenericStaticPage,
 }: EditBlockDialogProps) => {
   return (
     <Dialog
@@ -51,6 +53,7 @@ const EditBlockDialog = ({
             onSave={(data, meta) => onSave(block.id, data, meta)}
             onClose={onClose}
             onUploadingChange={setIsUploading}
+            isGenericStaticPage={isGenericStaticPage}
           />
         )}
       </DialogContent>
