@@ -14,7 +14,11 @@ const getFileType = (filename: string) => {
   return extension;
 };
 
-const getMediaInfo = (filename: string) => {
+const getMediaInfo = (resource: LearnerUnitOverviewResource) => {
+  if (resource.resource_type === "video") return { isMedia: true, type: "video" as const };
+  if (resource.resource_type === "audio") return { isMedia: true, type: "audio" as const };
+
+  const filename = resource.file || resource.title;
   const extension = filename.split(".").pop()?.toLowerCase();
 
   const videoExtensions = ["mp4", "webm", "ogg", "mov", "mkv"];
@@ -31,7 +35,8 @@ const getMediaInfo = (filename: string) => {
 };
 
 const ResourceCard = ({ resource, onPlay }: ResourceCardProps) => {
-  const { isMedia, type } = getMediaInfo(resource.file || resource.title);
+  const { isMedia, type } = getMediaInfo(resource);
+
   const fileType = getFileType(resource.title);
 
   const renderIcon = () => {

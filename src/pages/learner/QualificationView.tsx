@@ -170,7 +170,6 @@ const QualificationView = () => {
               </div>
             )}
 
-            <div className="flex items-center justify-between mb-2">
 
             <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
