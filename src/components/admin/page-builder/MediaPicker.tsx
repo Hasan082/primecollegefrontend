@@ -46,8 +46,22 @@ export const MediaPicker = ({ item, onUpdate, onImageUpload, isUploading }: any)
       <Label className="text-xs text-muted-foreground">Media</Label>
       <div className="flex gap-1.5 shadow-sm rounded-md p-1 bg-muted/40 border">
         <Button variant={mediaType === "icon" ? "default" : "ghost"} size="sm" className="flex-1 h-7 text-[10px]" onClick={() => onUpdate("mediaType", "icon")}><Smile className="h-3 w-3 mr-1" /> Icon</Button>
+        <Button variant={mediaType === "text" ? "default" : "ghost"} size="sm" className="flex-1 h-7 text-[10px]" onClick={() => onUpdate("mediaType", "text")}><span className="font-bold mr-1">T</span> Text</Button>
         <Button variant={mediaType === "image" ? "default" : "ghost"} size="sm" className="flex-1 h-7 text-[10px]" onClick={() => onUpdate("mediaType", "image")}><ImageIcon className="h-3 w-3 mr-1" /> Image</Button>
       </div>
+
+      {mediaType === "text" && (
+        <div className="space-y-1 pt-1">
+          <Label className="text-[10px] text-muted-foreground uppercase">Circle Text</Label>
+          <input 
+            type="text" 
+            className="w-full h-8 text-sm px-2 border rounded bg-background" 
+            placeholder="e.g. 01"
+            value={item.circleText || ""}
+            onChange={(e) => onUpdate("circleText", e.target.value)}
+          />
+        </div>
+      )}
 
       {mediaType === "icon" && (
         <div className="grid grid-cols-5 gap-1 pt-1">

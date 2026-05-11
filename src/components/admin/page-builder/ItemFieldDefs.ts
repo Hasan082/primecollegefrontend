@@ -7,7 +7,7 @@ export interface ItemField {
   placeholder?: string;
 }
 
-export const MEDIA_ENABLED_BLOCKS: BlockType[] = ["cards", "why-us", "blog", "logos", "hero", "popular-qualifications"];
+export const MEDIA_ENABLED_BLOCKS: BlockType[] = ["cards", "why-us", "blog", "logos", "hero", "popular-qualifications", "info-cards"];
 
 export const ITEM_FIELDS: Partial<Record<BlockType, ItemField[]>> = {
   hero: [
@@ -66,5 +66,9 @@ export const ITEM_FIELDS: Partial<Record<BlockType, ItemField[]>> = {
   ],
   "qualification_slider": [
     { key: "id", label: "Qualification ID (UUID)", type: "input", placeholder: "Enter UUID" },
+  ],
+  "info-cards": [
+    { key: "title", label: "Card Title", type: "input", placeholder: "e.g. First Aid" },
+    { key: "description", label: "Card Description", type: "textarea", placeholder: "Enter details..." },
   ]
 };

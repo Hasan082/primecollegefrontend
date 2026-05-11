@@ -314,9 +314,15 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
       {block.type === "map" && (
         <div className="space-y-4 border-t pt-4">
           <Label className="text-sm font-bold">Map Configuration</Label>
-          <Field label="Title" value={local.title as string} onChange={(v) => update("title", v)} />
+          {/* Title is handled by the common section above */}
           <Field label="Google Maps Embed URL (iframe src)" value={local.iframeUrl as string} onChange={(v) => update("iframeUrl", v)} />
           <p className="text-[10px] text-muted-foreground italic">Use the URL from the 'src' attribute of a Google Maps iframe embed code.</p>
+        </div>
+      )}
+
+      {block.type === "info-cards" && (
+        <div className="space-y-4 border-t pt-4">
+          {/* Title is handled by the common section above */}
         </div>
       )}
 

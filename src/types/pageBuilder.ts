@@ -22,7 +22,8 @@ export type BlockType =
   | "map"
   | "qualification_slider"
   | "custom"
-  | "related-qualifications";
+  | "related-qualifications"
+  | "info-cards";
 
 export type TextAlignment = "left" | "center" | "right";
 export type CmsPageCategory = "static" | "blog_post" | "qualification_detail" | "general";
@@ -335,6 +336,27 @@ export interface RelatedQualificationsBlock extends BlockBase {
   };
 }
 
+
+
+export interface InfoCardItem {
+  id: string;
+  title: string;
+  description: string;
+  circleText?: string;
+  icon?: string;
+  image?: string;
+}
+
+export interface InfoCardsBlock extends BlockBase {
+  type: "info-cards";
+  data: {
+    title?: string;
+    description?: string;
+    items: InfoCardItem[];
+    columns?: number;
+  };
+}
+
 export type ContentBlock =
   | HeroBlock
   | QualificationHeroBlock
@@ -355,7 +377,10 @@ export type ContentBlock =
   | FeaturesBlock
   | ContactFormBlock
   | MapBlock
-  | QualificationSliderBlock;
+  | QualificationSliderBlock
+  | CustomBlock
+  | RelatedQualificationsBlock
+  | InfoCardsBlock;
 
 export interface CMSPage {
   id: string;
@@ -461,6 +486,7 @@ export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   qualification_slider: "Qualification Slider",
   custom: "Custom HTML",
   "related-qualifications": "Related Qualifications",
+  "info-cards": "Info Cards (Numbered/Icon)",
 };
 
 export const getDefaultBlockData = (type: BlockType): ContentBlock => {
@@ -676,6 +702,21 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
         qualification_ids: [],
         show_count: 3,
         items: [],
+      },
+    }),
+    "info-cards": () => ({
+      id,
+      type: "info-cards",
+      label,
+      data: {
+        title: "Key Features",
+        description: "Explore our comprehensive training modules designed for your success.",
+        columns: 3,
+        items: [
+          { id: "1", circleText: "01", title: "Paediatric CPR & Resuscitation", description: "Hands-on training in infant and child CPR techniques, including the use of AEDs adapted for paediatric use." },
+          { id: "2", circleText: "02", title: "Choking in Infants and Children", description: "Recognising and treating choking episodes in babies and young children with age-appropriate techniques." },
+          { id: "3", circleText: "03", title: "Managing Childhood Illnesses", description: "Identifying symptoms of common childhood illnesses such as meningitis, asthma attacks, and febrile convulsions." }
+        ],
       },
     }),
   };

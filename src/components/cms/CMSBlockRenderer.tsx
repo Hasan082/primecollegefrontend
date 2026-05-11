@@ -293,6 +293,73 @@ const RelatedQualificationsSection = ({ block }: { block: ContentBlock }) => {
   );
 };
 
+const renderInfoCards = (block: ContentBlock) => {
+  const d = block.data as any;
+  const items = Array.isArray(d.items) ? d.items : [];
+  const columns = d.columns || 3;
+
+  const gridCols =
+    {
+      1: "grid-cols-1",
+      2: "grid-cols-1 md:grid-cols-2",
+      3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+      4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+    }[columns as number] || "grid-cols-1 md:grid-cols-3";
+
+  return (
+    <Section title="">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-12">
+          {d.title && renderRichText(d.title, "text-3xl font-bold")}
+        </div>
+
+        <div className={`grid gap-6 ${gridCols}`}>
+          {items.map((item: any, i: number) => {
+            const IconComponent =
+              item.mediaType === "icon" ? iconMap[item.icon] : null;
+            const imageUrl =
+              item.mediaType === "image" ? resolveCmsImage(item.image) : null;
+
+            return (
+              <div
+                key={i}
+                className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 flex flex-col items-start text-left group hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between w-full mb-6">
+                  {/* Circle with Text, Icon, or Image */}
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary font-bold text-sm">
+                    {item.mediaType === "icon" && IconComponent ? (
+                      <IconComponent className="h-5 w-5" />
+                    ) : item.mediaType === "image" && imageUrl ? (
+                      <img
+                        src={imageUrl as string}
+                        className="h-5 w-5 object-contain"
+                        alt=""
+                      />
+                    ) : (
+                      <span>
+                        {item.circleText || (i + 1).toString().padStart(2, "0")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {item.title &&
+                  renderRichText(item.title, "text-xl font-bold text-slate-900 mb-3")}
+                {item.description &&
+                  renderRichText(
+                    item.description,
+                    "text-slate-600 leading-relaxed",
+                  )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Section>
+  );
+};
+
 const renderPricing = (block: ContentBlock) => {
   const d = block.data as any;
   const features = Array.isArray(d.features) ? d.features.filter(Boolean) : [];
@@ -1468,6 +1535,8 @@ export const CMSBlockRenderer = ({
       ) : null;
     case "related-qualifications":
       return <RelatedQualificationsSection block={block} />;
+    case "info-cards":
+      return renderInfoCards(block);
     default:
       return null;
   }
