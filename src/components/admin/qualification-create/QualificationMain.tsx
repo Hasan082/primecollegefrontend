@@ -107,10 +107,7 @@ const qualificationMainSchema = z.object({
       "Slug may only contain lowercase letters, numbers, hyphens, and underscores",
     ),
 
-  instructions: z
-    .string()
-    .max(2000, "Instructions must be under 2000 characters")
-    .optional(),
+  instructions: z.string().default(""),
   category: z
     .string({ required_error: "Category is required" })
     .uuid("Invalid category ID"),
