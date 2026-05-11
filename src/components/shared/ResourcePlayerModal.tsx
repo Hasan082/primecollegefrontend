@@ -23,24 +23,24 @@ const ResourcePlayerModal = ({
 }: ResourcePlayerModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl border-none p-0 overflow-hidden bg-background">
-        <DialogHeader className="p-4 border-b">
+      <DialogContent className="sm:max-w-6xl w-[95vw] border-none p-0 overflow-hidden bg-background flex flex-col">
+        <DialogHeader className="p-4 border-b shrink-0">
           <DialogTitle className="text-lg font-bold truncate pr-8">
             {title}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex items-center justify-center bg-black/5 aspect-video min-h-[300px]">
+        <div className="flex-1 flex items-center justify-center bg-black min-h-[300px] h-[90vh]">
           {type === "video" ? (
             <video
               src={fileUrl}
-              className="w-full h-full"
+              className="w-full h-full object-contain"
               controls
               autoPlay
             >
               Your browser does not support the video tag.
             </video>
           ) : (
-            <div className="flex flex-col items-center gap-6 w-full p-10">
+            <div className="flex flex-col items-center gap-6 w-full p-10 bg-background">
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                   <div className="w-6 h-6 rounded-full bg-primary animate-ping" />
