@@ -891,9 +891,10 @@ export const CMSBlockRenderer = ({
               {d.title}
             </h2>
             {d.content ? (
-              <p className="text-primary-foreground/80 max-w-3xl mx-auto mb-12">
-                {d.content}
-              </p>
+              <div
+                className="text-primary-foreground/80 max-w-3xl mx-auto mb-12 prose prose-sm prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: d.content }}
+              />
             ) : null}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {Array.isArray(d.items) &&
@@ -923,9 +924,7 @@ export const CMSBlockRenderer = ({
       if (block.label === "More Than One Qualification") {
         return renderQualificationFinalCta(block);
       }
-      // On the home page always use the original CTASection with background image.
-      // On other pages use dynamic data if available, otherwise fall back to CTASection.
-      if (pageSlug === "home") return <CTASection />;
+      // Render dynamically from block data on all pages; fall back to CTASection if no data.
       return d.bgImage || d.title || d.content ? (
         <section className="relative py-20 px-4 overflow-hidden bg-primary text-primary-foreground text-center">
           {d.bgImage ? (
@@ -1146,7 +1145,7 @@ export const CMSBlockRenderer = ({
       return <BlogBlock d={d} />;
     case "why-us":
       if (pageSlug === "home") {
-        // Original home page why-us: large round bg-primary circles, centered layout, 3-col grid
+        // Original home page why-us: large round bg-primary circles (or image), centered layout, 3-col grid
         return (
           <section className="bg-muted py-16 px-4">
             <div className="container mx-auto text-center">
@@ -1155,30 +1154,42 @@ export const CMSBlockRenderer = ({
               </h2>
               <div className="w-12 h-1 bg-secondary mx-auto mb-8" />
               {d.content && (
-                <div className="max-w-3xl mx-auto mb-12">
-                  {d.content.split("\n\n").map((p: string, i: number) => (
-                    <p
-                      key={i}
-                      className="text-muted-foreground leading-relaxed mb-4"
-                    >
-                      {p}
-                    </p>
-                  ))}
-                </div>
+                <div
+                  className="max-w-3xl mx-auto mb-12 text-muted-foreground leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: d.content }}
+                />
               )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-8">
                 {Array.isArray(d.items) &&
                   d.items.map((item: any) => {
                     const Icon = iconMap[item.icon] || Users;
+                    const hasImage =
+                      item.mediaType === "image" && item.image;
+                    const imgSrc =
+                      item.image?.medium ||
+                      item.image?.small ||
+                      item.image?.large ||
+                      item.image?.original ||
+                      "";
                     return (
                       <div key={item.title} className="text-center">
                         <div className="flex justify-center mb-4">
-                          <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
-                            <Icon
-                              className="w-10 h-10 text-primary-foreground"
-                              strokeWidth={1.5}
-                            />
-                          </div>
+                          {hasImage ? (
+                            <div className="w-20 h-20 rounded-full overflow-hidden bg-primary flex items-center justify-center">
+                              <img
+                                src={imgSrc}
+                                alt={item.title}
+                                className="w-16 h-16 object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
+                              <Icon
+                                className="w-10 h-10 text-primary-foreground"
+                                strokeWidth={1.5}
+                              />
+                            </div>
+                          )}
                         </div>
                         <h3 className="text-xl font-bold text-foreground mb-3">
                           {item.title}
@@ -1201,25 +1212,42 @@ export const CMSBlockRenderer = ({
               {d.title}
             </h2>
             {d.content ? (
-              <p className="text-muted-foreground max-w-2xl mx-auto mb-12">
-                {d.content}
-              </p>
+              <div
+                className="text-muted-foreground max-w-2xl mx-auto mb-12 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: d.content }}
+              />
             ) : null}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {Array.isArray(d.items) &&
                 d.items.map((item: any) => {
                   const Icon = iconMap[item.icon] || Users;
+                  const hasImage =
+                    item.mediaType === "image" && item.image;
+                  const imgSrc =
+                    item.image?.medium ||
+                    item.image?.small ||
+                    item.image?.large ||
+                    item.image?.original ||
+                    "";
                   return (
                     <div
                       key={item.title}
                       className="bg-card border border-border rounded-xl p-6 text-left shadow-sm"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
-                          <Icon
-                            className="w-5 h-5 text-secondary"
-                            strokeWidth={2}
-                          />
+                        <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center overflow-hidden">
+                          {hasImage ? (
+                            <img
+                              src={imgSrc}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Icon
+                              className="w-5 h-5 text-secondary"
+                              strokeWidth={2}
+                            />
+                          )}
                         </div>
                         <h3 className="font-semibold text-foreground">
                           {item.title}
