@@ -22,7 +22,22 @@ export async function uploadFileToS3(
   });
 
   if (!response.ok) {
-    throw new Error("Direct upload to S3 failed.");
+    const text = await response.text().catch(() => "");
+    const codeMatch = text.match(/<Code>(.+?)<\/Code>/);
+    const code = codeMatch?.[1];
+
+    if (code === "EntityTooLarge") {
+      const maxMatch = text.match(/<MaxSizeAllowed>(\d+)<\/MaxSizeAllowed>/);
+      const maxBytes = maxMatch ? parseInt(maxMatch[1], 10) : null;
+      const maxMb = maxBytes ? Math.floor(maxBytes / (1024 * 1024)) : null;
+      throw new Error(
+        maxMb
+          ? `File "${file.name}" is too large. Maximum allowed size is ${maxMb} MB.`
+          : `File "${file.name}" exceeds the maximum allowed upload size.`
+      );
+    }
+
+    throw new Error(`Upload failed for "${file.name}". Please try again.`);
   }
 
   return presign.key;

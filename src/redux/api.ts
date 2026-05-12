@@ -1,6 +1,5 @@
 import { appConfig } from "@/app.config";
 import {
-  BaseQueryApi,
   BaseQueryFn,
   createApi,
   FetchArgs,
@@ -19,7 +18,6 @@ export const setCsrfToken = (token: string | null) => {
 };
 
 const getCsrfToken = () => csrfTokenMemory || getCookie("csrftoken");
-const getRefreshToken = () => getCookie("refresh");
 
 const baseQuery = fetchBaseQuery({
   baseUrl: appConfig.API_BASE_URL,
@@ -76,11 +74,7 @@ const baseQueryWithRefreshToken: BaseQueryFn<
       );
 
       if (res.ok) {
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          await res.json();
-          return await baseQuery(args, api, extraOptions);
-        }
+        return await baseQuery(args, api, extraOptions);
       }
     } catch (err) {
       console.error("Token refresh error:", err);
