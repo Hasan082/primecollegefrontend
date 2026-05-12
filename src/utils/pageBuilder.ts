@@ -151,24 +151,7 @@ export const normalizePageBlocksForSlug = (
     return blocks.filter((block) => block.type !== "hero" && block.type !== "qualification_hero");
   }
   if (pageType === "qualification_detail" || isQualificationPageSlug(slug)) {
-    const qHeroIndex = blocks.findIndex((block) => block.type === "qualification_hero");
-    const filteredBlocks = blocks.filter((block) => block.type !== "qualification_hero" && block.type !== "hero");
-
-    if (qHeroIndex >= 0) {
-      const qHero = blocks[qHeroIndex];
-      return [{ ...qHero, isLocked: true, isFixed: true }, ...filteredBlocks];
-    }
-    return [
-      {
-        id: "static_qualification_hero",
-        type: "qualification_hero",
-        label: BLOCK_TYPE_LABELS.qualification_hero,
-        isLocked: true,
-        isFixed: true,
-        data: {},
-      } as ContentBlock,
-      ...filteredBlocks,
-    ];
+    return blocks.filter((block) => block.type !== "qualification_hero" && block.type !== "hero");
   }
   if (slug && slug !== "home" && slug !== "contact" && slug !== "about" && pageType !== "qualification_detail" && !isQualificationPageSlug(slug)) {
     const heroIndex = blocks.findIndex((block) => block.type === "hero");
@@ -328,7 +311,9 @@ export const getAllowedBlockTypesForPage = (
   const hideHeroForCurrentPage =
     currentSlug === "home" ||
     currentSlug === "about" ||
-    currentSlug === "contact";
+    currentSlug === "contact" ||
+    pageType === "qualification_detail" ||
+    isQualificationPageSlug(currentSlug);
 
   return ALL_BLOCK_TYPES.filter((type) => {
     if (type === "qualification_hero") return false;

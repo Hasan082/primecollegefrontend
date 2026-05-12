@@ -326,13 +326,129 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
         </div>
       )}
 
+      {block.type === "cards" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Card Grid Settings</Label>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Cards Per Row</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={String(local.columns || 4)}
+                onChange={(e) => update("columns", parseInt(e.target.value, 10) || 4)}
+              >
+                <option value="2">2 Cards</option>
+                <option value="3">3 Cards</option>
+                <option value="4">4 Cards</option>
+              </select>
+            </div>
+
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Icon/Image Position</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.mediaPosition as string) || "top"}
+                onChange={(e) => update("mediaPosition", e.target.value)}
+              >
+                <option value="top">Top</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Text Align</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.textAlign as string) || "left"}
+                onChange={(e) => update("textAlign", e.target.value)}
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+
+          <Field
+            label="Button Label"
+            value={(local.buttonLabel as string) || ""}
+            onChange={(v) => update("buttonLabel", v)}
+          />
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["showSectionTitle", "Show Section Title"],
+              ["showMedia", "Show Icon/Image"],
+              ["showTitle", "Show Card Title"],
+              ["showCategory", "Show Category"],
+              ["showLevel", "Show Level"],
+              ["showPrice", "Show Price"],
+              ["showDescription", "Show Description"],
+              ["showButton", "Show Button"],
+            ].map(([key, label]) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={local[key] !== false}
+                  onChange={(e) => update(key, e.target.checked)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       {block.type === "custom" && (
         <div className="space-y-4 border-t pt-4">
           <Label className="text-sm font-bold">Custom HTML (Tailwind Supported)</Label>
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-[11px] leading-relaxed text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
-            <p className="font-bold mb-1 italic">Use Tailwind for design section</p>
-           
+            <p className="font-bold mb-1 italic">Recommended: use HTML + Tailwind utility classes for layout and styling.</p>
+            <p>
+              Allowed and practical: normal HTML tags, Tailwind classes, and inline <code>style</code> for small one-off tweaks.
+            </p>
+            <p>
+              Not allowed: scripts, event handlers, iframes, or unsafe embeds. Content is sanitized before rendering.
+            </p>
           </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Content Width</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.widthMode as string) || "container"}
+                onChange={(e) => update("widthMode", e.target.value)}
+              >
+                <option value="container">Container Width</option>
+                <option value="full">Full Width</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Background Mode</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.bgMode as string) || "transparent"}
+                onChange={(e) => update("bgMode", e.target.value)}
+              >
+                <option value="transparent">Transparent</option>
+                <option value="color">Solid Color</option>
+                <option value="image">Background Image</option>
+              </select>
+            </div>
+          </div>
+          {block.type === "custom" ? (
+            <CTABackgroundEditor
+              local={local}
+              update={update}
+              onImageUpload={onImageUpload}
+              isUploading={isUploading}
+            />
+          ) : null}
           <Textarea 
             value={local.html as string} 
             onChange={(e) => update("html", e.target.value)} 

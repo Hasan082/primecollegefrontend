@@ -22,6 +22,7 @@ import CTASection from "@/components/CTASection";
 import LogoCarousel from "@/components/LogoCarousel";
 import QualificationSlider from "@/components/QualificationSlider";
 import QualificationCard from "@/components/QualificationCard";
+import { DynamicIcon } from "@/components/admin/page-builder/MediaPicker";
 import { sanitizeRichHtml } from "@/utils/sanitizeRichHtml";
 import {
   Accordion,
@@ -427,6 +428,158 @@ const renderPricing = (block: ContentBlock) => {
         </div>
       </div>
     </section>
+  );
+};
+
+const getCardsGridClass = (columns?: number) => {
+  if (columns === 2) return "grid grid-cols-1 gap-6 md:grid-cols-2";
+  if (columns === 3) return "grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3";
+  return "grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4";
+};
+
+const getCardLink = (item: any) => {
+  if (!item?.slug) return null;
+  return String(item.slug).startsWith("/") ? String(item.slug) : `/qualifications/${item.slug}`;
+};
+
+const renderCardMedia = (item: any, showMedia: boolean) => {
+  if (!showMedia) return null;
+
+  const mediaType = item.mediaType || (item.image ? "image" : item.icon ? "icon" : item.circleText ? "text" : null);
+  if (!mediaType) return null;
+
+  if (mediaType === "image" && item.image) {
+    const isFull = item.imageSize === "full";
+    return (
+      <div className={isFull ? "overflow-hidden rounded-lg" : "flex justify-center"}>
+        <Image
+          image={resolveCmsImage(item.image) as any}
+          alt={item.title || "Card image"}
+          className={isFull ? "h-48 w-full object-cover" : "h-16 w-16 rounded-full object-cover"}
+        />
+      </div>
+    );
+  }
+
+  if (mediaType === "text" && item.circleText) {
+    return (
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+        {item.circleText}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <DynamicIcon iconKey={item.icon || "Star"} size={22} />
+    </div>
+  );
+};
+
+const renderCardsGrid = (block: ContentBlock, pageSlug?: string) => {
+  const d = block.data as any;
+  const columns = [2, 3, 4].includes(Number(d.columns)) ? Number(d.columns) : 4;
+  const mediaPosition = ["left", "right", "top"].includes(d.mediaPosition) ? d.mediaPosition : "top";
+  const textAlign = ["left", "center", "right"].includes(d.textAlign) ? d.textAlign : "left";
+  const showSectionTitle = d.showSectionTitle !== false;
+  const showMedia = d.showMedia !== false;
+  const showTitle = d.showTitle !== false;
+  const showCategory = d.showCategory !== false;
+  const showLevel = d.showLevel !== false;
+  const showPrice = d.showPrice !== false;
+  const showDescription = d.showDescription === true;
+  const showButton = d.showButton !== false;
+  const buttonLabel = d.buttonLabel || (pageSlug === "home" ? "Enroll Now" : "View Details");
+  const textAlignClass =
+    textAlign === "center" ? "text-center items-center" : textAlign === "right" ? "text-right items-end" : "text-left items-start";
+  const mediaTop = mediaPosition === "top";
+  const mediaRight = mediaPosition === "right";
+
+  return (
+    <Section title="">
+      {showSectionTitle && d.title ? renderRichText(d.title, "mb-8 text-center text-3xl font-bold") : null}
+      <div className={getCardsGridClass(columns)}>
+        {Array.isArray(d.items) &&
+          d.items.map((item: any, i: number) => {
+            const href = getCardLink(item);
+            const media = renderCardMedia(item, showMedia);
+
+            return (
+              <div
+                key={item.id || item.slug || item.title || i}
+                className={`group flex h-full flex-col rounded-xl border border-border bg-card p-5 ${mediaTop ? "" : "md:flex-row"} ${mediaRight ? "md:flex-row-reverse" : ""}`}
+              >
+                {media ? (
+                  <div className={`${mediaTop ? "mb-4" : "md:w-28 md:shrink-0"} ${mediaTop ? "" : "md:flex md:items-start"} ${textAlign === "center" ? "justify-center" : textAlign === "right" ? "justify-end" : "justify-start"}`}>
+                    {media}
+                  </div>
+                ) : null}
+
+                <div className={`flex flex-1 flex-col ${mediaTop ? "" : "md:px-4"} ${textAlignClass}`}>
+                  {(showCategory && item.category) || (showLevel && item.level) ? (
+                    <div className={`mb-2 flex flex-wrap gap-2 ${textAlign === "center" ? "justify-center" : textAlign === "right" ? "justify-end" : "justify-start"}`}>
+                      {showCategory && item.category ? (
+                        <span className="rounded bg-secondary px-3 py-1 text-xs font-bold uppercase text-secondary-foreground">
+                          {item.category}
+                        </span>
+                      ) : null}
+                      {showLevel && item.level ? (
+                        <span className="text-xs text-muted-foreground">
+                          {item.level}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {showTitle && item.title ? (
+                    href ? (
+                      <Link to={href} className="mb-3 text-sm font-semibold leading-snug text-foreground hover:text-primary">
+                        {renderRichText(item.title)}
+                      </Link>
+                    ) : (
+                      <div className="mb-3 text-sm font-semibold leading-snug text-foreground">
+                        {renderRichText(item.title)}
+                      </div>
+                    )
+                  ) : null}
+
+                  {showDescription && item.description ? (
+                    <div className="mb-4 text-sm text-muted-foreground">
+                      {renderRichText(item.description)}
+                    </div>
+                  ) : null}
+
+                  {showPrice && item.price ? (
+                    <div className="mb-4 text-lg font-bold text-primary">
+                      {item.price}
+                    </div>
+                  ) : null}
+
+                  {showButton && href ? (
+                    <Link
+                      to={href}
+                      className="mt-auto inline-flex rounded bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                    >
+                      {buttonLabel}
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+      </div>
+
+      {pageSlug === "home" ? (
+        <div className="mt-8 text-center">
+          <Link
+            to="/qualifications"
+            className="inline-block rounded bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            View All Qualifications
+          </Link>
+        </div>
+      ) : null}
+    </Section>
   );
 };
 
@@ -1256,130 +1409,7 @@ export const CMSBlockRenderer = ({
       if (block.label === "Related Qualifications") {
         return renderQualificationCards(block);
       }
-      if (pageSlug === "home") {
-        // Original home page styling: rounded top image with m-2 padding & hover-scale
-        return (
-          <Section title="">
-          {d.title && renderRichText(d.title, "text-3xl font-bold mb-8 text-center")}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Array.isArray(d.items) &&
-                d.items.map((item: any, i: number) => {
-                  const slug =
-                    item.slug ||
-                    item.title
-                      ?.toLowerCase()
-                      .replace(/[^a-z0-9]+/g, "-")
-                      .replace(/(^-|-$)/g, "");
-                  return (
-                    <div
-                      key={item.id || slug || i}
-                      className="bg-card border border-border rounded-xl overflow-hidden group flex flex-col"
-                    >
-                      <Link to={`/qualifications/${slug}`}>
-                        <div className="aspect-[4/3] overflow-hidden rounded-t-xl m-2">
-                          <Image
-                            image={resolveCmsImage(item.image) || heroClassroom}
-                            alt={item.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-                      </Link>
-                      <div className="px-4 pb-5 flex flex-col flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          {item.category ? (
-                            <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
-                              {item.category}
-                            </span>
-                          ) : null}
-                          {item.level ? (
-                            <span className="text-xs text-muted-foreground">
-                              {item.level}
-                            </span>
-                          ) : null}
-                        </div>
-                        <Link to={`/qualifications/${slug}`}>
-                          <h3 className="text-sm font-semibold text-foreground leading-snug mb-3 hover:text-primary">
-                            {renderRichText(item.title)}
-                          </h3>
-                        </Link>
-                        {item.price ? (
-                          <div className="text-lg font-bold text-primary mb-4">
-                            {item.price}
-                          </div>
-                        ) : null}
-                        <Link
-                          to={`/qualifications/${slug}`}
-                          className="mt-auto inline-block bg-primary text-primary-foreground text-center px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
-                        >
-                          Enroll Now
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-            <div className="text-center mt-8">
-              <Link
-                to="/qualifications"
-                className="inline-block bg-primary text-primary-foreground px-8 py-3 font-semibold rounded text-sm hover:opacity-90"
-              >
-                View All Qualifications
-              </Link>
-            </div>
-          </Section>
-        );
-      }
-      return (
-        <Section title={d.title || "Featured Qualifications"}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.isArray(d.items) &&
-              d.items.map((item: any, i: number) => (
-                <div
-                  key={item.id || item.slug || i}
-                  className="bg-card border border-border rounded-xl overflow-hidden group flex flex-col"
-                >
-                  {item.image ? (
-                    <Image
-                      image={resolveCmsImage(item.image) as any}
-                      alt={item.title}
-                      className="w-full h-48 object-cover"
-                    />
-                  ) : null}
-                  <div className="px-4 py-5 flex flex-col flex-1">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      {item.category ? (
-                        <span className="bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded uppercase">
-                          {item.category}
-                        </span>
-                      ) : null}
-                      {item.level ? (
-                        <span className="text-xs text-muted-foreground">
-                          {item.level}
-                        </span>
-                      ) : null}
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground leading-snug mb-3">
-                      {item.title}
-                    </h3>
-                    {item.description ? (
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {item.description}
-                      </p>
-                    ) : null}
-                    {item.slug ? (
-                      <Link
-                        to={`/qualifications/${item.slug}`}
-                        className="mt-auto inline-block bg-primary text-primary-foreground text-center px-5 py-2 text-sm font-semibold rounded hover:opacity-90"
-                      >
-                        View Details
-                      </Link>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-          </div>
-        </Section>
-      );
+      return renderCardsGrid(block, pageSlug);
     case "popular-qualifications":
       return renderPopularQualifications(block);
     case "pricing":
@@ -1598,13 +1628,35 @@ export const CMSBlockRenderer = ({
     case "qualification_hero":
       return renderQualificationHero(block);
     case "custom":
-      return d.html ? (
-        <section className="py-16 px-4 overflow-hidden">
-          <div className="container mx-auto">
-            {renderRichText(d.html)}
-          </div>
-        </section>
-      ) : null;
+      if (!d.html) return null;
+      {
+        const widthMode = d.widthMode === "full" ? "full" : "container";
+        const bgMode = d.bgMode || "transparent";
+        const bgColor = d.bgColor || "#ffffff";
+        const bgImage = d.bgImage;
+        const overlayColor = d.overlayColor || "rgba(0,0,0,0.45)";
+
+        return (
+          <section className="relative overflow-hidden py-16 px-4">
+            {bgMode === "image" && bgImage ? (
+              <div className="absolute inset-0">
+                <Image
+                  image={resolveCmsImage(bgImage) as any}
+                  className="h-full w-full object-cover"
+                  alt=""
+                />
+                <div className="absolute inset-0" style={{ backgroundColor: overlayColor }} />
+              </div>
+            ) : bgMode === "color" ? (
+              <div className="absolute inset-0" style={{ backgroundColor: bgColor }} />
+            ) : null}
+
+            <div className={`relative mx-auto ${widthMode === "container" ? "container" : "w-full"}`}>
+              {renderRichText(d.html)}
+            </div>
+          </section>
+        );
+      }
     case "related-qualifications":
       return <RelatedQualificationsSection block={block} />;
     case "info-cards":

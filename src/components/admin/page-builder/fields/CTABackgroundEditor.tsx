@@ -33,9 +33,18 @@ const CTABackgroundEditor = ({
   return (
     <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/20">
       <Label className="flex items-center gap-2 text-sm font-semibold">
-        <Palette className="h-4 w-4" /> CTA Background Style
+        <Palette className="h-4 w-4" /> Background Style
       </Label>
       <div className="flex gap-2">
+        <Button
+          type="button"
+          variant={bgMode === "transparent" ? "default" : "outline"}
+          size="sm"
+          className="flex-1"
+          onClick={() => update("bgMode", "transparent")}
+        >
+          Transparent
+        </Button>
         <Button
           type="button"
           variant={bgMode === "color" ? "default" : "outline"}

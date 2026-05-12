@@ -187,6 +187,18 @@ export interface CardsBlock extends BlockBase {
   type: "cards";
   data: {
     title?: string;
+    columns?: 2 | 3 | 4;
+    mediaPosition?: "top" | "left" | "right";
+    textAlign?: "left" | "center" | "right";
+    showSectionTitle?: boolean;
+    showMedia?: boolean;
+    showTitle?: boolean;
+    showCategory?: boolean;
+    showLevel?: boolean;
+    showPrice?: boolean;
+    showDescription?: boolean;
+    showButton?: boolean;
+    buttonLabel?: string;
     items: Array<{
       title: string;
       category?: string;
@@ -195,6 +207,10 @@ export interface CardsBlock extends BlockBase {
       image?: string;
       slug?: string;
       description?: string;
+      mediaType?: "icon" | "text" | "image";
+      icon?: string;
+      circleText?: string;
+      imageSize?: "icon" | "full";
     }>;
   };
 }
@@ -342,6 +358,11 @@ export interface CustomBlock extends BlockBase {
   data: {
     html: string;
     title?: string;
+    widthMode?: "container" | "full";
+    bgMode?: "transparent" | "color" | "image";
+    bgColor?: string;
+    bgImage?: string;
+    overlayColor?: string;
   };
 }
 
@@ -612,7 +633,22 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       id,
       type: "cards",
       label,
-      data: { title: "Featured Items", items: [] },
+      data: {
+        title: "Featured Items",
+        columns: 4,
+        mediaPosition: "top",
+        textAlign: "left",
+        showSectionTitle: true,
+        showMedia: true,
+        showTitle: true,
+        showCategory: true,
+        showLevel: true,
+        showPrice: true,
+        showDescription: false,
+        showButton: true,
+        buttonLabel: "View Details",
+        items: [],
+      },
     }),
     logos: () => ({
       id,
@@ -730,6 +766,11 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       label,
       data: {
         title: "Custom Section",
+        widthMode: "container",
+        bgMode: "transparent",
+        bgColor: "#ffffff",
+        bgImage: "",
+        overlayColor: "rgba(0,0,0,0.45)",
         html: `<div class="bg-primary/5 p-8 rounded-2xl border border-primary/10 text-center">\n  <h2 class="text-2xl font-bold text-primary mb-4">Custom Tailwind Content</h2>\n  <p class="text-muted-foreground">You can add any HTML here using Tailwind CSS classes.</p>\n</div>`,
       },
     }),

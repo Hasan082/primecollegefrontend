@@ -31,6 +31,7 @@ export const ITEM_FIELDS: Partial<Record<BlockType, ItemField[]>> = {
   ],
   cards: [
     { key: "title", label: "Title", type: "input", placeholder: "Card title" },
+    { key: "description", label: "Description", type: "textarea", placeholder: "Card description" },
     { key: "category", label: "Category", type: "input", placeholder: "e.g. Business" },
     { key: "level", label: "Level", type: "input", placeholder: "e.g. Level 5" },
     { key: "price", label: "Price", type: "input", placeholder: "e.g. £1,200" },
