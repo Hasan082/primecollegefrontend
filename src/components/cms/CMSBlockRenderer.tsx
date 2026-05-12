@@ -583,6 +583,130 @@ const renderCardsGrid = (block: ContentBlock, pageSlug?: string) => {
   );
 };
 
+const getFeatureGridClass = (columns?: number) => {
+  if (columns === 2) return "grid grid-cols-1 gap-6 md:grid-cols-2";
+  if (columns === 3) return "grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3";
+  return "grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4";
+};
+
+const renderFeatureMedia = (item: any, showMedia: boolean, homeStyle: boolean) => {
+  if (!showMedia) return null;
+  const mediaType = item.mediaType || (item.image ? "image" : item.circleText ? "text" : "icon");
+
+  if (mediaType === "image" && item.image) {
+    const imgSrc =
+      item.image?.medium ||
+      item.image?.small ||
+      item.image?.large ||
+      item.image?.original ||
+      item.image;
+    const isFull = item.imageSize === "full";
+    return (
+      <div className={isFull ? "overflow-hidden rounded-lg" : "flex justify-center"}>
+        <img
+          src={imgSrc}
+          alt={item.title}
+          className={isFull ? "h-24 w-full object-cover rounded-lg" : homeStyle ? "h-16 w-16 rounded-full object-cover" : "h-12 w-12 rounded-full object-cover"}
+        />
+      </div>
+    );
+  }
+
+  if (mediaType === "text" && item.circleText) {
+    return (
+      <div className={`${homeStyle ? "h-20 w-20 text-base" : "h-12 w-12 text-sm"} flex items-center justify-center rounded-full bg-primary/10 font-bold text-primary`}>
+        {item.circleText}
+      </div>
+    );
+  }
+
+  return homeStyle ? (
+    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground">
+      <DynamicIcon iconKey={item.icon || "Users"} size={40} />
+    </div>
+  ) : (
+    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/20 text-secondary">
+      <DynamicIcon iconKey={item.icon || "Users"} size={20} />
+    </div>
+  );
+};
+
+const renderWhyUsOrFeatures = (block: ContentBlock, pageSlug?: string) => {
+  const d = block.data as any;
+  const isWhyUs = block.type === "why-us";
+  const isHomeStyle = isWhyUs && pageSlug === "home";
+  const columns = [2, 3, 4].includes(Number(d.columns)) ? Number(d.columns) : isWhyUs ? 3 : 4;
+  const widthMode = d.widthMode === "full" ? "full" : "container";
+  const bgMode = d.bgMode || (isHomeStyle ? "color" : "transparent");
+  const textAlign = ["left", "center", "right"].includes(d.textAlign) ? d.textAlign : "center";
+  const mediaPosition = ["left", "right", "top"].includes(d.mediaPosition) ? d.mediaPosition : "top";
+  const showSectionTitle = d.showSectionTitle !== false;
+  const showSectionDescription = d.showSectionDescription !== false;
+  const showItemTitle = d.showItemTitle !== false;
+  const showItemDescription = d.showItemDescription !== false;
+  const showMedia = d.showMedia !== false;
+  const sectionTextClass = textAlign === "left" ? "text-left" : textAlign === "right" ? "text-right" : "text-center";
+  const itemTextClass =
+    textAlign === "left" ? "text-left items-start" : textAlign === "right" ? "text-right items-end" : "text-center items-center";
+  const titleWidthClass =
+    textAlign === "center" ? "mx-auto max-w-3xl" : textAlign === "right" ? "ml-auto max-w-3xl" : "max-w-3xl";
+
+  return (
+    <section className={`relative overflow-hidden py-16 px-4 ${sectionTextClass}`}>
+      {bgMode === "image" && d.bgImage ? (
+        <div className="absolute inset-0">
+          <Image image={resolveCmsImage(d.bgImage) as any} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0" style={{ backgroundColor: d.overlayColor || "rgba(15,23,42,0.35)" }} />
+        </div>
+      ) : bgMode === "color" ? (
+        <div className="absolute inset-0" style={{ backgroundColor: d.bgColor || (isHomeStyle ? "#f8fafc" : "#ffffff") }} />
+      ) : null}
+
+      <div className={`relative mx-auto ${widthMode === "container" ? "container" : "w-full max-w-7xl"}`}>
+        {showSectionTitle && d.title ? (
+          renderRichText(d.title, `${isHomeStyle ? "mb-2" : "mb-4"} text-3xl font-bold text-foreground`)
+        ) : null}
+        {isHomeStyle && showSectionTitle ? <div className="mx-auto mb-8 h-1 w-12 bg-secondary" /> : null}
+        {showSectionDescription && d.content ? (
+          renderRichText(d.content, `${titleWidthClass} mb-12 text-muted-foreground leading-relaxed prose prose-sm max-w-none`)
+        ) : null}
+        <div className={`${getFeatureGridClass(columns)} ${isHomeStyle ? "mt-8" : ""}`}>
+          {Array.isArray(d.items) &&
+            d.items.map((item: any, i: number) => {
+              const media = renderFeatureMedia(item, showMedia, isHomeStyle);
+              const mediaTop = mediaPosition === "top";
+              const mediaRight = mediaPosition === "right";
+              return (
+                <div
+                  key={item.title || i}
+                  className={`${isHomeStyle ? "text-center" : "bg-card border border-border rounded-xl p-6 shadow-sm"} ${mediaTop ? "flex flex-col" : `flex ${mediaRight ? "md:flex-row-reverse" : "md:flex-row"} gap-4`} ${itemTextClass}`}
+                >
+                  {media ? (
+                    <div className={`${mediaTop ? (isHomeStyle ? "mb-4 flex justify-center" : "mb-3 flex justify-center") : "shrink-0"} ${!mediaTop && textAlign === "center" ? "justify-center" : !mediaTop && textAlign === "right" ? "justify-end" : ""}`}>
+                      {media}
+                    </div>
+                  ) : null}
+                  <div className={`flex flex-1 flex-col ${itemTextClass}`}>
+                    {showItemTitle && item.title ? (
+                      <div className={`${isHomeStyle ? "mb-3 text-xl font-bold" : "mb-2 font-semibold"} text-foreground`}>
+                        {renderRichText(item.title)}
+                      </div>
+                    ) : null}
+                    {showItemDescription && item.description ? (
+                      <div className={`${isHomeStyle ? "max-w-xs text-sm text-muted-foreground" : "text-sm leading-relaxed text-muted-foreground"}`}>
+                        {renderRichText(item.description)}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const renderQualificationWhy = (block: ContentBlock) => {
   const d = block.data as any;
   const imageSrc = resolveCmsImage(d.image) || heroBusiness;
@@ -1062,16 +1186,49 @@ export const CMSBlockRenderer = ({
       }
       return renderHero(block, pageSlug);
     case "text":
-      return (
-        <Section title="">
-          {d.title && renderRichText(d.title, "text-2xl font-bold mb-4")}
-          {d.content ? (
-            <div className="mx-auto max-w-3xl text-center text-muted-foreground leading-relaxed">
-              {renderRichText(d.content)}
+      {
+        const widthMode = d.widthMode === "full" ? "full" : "container";
+        const bgMode = d.bgMode || "transparent";
+        const alignment = ["left", "center", "right"].includes(d.alignment) ? d.alignment : "center";
+        const showTitle = d.showTitle !== false;
+        const showDescription = d.showDescription !== false;
+        const wrapperClass =
+          alignment === "left" ? "text-left" : alignment === "right" ? "text-right" : "text-center";
+        const bodyWidthClass =
+          alignment === "center" ? "mx-auto max-w-3xl" : alignment === "right" ? "ml-auto max-w-3xl" : "max-w-3xl";
+
+        return (
+          <section className={`relative overflow-hidden py-16 px-4 ${wrapperClass}`}>
+            {bgMode === "image" && d.bgImage ? (
+              <div className="absolute inset-0">
+                <Image
+                  image={resolveCmsImage(d.bgImage) as any}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ backgroundColor: d.overlayColor || "rgba(15,23,42,0.3)" }}
+                />
+              </div>
+            ) : bgMode === "color" ? (
+              <div
+                className="absolute inset-0"
+                style={{ backgroundColor: d.bgColor || "#f8fafc" }}
+              />
+            ) : null}
+
+            <div className={`relative mx-auto ${widthMode === "container" ? "container" : "w-full max-w-7xl"}`}>
+              {showTitle && d.title ? renderRichText(d.title, "mb-4 text-2xl font-bold") : null}
+              {showDescription && d.content ? (
+                <div className={`${bodyWidthClass} leading-relaxed text-muted-foreground`}>
+                  {renderRichText(d.content)}
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </Section>
-      );
+          </section>
+        );
+      }
     case "full-width-text-image": {
       const bgMode = d.bgMode || (d.bgImage ? "image" : "color");
       const minHeight = Math.max(280, Number(d.minHeight) || 420);
@@ -1165,51 +1322,94 @@ export const CMSBlockRenderer = ({
       if (block.label === "Why Choose This Qualification") {
         return renderQualificationWhy(block);
       }
-      return (
-        <section className="bg-muted py-16 px-4">
-          <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div
-              className={`rounded-xl overflow-hidden ${d.imagePosition === "right" ? "order-2" : "order-1"}`}
-            >
-              <Image
-                image={resolveCmsImage(d.image) || aboutHero}
-                alt={d.headline}
-                className="w-full h-[400px] object-cover rounded-xl"
+      {
+        const widthMode = d.widthMode === "full" ? "full" : "container";
+        const bgMode = d.bgMode || "transparent";
+        const textAlign = ["left", "center", "right"].includes(d.textAlign) ? d.textAlign : "left";
+        const showTitle = d.showTitle !== false;
+        const showDescription = d.showDescription !== false;
+        const showButton = d.showButton !== false;
+        const showImage = d.showImage !== false;
+        const textAlignClass =
+          textAlign === "center" ? "text-center items-center" : textAlign === "right" ? "text-right items-end" : "text-left items-start";
+        const buttonJustifyClass =
+          textAlign === "center" ? "justify-center" : textAlign === "right" ? "justify-end" : "justify-start";
+
+        return (
+          <section className="relative overflow-hidden py-16 px-4">
+            {bgMode === "image" && d.bgImage ? (
+              <div className="absolute inset-0">
+                <Image
+                  image={resolveCmsImage(d.bgImage) as any}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ backgroundColor: d.overlayColor || "rgba(15,23,42,0.35)" }}
+                />
+              </div>
+            ) : bgMode === "color" ? (
+              <div
+                className="absolute inset-0"
+                style={{ backgroundColor: d.bgColor || "#f8fafc" }}
               />
-            </div>
-            <div
-              className={`bg-card rounded-xl p-8 border border-border ${d.imagePosition === "right" ? "order-1" : "order-2"}`}
-            >
-              {d.headline && renderRichText(d.headline, "text-2xl font-bold text-foreground mb-6")}
-              <div className="space-y-4 text-sm text-muted-foreground leading-relaxed prose prose-sm max-w-none">
-                {Array.isArray(d.paragraphs) && d.paragraphs.length > 0
-                  ? d.paragraphs.map((p: string, i: number) => renderRichText(p, "", i))
-                  : renderRichText(d.description)}
-              </div>
-              <div className="flex flex-wrap gap-4 mt-6">
-                {Array.isArray(d.ctas) && d.ctas.length > 0 ? (
-                  d.ctas.map((cta: any, i: number) => (
-                    <Link
-                      key={i}
-                      to={cta.href || "/about"}
-                      className="inline-block bg-secondary text-secondary-foreground px-6 py-2 rounded text-sm font-semibold hover:opacity-90"
-                    >
-                      {cta.label}
-                    </Link>
-                  ))
-                ) : d.ctaLabel ? (
-                  <Link
-                    to={d.ctaHref || "/about"}
-                    className="inline-block bg-secondary text-secondary-foreground px-6 py-2 rounded text-sm font-semibold hover:opacity-90"
+            ) : null}
+
+            <div className={`relative mx-auto ${widthMode === "container" ? "container" : "w-full max-w-7xl"}`}>
+              <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+                {showImage ? (
+                  <div
+                    className={`rounded-xl overflow-hidden ${d.imagePosition === "right" ? "order-2" : "order-1"}`}
                   >
-                    {d.ctaLabel}
-                  </Link>
+                    <Image
+                      image={resolveCmsImage(d.image) || aboutHero}
+                      alt={d.headline}
+                      className="h-[400px] w-full rounded-xl object-cover"
+                    />
+                  </div>
                 ) : null}
+                <div
+                  className={`rounded-xl border border-border bg-card p-8 ${showImage ? (d.imagePosition === "right" ? "order-1" : "order-2") : "lg:col-span-2"} flex flex-col ${textAlignClass}`}
+                >
+                  {showTitle && d.headline
+                    ? renderRichText(d.headline, "mb-6 text-2xl font-bold text-foreground")
+                    : null}
+                  {showDescription ? (
+                    <div className="space-y-4 text-sm leading-relaxed text-muted-foreground prose prose-sm max-w-none">
+                      {Array.isArray(d.paragraphs) && d.paragraphs.length > 0
+                        ? d.paragraphs.map((p: string, i: number) => renderRichText(p, "", i))
+                        : renderRichText(d.description)}
+                    </div>
+                  ) : null}
+                  {showButton ? (
+                    <div className={`mt-6 flex flex-wrap gap-4 ${buttonJustifyClass}`}>
+                      {Array.isArray(d.ctas) && d.ctas.length > 0 ? (
+                        d.ctas.map((cta: any, i: number) => (
+                          <Link
+                            key={i}
+                            to={cta.href || "/about"}
+                            className="inline-block rounded bg-secondary px-6 py-2 text-sm font-semibold text-secondary-foreground hover:opacity-90"
+                          >
+                            {cta.label}
+                          </Link>
+                        ))
+                      ) : d.ctaLabel ? (
+                        <Link
+                          to={d.ctaHref || "/about"}
+                          className="inline-block rounded bg-secondary px-6 py-2 text-sm font-semibold text-secondary-foreground hover:opacity-90"
+                        >
+                          {d.ctaLabel}
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      );
+          </section>
+        );
+      }
     case "about-split":
       return (
         <section
@@ -1326,9 +1526,16 @@ export const CMSBlockRenderer = ({
       const bgColor = d.bgColor || "#0c2d6b";
       const bgImage = d.bgImage;
       const overlayColor = d.overlayColor || "rgba(0,0,0,0.5)";
+      const widthMode = d.widthMode === "full" ? "full" : "container";
+      const textAlign = ["left", "center", "right"].includes(d.textAlign) ? d.textAlign : "center";
+      const showTitle = d.showTitle !== false;
+      const showDescription = d.showDescription !== false;
+      const showButton = d.showButton !== false;
+      const textAlignClass = textAlign === "left" ? "text-left" : textAlign === "right" ? "text-right" : "text-center";
+      const buttonJustifyClass = textAlign === "left" ? "justify-start" : textAlign === "right" ? "justify-end" : "justify-center";
 
       return d.bgImage || d.title || d.content || d.ctaLabel || (Array.isArray(d.ctas) && d.ctas.length > 0) ? (
-        <section className="relative py-20 px-4 overflow-hidden text-white text-center">
+        <section className={`relative overflow-hidden py-20 px-4 text-white ${textAlignClass}`}>
           {bgMode === "image" && bgImage ? (
             <div className="absolute inset-0">
               <Image
@@ -1342,32 +1549,36 @@ export const CMSBlockRenderer = ({
             <div className="absolute inset-0" style={{ backgroundColor: bgColor }} />
           )}
 
-          <div className="relative z-10 max-w-3xl mx-auto">
-            {d.title && renderRichText(d.title, "text-3xl font-bold mb-4")}
-            {d.content ? (
-              <div className="text-white/80 mb-8 max-w-xl mx-auto leading-relaxed prose prose-sm prose-invert max-w-none">
+          <div className={`relative z-10 ${widthMode === "container" ? "container mx-auto" : "mx-auto w-full max-w-7xl"}`}>
+            <div className={`mx-auto ${widthMode === "container" ? "max-w-3xl" : "max-w-5xl"}`}>
+            {showTitle && d.title ? renderRichText(d.title, "text-3xl font-bold mb-4") : null}
+            {showDescription && d.content ? (
+              <div className={`text-white/80 mb-8 leading-relaxed prose prose-sm prose-invert max-w-none ${textAlign === "center" ? "mx-auto max-w-xl" : textAlign === "right" ? "ml-auto max-w-xl" : "max-w-xl"}`}>
                 {renderRichText(d.content)}
               </div>
             ) : null}
-            <div className="flex flex-wrap justify-center gap-4">
-              {Array.isArray(d.ctas) && d.ctas.length > 0 ? (
-                d.ctas.map((cta: any, i: number) => (
+            <div className={`flex flex-wrap gap-4 ${buttonJustifyClass}`}>
+              {showButton ? (
+                Array.isArray(d.ctas) && d.ctas.length > 0 ? (
+                  d.ctas.map((cta: any, i: number) => (
+                    <Link
+                      key={i}
+                      to={cta.href || "/qualifications"}
+                      className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 transition shadow-lg"
+                    >
+                      {cta.label}
+                    </Link>
+                  ))
+                ) : d.ctaLabel ? (
                   <Link
-                    key={i}
-                    to={cta.href || "/qualifications"}
+                    to={d.ctaHref || "/qualifications"}
                     className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 transition shadow-lg"
                   >
-                    {cta.label}
+                    {d.ctaLabel}
                   </Link>
-                ))
-              ) : d.ctaLabel ? (
-                <Link
-                  to={d.ctaHref || "/qualifications"}
-                  className="inline-block bg-secondary text-secondary-foreground px-8 py-3 font-semibold rounded hover:opacity-90 transition shadow-lg"
-                >
-                  {d.ctaLabel}
-                </Link>
+                ) : null
               ) : null}
+            </div>
             </div>
           </div>
         </section>
@@ -1441,169 +1652,13 @@ export const CMSBlockRenderer = ({
     case "blog":
       return <BlogBlock d={d} />;
     case "why-us":
-      if (pageSlug === "home") {
-        // Original home page why-us: large round bg-primary circles (or image), centered layout, 3-col grid
-        return (
-          <section className="bg-muted py-16 px-4">
-            <div className="container mx-auto text-center">
-              {d.title && renderRichText(d.title, "text-3xl font-bold text-foreground mb-2")}
-              <div className="w-12 h-1 bg-secondary mx-auto mb-8" />
-              {d.content && 
-                renderRichText(d.content, "max-w-3xl mx-auto mb-12 text-muted-foreground leading-relaxed prose prose-sm max-w-none")
-              }
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-8">
-                {Array.isArray(d.items) &&
-                  d.items.map((item: any) => {
-                    const Icon = iconMap[item.icon] || Users;
-                    const hasImage =
-                      item.mediaType === "image" && item.image;
-                    const imgSrc =
-                      item.image?.medium ||
-                      item.image?.small ||
-                      item.image?.large ||
-                      item.image?.original ||
-                      "";
-                    return (
-                      <div key={item.title} className="text-center">
-                        <div className="flex justify-center mb-4">
-                          {hasImage ? (
-                            <div className="w-20 h-20 rounded-full overflow-hidden bg-primary flex items-center justify-center">
-                              <img
-                                src={imgSrc}
-                                alt={item.title}
-                                className="w-16 h-16 object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center">
-                              <Icon
-                                className="w-10 h-10 text-primary-foreground"
-                                strokeWidth={1.5}
-                              />
-                            </div>
-                          )}
-                        </div>
-                        <h3 className="text-xl font-bold text-foreground mb-3">
-                          {renderRichText(item.title)}
-                        </h3>
-                        {item.description && (
-                          <div className="text-muted-foreground text-sm max-w-xs mx-auto">
-                            {renderRichText(item.description)}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          </section>
-        );
-      }
-      return (
-        <section className="bg-muted py-16 px-4">
-          <div className="container mx-auto text-center">
-            {d.title && renderRichText(d.title, "text-3xl font-bold text-foreground mb-4")}
-            {d.content ? 
-                renderRichText(d.content, "text-muted-foreground max-w-2xl mx-auto mb-12 prose prose-sm max-w-none")
-             : null}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {Array.isArray(d.items) &&
-                d.items.map((item: any) => {
-                  const Icon = iconMap[item.icon] || Users;
-                  const hasImage =
-                    item.mediaType === "image" && item.image;
-                  const imgSrc =
-                    item.image?.medium ||
-                    item.image?.small ||
-                    item.image?.large ||
-                    item.image?.original ||
-                    "";
-                  return (
-                    <div
-                      key={item.title}
-                      className="bg-card border border-border rounded-xl p-6 text-left shadow-sm"
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center overflow-hidden">
-                          {hasImage ? (
-                            <img
-                              src={imgSrc}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Icon
-                              className="w-5 h-5 text-secondary"
-                              strokeWidth={2}
-                            />
-                          )}
-                        </div>
-                        <h3 className="font-semibold text-foreground">
-                          {item.title}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {item.description}
-                      </p>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        </section>
-      );
+      return renderWhyUsOrFeatures(block, pageSlug);
     case "features":
     case "modules":
       if (block.label === "Course Structure") {
         return renderQualificationStructure(block);
       }
-      if (pageSlug === "home") {
-        // Original home page features: bg-muted background on the section
-        return (
-          <Section title={d.title || "Highlights"} className="bg-muted">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Array.isArray(d.items) &&
-                d.items.map((item: any, i: number) => (
-                  <div
-                    key={item.title || i}
-                    className="bg-card p-6 rounded-xl border border-border"
-                  >
-                    <h3 className="font-semibold text-foreground mb-2">
-                      {item.title}
-                    </h3>
-                    {item.description ? (
-                      <p className="text-sm text-muted-foreground">
-                        {item.description}
-                      </p>
-                    ) : null}
-                  </div>
-                ))}
-            </div>
-          </Section>
-        );
-      }
-      return (
-        <Section title={d.title || "Highlights"}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.isArray(d.items) &&
-              d.items.map((item: any, i: number) => (
-                <div
-                  key={item.title || i}
-                  className="bg-card border border-border rounded-xl p-6 text-center shadow-sm"
-                >
-                  <h3 className="font-bold text-foreground mb-2">
-                    {item.title}
-                  </h3>
-                  {item.description ? (
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {item.description}
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-          </div>
-        </Section>
-      );
+      return renderWhyUsOrFeatures(block, pageSlug);
     case "qualification_slider": {
       const sliderBlock = block as QualificationSliderBlock;
       // When this is the fixed hero block on the home page, render as the original HeroSlider

@@ -87,6 +87,13 @@ export interface TextBlock extends BlockBase {
     title?: string;
     content: string;
     alignment?: TextAlignment;
+    widthMode?: "container" | "full";
+    bgMode?: "transparent" | "color" | "image";
+    bgColor?: string;
+    bgImage?: string;
+    overlayColor?: string;
+    showTitle?: boolean;
+    showDescription?: boolean;
   };
 }
 
@@ -183,6 +190,11 @@ export interface CTABlock extends BlockBase {
   data: {
     title: string;
     content?: string;
+    widthMode?: "container" | "full";
+    textAlign?: "left" | "center" | "right";
+    showTitle?: boolean;
+    showDescription?: boolean;
+    showButton?: boolean;
     ctaLabel?: string;
     ctaHref?: string;
     ctas?: Array<{ label: string; href: string }>;
@@ -257,10 +269,27 @@ export interface WhyUsBlock extends BlockBase {
   data: {
     title?: string;
     content?: string;
+    columns?: 2 | 3 | 4;
+    widthMode?: "container" | "full";
+    bgMode?: "transparent" | "color" | "image";
+    bgColor?: string;
+    bgImage?: string;
+    overlayColor?: string;
+    textAlign?: "left" | "center" | "right";
+    mediaPosition?: "top" | "left" | "right";
+    showSectionTitle?: boolean;
+    showSectionDescription?: boolean;
+    showItemTitle?: boolean;
+    showItemDescription?: boolean;
+    showMedia?: boolean;
     items: Array<{
       title: string;
       icon?: string;
       description: string;
+      mediaType?: "icon" | "text" | "image";
+      image?: string;
+      circleText?: string;
+      imageSize?: "icon" | "full";
     }>;
   };
 }
@@ -306,9 +335,27 @@ export interface FeaturesBlock extends BlockBase {
   type: "features";
   data: {
     title: string;
+    columns?: 2 | 3 | 4;
+    widthMode?: "container" | "full";
+    bgMode?: "transparent" | "color" | "image";
+    bgColor?: string;
+    bgImage?: string;
+    overlayColor?: string;
+    textAlign?: "left" | "center" | "right";
+    mediaPosition?: "top" | "left" | "right";
+    showSectionTitle?: boolean;
+    showSectionDescription?: boolean;
+    showItemTitle?: boolean;
+    showItemDescription?: boolean;
+    showMedia?: boolean;
     items: Array<{
       title: string;
       description: string;
+      mediaType?: "icon" | "text" | "image";
+      icon?: string;
+      image?: string;
+      circleText?: string;
+      imageSize?: "icon" | "full";
     }>;
   };
 }
@@ -565,7 +612,18 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       id,
       type: "text",
       label,
-      data: { title: "Section Title", content: "Enter your content here." },
+      data: {
+        title: "Section Title",
+        content: "Enter your content here.",
+        alignment: "center",
+        widthMode: "container",
+        bgMode: "transparent",
+        bgColor: "#f8fafc",
+        bgImage: "",
+        overlayColor: "rgba(15,23,42,0.3)",
+        showTitle: true,
+        showDescription: true,
+      },
     }),
     "full-width-text-image": () => ({
       id,
@@ -641,6 +699,11 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       data: {
         title: "Ready to Start?",
         content: "Contact us today.",
+        widthMode: "container",
+        textAlign: "center",
+        showTitle: true,
+        showDescription: true,
+        showButton: true,
         ctaLabel: "Get Started",
         ctaHref: "/contact",
         bgMode: "color",
@@ -686,7 +749,24 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       id,
       type: "why-us",
       label,
-      data: { title: "Why Choose Us", items: [{ title: "Feature", description: "Description" }] },
+      data: {
+        title: "Why Choose Us",
+        content: "",
+        columns: 3,
+        widthMode: "container",
+        bgMode: "color",
+        bgColor: "#f8fafc",
+        bgImage: "",
+        overlayColor: "rgba(15,23,42,0.35)",
+        textAlign: "center",
+        mediaPosition: "top",
+        showSectionTitle: true,
+        showSectionDescription: true,
+        showItemTitle: true,
+        showItemDescription: true,
+        showMedia: true,
+        items: [{ title: "Feature", description: "Description", mediaType: "icon", icon: "Users" }],
+      },
     }),
     pricing: () => ({
       id,
@@ -737,7 +817,23 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       id,
       type: "features",
       label,
-      data: { title: "Features", items: [{ title: "Feature", description: "Description" }] },
+      data: {
+        title: "Features",
+        columns: 4,
+        widthMode: "container",
+        bgMode: "transparent",
+        bgColor: "#ffffff",
+        bgImage: "",
+        overlayColor: "rgba(15,23,42,0.35)",
+        textAlign: "center",
+        mediaPosition: "top",
+        showSectionTitle: true,
+        showSectionDescription: true,
+        showItemTitle: true,
+        showItemDescription: true,
+        showMedia: false,
+        items: [{ title: "Feature", description: "Description", mediaType: "icon", icon: "Star" }],
+      },
     }),
     "contact-form": () => ({
       id,

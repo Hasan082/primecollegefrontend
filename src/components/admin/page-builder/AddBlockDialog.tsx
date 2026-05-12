@@ -68,7 +68,7 @@ const BLOCK_ICONS: Partial<Record<BlockType, React.ElementType>> = {
 
 const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
   text: (
-    <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+    <div className="space-y-1.5 rounded-md border border-border/60 bg-muted/20 p-2.5">
       <div className="h-2.5 w-24 rounded bg-foreground/20" />
       <div className="h-2 w-full rounded bg-foreground/10" />
       <div className="h-2 w-5/6 rounded bg-foreground/10" />
@@ -77,7 +77,7 @@ const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
   ),
   "full-width-text-image": (
     <div className="overflow-hidden rounded-lg border border-border/60">
-      <div className="relative h-24 bg-slate-700">
+      <div className="relative h-20 bg-slate-700">
         <div className="absolute inset-0 bg-black/35" />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
           <div className="h-3 w-24 rounded bg-white/90" />
@@ -88,14 +88,14 @@ const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
     </div>
   ),
   image: (
-    <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 p-2">
-      <div className="h-24 rounded bg-gradient-to-br from-slate-200 to-slate-300" />
+    <div className="overflow-hidden rounded-md border border-border/60 bg-muted/20 p-2">
+      <div className="h-20 rounded bg-gradient-to-br from-slate-200 to-slate-300" />
     </div>
   ),
   "image-text": (
-    <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/60 bg-muted/20 p-2">
-      <div className="h-24 rounded bg-gradient-to-br from-slate-200 to-slate-300" />
-      <div className="space-y-2 py-1">
+    <div className="grid grid-cols-2 gap-2 rounded-md border border-border/60 bg-muted/20 p-2">
+      <div className="h-20 rounded bg-gradient-to-br from-slate-200 to-slate-300" />
+      <div className="space-y-1.5 py-1">
         <div className="h-2.5 w-16 rounded bg-foreground/20" />
         <div className="h-2 w-full rounded bg-foreground/10" />
         <div className="h-2 w-5/6 rounded bg-foreground/10" />
@@ -104,14 +104,14 @@ const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
     </div>
   ),
   cta: (
-    <div className="rounded-lg border border-border/60 bg-primary p-4 text-center">
+    <div className="rounded-md border border-border/60 bg-primary p-3 text-center">
       <div className="mx-auto h-3 w-24 rounded bg-white/85" />
       <div className="mx-auto mt-2 h-2 w-32 rounded bg-white/60" />
       <div className="mx-auto mt-3 h-5 w-16 rounded bg-secondary" />
     </div>
   ),
   cards: (
-    <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/60 bg-muted/20 p-2">
+    <div className="grid grid-cols-2 gap-2 rounded-md border border-border/60 bg-muted/20 p-2">
       {[0, 1].map((i) => (
         <div key={i} className="rounded-md border border-border/50 bg-background p-2">
           <div className="mb-2 h-10 rounded bg-slate-200" />
@@ -123,7 +123,7 @@ const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
     </div>
   ),
   faq: (
-    <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+    <div className="space-y-1.5 rounded-md border border-border/60 bg-muted/20 p-2.5">
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex items-center justify-between rounded border border-border/50 bg-background px-2 py-2">
           <div className="h-2 w-24 rounded bg-foreground/15" />
@@ -133,7 +133,7 @@ const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
     </div>
   ),
   stats: (
-    <div className="grid grid-cols-3 gap-2 rounded-lg border border-border/60 bg-primary/10 p-3">
+    <div className="grid grid-cols-3 gap-2 rounded-md border border-border/60 bg-primary/10 p-2.5">
       {[0, 1, 2].map((i) => (
         <div key={i} className="text-center">
           <div className="mx-auto h-4 w-8 rounded bg-primary/40" />
@@ -143,7 +143,7 @@ const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
     </div>
   ),
   features: (
-    <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/60 bg-muted/20 p-2">
+    <div className="grid grid-cols-2 gap-2 rounded-md border border-border/60 bg-muted/20 p-2">
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className="rounded-md border border-border/50 bg-background p-2">
           <div className="h-2.5 w-10 rounded bg-foreground/20" />
@@ -153,7 +153,7 @@ const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
     </div>
   ),
   "contact-form": (
-    <div className="grid grid-cols-2 gap-2 rounded-lg border border-border/60 bg-muted/20 p-2">
+    <div className="grid grid-cols-2 gap-2 rounded-md border border-border/60 bg-muted/20 p-2">
       <div className="space-y-2">
         <div className="h-2.5 w-16 rounded bg-foreground/20" />
         <div className="h-2 w-20 rounded bg-foreground/10" />
@@ -167,7 +167,7 @@ const BLOCK_PREVIEWS: Partial<Record<BlockType, React.ReactNode>> = {
     </div>
   ),
   custom: (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-2">
+    <div className="rounded-md border border-border/60 bg-muted/20 p-2">
       <div className="rounded border border-dashed border-primary/40 bg-background p-3 font-mono text-[9px] text-muted-foreground">
         &lt;div class="grid..."&gt;
         <br />
@@ -197,12 +197,12 @@ const AddBlockDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-6xl max-h-[90vh] overflow-hidden p-4 sm:p-6">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-6xl max-h-[90vh] overflow-hidden p-3 sm:p-4">
         <DialogHeader className="pr-10 sm:pr-12">
           <DialogTitle>Add Block</DialogTitle>
         </DialogHeader>
-        <div className="max-h-[calc(90vh-6rem)] overflow-y-auto pr-1">
-          <div className="grid grid-cols-1 gap-3 pb-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="max-h-[calc(90vh-5rem)] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-2.5 pb-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {blockTypes.map((type) => (
             <Button
               key={type}
@@ -211,16 +211,16 @@ const AddBlockDialog = ({
               onClick={() => addBlock(type)}
             >
                 <Card className="h-full w-full border-border/70 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/30 group-hover:shadow-md">
-                <CardContent className="flex h-full min-h-[220px] flex-col gap-3 p-4 sm:p-5">
+                <CardContent className="flex h-full min-h-[192px] flex-col gap-2.5 p-3.5 sm:p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       {BLOCK_ICONS[type] ? (
                         React.createElement(BLOCK_ICONS[type] as React.ElementType, {
                           className: "h-5 w-5",
                         })
                       ) : null}
                     </div>
-                    <span className="rounded-full border border-border px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                    <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                       Add
                     </span>
                   </div>
@@ -232,10 +232,10 @@ const AddBlockDialog = ({
                     )}
                   </div>
                   <div className="space-y-1">
-                    <span className="block text-sm font-semibold text-foreground">
+                    <span className="block text-[15px] font-semibold leading-tight text-foreground">
                       {BLOCK_TYPE_LABELS[type]}
                     </span>
-                    <span className="block text-xs leading-relaxed text-muted-foreground">
+                    <span className="block text-[12px] leading-snug text-muted-foreground">
                       {BLOCK_DESCRIPTIONS[type] || "Add this block to the page."}
                     </span>
                   </div>

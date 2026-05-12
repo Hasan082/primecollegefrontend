@@ -303,6 +303,73 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
         <div><Label>Main Content</Label><RichTextEditor value={local.content as string} onChange={(v) => update("content", v)} /></div>
       )}
 
+      {block.type === "text" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Text Section Settings</Label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Content Width</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.widthMode as string) || "container"}
+                onChange={(e) => update("widthMode", e.target.value)}
+              >
+                <option value="container">Container Width</option>
+                <option value="full">Full Width</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Text Align</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.alignment as string) || "center"}
+                onChange={(e) => update("alignment", e.target.value)}
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Background Mode</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.bgMode as string) || "transparent"}
+                onChange={(e) => update("bgMode", e.target.value)}
+              >
+                <option value="transparent">Transparent</option>
+                <option value="color">Solid Color</option>
+                <option value="image">Background Image</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              ["showTitle", "Show Title"],
+              ["showDescription", "Show Description"],
+            ].map(([key, label]) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={local[key] !== false}
+                  onChange={(e) => update(key, e.target.checked)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          <CTABackgroundEditor
+            local={local}
+            update={update}
+            onImageUpload={onImageUpload}
+            isUploading={isUploading}
+          />
+        </div>
+      )}
+
       {(block.type === "image-text" || block.type === "about-split") && (
         <div>
           <Label className="text-xs text-muted-foreground">Detailed Description / Paragraphs</Label>
@@ -548,6 +615,102 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
         </div>
       )}
 
+      {(block.type === "why-us" || block.type === "features") && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">{block.type === "why-us" ? "Why Us" : "Features"} Layout Settings</Label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Cards Per Row</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={String(local.columns || (block.type === "features" ? 4 : 3))}
+                onChange={(e) => update("columns", parseInt(e.target.value, 10) || (block.type === "features" ? 4 : 3))}
+              >
+                <option value="2">2 Cards</option>
+                <option value="3">3 Cards</option>
+                <option value="4">4 Cards</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Content Width</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.widthMode as string) || "container"}
+                onChange={(e) => update("widthMode", e.target.value)}
+              >
+                <option value="container">Container Width</option>
+                <option value="full">Full Width</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Text Align</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.textAlign as string) || "center"}
+                onChange={(e) => update("textAlign", e.target.value)}
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Media Position</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.mediaPosition as string) || "top"}
+                onChange={(e) => update("mediaPosition", e.target.value)}
+              >
+                <option value="top">Top</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Background Mode</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.bgMode as string) || (block.type === "why-us" ? "color" : "transparent")}
+                onChange={(e) => update("bgMode", e.target.value)}
+              >
+                <option value="transparent">Transparent</option>
+                <option value="color">Solid Color</option>
+                <option value="image">Background Image</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["showSectionTitle", "Show Section Title"],
+              ["showSectionDescription", "Show Section Description"],
+              ["showItemTitle", "Show Item Title"],
+              ["showItemDescription", "Show Item Description"],
+              ["showMedia", "Show Media"],
+            ].map(([key, label]) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={local[key] !== false}
+                  onChange={(e) => update(key, e.target.checked)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          <CTABackgroundEditor
+            local={local}
+            update={update}
+            onImageUpload={onImageUpload}
+            isUploading={isUploading}
+          />
+        </div>
+      )}
+
       {block.type === "custom" && (
         <div className="space-y-4 border-t pt-4">
           <Label className="text-sm font-bold">Custom HTML (Tailwind Supported)</Label>
@@ -624,7 +787,61 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
         </div>
       )}
 
-      {block.type === "cta" && <CTABackgroundEditor local={local} update={update} onImageUpload={onImageUpload} isUploading={isUploading} />}
+      {block.type === "cta" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">CTA Layout Settings</Label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Content Width</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.widthMode as string) || "container"}
+                onChange={(e) => update("widthMode", e.target.value)}
+              >
+                <option value="container">Container Width</option>
+                <option value="full">Full Width</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Text Align</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.textAlign as string) || "center"}
+                onChange={(e) => update("textAlign", e.target.value)}
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              ["showTitle", "Show Title"],
+              ["showDescription", "Show Description"],
+              ["showButton", "Show Button"],
+            ].map(([key, label]) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={local[key] !== false}
+                  onChange={(e) => update(key, e.target.checked)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          <CTABackgroundEditor
+            local={local}
+            update={update}
+            onImageUpload={onImageUpload}
+            isUploading={isUploading}
+          />
+        </div>
+      )}
 
       {block.type === "full-width-text-image" && (
         <div className="space-y-4 border-t pt-4">
