@@ -8,7 +8,6 @@ import {
   Eye,
   FileText,
   GraduationCap,
-  MinusCircle,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -50,6 +49,7 @@ type FrontendUnitStatus =
   | "Assessed"
   | "Awaiting IQA"
   | "Signed Off"
+  | "Auto Cleared"
   | "Action Required";
 
 type FilterMode = "requires_attention" | "all" | "signed_off";
@@ -77,6 +77,10 @@ const statusConfig: Record<
   "Signed Off": {
     icon: <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />,
     badgeClass: "bg-green-100 text-green-700 border-green-200",
+  },
+  "Auto Cleared": {
+    icon: <CheckCircle2 className="w-3.5 h-3.5 text-gray-500" />,
+    badgeClass: "bg-gray-100 text-gray-600 border-gray-200",
   },
   "Action Required": {
     icon: <AlertTriangle className="w-3.5 h-3.5 text-destructive" />,
@@ -179,7 +183,6 @@ const buildQueueMaps = (queueItems: IQAReviewQueueItem[]) => {
 };
 
 const UnitRow = ({
-  enrolmentId,
   trainerName,
   unit,
   queueItem,
@@ -203,17 +206,20 @@ const UnitRow = ({
   };
   queueItem?: IQAReviewQueueItem;
 }) => {
-  const unitStatus =
+  const isAutoCleared = !queueItem && unit.progress?.competency_status === "competent";
+  const unitStatus: FrontendUnitStatus =
     mapQueueStatusToUnitStatus(queueItem) ||
-    mapDisplayStatusToUnitStatus(
-      unit.progress?.competency_status === "iqa_review"
-        ? "Waiting for IQA review"
-        : unit.progress?.status === "in_progress"
-          ? "In progress"
-          : unit.progress?.status === "completed"
-            ? "Completed"
-            : null,
-    );
+    (isAutoCleared
+      ? "Auto Cleared"
+      : mapDisplayStatusToUnitStatus(
+          unit.progress?.competency_status === "iqa_review"
+            ? "Waiting for IQA review"
+            : unit.progress?.status === "in_progress"
+              ? "In progress"
+              : unit.progress?.status === "completed"
+                ? "Completed"
+                : null,
+        ));
 
   const config = statusConfig[unitStatus];
   const reviewLink = queueItem?.sample_id || queueItem?.submission_id
@@ -283,9 +289,11 @@ const LearnerAccordionItem = ({
     }
     const completedUnits = units.filter((unit) => {
       const queueItem = queueByUnit.get(getQueueKey(enrolment.id, unit.id));
+      const isAutoCleared = !queueItem && unit.progress?.competency_status === "competent";
       const unitStatus =
-        mapQueueStatusToUnitStatus(queueItem) || mapDisplayStatusToUnitStatus(unit.progress?.status);
-        return unitStatus === "Signed Off";
+        mapQueueStatusToUnitStatus(queueItem) ||
+        (isAutoCleared ? "Auto Cleared" : mapDisplayStatusToUnitStatus(unit.progress?.status));
+      return unitStatus === "Signed Off" || unitStatus === "Auto Cleared";
     }).length;
     return Math.round((completedUnits / units.length) * 100);
   }, [enrolment.id, queueByUnit, units]);
@@ -520,7 +528,7 @@ const QualificationTreeView = () => {
             </div>
             <div>
               <p className="text-xl font-bold">{approved}</p>
-              <p className="text-[11px] text-muted-foreground">Signed Off</p>
+              <p className="text-[11px] text-muted-foreground">IQA Approved</p>
             </div>
           </CardContent>
         </Card>
