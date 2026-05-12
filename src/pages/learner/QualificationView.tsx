@@ -130,6 +130,7 @@ const QualificationView = () => {
   const isSession = qualification.is_session === true;
   const session = enrolment.session || null;
   const isExpired = enrolment.access_expired;
+  const canExtend = isExpired && enrolment.status !== "completed";
   const requiresDeclaration = qualification.requires_learner_declaration === true;
   const requiresEvaluation = qualification.requires_course_evaluation === true;
 
@@ -258,10 +259,12 @@ const QualificationView = () => {
                 </p>
               </div>
             </div>
-            <Button className="gap-2 self-start md:self-auto" onClick={() => setShowExtension(true)}>
-              <CalendarPlus className="h-4 w-4" />
-              Extend Access
-            </Button>
+            {canExtend && (
+              <Button className="gap-2 self-start md:self-auto" onClick={() => setShowExtension(true)}>
+                <CalendarPlus className="h-4 w-4" />
+                Extend Access
+              </Button>
+            )}
           </div>
         </div>
       )}

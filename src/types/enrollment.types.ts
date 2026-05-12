@@ -201,6 +201,7 @@ export interface EnrolmentListItem {
     };
     access_expired: boolean;
     status_badge: string;
+    can_extend: boolean;
 }
 
 export interface EnrolmentListResponse {

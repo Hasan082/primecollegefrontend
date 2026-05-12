@@ -111,7 +111,7 @@ const MyQualifications = () => {
                   <Progress value={pct} className="h-3" />
                 </div>
 
-                {expired && (
+                {enrolment.can_extend && (
                   <div className="mt-4 border border-destructive/30 bg-destructive/5 rounded-lg p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0" />

@@ -318,6 +318,7 @@ const UnitDetail = () => {
   }
 
   const isExpired = enrolment.access_expired;
+  const canExtend = isExpired && enrolment.status !== "completed";
 
   const evidenceSubmissions = evidenceResponse?.data?.submissions || [];
   const evidenceConfig = evidenceResponse?.data?.config;
@@ -411,10 +412,12 @@ const UnitDetail = () => {
                 </p>
               </div>
             </div>
-            <Button className="gap-2 self-start md:self-auto" onClick={() => setShowExtension(true)}>
-              <CalendarPlus className="h-4 w-4" />
-              Extend Access
-            </Button>
+            {canExtend && (
+              <Button className="gap-2 self-start md:self-auto" onClick={() => setShowExtension(true)}>
+                <CalendarPlus className="h-4 w-4" />
+                Extend Access
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -720,7 +723,7 @@ const UnitDetail = () => {
 
 
 
-          {isExpired && !qualification.is_cpd && (
+          {canExtend && !qualification.is_cpd && (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
                 <Lock className="h-5 w-5 text-destructive" />
@@ -821,7 +824,7 @@ const UnitDetail = () => {
                   Upload evidence below to create your first learner submission for this unit.
                 </p>
               )}
-              {isExpired && (
+              {canExtend && (
                 <Button variant="outline" className="mt-3 w-full gap-2" onClick={() => setShowExtension(true)}>
                   <Lock className="w-4 h-4" />
                   Extend To Unlock
