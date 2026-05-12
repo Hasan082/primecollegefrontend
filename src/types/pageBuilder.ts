@@ -125,6 +125,16 @@ export interface ImageTextBlock extends BlockBase {
     paragraphs: string[];
     image?: string;
     imagePosition?: "left" | "right";
+    textAlign?: "left" | "center" | "right";
+    widthMode?: "container" | "full";
+    bgMode?: "transparent" | "color" | "image";
+    bgColor?: string;
+    bgImage?: string;
+    overlayColor?: string;
+    showTitle?: boolean;
+    showDescription?: boolean;
+    showButton?: boolean;
+    showImage?: boolean;
     ctaLabel?: string;
     ctaHref?: string;
     ctas?: Array<{ label: string; href: string }>;
@@ -592,6 +602,16 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
         description: "",
         image: "",
         imagePosition: "right",
+        textAlign: "left",
+        widthMode: "container",
+        bgMode: "transparent",
+        bgColor: "#f8fafc",
+        bgImage: "",
+        overlayColor: "rgba(15,23,42,0.35)",
+        showTitle: true,
+        showDescription: true,
+        showButton: true,
+        showImage: true,
         ctaLabel: "",
         ctaHref: "",
       },

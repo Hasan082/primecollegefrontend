@@ -52,6 +52,78 @@ interface QualificationOption {
   level?: string;
 }
 
+const CUSTOM_BLOCK_PRESETS: Array<{
+  id: string;
+  name: string;
+  description: string;
+  preview: React.ReactNode;
+  data: Record<string, unknown>;
+}> = [
+  {
+    id: "hero-banner",
+    name: "Hero Banner",
+    description: "Large heading, short supporting text, and CTA button.",
+    preview: (
+      <div className="rounded-lg bg-slate-800 p-3 text-center">
+        <div className="mx-auto h-2.5 w-20 rounded bg-white/90" />
+        <div className="mx-auto mt-2 h-2 w-28 rounded bg-white/60" />
+        <div className="mx-auto mt-3 h-5 w-14 rounded bg-secondary/90" />
+      </div>
+    ),
+    data: {
+      widthMode: "full",
+      bgMode: "color",
+      bgColor: "#0c2d6b",
+      overlayColor: "rgba(0,0,0,0.45)",
+      html: `<div class="mx-auto max-w-4xl py-16 text-center text-white">\n  <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/70">Prime College</p>\n  <h2 class="text-4xl font-bold md:text-5xl">Build a high-converting custom hero section</h2>\n  <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/85 md:text-lg">Use Tailwind utility classes to control spacing, alignment, layout, and responsive behavior without introducing custom scripts.</p>\n  <a href="/contact" class="mt-8 inline-flex rounded bg-secondary px-8 py-3 text-sm font-semibold text-secondary-foreground">Get Started</a>\n</div>`,
+    },
+  },
+  {
+    id: "split-layout",
+    name: "Split Layout",
+    description: "Two-column content block with text and image area.",
+    preview: (
+      <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted/20 p-2">
+        <div className="rounded bg-slate-200" />
+        <div className="space-y-2 rounded bg-background p-2">
+          <div className="h-2.5 w-16 rounded bg-foreground/20" />
+          <div className="h-2 w-full rounded bg-foreground/10" />
+          <div className="h-2 w-5/6 rounded bg-foreground/10" />
+        </div>
+      </div>
+    ),
+    data: {
+      widthMode: "container",
+      bgMode: "transparent",
+      bgColor: "#ffffff",
+      overlayColor: "rgba(0,0,0,0.45)",
+      html: `<div class="grid items-center gap-8 lg:grid-cols-2">\n  <div class="overflow-hidden rounded-xl bg-slate-200 aspect-[4/3]">\n    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" alt="Team" class="h-full w-full object-cover" />\n  </div>\n  <div>\n    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Flexible Layout</p>\n    <h2 class="mt-3 text-3xl font-bold text-foreground">Build custom split sections without new frontend code</h2>\n    <p class="mt-4 text-muted-foreground leading-relaxed">This pattern works well for service highlights, about sections, recruitment content, and landing-page rows.</p>\n    <div class="mt-6 flex flex-wrap gap-3">\n      <a href="/about" class="inline-flex rounded bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">Learn More</a>\n      <a href="/contact" class="inline-flex rounded border border-border px-6 py-3 text-sm font-semibold text-foreground">Contact</a>\n    </div>\n  </div>\n</div>`,
+    },
+  },
+  {
+    id: "feature-grid",
+    name: "Feature Grid",
+    description: "Responsive three-card grid with headings and descriptions.",
+    preview: (
+      <div className="grid grid-cols-3 gap-2 rounded-lg bg-muted/20 p-2">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded bg-background p-2">
+            <div className="h-2.5 w-8 rounded bg-foreground/20" />
+            <div className="mt-2 h-2 w-full rounded bg-foreground/10" />
+          </div>
+        ))}
+      </div>
+    ),
+    data: {
+      widthMode: "container",
+      bgMode: "color",
+      bgColor: "#f8fafc",
+      overlayColor: "rgba(0,0,0,0.45)",
+      html: `<div class="text-center">\n  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Why It Works</p>\n  <h2 class="mt-3 text-3xl font-bold text-foreground">A custom code block can build full design systems</h2>\n  <p class="mx-auto mt-4 max-w-2xl text-muted-foreground">Use semantic HTML and utility classes to create repeatable sections while keeping the CMS flexible.</p>\n</div>\n<div class="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">\n  <div class="rounded-xl border border-border bg-background p-6 text-left">\n    <h3 class="text-lg font-semibold text-foreground">Fast</h3>\n    <p class="mt-3 text-sm leading-relaxed text-muted-foreground">Tailwind utilities avoid extra stylesheet churn for one-off sections.</p>\n  </div>\n  <div class="rounded-xl border border-border bg-background p-6 text-left">\n    <h3 class="text-lg font-semibold text-foreground">Flexible</h3>\n    <p class="mt-3 text-sm leading-relaxed text-muted-foreground">Admins can compose banners, content rows, and feature groups from HTML.</p>\n  </div>\n  <div class="rounded-xl border border-border bg-background p-6 text-left">\n    <h3 class="text-lg font-semibold text-foreground">Safe</h3>\n    <p class="mt-3 text-sm leading-relaxed text-muted-foreground">Sanitized HTML blocks scripting while preserving layout and styling tools.</p>\n  </div>\n</div>`,
+    },
+  },
+];
+
 const SortableQualificationRow = ({
   qualification,
   onRemove,
@@ -116,6 +188,9 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
 
   const setIsUploading = (v: boolean) => { _setIsUploading(v); onUploadingChange?.(v); };
   const update = (key: string, value: unknown) => setLocal((prev) => ({ ...prev, [key]: value }));
+  const applyCustomPreset = (presetData: Record<string, unknown>) => {
+    setLocal((prev) => ({ ...prev, ...presetData }));
+  };
 
   const handleSave = () => {
     if (isUploading) return;
@@ -233,6 +308,75 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
           <Label className="text-xs text-muted-foreground">Detailed Description / Paragraphs</Label>
           <RichTextEditor value={(local.description as string) || (Array.isArray(local.paragraphs) ? (local.paragraphs as string[]).join("") : "")}
             onChange={(v) => { update("description", v); update("paragraphs", [v]); }} />
+        </div>
+      )}
+
+      {block.type === "image-text" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Layout Settings</Label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Content Width</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.widthMode as string) || "container"}
+                onChange={(e) => update("widthMode", e.target.value)}
+              >
+                <option value="container">Container Width</option>
+                <option value="full">Full Width</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Text Align</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.textAlign as string) || "left"}
+                onChange={(e) => update("textAlign", e.target.value)}
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase">Background Mode</Label>
+              <select
+                className="w-full h-9 text-sm border rounded bg-background"
+                value={(local.bgMode as string) || "transparent"}
+                onChange={(e) => update("bgMode", e.target.value)}
+              >
+                <option value="transparent">Transparent</option>
+                <option value="color">Solid Color</option>
+                <option value="image">Background Image</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["showTitle", "Show Title"],
+              ["showDescription", "Show Description"],
+              ["showButton", "Show Button"],
+              ["showImage", "Show Image"],
+            ].map(([key, label]) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={local[key] !== false}
+                  onChange={(e) => update(key, e.target.checked)}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          <CTABackgroundEditor
+            local={local}
+            update={update}
+            onImageUpload={onImageUpload}
+            isUploading={isUploading}
+          />
         </div>
       )}
 
@@ -415,6 +559,28 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
             <p>
               Not allowed: scripts, event handlers, iframes, or unsafe embeds. Content is sanitized before rendering.
             </p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-sm font-semibold">Starter Presets</Label>
+              <span className="text-[10px] text-muted-foreground">Applies sample layout, width, and background settings</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {CUSTOM_BLOCK_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className="rounded-lg border border-border bg-background p-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/20"
+                  onClick={() => applyCustomPreset(preset.data)}
+                >
+                  <div className="pointer-events-none">{preset.preview}</div>
+                  <div className="mt-3">
+                    <div className="text-sm font-semibold text-foreground">{preset.name}</div>
+                    <div className="mt-1 text-xs leading-relaxed text-muted-foreground">{preset.description}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
