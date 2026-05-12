@@ -7,22 +7,6 @@ import { Button } from "@/components/ui/button";
 import ExtensionRequestModal from "@/components/learner/ExtensionRequestModal";
 import { useGetEnrolmentsQuery } from "@/redux/apis/enrolmentApi";
 
-// Mock qualification-level expiry data (DD/MM/YYYY)
-const qualificationExpiry: Record<string, string> = {
-  "adult-care-l4": "01/02/2026", // expired
-  "business-admin-l3": "15/09/2026", // still active
-};
-
-const isExpired = (dateStr: string) => {
-  const [d, m, y] = dateStr.split("/").map(Number);
-  return new Date(y, m - 1, d) < new Date();
-};
-
-const daysOverdue = (dateStr: string) => {
-  const [d, m, y] = dateStr.split("/").map(Number);
-  const diff = new Date().getTime() - new Date(y, m - 1, d).getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
-};
 
 const MyQualifications = () => {
   const [extensionOpen, setExtensionOpen] = useState(false);
@@ -89,10 +73,14 @@ const MyQualifications = () => {
                       <span className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-0.5 rounded border border-primary/20">
                         {q.category}
                       </span>
-                      {expired ? (
+                      {expired || enrolment.status_badge === "expired" ? (
                         <Badge variant="destructive" className="text-xs">Expired</Badge>
-                      ) : enrolment.status === "completed" ? (
+                      ) : enrolment.status_badge === "completed" ? (
                         <Badge className="bg-green-600 text-white text-xs">Completed</Badge>
+                      ) : enrolment.status_badge === "all_units_competent" ? (
+                        <Badge className="bg-blue-600 text-white text-xs">Awaiting Completion</Badge>
+                      ) : enrolment.status_badge === "on_hold" ? (
+                        <Badge variant="outline" className="text-xs">On Hold</Badge>
                       ) : (
                         <Badge variant="secondary" className="text-xs">In Progress</Badge>
                       )}
