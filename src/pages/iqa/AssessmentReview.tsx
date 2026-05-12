@@ -8,6 +8,7 @@ import {
   Loader2,
   ShieldAlert,
   Image as ImageIcon,
+  Play,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,8 @@ import {
   useSubmitIqaSampleDecisionMutation,
 } from "@/redux/apis/iqa/iqaApi";
 import ResourceSection from "@/components/shared/ResourceSection";
+import ResourcePlayerModal from "@/components/shared/ResourcePlayerModal";
+import { getMediaInfo } from "@/lib/media";
 
 const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"];
 
@@ -121,6 +124,12 @@ const AssessmentReview = () => {
   const [concernNote, setConcernNote] = useState("");
   const [checklistResponses, setChecklistResponses] = useState<Record<string, Record<string, string>>>({});
   const [checklistSummaries, setChecklistSummaries] = useState<Record<string, string>>({});
+  const [playerState, setPlayerState] = useState<{
+    open: boolean;
+    url: string;
+    title: string;
+    type: "video" | "audio";
+  } | null>(null);
 
   const { data: sampleDetail, isLoading: isLoadingSampleDetail, isError: isSampleDetailError } =
     useGetIqaSampleDetailQuery(id || "", { skip: !id });
@@ -934,14 +943,41 @@ const AssessmentReview = () => {
                       </p>
                     ) : null}
                   </div>
-                  <a
-                    className="text-sm text-primary underline"
-                    href={item.file}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open file
-                  </a>
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const { isMedia, type } = getMediaInfo(item.file);
+                      if (isMedia && type) {
+                        return (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs text-primary"
+                            onClick={() => {
+                              setPlayerState({
+                                open: true,
+                                url: item.file,
+                                title: item.title,
+                                type,
+                              });
+                            }}
+                          >
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            Play
+                          </Button>
+                        );
+                      }
+                      return (
+                        <a
+                          className="text-sm text-primary underline"
+                          href={item.file}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open file
+                        </a>
+                      );
+                    })()}
+                  </div>
                 </div>
 
                 <div className="mt-3 rounded-lg border bg-muted/20 p-3">
@@ -1288,6 +1324,15 @@ const AssessmentReview = () => {
             </Button>
           </CardContent>
         </Card>
+      )}
+      {playerState && (
+        <ResourcePlayerModal
+          open={playerState.open}
+          onOpenChange={(open) => setPlayerState(open ? playerState : null)}
+          title={playerState.title}
+          fileUrl={playerState.url}
+          type={playerState.type}
+        />
       )}
     </div>
   );

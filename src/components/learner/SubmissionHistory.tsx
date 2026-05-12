@@ -1,6 +1,9 @@
-import { CheckCircle2, Clock, AlertTriangle, Upload, MessageSquare, Shield, FileText, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, Upload, MessageSquare, Shield, FileText, ChevronDown, ChevronUp, Download, Play } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import ResourcePlayerModal from "@/components/shared/ResourcePlayerModal";
+import { getMediaInfo } from "@/lib/media";
 
 export interface SubmissionVersion {
   id: string;
@@ -40,6 +43,12 @@ const SubmissionHistory = ({
   subtitle,
 }: SubmissionHistoryProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [playerState, setPlayerState] = useState<{
+    open: boolean;
+    url: string;
+    title: string;
+    type: "video" | "audio";
+  } | null>(null);
 
   if (!submissions.length) return null;
 
@@ -130,16 +139,44 @@ const SubmissionHistory = ({
                                 <span className="text-sm text-foreground flex-1 truncate">{f.name}</span>
                                 <span className="text-xs text-muted-foreground">{f.size}</span>
                                 {f.url && (
-                                  <a
-                                    href={f.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="p-1.5 hover:bg-primary/10 rounded-md text-primary  "
-                                    title="Download file"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Download className="w-3.5 h-3.5" />
-                                  </a>
+                                  <div className="flex items-center gap-1">
+                                    {(() => {
+                                      const { isMedia, type } = getMediaInfo(f.url);
+                                      if (isMedia && type) {
+                                        return (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-primary hover:bg-primary/10"
+                                            title="Play file"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setPlayerState({
+                                                open: true,
+                                                url: f.url!,
+                                                title: f.name,
+                                                type,
+                                              });
+                                            }}
+                                          >
+                                            <Play className="w-3.5 h-3.5 fill-current" />
+                                          </Button>
+                                        );
+                                      }
+                                      return (
+                                        <a
+                                          href={f.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="p-1.5 hover:bg-primary/10 rounded-md text-primary"
+                                          title="Download file"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <Download className="w-3.5 h-3.5" />
+                                        </a>
+                                      );
+                                    })()}
+                                  </div>
                                 )}
                               </div>
                             ))}
@@ -178,6 +215,15 @@ const SubmissionHistory = ({
           })}
         </div>
       </div>
+      {playerState && (
+        <ResourcePlayerModal
+          open={playerState.open}
+          onOpenChange={(open) => setPlayerState(open ? playerState : null)}
+          title={playerState.title}
+          fileUrl={playerState.url}
+          type={playerState.type}
+        />
+      )}
     </div>
   );
 };

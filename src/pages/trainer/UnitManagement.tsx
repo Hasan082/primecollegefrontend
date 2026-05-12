@@ -11,8 +11,11 @@ import {
   Upload,
   Trophy,
   AlertCircle,
+  Play,
 } from "lucide-react";
 import ResourceSection from "@/components/shared/ResourceSection";
+import ResourcePlayerModal from "@/components/shared/ResourcePlayerModal";
+import { getMediaInfo } from "@/lib/media";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -174,6 +177,12 @@ const UnitManagement = () => {
   const [writtenFeedback, setWrittenFeedback] = useState("");
   const [evidenceOutcome, setEvidenceOutcome] = useState<TrainerOutcome | "">("");
   const [evidenceFeedback, setEvidenceFeedback] = useState("");
+  const [playerState, setPlayerState] = useState<{
+    open: boolean;
+    url: string;
+    title: string;
+    type: "video" | "audio";
+  } | null>(null);
 
   if (isLoadingContent) {
     return <div className="py-20 text-center text-muted-foreground">Loading unit...</div>;
@@ -558,12 +567,39 @@ const UnitManagement = () => {
                           </div>
                         )}
                       </div>
-                      <Button asChild size="sm" variant="outline">
-                        <a href={item.file} target="_blank" rel="noreferrer">
-                          <Download className="w-4 h-4 mr-2" />
-                          Open
-                        </a>
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        {(() => {
+                          const { isMedia, type } = getMediaInfo(item.file);
+                          if (isMedia && type) {
+                            return (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 w-9 p-0 text-primary hover:bg-primary/10"
+                                title="Play file"
+                                onClick={() => {
+                                  setPlayerState({
+                                    open: true,
+                                    url: item.file,
+                                    title: item.title,
+                                    type,
+                                  });
+                                }}
+                              >
+                                <Play className="w-4 h-4 fill-current" />
+                              </Button>
+                            );
+                          }
+                          return (
+                            <Button asChild size="sm" variant="outline">
+                              <a href={item.file} target="_blank" rel="noreferrer">
+                                <Download className="w-4 h-4 mr-2" />
+                                Open
+                              </a>
+                            </Button>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -658,6 +694,15 @@ const UnitManagement = () => {
       )}
 
       
+      {playerState && (
+        <ResourcePlayerModal
+          open={playerState.open}
+          onOpenChange={(open) => setPlayerState(open ? playerState : null)}
+          title={playerState.title}
+          fileUrl={playerState.url}
+          type={playerState.type}
+        />
+      )}
     </div>
   );
 };

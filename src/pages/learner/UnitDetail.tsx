@@ -14,8 +14,11 @@ import {
   MessageSquare,
   Clock,
   AlertTriangle,
+  Play,
 } from "lucide-react";
 import ResourceSection from "@/components/shared/ResourceSection";
+import ResourcePlayerModal from "@/components/shared/ResourcePlayerModal";
+import { getMediaInfo } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import StrictQuizModal from "@/components/learner/StrictQuizModal";
 import EvidenceUploadForm from "@/components/learner/EvidenceUploadForm";
@@ -245,6 +248,12 @@ const UnitDetail = () => {
   const [activeAssignment, setActiveAssignment] = useState<string | null>(null);
   const [showStrictQuiz, setShowStrictQuiz] = useState(false);
   const [showExtension, setShowExtension] = useState(false);
+  const [playerState, setPlayerState] = useState<{
+    open: boolean;
+    url: string;
+    title: string;
+    type: "video" | "audio";
+  } | null>(null);
   const { toast } = useToast();
   const [markCpdUnitComplete, { isLoading: isMarkingCpdComplete }] = useMarkCpdUnitCompleteMutation();
 
@@ -868,12 +877,39 @@ const UnitDetail = () => {
                   {latestFeedbackSubmission.assessor?.name || "Trainer"} • {formatDate(latestFeedbackSubmission.outcome_set_at || latestFeedbackSubmission.submitted_at)}
                 </div>
                 {latestFeedbackSubmission.assessor_feedback_file && (
-                  <Button variant="outline" size="sm" className="gap-2" asChild>
-                    <a href={latestFeedbackSubmission.assessor_feedback_file} target="_blank" rel="noreferrer">
-                      <Download className="w-4 h-4" />
-                      Download Feedback File
-                    </a>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const { isMedia, type } = getMediaInfo(latestFeedbackSubmission.assessor_feedback_file);
+                      if (isMedia && type) {
+                        return (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => {
+                              setPlayerState({
+                                open: true,
+                                url: latestFeedbackSubmission.assessor_feedback_file!,
+                                title: "Feedback Media",
+                                type,
+                              });
+                            }}
+                          >
+                            <Play className="w-4 h-4 fill-current" />
+                            Play Feedback
+                          </Button>
+                        );
+                      }
+                      return (
+                        <Button variant="outline" size="sm" className="gap-2" asChild>
+                          <a href={latestFeedbackSubmission.assessor_feedback_file} target="_blank" rel="noreferrer">
+                            <Download className="w-4 h-4" />
+                            Download Feedback File
+                          </a>
+                        </Button>
+                      );
+                    })()}
+                  </div>
                 )}
               </div>
             </div>
@@ -897,6 +933,16 @@ const UnitDetail = () => {
         qualificationTitle={qualification.title}
         currentExpiry={enrolment.access_expires_at ? new Date(enrolment.access_expires_at).toLocaleDateString("en-GB") : ""}
       />
+
+      {playerState && (
+        <ResourcePlayerModal
+          open={playerState.open}
+          onOpenChange={(open) => setPlayerState(open ? playerState : null)}
+          title={playerState.title}
+          fileUrl={playerState.url}
+          type={playerState.type}
+        />
+      )}
     </div>
   );
 };
