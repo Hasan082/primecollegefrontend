@@ -4,6 +4,7 @@ export type BlockType =
   | "hero"
   | "qualification_hero"
   | "text"
+  | "full-width-text-image"
   | "image"
   | "image-text"
   | "modules"
@@ -95,6 +96,25 @@ export interface ImageBlock extends BlockBase {
     image: string;
     alt?: string;
     caption?: string;
+  };
+}
+
+export interface FullWidthTextImageBlock extends BlockBase {
+  type: "full-width-text-image";
+  data: {
+    title?: string;
+    content?: string;
+    ctaLabel?: string;
+    ctaHref?: string;
+    ctas?: Array<{ label: string; href: string }>;
+    bgMode?: "color" | "image";
+    bgColor?: string;
+    bgImage?: string;
+    overlayColor?: string;
+    showTitle?: boolean;
+    showDescription?: boolean;
+    showButton?: boolean;
+    minHeight?: string;
   };
 }
 
@@ -361,6 +381,7 @@ export type ContentBlock =
   | HeroBlock
   | QualificationHeroBlock
   | TextBlock
+  | FullWidthTextImageBlock
   | ImageBlock
   | ImageTextBlock
   | ModulesBlock
@@ -466,6 +487,7 @@ export const LOCKED_BLOCK_TYPES: BlockType[] = ["qualification_hero"];
 export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   hero: "Hero Banner",
   text: "Text Section",
+  "full-width-text-image": "Full Width Text + Image",
   image: "Image",
   "image-text": "Image + Text",
   modules: "Module List",
@@ -513,6 +535,25 @@ export const getDefaultBlockData = (type: BlockType): ContentBlock => {
       type: "text",
       label,
       data: { title: "Section Title", content: "Enter your content here." },
+    }),
+    "full-width-text-image": () => ({
+      id,
+      type: "full-width-text-image",
+      label,
+      data: {
+        title: "About Us",
+        content: "Add supporting text for this full-width banner section.",
+        ctaLabel: "Learn More",
+        ctaHref: "/about",
+        bgMode: "image",
+        bgColor: "#0c2d6b",
+        bgImage: "",
+        overlayColor: "rgba(15,23,42,0.55)",
+        showTitle: true,
+        showDescription: true,
+        showButton: true,
+        minHeight: "420",
+      },
     }),
     image: () => ({
       id,

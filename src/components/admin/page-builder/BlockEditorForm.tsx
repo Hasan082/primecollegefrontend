@@ -344,6 +344,49 @@ const BlockEditorForm = ({ block, onSave, onClose, onUploadingChange, isGenericS
 
       {block.type === "cta" && <CTABackgroundEditor local={local} update={update} onImageUpload={onImageUpload} isUploading={isUploading} />}
 
+      {block.type === "full-width-text-image" && (
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-sm font-bold">Display Options</Label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={local.showTitle !== false}
+                onChange={(e) => update("showTitle", e.target.checked)}
+              />
+              <span>Show Title</span>
+            </label>
+            <label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={local.showDescription !== false}
+                onChange={(e) => update("showDescription", e.target.checked)}
+              />
+              <span>Show Description</span>
+            </label>
+            <label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={local.showButton !== false}
+                onChange={(e) => update("showButton", e.target.checked)}
+              />
+              <span>Show Button</span>
+            </label>
+          </div>
+          <Field
+            label="Minimum Height (px)"
+            value={String(local.minHeight || "420")}
+            onChange={(v) => update("minHeight", v)}
+          />
+          <CTABackgroundEditor
+            local={local}
+            update={update}
+            onImageUpload={onImageUpload}
+            isUploading={isUploading}
+          />
+        </div>
+      )}
+
       {block.type === "qualification_slider" && (
         <div className="space-y-4 border-t pt-4">
           <Label className="text-sm font-bold">Slider Configuration</Label>

@@ -6,6 +6,7 @@ import {
   Layers3,
   MessageSquareText,
   Newspaper,
+  PanelTop,
   Text,
   LayoutGrid,
   ArrowRight,
@@ -27,6 +28,7 @@ import { BlockType, BLOCK_TYPE_LABELS } from "@/types/pageBuilder";
 
 const BLOCK_DESCRIPTIONS: Partial<Record<BlockType, string>> = {
   text: "Section copy",
+  "full-width-text-image": "Full-width banner with text and background image",
   image: "Standalone image",
   "image-text": "Text with image",
   modules: "Course structure",
@@ -46,6 +48,7 @@ const BLOCK_DESCRIPTIONS: Partial<Record<BlockType, string>> = {
 
 const BLOCK_ICONS: Partial<Record<BlockType, React.ElementType>> = {
   text: Text,
+  "full-width-text-image": PanelTop,
   image: ImageIcon,
   "image-text": LayoutGrid,
   modules: BookOpen,

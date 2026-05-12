@@ -919,6 +919,78 @@ export const CMSBlockRenderer = ({
           ) : null}
         </Section>
       );
+    case "full-width-text-image": {
+      const bgMode = d.bgMode || (d.bgImage ? "image" : "color");
+      const minHeight = Math.max(280, Number(d.minHeight) || 420);
+      const shouldShowTitle = d.showTitle !== false;
+      const shouldShowDescription = d.showDescription !== false;
+      const shouldShowButton = d.showButton !== false;
+      const hasCtas = Array.isArray(d.ctas) && d.ctas.length > 0;
+
+      return (
+        <section
+          className="relative overflow-hidden px-4"
+          style={{ minHeight: `${minHeight}px` }}
+        >
+          {bgMode === "image" && d.bgImage ? (
+            <div className="absolute inset-0">
+              <Image
+                image={resolveCmsImage(d.bgImage) as any}
+                alt={d.title || "Section background"}
+                className="h-full w-full object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{ backgroundColor: d.overlayColor || "rgba(15,23,42,0.55)" }}
+              />
+            </div>
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: d.bgColor || "#0c2d6b" }}
+            />
+          )}
+
+          <div
+            className="relative mx-auto flex max-w-7xl items-center justify-center py-16 text-center"
+            style={{ minHeight: `${minHeight}px` }}
+          >
+            <div className="max-w-3xl text-white">
+              {shouldShowTitle && d.title
+                ? renderRichText(d.title, "text-4xl font-bold text-white md:text-5xl")
+                : null}
+              {shouldShowDescription && d.content ? (
+                <div className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/85 md:text-lg">
+                  {renderRichText(d.content)}
+                </div>
+              ) : null}
+              {shouldShowButton ? (
+                <div className="mt-8 flex flex-wrap justify-center gap-4">
+                  {hasCtas ? (
+                    d.ctas.map((cta: any, i: number) => (
+                      <Link
+                        key={i}
+                        to={cta.href || "/"}
+                        className="inline-flex rounded bg-secondary px-8 py-3 text-sm font-semibold text-secondary-foreground hover:opacity-90"
+                      >
+                        {cta.label}
+                      </Link>
+                    ))
+                  ) : d.ctaLabel ? (
+                    <Link
+                      to={d.ctaHref || "/"}
+                      className="inline-flex rounded bg-secondary px-8 py-3 text-sm font-semibold text-secondary-foreground hover:opacity-90"
+                    >
+                      {d.ctaLabel}
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      );
+    }
     case "image":
       return (
         <section className="py-16 px-4">
