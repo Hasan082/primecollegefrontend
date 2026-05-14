@@ -101,7 +101,12 @@ const QualificationView = () => {
   const qualification = enrolment?.qualification;
   const units = enrolment?.units || [];
   const progress = enrolment?.overall_progress;
-
+  const isAccess = units?.some((unit) => unit.is_mandatory === true);
+  // True when every mandatory unit has been marked competent
+  const allMandatoryCompetent =
+    units
+      .filter((u) => u.is_mandatory === true)
+      .every((u) => u.progress?.competency_status === "competent");
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
@@ -245,7 +250,7 @@ const QualificationView = () => {
         </div>
       )}
 
-      {!isSession && isExpired && (
+      {!isSession && isExpired && !allMandatoryCompetent && (
         <div className="mb-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-4">
@@ -401,7 +406,7 @@ const QualificationView = () => {
                 </h3>
               </div>
             </div>
-            {isLocked ? (
+            {isLocked && !allMandatoryCompetent  ? (
               <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => isExpired ? setShowExtension(true) : null}>
                 <Lock className="h-4 w-4" />
                 {isExpired ? "Access Locked" : "Staff Pending"}
@@ -445,9 +450,14 @@ const QualificationView = () => {
                       {!qualification.is_cpd && (
                         <span className={`text-xs font-bold px-2.5 py-0.5 rounded ${cfg.color}`}>
                           {cfg.label}
+
                         </span>
-                      )}
+                      )}<span className={`text-xs font-bold px-2.5 py-0.5 rounded ${unit?.is_mandatory ? "bg-red-600 text-white" : "bg-muted text-muted-foreground"}`}>
+                          {unit.is_mandatory ? "Mandatory" : "Optional"}
+                      </span>
                     </div>
+                     
+                    
                     {unit.progress?.completed_at && (
                       <p className="text-xs text-muted-foreground">
                         {qualification.is_cpd ? "Completed" : "Assessed"}: {new Date(unit.progress.completed_at).toLocaleDateString()}
@@ -460,10 +470,15 @@ const QualificationView = () => {
                     )}
                   </div>
                 </div>
-                {isLocked ? (
-                  <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => isExpired ? setShowExtension(true) : null}>
+                {isExpired && !allMandatoryCompetent ? (
+                  <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => setShowExtension(true)}>
                     <Lock className="h-4 w-4" />
-                    {isExpired ? "Access Locked" : "Staff Pending"}
+                    Access Locked
+                  </Button>
+                ) : isLocked && !allMandatoryCompetent ? (
+                  <Button size="sm" variant="outline" className="flex-shrink-0 gap-2">
+                    <Lock className="h-4 w-4" />
+                    Staff Pending
                   </Button>
                 ) : (
                   <Button asChild size="sm" className="flex-shrink-0">
@@ -490,10 +505,15 @@ const QualificationView = () => {
                 </h3>
               </div>
             </div>
-            {isLocked || pct !== 100 ? (
-              <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => isExpired ? setShowExtension(true) : null}>
+            {isExpired && !allMandatoryCompetent ? (
+              <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" onClick={() => setShowExtension(true)}>
                 <Lock className="h-4 w-4" />
-                {isExpired ? "Access Locked" : pct !== 100 ? "Not Complete Yet" : "Staff Pending"}
+                Access Locked
+              </Button>
+            ) : !allMandatoryCompetent ? (
+              <Button size="sm" variant="outline" className="flex-shrink-0 gap-2" disabled>
+                <Lock className="h-4 w-4" />
+                Complete Mandatory Units First
               </Button>
             ) : (
               <Button asChild variant="outline" size="sm" className="flex-shrink-0">
