@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +71,7 @@ const QualificationDetail = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [newCode, setNewCode] = useState("");
   const [newName, setNewName] = useState("");
+  const [newIsMandatory, setNewIsMandatory] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -102,11 +104,13 @@ const QualificationDetail = () => {
         payload: {
           unit_code: newCode.trim(),
           title: newName.trim(),
-          order: units.length + 1
+          order: units.length + 1,
+          is_mandatory: newIsMandatory,
         }
       }).unwrap();
       setNewCode("");
       setNewName("");
+      setNewIsMandatory(true);
       setAddOpen(false);
       toast({ title: "Unit added successfully" });
     } catch (err) {
@@ -358,6 +362,23 @@ const QualificationDetail = () => {
                 placeholder="e.g. Principles of Business"
                 className="h-11 font-semibold"
               />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <div className="space-y-0.5">
+                <Label className="font-bold text-sm">Mandatory Unit</Label>
+               
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded ${
+                  newIsMandatory ? "bg-red-600 text-white" : "bg-muted text-muted-foreground"
+                }`}>
+                  {newIsMandatory ? "Mandatory" : "Optional"}
+                </span>
+                <Switch
+                  checked={newIsMandatory}
+                  onCheckedChange={setNewIsMandatory}
+                />
+              </div>
             </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">

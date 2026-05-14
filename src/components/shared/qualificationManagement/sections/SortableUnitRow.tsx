@@ -46,7 +46,13 @@ export const SortableUnitRow = ({
                         <GripVertical className="w-4 h-4" />
                     </button>
                     <Badge variant="outline" className="font-mono text-xs shrink-0 px-2 py-0.5 bg-muted/50">{unit.unit_code}</Badge>
-                    <span className="text-sm font-semibold flex-1 text-foreground truncate">{unit.title}</span>
+                   
+                
+                     <span className="text-sm font-semibold flex-1 text-foreground truncate">{unit.title}  <span className={`text-xs font-bold px-2.5 py-0.5 rounded ${unit?.is_mandatory ? "bg-red-600 text-white" : "bg-muted text-muted-foreground"}`}>
+                          {unit.is_mandatory ? "Mandatory" : "Optional"}
+                      </span></span>
+                   
+                   
 
                     <div className="flex items-center gap-2 mr-2">
                         {!isCpd && (

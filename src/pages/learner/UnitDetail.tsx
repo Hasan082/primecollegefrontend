@@ -269,6 +269,7 @@ const UnitDetail = () => {
     );
 
   const enrolment = enrolmentResponse?.data;
+
   const qualification = enrolment?.qualification;
   const unit = unitResponse?.data;
   const resolvedEnrolmentId = enrolment?.id || qualificationId || "";
@@ -306,6 +307,7 @@ const UnitDetail = () => {
     );
   }
 
+
   if (overviewError || unitError || !enrolment || !qualification || !unit) {
     return (
       <div className="text-center py-20">
@@ -318,6 +320,7 @@ const UnitDetail = () => {
   }
 
   const isExpired = enrolment.access_expired;
+  
   const canExtend = isExpired && enrolment.status !== "completed";
 
   const evidenceSubmissions = evidenceResponse?.data?.submissions || [];
@@ -398,7 +401,7 @@ const UnitDetail = () => {
         <ArrowLeft className="w-4 h-4" /> Back to Qualification
       </Link>
 
-      {isExpired && (
+      {isExpired &&  unit?.progress?.competency_status !== "competent" && (
         <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-4">

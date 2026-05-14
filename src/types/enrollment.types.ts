@@ -239,6 +239,7 @@ export interface EnrolmentOverviewResponse {
         id: string;
         status: string;
         enrolled_at: string;
+        is_mandatory: boolean;
         access_expires_at: string | null;
         access_expired: boolean;
         trainer?: {
