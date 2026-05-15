@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DOMPurify from "dompurify";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -446,7 +447,7 @@ const UnitDetail = () => {
                 </div>
                 <div 
                   className="prose prose-sm max-w-none text-muted-foreground"
-                  dangerouslySetInnerHTML={{ __html: qualification.instructions }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qualification.instructions) }}
                 />
               </div>
             )}
@@ -711,17 +712,33 @@ const UnitDetail = () => {
           )}
 
           {canSubmitEvidence && !isExpired && !qualification.is_cpd && unit.requires_evidence && !evidenceSetupMissing && (
-            <EvidenceUploadForm
-              requirements={evidenceRequirementList}
-              enrolmentId={resolvedEnrolmentId}
-              unitId={resolvedUnitId}
-              mode={latestEvidenceSubmission ? "resubmission" : "initial"}
-              onSuccess={() => {
-                void refetchOverview();
-                void refetchUnit();
-                void refetchEvidence();
-              }}
-            />
+            <>
+              {evidenceConfig?.instructions && (
+                <div className="rounded-xl border border-primary/15 bg-primary/5 p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-4 w-1 bg-primary rounded-full" />
+                    <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                      Instructions for Learners
+                    </h4>
+                  </div>
+                  <div
+                    className="prose prose-sm max-w-none text-muted-foreground"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(evidenceConfig.instructions) }}
+                  />
+                </div>
+              )}
+              <EvidenceUploadForm
+                requirements={evidenceRequirementList}
+                enrolmentId={resolvedEnrolmentId}
+                unitId={resolvedUnitId}
+                mode={latestEvidenceSubmission ? "resubmission" : "initial"}
+                onSuccess={() => {
+                  void refetchOverview();
+                  void refetchUnit();
+                  void refetchEvidence();
+                }}
+              />
+            </>
           )}
 
 

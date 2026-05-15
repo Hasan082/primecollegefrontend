@@ -4,7 +4,7 @@ import { FileText, Save, Plus, X, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/admin/page-builder/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -12,8 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUpdatePortfolioConfigMutation, useGetPortfolioConfigQuery } from "@/redux/apis/quiz/quizApi";
 
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
+
 const portfolioConfigSchema = z.object({
-  instructions: z.string().trim().min(1, "Instructions for Learners is required"),
+  instructions: z.string().refine((val) => stripHtml(val).length > 0, "Instructions for Learners is required"),
   acceptedFileTypes: z.array(z.string()).min(1, "Select at least one accepted file type"),
   maxFilesPerSubmission: z
     .number({
@@ -279,14 +281,13 @@ const PortfolioInstructionsEditor = ({
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Instructions for Learners <span className="text-destructive">*</span>
             </Label>
-            <Textarea
+            <RichTextEditor
               value={config.instructions}
-              onChange={(e) => {
-                update({ instructions: e.target.value });
-                if (e.target.value.trim()) clearError("instructions");
+              onChange={(html) => {
+                update({ instructions: html });
+                if (stripHtml(html).length > 0) clearError("instructions");
               }}
-              placeholder="Explain what evidence learners should upload for this unit. E.g. 'Upload a reflective account demonstrating your understanding of duty of care, supported by witness testimony from your supervisor...'"
-              className="min-h-[120px] text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
+              placeholder="Explain what evidence learners should upload for this unit..."
             />
             {errors.instructions && (
               <p className="text-xs text-destructive">{errors.instructions}</p>
